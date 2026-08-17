@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WalkWise"
+rootProject.name = "StoryStep"
 include(":app")

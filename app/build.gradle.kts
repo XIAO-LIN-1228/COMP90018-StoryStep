@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.comp90018.walkwise"
+    namespace = "com.comp90018.StoryStep"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.comp90018.walkwise"
+        applicationId = "com.comp90018.StoryStep"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
