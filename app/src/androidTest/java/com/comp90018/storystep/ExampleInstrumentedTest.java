@@ -1,4 +1,4 @@
-package com.comp90018.walkwise;
+package com.comp90018.StoryStep;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("com.comp90018.walkwise", appContext.getPackageName());
+        assertEquals("com.comp90018.StoryStep", appContext.getPackageName());
     }
 }
