@@ -1,3 +1,32 @@
 <resources>
     <string name="app_name">StoryStep</string>
+
+    <!-- Nearby attractions screen -->
+    <string name="nearby_title">Nearby attractions</string>
+    <string name="nearby_subtitle">Places to discover around you</string>
+    <string name="nearby_loading">Loading nearby attractions</string>
+    <string name="nearby_empty">No attractions found nearby. Try again from a different area.</string>
+    <string name="nearby_error">Nearby attractions could not be loaded.</string>
+    <string name="nearby_retry">Retry</string>
+    <string name="nearby_list_description">List of nearby attractions</string>
+
+    <!-- Attraction detail screen -->
+    <string name="detail_title">Attraction</string>
+    <string name="detail_about">About this place</string>
+    <string name="detail_error">This attraction could not be loaded.</string>
+
+    <!-- Shared attraction labels -->
+    <string name="attraction_indoor">Indoor</string>
+    <string name="attraction_outdoor">Outdoor</string>
+    <string name="distance_meters_format">%1$d m</string>
+    <string name="distance_kilometers_format">%1$.1f km</string>
+    <string name="attraction_item_description">%1$s, %2$s, %3$s away</string>
+
+    <!-- Attraction categories -->
+    <string name="category_historical_building">Historical building</string>
+    <string name="category_museum">Museum</string>
+    <string name="category_park">Park</string>
+    <string name="category_public_art">Public art</string>
+    <string name="category_cultural_site">Cultural site</string>
+    <string name="category_university_landmark">University landmark</string>
 </resources>

@@ -1,4 +1,4 @@
-package com.comp90018.storystep;
+package com.comp90018.storystep.ui;
 
 import android.os.Bundle;
 
@@ -8,8 +8,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.comp90018.StoryStep.R;
+import com.comp90018.storystep.R;
 
+/**
+ * The single Activity of the application. It hosts the navigation graph and applies system-bar
+ * insets; every other screen is a Fragment. No calculation, sensor or location work belongs here.
+ */
 public class MainActivity extends AppCompatActivity {
 
     @Override

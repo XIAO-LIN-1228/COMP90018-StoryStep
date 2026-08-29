@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "com.comp90018.StoryStep"
+    namespace = "com.comp90018.storystep"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "com.comp90018.StoryStep"
+        applicationId = "com.comp90018.storystep"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
@@ -36,7 +36,25 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.constraintlayout)
     implementation(libs.material)
+    implementation(libs.fragment)
+    implementation(libs.recyclerview)
+    implementation(libs.lifecycle.viewmodel)
+    implementation(libs.lifecycle.livedata)
+    implementation(libs.lifecycle.runtime)
+    implementation(libs.navigation.fragment)
+    implementation(libs.navigation.ui)
+    implementation(libs.room.runtime)
+    annotationProcessor(libs.room.compiler)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp)
+    implementation(libs.okhttp.logging.interceptor)
+
     testImplementation(libs.junit)
+    testImplementation(libs.arch.core.testing)
+
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)
+    androidTestImplementation(libs.test.runner)
+    androidTestImplementation(libs.room.testing)
 }
