@@ -13,3 +13,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio / IntelliJ project files
+/.idea/
+
+# Scratch output from local report tooling (see scripts/)
+/tmp/
+/output/

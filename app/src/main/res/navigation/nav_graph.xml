@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/nearbyAttractionsFragment">
+
+    <fragment
+        android:id="@+id/nearbyAttractionsFragment"
+        android:name="com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment"
+        android:label="@string/nearby_title"
+        tools:layout="@layout/fragment_nearby_attractions"
+        xmlns:tools="http://schemas.android.com/tools">
+        <action
+            android:id="@+id/action_nearby_to_detail"
+            app:destination="@id/attractionDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/attractionDetailFragment"
+        android:name="com.comp90018.storystep.ui.detail.AttractionDetailFragment"
+        android:label="@string/detail_title"
+        tools:layout="@layout/fragment_attraction_detail"
+        xmlns:tools="http://schemas.android.com/tools">
+        <!-- Passed manually as a Bundle argument; Safe Args is intentionally not used. -->
+        <argument
+            android:name="attractionId"
+            app:argType="string" />
+    </fragment>
+
+</navigation>
