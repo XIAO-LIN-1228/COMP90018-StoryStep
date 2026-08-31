@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
+import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
 
@@ -38,7 +39,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new NearbyAttractionsViewModel(
                     appContainer.getAttractionRepository(),
                     appContainer.getReferenceOrigin(),
-                    appContainer.getNearbySearchRadiusMeters());
+                    appContainer.getNearbySearchRadiusMeters(),
+                    new LocationSampleFilter(appContainer.getLocationQualityPolicy()));
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(appContainer.getAttractionRepository());

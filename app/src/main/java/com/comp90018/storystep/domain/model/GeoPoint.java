@@ -12,14 +12,21 @@ public final class GeoPoint {
     private final double longitude;
 
     public GeoPoint(double latitude, double longitude) {
-        if (latitude < -90.0 || latitude > 90.0) {
+        // NaN fails every ordering comparison, so a range check alone would let it through and a
+        // NaN coordinate would silently poison every downstream distance and bearing result.
+        if (!isFinite(latitude) || latitude < -90.0 || latitude > 90.0) {
             throw new IllegalArgumentException("latitude out of range: " + latitude);
         }
-        if (longitude < -180.0 || longitude > 180.0) {
+        if (!isFinite(longitude) || longitude < -180.0 || longitude > 180.0) {
             throw new IllegalArgumentException("longitude out of range: " + longitude);
         }
         this.latitude = latitude;
         this.longitude = longitude;
+    }
+
+    /** {@code Double.isFinite} is API 24+, but this class must stay plain Java for JVM tests. */
+    private static boolean isFinite(double value) {
+        return !Double.isNaN(value) && !Double.isInfinite(value);
     }
 
     public double getLatitude() {
