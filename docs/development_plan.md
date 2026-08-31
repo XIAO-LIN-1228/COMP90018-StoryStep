@@ -13,7 +13,6 @@ Read the documents in this order:
 1. `CLAUDE.md` and `README.md`: constraints and scope.
 2. This plan: behavior, dependencies, task IDs and acceptance conditions.
 3. [Verification checklist](verification_checklist.md): requirement status, executable acceptance cases and evidence records.
-4. [Claude Code handoff](claude_code_handoff.md): instructions for implementing one bounded issue at a time.
 
 Use one requirement ID per issue, splitting larger requirements into the numbered subtasks below. One PR may implement a subset, but the requirement is not accepted until all its acceptance conditions are verified. Code generation, successful compilation and merging are not substitutes for acceptance evidence.
 
