@@ -20,3 +20,6 @@ local.properties
 # Scratch output from local report tooling (see scripts/)
 /tmp/
 /output/
+
+# Local implementation-handoff notes, deliberately kept out of the repository
+/docs/claude_code_handoff.md
