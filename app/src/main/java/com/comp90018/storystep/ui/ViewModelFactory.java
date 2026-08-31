@@ -9,10 +9,10 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
-import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
-import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
+import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
+import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
 
 /**
  * Builds ViewModels from the {@link AppContainer}, so Fragments never construct a repository,
@@ -41,13 +41,17 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getAttractionRepository(),
                     appContainer.getReferenceOrigin(),
                     appContainer.getNearbySearchRadiusMeters(),
-                    new LocationSampleFilter(appContainer.getLocationQualityPolicy()));
+                    appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(appContainer.getAttractionRepository());
         }
         if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
             return (T) new JourneysViewModel(appContainer.getJourneyRepository());
+        }
+        if (modelClass.isAssignableFrom(SessionRecoveryViewModel.class)) {
+            return (T) new SessionRecoveryViewModel(
+                    appContainer.getExplorationCoordinator());
         }
         throw new IllegalArgumentException("Unknown ViewModel class: " + modelClass.getName());
     }

@@ -9,15 +9,21 @@ StoryStep is a context-aware Android tourism companion for COMP90018 (University
 Current state: the layered Java/XML application skeleton and a cross-iteration frontend prototype
 are in place. The app includes onboarding, nearby discovery, attraction details, exploration,
 arrival/story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
-real foreground Android location adapter, permission recovery and quality-aware samples. Attraction
-and journey content still uses in-memory repositories; Room and Retrofit remain unwired for runtime
-data. A session coordinator, durable route/history storage, accelerometer movement estimation,
+real foreground Android location adapter, permission recovery and quality-aware samples. A
+process-wide session coordinator now owns the foreground location subscription and implements
+start, pause, resume, finish and discard against a process-lifetime session store. Attraction and
+journey content still uses in-memory repositories; Room and Retrofit remain unwired for runtime
+data. Durable session restoration and route/history storage, accelerometer movement estimation,
 magnetometer heading, arrival detection, real weather/attraction services and contextual ranking
 remain incomplete. `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.
 
-For requirement-by-requirement implementation, use `docs/development_plan.md` for task IDs, dependencies and acceptance behavior, `docs/verification_checklist.md` for verification status and evidence, and `docs/claude_code_handoff.md` for bounded implementation/review prompts. These are execution documents, not completed-feature claims or permission to expand the README scope. Read the selected requirement and its shared contracts before coding; keep unexecuted tests and unresolved decisions explicit.
+For requirement-by-requirement implementation, use `docs/development_plan.md` for task IDs,
+dependencies and acceptance behavior and `docs/verification_checklist.md` for verification status
+and evidence. These are execution documents, not completed-feature claims or permission to expand
+the README scope. Read the selected requirement and its shared contracts before coding; keep
+unexecuted tests and unresolved decisions explicit.
 
 The on-disk directory and Git repository are named `COMP90018-StoryStep`, matching the current
 product identity.

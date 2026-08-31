@@ -7,7 +7,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -29,11 +28,8 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
-import com.comp90018.storystep.StoryStepApplication;
-import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationAccessPolicy;
-import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -43,16 +39,16 @@ import com.google.android.material.textfield.TextInputLayout;
 /**
  * Start destination: the list of nearby attractions.
  *
- * <p>The Fragment renders {@link NearbyUiState}, owns the Android permission and location
- * registration lifecycle, and forwards results to the ViewModel. It performs no geographic
- * calculation and applies no sample-quality rules of its own.
+ * <p>The Fragment renders {@link NearbyUiState} and owns the Android permission flow, which needs
+ * an Activity. It holds no session state of its own: the session and its location subscription
+ * belong to the coordinator behind the ViewModel, which is why rotating the screen or navigating
+ * away no longer disturbs a running session.
  *
- * <p>Nothing is requested or registered at launch. Location collection begins only when the user
- * presses the exploration control, and ends in {@code onStop}, so the app never collects a position
- * while it is not visible.
+ * <p>Nothing is requested at launch. Collection begins only when the user presses the exploration
+ * control, and the coordinator ends it as soon as the app stops being visible.
  */
 public class NearbyAttractionsFragment extends Fragment
-        implements AttractionAdapter.OnAttractionSelected, LocationSource.Listener {
+        implements AttractionAdapter.OnAttractionSelected {
 
     /** Bundle key read by {@link com.comp90018.storystep.ui.detail.AttractionDetailFragment}. */
     public static final String ARG_ATTRACTION_ID = "attractionId";
@@ -80,13 +76,9 @@ public class NearbyAttractionsFragment extends Fragment
 
     private NearbyAttractionsViewModel viewModel;
     private AttractionAdapter adapter;
-    private LocationSource locationSource;
     private SharedPreferences preferences;
 
     private ActivityResultLauncher<String[]> permissionLauncher;
-
-    /** True while this screen has an active location registration. */
-    private boolean tracking;
 
     /** True once the user has seen the purpose explanation and can be asked for permission. */
     private boolean explanationAcknowledged;
@@ -103,7 +95,9 @@ public class NearbyAttractionsFragment extends Fragment
     private TextView sectionTitle;
     private TextView seeAllButton;
     private boolean listMode;
+    private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
     private MaterialButton sessionButton;
+    private MaterialButton stopButton;
     private View permissionNotice;
     private TextView permissionNoticeMessage;
     private MaterialButton permissionNoticeAction;
@@ -147,6 +141,7 @@ public class NearbyAttractionsFragment extends Fragment
         sectionTitle = view.findViewById(R.id.nearby_title);
         seeAllButton = view.findViewById(R.id.see_all_button);
         sessionButton = view.findViewById(R.id.session_button);
+        stopButton = view.findViewById(R.id.stop_button);
         permissionNotice = view.findViewById(R.id.permission_notice);
         permissionNoticeMessage = view.findViewById(R.id.permission_notice_message);
         permissionNoticeAction = view.findViewById(R.id.permission_notice_action);
@@ -154,10 +149,6 @@ public class NearbyAttractionsFragment extends Fragment
         adapter = new AttractionAdapter(this);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
-
-        StoryStepApplication application =
-                (StoryStepApplication) requireActivity().getApplication();
-        locationSource = application.getAppContainer().createLocationSource();
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(NearbyAttractionsViewModel.class);
@@ -168,6 +159,7 @@ public class NearbyAttractionsFragment extends Fragment
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_nearby_to_session_recovery));
         sessionButton.setOnClickListener(v -> onSessionButtonClicked());
+        stopButton.setOnClickListener(v -> viewModel.onStopRequested());
         viewModel.loadIfNeeded();
     }
 
@@ -180,10 +172,11 @@ public class NearbyAttractionsFragment extends Fragment
     }
 
     @Override
-    public void onStop() {
-        // Foreground-only: a screen the user cannot see must not hold a location registration.
-        stopTracking();
-        super.onStop();
+    public void onStart() {
+        super.onStart();
+        // Access can have been changed in system settings while the app was away. Re-checking here
+        // is what stops the screen from offering actions that would silently do nothing.
+        viewModel.onLocationAccessChanged(currentAccess());
     }
 
     @Override
@@ -195,32 +188,72 @@ public class NearbyAttractionsFragment extends Fragment
 
     // --- exploration control -------------------------------------------------------------------
 
+    /**
+     * The primary control. What it does depends on the session phase, which the ViewModel
+     * publishes; this method never inspects a local tracking flag, because there is no longer one
+     * to disagree with the session.
+     */
     private void onSessionButtonClicked() {
-        if (tracking) {
-            stopTracking();
-            viewModel.onLocationTrackingStopped();
+        NearbyUiState state = viewModel.getUiState().getValue();
+        NearbyUiState.SessionPhase phase = state == null
+                ? NearbyUiState.SessionPhase.IDLE
+                : state.getSessionPhase();
+        if (phase.isBusy()) {
+            // A start or stop is already in flight; a second press must not open or close another.
             return;
         }
+        switch (phase) {
+            case ACTIVE:
+                viewModel.onStopRequested();
+                return;
+            case PAUSED_BACKGROUND:
+            case PAUSED_ACCESS_LOST:
+                resumeIfAccessAllows();
+                return;
+            default:
+                startIfAccessAllows();
+        }
+    }
+
+    private void startIfAccessAllows() {
+        if (withAccess()) {
+            viewModel.onStartRequested();
+        }
+    }
+
+    private void resumeIfAccessAllows() {
+        if (withAccess()) {
+            viewModel.onResumeRequested();
+        }
+    }
+
+    /**
+     * Ensures location access before a session command, requesting it if that is still possible.
+     *
+     * @return true when the command may proceed now
+     */
+    private boolean withAccess() {
         LocationAccess access = currentAccess();
         if (access.isGranted()) {
-            startTracking(access);
-            return;
+            viewModel.onLocationAccessRequested(access);
+            return true;
         }
         if (!access.canRequest()) {
             // Permanently denied: a request would show nothing, so publish the state that offers
             // the settings route instead.
-            viewModel.onLocationAccessChanged(access);
-            return;
+            viewModel.onLocationAccessRequested(access);
+            return false;
         }
         if (access == LocationAccess.NOT_REQUESTED && !explanationAcknowledged) {
             // Explain before the system dialog rather than after it. A request the user cannot
             // interpret is the one they deny, and a first denial is expensive: Android will not
             // show the dialog indefinitely. The notice's own action makes the actual request.
             explanationAcknowledged = true;
-            viewModel.onLocationAccessChanged(access);
-            return;
+            viewModel.onExplanationRequired();
+            return false;
         }
         requestLocationPermissions();
+        return false;
     }
 
     private void requestLocationPermissions() {
@@ -234,28 +267,11 @@ public class NearbyAttractionsFragment extends Fragment
         // The per-permission booleans are not consulted directly: a re-check goes through the same
         // policy as every other path, so granted, approximate-only and denied are classified once.
         LocationAccess access = currentAccess();
+        viewModel.onLocationAccessRequested(access);
         if (access.isGranted()) {
-            startTracking(access);
-        } else {
-            viewModel.onLocationAccessChanged(access);
-        }
-    }
-
-    private void startTracking(LocationAccess access) {
-        viewModel.onLocationAccessChanged(access);
-        tracking = true;
-        sessionButton.setText(R.string.nearby_stop_exploring);
-        locationSource.startUpdates(this);
-    }
-
-    private void stopTracking() {
-        if (!tracking) {
-            return;
-        }
-        tracking = false;
-        locationSource.stopUpdates();
-        if (sessionButton != null) {
-            sessionButton.setText(R.string.nearby_start_exploring);
+            // The user asked for a session by pressing the control; granting is the last thing
+            // that was missing, so continue rather than making them press it again.
+            onSessionButtonClicked();
         }
     }
 
@@ -284,20 +300,6 @@ public class NearbyAttractionsFragment extends Fragment
         startActivity(intent);
     }
 
-    // --- LocationSource.Listener ---------------------------------------------------------------
-
-    @Override
-    public void onLocationChanged(LocationSample sample) {
-        // elapsedRealtime is the same monotonic clock the sample's timestamp came from, so the two
-        // are safe to subtract; wall-clock time is not used for any interval.
-        viewModel.onLocationSample(sample, SystemClock.elapsedRealtime());
-    }
-
-    @Override
-    public void onLocationUnavailable(LocationSource.Reason reason) {
-        viewModel.onLocationUnavailable(reason);
-    }
-
     // --- rendering -----------------------------------------------------------------------------
 
     private void render(NearbyUiState state) {
@@ -319,7 +321,8 @@ public class NearbyAttractionsFragment extends Fragment
         }
 
         configureRecoveryAction(status);
-        renderPermissionNotice(status);
+        renderPermissionNotice(status, state.getSessionPhase());
+        renderSessionControls(state.getSessionPhase());
         adapter.submitList(state.getItems());
     }
 
@@ -358,7 +361,37 @@ public class NearbyAttractionsFragment extends Fragment
      * launch, so anything shown only on an empty list would never be seen at all — which is what
      * previously kept the purpose explanation from ever reaching the user.
      */
-    private void renderPermissionNotice(NearbyUiState.Status status) {
+    private void renderSessionControls(NearbyUiState.SessionPhase phase) {
+        currentSessionPhase = phase;
+        switch (phase) {
+            case ACTIVE:
+                sessionButton.setText(R.string.nearby_stop_exploring);
+                break;
+            case PAUSED_BACKGROUND:
+            case PAUSED_ACCESS_LOST:
+                sessionButton.setText(R.string.nearby_resume_exploring);
+                break;
+            case STARTING:
+                sessionButton.setText(R.string.nearby_starting);
+                break;
+            case STOPPING:
+                sessionButton.setText(R.string.nearby_stopping);
+                break;
+            case IDLE:
+            default:
+                sessionButton.setText(R.string.nearby_start_exploring);
+                break;
+        }
+        // Inert rather than hidden while a transition is in flight: a control that vanishes under
+        // the user's finger is worse than one that briefly does nothing.
+        sessionButton.setEnabled(!phase.isBusy());
+        // A paused session must be endable without resuming it first.
+        stopButton.setVisibility(phase.isPaused() ? View.VISIBLE : View.GONE);
+        updateContinueJourneyCard();
+    }
+
+    private void renderPermissionNotice(NearbyUiState.Status status,
+                                        NearbyUiState.SessionPhase phase) {
         int message;
         int actionLabel;
         View.OnClickListener action;
@@ -367,6 +400,16 @@ public class NearbyAttractionsFragment extends Fragment
                 message = R.string.nearby_permission_rationale;
                 actionLabel = R.string.nearby_grant_access;
                 action = v -> requestLocationPermissions();
+                break;
+            case WAITING_FOR_FIX:
+                if (!phase.isPaused()) {
+                    permissionNotice.setVisibility(View.GONE);
+                    permissionNoticeAction.setOnClickListener(null);
+                    return;
+                }
+                message = R.string.nearby_session_paused_background;
+                actionLabel = R.string.nearby_resume_exploring;
+                action = v -> resumeIfAccessAllows();
                 break;
             case PERMISSION_DENIED:
                 message = R.string.nearby_permission_denied;
@@ -384,6 +427,14 @@ public class NearbyAttractionsFragment extends Fragment
                 action = v -> openLocationSettings();
                 break;
             default:
+                if (phase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND) {
+                    // Explains why the totals stopped moving. Without it, returning to the app
+                    // looks like the session silently died.
+                    message = R.string.nearby_session_paused_background;
+                    actionLabel = R.string.nearby_resume_exploring;
+                    action = v -> resumeIfAccessAllows();
+                    break;
+                }
                 permissionNotice.setVisibility(View.GONE);
                 permissionNoticeAction.setOnClickListener(null);
                 return;
@@ -406,6 +457,8 @@ public class NearbyAttractionsFragment extends Fragment
                 return R.string.nearby_origin_live_precise;
             case LIVE_APPROXIMATE:
                 return R.string.nearby_origin_live_approximate;
+            case LIVE_PAUSED:
+                return R.string.nearby_origin_live_paused;
             case REFERENCE_AREA:
             default:
                 return R.string.nearby_origin_reference_area;
@@ -423,7 +476,7 @@ public class NearbyAttractionsFragment extends Fragment
     private void setListMode(boolean enabled) {
         listMode = enabled;
         homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
-        continueJourneyCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
         sectionTitle.setText(enabled ? R.string.nearby_title : R.string.home_nearby);
@@ -441,5 +494,11 @@ public class NearbyAttractionsFragment extends Fragment
             params.topToBottom = enabled ? R.id.filter_group : R.id.continue_journey_card;
             sectionHeader.setLayoutParams(params);
         }
+    }
+
+    /** The recovery card represents a real resumable session, never a permanent demo fixture. */
+    private void updateContinueJourneyCard() {
+        boolean resumable = currentSessionPhase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND;
+        continueJourneyCard.setVisibility(!listMode && resumable ? View.VISIBLE : View.GONE);
     }
 }

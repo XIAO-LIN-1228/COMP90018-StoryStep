@@ -4,10 +4,9 @@ Prepared: 2026-08-31. Planning baseline: `762662e` (`framework-build`).
 
 Status: proposed execution plan, not a claim that the features or tests below are complete.
 
-Current frontend assessment: local integration base `ff956ae` on `feature/frontend-ui`, plus the
-current working-tree Session Recovery and Privacy & Data pages, evaluated 2026-08-31. The base
-includes `origin/main` at `e984ff7`; the frontend work has not yet been pushed or reviewed through
-a pull request.
+Current frontend assessment: `feature/frontend-ui` contains the frontend implementation at
+`142c26f` and is integrating `origin/main@204708f`, including the REQ-02 process-wide session
+lifecycle. The branch is pushed for review; Android and physical-device acceptance remain partial.
 
 ## 1. How to use this plan
 
@@ -22,7 +21,6 @@ Read the documents in this order:
 1. `CLAUDE.md` and `README.md`: constraints and scope.
 2. This plan: behavior, dependencies, task IDs and acceptance conditions.
 3. [Verification checklist](verification_checklist.md): requirement status, executable acceptance cases and evidence records.
-4. [Claude Code handoff](claude_code_handoff.md): instructions for implementing one bounded issue at a time.
 
 Use one requirement ID per issue, splitting larger requirements into the numbered subtasks below. One PR may implement a subset, but the requirement is not accepted until all its acceptance conditions are verified. Code generation, successful compilation and merging are not substitutes for acceptance evidence.
 
@@ -61,13 +59,13 @@ navigation reach later user journeys, while most of the corresponding domain, pe
 and network requirements remain incomplete. A rendered page or navigation action is therefore
 recorded as `FOUNDATION_ONLY` unless it is connected to the required production behavior.
 
-| Frontend area | Plan coverage | Current assessment at `ff956ae` | Next acceptance gate |
+| Frontend area | Plan coverage | Current assessment on `feature/frontend-ui` | Next acceptance gate |
 |---|---|---|---|
 | App shell, onboarding and location rationale | I0; REQ-01; NFR-03 | XML screens, edge-to-edge shell, bottom navigation and explicit location explanation are implemented | Fresh-install Android test, first-run behavior, Back/Up and accessibility checks |
 | Home / nearby discovery | I1; REQ-01, REQ-03, REQ-04 | Professional home UI is integrated with the foreground location adapter, permission recovery, reference/live-origin labels and repository-backed attraction list | API 31+ permission matrix, provider-off/stale-fix tests, rotation/navigation tests and physical fix evidence |
 | Attraction details and start confirmation | I1; REQ-05 | ID-based repository loading, error presentation, confirmation dialog and exploration navigation exist | Bind destination to a real session; replace Save toast with REQ-17 persistence; add restoration/error tests |
-| Active exploration | I2; REQ-02, REQ-06, REQ-07, REQ-10, REQ-11 | Designed map/dashboard and stop dialog exist, but values and route are prototype presentation; the live location source is not owned by this screen or a session coordinator | Implement session coordinator/state machine, route/motion/heading bindings, pause/resume and durable checkpoints |
-| Paused-session recovery | I1-I2; REQ-02, REQ-15 | Session Recovery page now exposes Resume, Finish and confirmed Discard without automatic tracking; checkpoint values remain fixture data | Bind controls to one durable session coordinator/repository and verify process-death recovery |
+| Active exploration | I2; REQ-02, REQ-06, REQ-07, REQ-10, REQ-11 | Designed map/dashboard and stop dialog exist; one process-wide coordinator owns the real foreground location session, but dashboard values and route remain prototype presentation | Bind the dashboard to coordinator samples, then add route/motion/heading data and durable checkpoints |
+| Paused-session recovery | I1-I2; REQ-02, REQ-15 | Recovery appears only for a real paused process session; Resume, Finish and Discard command the shared coordinator, and elapsed time/segment come from its session summary | Implement Room-backed restoration after process death and verify the full interruption matrix |
 | Arrival, story and memory | I4; REQ-12, REQ-13 | Complete clickable visual flow exists, including a preview-only arrival action | Replace preview with quality-aware arrival detection and exactly-once persisted visit/story delivery |
 | Journeys, summary and detail | I4; REQ-15, REQ-16 | List/detail/summary pages and repository boundary exist, backed by deterministic in-memory journeys | Implement Room sessions/routes/visits, recovery, real summaries, deletion and offline relaunch tests |
 | Saved | I3; REQ-17 | Saved list and detail Save affordance exist, but the list reuses nearby data and Save only shows a toast | Dedicated durable saved-attraction repository, synchronized Save/Unsave state and failure handling |
@@ -81,7 +79,7 @@ Iteration-level interpretation:
 - I1 is the active functional stage: REQ-01 and REQ-03 are merged with partial verification;
   REQ-04/05 remain in review or progress.
 - I2-I4 have useful UI prototypes for parallel development, but they do not pass their iteration
-  exit gates because the session, sensor, persistence, network and arrival behaviors are missing.
+  exit gates because route/sensor binding, persistence, network and arrival behaviors are missing.
 - I5 stabilization has not started. A successful local build is regression evidence, not release
   acceptance.
 
@@ -166,6 +164,7 @@ Android lifecycle events are forwarded into the coordinator by a thin adapter. T
 | ACTIVE + screen navigation/rotation | ACTIVE | Same logical session and totals; no duplicate subscription; rebind UI safely |
 | PAUSED + explicit Resume while visible and access available | ACTIVE | Same session ID; begin a new route segment; reset stale sensor/arrival windows |
 | ACTIVE or PAUSED + Stop | STOPPING, then COMPLETED after save | Stop sources immediately; persist once; show retry if save fails |
+| ACTIVE or PAUSED + Discard | STOPPING, then IDLE after deletion | Stop sources immediately; remove the unfinished session without adding history |
 | Relaunch with an unfinished record | PAUSED/INTERRUPTED presentation | No automatic sensor restart; offer Resume or Finish with preserved checkpoint |
 
 At most one unfinished session is allowed. Stop is idempotent. STARTING and STOPPING disable duplicate actions. Missing motion/heading sensors do not stop an otherwise usable location session. A stale/low-quality fix shows degraded guidance; it is not fabricated as a valid arrival.

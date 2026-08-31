@@ -20,10 +20,15 @@
     <string name="nearby_origin_reference_area">Distances from the demo area, not your location. Start exploring to use your position.</string>
     <string name="nearby_origin_live_precise">Distances from your current location.</string>
     <string name="nearby_origin_live_approximate">Approximate distances: you granted approximate location only.</string>
+    <string name="nearby_origin_live_paused">Distances from where you last were. Paused, so they are no longer updating.</string>
 
     <!-- Exploration control and location access -->
     <string name="nearby_start_exploring">Start exploring</string>
     <string name="nearby_stop_exploring">Stop exploring</string>
+    <string name="nearby_resume_exploring">Resume exploring</string>
+    <string name="nearby_starting">Starting…</string>
+    <string name="nearby_stopping">Saving…</string>
+    <string name="nearby_session_paused_background">Paused while you were away. StoryStep does not collect location in the background — resume when you are ready to keep exploring.</string>
     <string name="nearby_permission_rationale">StoryStep uses your location only while you are exploring, to show what is nearby and how far away it is. It is never collected in the background.</string>
     <string name="nearby_permission_denied">Location access is needed to show attractions around you. You can keep browsing the demo area instead.</string>
     <string name="nearby_permission_permanently_denied">Location access is turned off for StoryStep. Enable it in system settings to explore from your own position.</string>
@@ -216,20 +221,25 @@
     <!-- Session recovery -->
     <string name="session_recovery_title">Resume journey</string>
     <string name="session_recovery_paused">PAUSED SAFELY</string>
+    <string name="session_recovery_paused_permission">LOCATION ACCESS NEEDED</string>
+    <string name="session_recovery_paused_provider">LOCATION SERVICES NEEDED</string>
     <string name="session_recovery_headline">Continue where you left off</string>
     <string name="session_recovery_body">This journey is paused on your device. StoryStep is not collecting location while it is paused.</string>
-    <string name="session_recovery_checkpoint">Last checkpoint · Today, 10:46</string>
-    <string name="session_recovery_progress_description">Three of six stories completed</string>
+    <string name="session_recovery_current_journey">Current exploration</string>
+    <string name="session_recovery_checkpoint_pending">Loading session checkpoint…</string>
+    <string name="session_recovery_checkpoint_format">Active for %1$d min · segment %2$d</string>
     <string name="session_recovery_privacy_note">Location and sensors restart only after you choose Resume. The recovered journey never starts tracking automatically.</string>
     <string name="session_recovery_resume">Resume journey</string>
     <string name="session_recovery_finish">Finish without resuming</string>
     <string name="session_recovery_discard">Discard this journey</string>
     <string name="session_recovery_finish_title">Finish this journey?</string>
-    <string name="session_recovery_finish_body">Your current checkpoint will be used to create the journey summary. Location will remain off.</string>
+    <string name="session_recovery_finish_body">StoryStep will end this active session. Location will remain off.</string>
     <string name="session_recovery_finish_action">Finish journey</string>
     <string name="session_recovery_discard_title">Discard this journey?</string>
     <string name="session_recovery_discard_body">This removes the unfinished journey. Saved places are not affected.</string>
     <string name="session_recovery_discard_action">Discard</string>
+    <string name="session_recovery_resume_unavailable">Restore location access before resuming.</string>
+    <string name="session_recovery_action_unavailable">This session action is no longer available.</string>
 
     <!-- Privacy and data -->
     <string name="privacy_data_title">Privacy &amp; data</string>

@@ -46,6 +46,7 @@
             android:padding="@dimen/page_horizontal_margin">
 
             <TextView
+                android:id="@+id/session_recovery_paused_label"
                 style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -109,42 +110,19 @@
                                 style="@style/TextAppearance.StoryStep.Title"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="@string/home_journey_name" />
+                                android:text="@string/session_recovery_current_journey" />
 
                             <TextView
+                                android:id="@+id/session_recovery_checkpoint"
                                 style="@style/TextAppearance.StoryStep.Supporting"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
-                                android:text="@string/session_recovery_checkpoint" />
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="@string/home_journey_meta"
+                                android:text="@string/session_recovery_checkpoint_pending"
                                 android:textColor="@color/brand_teal"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
-
-                    <com.google.android.material.progressindicator.LinearProgressIndicator
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_16"
-                        android:contentDescription="@string/session_recovery_progress_description"
-                        android:max="100"
-                        android:progress="50"
-                        app:indicatorColor="@color/brand_teal"
-                        app:trackColor="@color/brand_teal_soft" />
-
-                    <TextView
-                        style="@style/TextAppearance.StoryStep.Supporting"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_8"
-                        android:text="@string/home_journey_progress" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

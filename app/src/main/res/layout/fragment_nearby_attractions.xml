@@ -335,7 +335,7 @@
 
     <!--
         The only thing that starts location collection. Nothing is requested or registered until
-        the user presses this.
+        the user presses this. Its label follows the session phase: Start, Stop or Resume.
     -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/session_button"
@@ -347,8 +347,26 @@
         android:layout_marginBottom="@dimen/space_12"
         android:minHeight="@dimen/minimum_touch_target"
         android:text="@string/nearby_start_exploring"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/stop_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <!--
+        Only shown while the session is paused, so a session interrupted by leaving the app can be
+        ended without first resuming collection.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/stop_button"
+        style="@style/Widget.Material3.Button.TextButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp"
+        android:text="@string/nearby_stop_exploring"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_goneMarginBottom="0dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
