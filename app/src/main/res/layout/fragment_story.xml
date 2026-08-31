@@ -27,13 +27,13 @@
             app:tint="@color/white" />
 
         <TextView
+            style="@style/TextAppearance.StoryStep.AppBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/story_toolbar_title"
             android:textColor="@color/white"
-            android:textSize="19sp"
-            android:textStyle="bold" />
+            android:textSize="20sp" />
     </LinearLayout>
 
     <ScrollView

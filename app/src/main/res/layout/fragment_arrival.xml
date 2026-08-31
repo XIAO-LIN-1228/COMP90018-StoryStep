@@ -31,13 +31,13 @@
             app:cardCornerRadius="48dp"
             app:cardElevation="6dp">
 
-            <TextView
+            <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="@string/icon_check"
-                android:textColor="@color/white"
-                android:textSize="48sp" />
+                android:contentDescription="@null"
+                android:padding="28dp"
+                android:src="@drawable/ic_check_circle"
+                app:tint="@color/white" />
         </com.google.android.material.card.MaterialCardView>
 
         <TextView

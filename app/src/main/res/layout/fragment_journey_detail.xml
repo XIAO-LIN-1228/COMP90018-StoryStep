@@ -27,6 +27,7 @@
             app:tint="@color/white" />
 
         <TextView
+            style="@style/TextAppearance.StoryStep.AppBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -34,8 +35,7 @@
             android:maxLines="1"
             android:text="@string/home_journey_name"
             android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold" />
+            android:textSize="19sp" />
     </LinearLayout>
 
     <ScrollView

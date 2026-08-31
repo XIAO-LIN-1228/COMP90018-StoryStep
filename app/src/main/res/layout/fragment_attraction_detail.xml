@@ -40,22 +40,21 @@
                     android:layout_height="48dp"
                     android:layout_gravity="start|top"
                     android:layout_margin="12dp"
-                    android:background="@color/white"
+                    android:background="@drawable/bg_round_surface"
                     android:contentDescription="@string/detail_back"
                     android:padding="12dp"
                     android:src="@drawable/ic_back" />
 
-                <com.google.android.material.button.MaterialButton
+                <ImageButton
                     android:id="@+id/detail_save_button"
-                    style="@style/Widget.Material3.Button.IconButton.Filled.Tonal"
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_gravity="end|top"
                     android:layout_margin="12dp"
+                    android:background="@drawable/bg_round_surface"
                     android:contentDescription="@string/detail_save"
-                    android:minWidth="48dp"
-                    android:text="@string/icon_save"
-                    android:textSize="24sp" />
+                    android:padding="12dp"
+                    android:src="@drawable/ic_bookmark_outline" />
             </FrameLayout>
 
             <LinearLayout
@@ -136,13 +135,13 @@
                         android:orientation="horizontal"
                         android:padding="16dp">
 
-                        <TextView
+                        <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
                             android:background="@drawable/bg_soft_teal"
-                            android:gravity="center"
-                            android:text="@string/icon_lock"
-                            android:textSize="18sp" />
+                            android:contentDescription="@null"
+                            android:padding="9dp"
+                            android:src="@drawable/ic_lock_outline" />
 
                         <LinearLayout
                             android:layout_width="0dp"

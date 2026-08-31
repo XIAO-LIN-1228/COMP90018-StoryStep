@@ -17,15 +17,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
+    <ImageView
         android:id="@+id/recovery_icon"
         android:layout_width="104dp"
         android:layout_height="104dp"
         android:background="@drawable/bg_soft_teal"
-        android:gravity="center"
-        android:text="@string/recovery_icon"
-        android:textColor="@color/brand_teal"
-        android:textSize="48sp"
+        android:contentDescription="@null"
+        android:padding="28dp"
+        android:src="@drawable/ic_location_outline"
         app:layout_constraintBottom_toTopOf="@id/recovery_title"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

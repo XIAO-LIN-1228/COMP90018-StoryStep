@@ -5,6 +5,6 @@
             <TextView style="@style/TextAppearance.StoryStep.Title" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/journey_stop_old_arts" android:textSize="15sp" />
             <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="3dp" android:text="@string/journey_stop_old_arts_meta" />
         </LinearLayout>
-        <TextView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_soft_teal" android:gravity="center" android:text="@string/icon_check" android:textColor="@color/brand_teal" android:textStyle="bold" />
+        <ImageView android:layout_width="36dp" android:layout_height="36dp" android:background="@drawable/bg_soft_teal" android:contentDescription="@null" android:padding="7dp" android:src="@drawable/ic_check_circle" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

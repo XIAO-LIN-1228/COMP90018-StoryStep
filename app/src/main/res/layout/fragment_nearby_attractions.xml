@@ -19,17 +19,29 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageButton
+            android:id="@+id/nearby_back_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="-12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/nearby_back"
+            android:padding="12dp"
+            android:src="@drawable/ic_back"
+            android:visibility="gone" />
+
         <TextView
             android:id="@+id/home_title"
+            style="@style/TextAppearance.StoryStep.AppBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/app_name"
             android:textColor="@color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textSize="21sp" />
 
         <com.google.android.material.card.MaterialCardView
+            android:id="@+id/weather_card"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
             app:cardBackgroundColor="#26FFFFFF"
@@ -44,14 +56,17 @@
                 android:paddingEnd="14dp"
                 android:text="@string/home_weather"
                 android:textColor="@color/white"
-                android:textSize="13sp" />
+                android:textSize="12sp"
+                app:drawableStartCompat="@drawable/ic_location_outline"
+                app:drawableTint="@color/white"
+                android:drawablePadding="6dp" />
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
     <com.comp90018.storystep.ui.widget.StoryMapView
         android:id="@+id/home_map"
         android:layout_width="0dp"
-        android:layout_height="220dp"
+        android:layout_height="190dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/home_header" />
@@ -159,6 +174,10 @@
         app:boxCornerRadiusBottomStart="16dp"
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusTopStart="16dp"
+        app:boxBackgroundColor="@color/story_surface"
+        app:boxStrokeColor="@color/brand_teal"
+        app:startIconDrawable="@drawable/ic_search"
+        app:startIconTint="@color/story_text_secondary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/home_header">
@@ -193,7 +212,7 @@
     <LinearLayout
         android:id="@+id/nearby_section_header"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="44dp"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="@dimen/space_16"
@@ -220,7 +239,7 @@
             android:text="@string/home_see_all"
             android:textColor="@color/brand_teal"
             android:textSize="14sp"
-            android:textStyle="bold" />
+            android:fontFamily="sans-serif-medium" />
     </LinearLayout>
 
     <!--

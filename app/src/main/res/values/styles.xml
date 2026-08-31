@@ -1,36 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="TextAppearance.StoryStep.Display" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/story_text_primary</item>
-        <item name="android:textSize">34sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.08</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Headline" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/story_text_primary</item>
-        <item name="android:textSize">24sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.12</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Title" parent="TextAppearance.Material3.TitleMedium">
+        <item name="android:fontFamily">sans-serif-medium</item>
         <item name="android:textColor">@color/story_text_primary</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">17sp</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Body" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/story_text_secondary</item>
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.25</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Supporting" parent="TextAppearance.Material3.BodySmall">
+        <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/story_text_secondary</item>
         <item name="android:textSize">12sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.2</item>
+    </style>
+
+    <style name="TextAppearance.StoryStep.AppBar" parent="TextAppearance.Material3.TitleLarge">
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/story_text_primary</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:includeFontPadding">false</item>
     </style>
 
     <style name="Widget.StoryStep.Card" parent="Widget.Material3.CardView.Elevated">
         <item name="cardCornerRadius">@dimen/card_corner_radius</item>
-        <item name="cardElevation">2dp</item>
+        <item name="cardElevation">1dp</item>
         <item name="strokeColor">@color/story_outline</item>
         <item name="strokeWidth">1dp</item>
         <item name="cardBackgroundColor">@color/story_surface</item>
@@ -38,11 +56,13 @@
 
     <style name="Widget.StoryStep.Button.Primary" parent="Widget.Material3.Button">
         <item name="android:minHeight">@dimen/primary_button_height</item>
+        <item name="android:minWidth">48dp</item>
         <item name="cornerRadius">@dimen/button_corner_radius</item>
-        <item name="backgroundTint">@color/brand_teal</item>
+        <item name="backgroundTint">@color/button_primary_background</item>
         <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textStyle">bold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
     <style name="Widget.StoryStep.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
@@ -50,18 +70,30 @@
         <item name="cornerRadius">@dimen/button_corner_radius</item>
         <item name="strokeColor">@color/brand_teal</item>
         <item name="android:textColor">@color/brand_teal</item>
-        <item name="android:textSize">16sp</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textAllCaps">false</item>
     </style>
 
     <style name="Widget.StoryStep.Chip" parent="Widget.Material3.Chip.Assist">
-        <item name="chipBackgroundColor">@color/brand_teal_soft</item>
-        <item name="android:textColor">@color/brand_teal_dark</item>
+        <item name="android:checkable">true</item>
+        <item name="chipBackgroundColor">@color/chip_background</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="chipStrokeColor">@color/chip_stroke</item>
+        <item name="chipStrokeWidth">1dp</item>
         <item name="chipCornerRadius">12dp</item>
         <item name="android:minHeight">36dp</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.StoryStep.Image" parent="">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">12dp</item>
+    </style>
+
+    <style name="Widget.StoryStep.BottomNavigation.ActiveIndicator"
+        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/brand_teal_soft</item>
     </style>
 </resources>

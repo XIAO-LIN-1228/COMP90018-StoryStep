@@ -8,7 +8,7 @@
     <LinearLayout
         android:id="@+id/journeys_header"
         android:layout_width="0dp"
-        android:layout_height="96dp"
+        android:layout_height="88dp"
         android:background="@drawable/bg_brand_header"
         android:gravity="center_vertical"
         android:orientation="vertical"
@@ -19,12 +19,12 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
+            style="@style/TextAppearance.StoryStep.AppBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/journeys_title"
             android:textColor="@color/white"
-            android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textSize="21sp" />
 
         <TextView
             android:layout_width="match_parent"

@@ -90,6 +90,10 @@ public class NearbyAttractionsFragment extends Fragment
     private MaterialButton retryButton;
     private View homeMap;
     private MaterialCardView continueJourneyCard;
+    private View homeHeader;
+    private View nearbyBackButton;
+    private MaterialCardView weatherCard;
+    private TextView homeTitle;
     private TextInputLayout searchContainer;
     private ChipGroup filterGroup;
     private TextView sectionTitle;
@@ -136,6 +140,10 @@ public class NearbyAttractionsFragment extends Fragment
         retryButton = view.findViewById(R.id.retry_button);
         homeMap = view.findViewById(R.id.home_map);
         continueJourneyCard = view.findViewById(R.id.continue_journey_card);
+        homeHeader = view.findViewById(R.id.home_header);
+        nearbyBackButton = view.findViewById(R.id.nearby_back_button);
+        weatherCard = view.findViewById(R.id.weather_card);
+        homeTitle = view.findViewById(R.id.home_title);
         searchContainer = view.findViewById(R.id.search_container);
         filterGroup = view.findViewById(R.id.filter_group);
         sectionTitle = view.findViewById(R.id.nearby_title);
@@ -155,6 +163,7 @@ public class NearbyAttractionsFragment extends Fragment
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
+        nearbyBackButton.setOnClickListener(v -> setListMode(false));
         view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_nearby_to_session_recovery));
@@ -475,12 +484,22 @@ public class NearbyAttractionsFragment extends Fragment
 
     private void setListMode(boolean enabled) {
         listMode = enabled;
+        homeHeader.setBackgroundResource(enabled
+                ? android.R.color.transparent
+                : R.drawable.bg_brand_header);
+        nearbyBackButton.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        weatherCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
+        homeTitle.setTextColor(ContextCompat.getColor(requireContext(), enabled
+                ? R.color.story_text_primary
+                : R.color.white));
         homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        sectionTitle.setText(enabled ? R.string.nearby_title : R.string.home_nearby);
-        seeAllButton.setText(enabled ? R.string.nav_explore : R.string.home_see_all);
+        sectionTitle.setText(enabled ? R.string.nearby_results : R.string.home_nearby);
+        seeAllButton.setText(R.string.home_see_all);
+        seeAllButton.setVisibility(enabled ? View.GONE : View.VISIBLE);
 
         View fragmentView = getView();
         if (fragmentView == null) {

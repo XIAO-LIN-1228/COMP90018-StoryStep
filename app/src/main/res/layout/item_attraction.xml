@@ -5,7 +5,7 @@
     android:id="@+id/attraction_card"
     style="@style/Widget.StoryStep.Card"
     android:layout_width="match_parent"
-    android:layout_height="118dp"
+    android:layout_height="126dp"
     android:layout_marginBottom="@dimen/space_12"
     android:clickable="true"
     android:focusable="true">
@@ -13,11 +13,11 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="10dp">
+        android:padding="8dp">
 
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/attraction_image"
-            android:layout_width="112dp"
+            android:layout_width="116dp"
             android:layout_height="0dp"
             android:contentDescription="@null"
             android:scaleType="centerCrop"
@@ -32,11 +32,12 @@
             style="@style/TextAppearance.StoryStep.Title"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginTop="4dp"
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/attraction_action_icon"
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Old Arts Building" />
@@ -46,9 +47,9 @@
             style="@style/TextAppearance.StoryStep.Supporting"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:layout_marginTop="3dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/attraction_action_icon"
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             app:layout_constraintTop_toBottomOf="@id/attraction_name"
             tools:text="University landmark" />
@@ -58,7 +59,7 @@
             style="@style/TextAppearance.StoryStep.Supporting"
             android:layout_width="0dp"
             android:layout_height="0dp"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
             android:layout_marginTop="5dp"
             android:ellipsize="end"
             android:maxLines="2"
@@ -73,10 +74,22 @@
             style="@style/TextAppearance.Material3.LabelLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginBottom="4dp"
             android:textColor="@color/brand_teal"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             tools:text="280 m" />
+
+        <ImageView
+            android:id="@+id/attraction_action_icon"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_icon_surface"
+            android:contentDescription="@null"
+            android:padding="8dp"
+            android:src="@drawable/ic_location_outline"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>

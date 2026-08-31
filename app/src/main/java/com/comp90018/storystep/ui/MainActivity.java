@@ -38,6 +38,14 @@ public class MainActivity extends AppCompatActivity {
         }
         NavController navController = navHost.getNavController();
         BottomNavigationView bottomNavigation = findViewById(R.id.main_bottom_navigation);
+        // The root already reserves the system navigation-bar inset. BottomNavigationView also
+        // applies that inset by default, which would squeeze its icons and labels into the top of
+        // a fixed-height bar. Consume no additional inset here so the 68 dp component keeps the
+        // proportions defined by the design system.
+        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
+            v.setPadding(v.getPaddingLeft(), 0, v.getPaddingRight(), 0);
+            return insets;
+        });
         NavigationUI.setupWithNavController(bottomNavigation, navController);
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int destinationId = destination.getId();

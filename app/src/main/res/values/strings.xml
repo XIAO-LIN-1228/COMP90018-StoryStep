@@ -1,11 +1,5 @@
 <resources>
     <string name="app_name">StoryStep</string>
-    <string name="icon_check">✓</string>
-    <string name="icon_save">☆</string>
-    <string name="icon_lock">🔒</string>
-    <string name="icon_add">＋</string>
-    <string name="profile_initial">S</string>
-    <string name="recovery_icon">⌖</string>
 
     <!-- Nearby attractions screen -->
     <string name="nearby_title">Nearby stories</string>
@@ -184,11 +178,18 @@
     <!-- Saved and profile -->
     <string name="saved_title">Saved</string>
     <string name="saved_explore">Explore</string>
-    <string name="profile_title">Your activity</string>
+    <string name="profile_title">Your StoryStep</string>
     <string name="profile_local">Stored on this device</string>
-    <string name="profile_journeys">5\njourneys</string>
-    <string name="profile_stories">14\nstories</string>
-    <string name="profile_memories">6\nmemories</string>
+    <string name="profile_journeys_count">5</string>
+    <string name="profile_journeys_label">Journeys</string>
+    <string name="profile_stories_count">14</string>
+    <string name="profile_stories_label">Stories</string>
+    <string name="profile_memories_count">6</string>
+    <string name="profile_memories_label">Memories</string>
+    <string name="profile_avatar_description">StoryStep profile</string>
+    <string name="saved_search">Search saved places</string>
+    <string name="nearby_back">Back to Explore</string>
+    <string name="nearby_results">Places near Parkville</string>
     <string name="settings_location">Location &amp; permissions</string>
     <string name="settings_location_value">Allowed while using app</string>
     <string name="settings_sensor">Sensor status</string>
@@ -199,9 +200,6 @@
     <string name="settings_clear">Clear local history</string>
     <string name="settings_about">About StoryStep</string>
     <string name="settings_version">v1.0.0</string>
-    <string name="settings_location_row">Location &amp; permissions\nAllowed while using app</string>
-    <string name="settings_sensor_row">Sensor status\nGPS and compass available</string>
-    <string name="settings_units_row">Distance units\nKilometres</string>
 
     <!-- Recovery states -->
     <string name="location_access_title">Explore without sharing your location</string>

@@ -8,9 +8,10 @@
     <dimen name="space_32">32dp</dimen>
     <dimen name="page_horizontal_margin">16dp</dimen>
     <dimen name="card_corner_radius">16dp</dimen>
-    <dimen name="button_corner_radius">16dp</dimen>
-    <dimen name="primary_button_height">54dp</dimen>
+    <dimen name="button_corner_radius">14dp</dimen>
+    <dimen name="primary_button_height">52dp</dimen>
     <dimen name="minimum_touch_target">48dp</dimen>
-    <dimen name="app_bar_height">64dp</dimen>
-    <dimen name="bottom_navigation_height">72dp</dimen>
+    <dimen name="app_bar_height">56dp</dimen>
+    <dimen name="bottom_navigation_height">68dp</dimen>
+    <dimen name="settings_row_height">68dp</dimen>
 </resources>

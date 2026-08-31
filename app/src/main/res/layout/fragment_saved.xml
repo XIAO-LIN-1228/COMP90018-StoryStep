@@ -5,21 +5,37 @@
     android:layout_height="match_parent"
     android:background="@color/brand_ivory">
 
-    <TextView
+    <LinearLayout
         android:id="@+id/saved_header"
         android:layout_width="0dp"
         android:layout_height="@dimen/app_bar_height"
         android:background="@drawable/bg_brand_header"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        android:text="@string/saved_title"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            style="@style/TextAppearance.StoryStep.AppBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/saved_title"
+            android:textColor="@color/white" />
+
+        <ImageButton
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="-12dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/saved_search"
+            android:padding="12dp"
+            android:src="@drawable/ic_search"
+            app:tint="@color/white" />
+    </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/saved_list"
