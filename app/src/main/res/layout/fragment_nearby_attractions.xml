@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingStart="16dp"
@@ -30,6 +31,61 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nearby_title" />
 
+    <!--
+        States which position the listed distances are measured from. This must always be visible:
+        distances from the demonstration reference area must never be mistaken for distances from
+        the user.
+    -->
+    <TextView
+        android:id="@+id/origin_label"
+        style="@style/TextAppearance.Material3.LabelMedium"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nearby_subtitle"
+        tools:text="@string/nearby_origin_reference_area" />
+
+    <!--
+        Location explanation and its recovery action. Deliberately sits above the list rather than
+        in the centred status area: reference-area content is already on screen at launch, so an
+        explanation that only appears on an empty list would never be shown at all.
+    -->
+    <LinearLayout
+        android:id="@+id/permission_notice"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="?attr/colorSurfaceVariant"
+        android:orientation="vertical"
+        android:padding="12dp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/origin_label"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/permission_notice_message"
+            style="@style/TextAppearance.Material3.BodyMedium"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="@string/nearby_permission_rationale" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/permission_notice_action"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            tools:text="@string/nearby_grant_access" />
+
+    </LinearLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/attraction_list"
         android:layout_width="0dp"
@@ -38,10 +94,11 @@
         android:clipToPadding="false"
         android:contentDescription="@string/nearby_list_description"
         android:paddingBottom="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/session_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/nearby_subtitle" />
+        app:layout_constraintTop_toBottomOf="@id/permission_notice"
+        app:layout_goneMarginTop="16dp" />
 
     <ProgressBar
         android:id="@+id/loading_indicator"
@@ -65,8 +122,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/attraction_list"
         app:layout_constraintVertical_chainStyle="packed"
-        tools:text="@string/nearby_empty"
-        xmlns:tools="http://schemas.android.com/tools" />
+        tools:text="@string/nearby_empty" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/retry_button"
@@ -80,5 +136,20 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/status_message" />
+
+    <!--
+        The only thing that starts location collection. Nothing is requested or registered until
+        the user presses this.
+    -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/session_button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp"
+        android:text="@string/nearby_start_exploring"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

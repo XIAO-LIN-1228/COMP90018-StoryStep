@@ -1,6 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!--
+        Foreground-only location. ACCESS_BACKGROUND_LOCATION is deliberately absent and must not
+        be added: continuous background tracking is out of scope for this project.
+        Coarse is requested alongside fine so a user who grants approximate-only access still
+        gets discovery, with route precision and automatic arrival disabled.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- GPS is optional so the app still installs on devices without it. -->
+    <uses-feature
+        android:name="android.hardware.location.gps"
+        android:required="false" />
+
     <application
         android:name=".StoryStepApplication"
         android:allowBackup="true"
