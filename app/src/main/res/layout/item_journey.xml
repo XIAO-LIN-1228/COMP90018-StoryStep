@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.StoryStep.Card"
+    android:layout_width="match_parent"
+    android:layout_height="142dp"
+    android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="10dp">
+
+        <com.comp90018.storystep.ui.widget.StoryMapView
+            android:id="@+id/journey_map_thumbnail"
+            android:layout_width="120dp"
+            android:layout_height="0dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/journey_item_title"
+            style="@style/TextAppearance.StoryStep.Title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/journey_map_thumbnail"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="University Heritage Walk" />
+
+        <TextView
+            android:id="@+id/journey_item_date"
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/journey_map_thumbnail"
+            app:layout_constraintTop_toBottomOf="@id/journey_item_title"
+            tools:text="31 Aug 2026" />
+
+        <TextView
+            android:id="@+id/journey_item_stats"
+            style="@style/TextAppearance.StoryStep.Body"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_marginTop="12dp"
+            android:lineSpacingExtra="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/journey_map_thumbnail"
+            app:layout_constraintTop_toBottomOf="@id/journey_item_date"
+            tools:text="42 min  ·  2.3 km\n4 stories discovered" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

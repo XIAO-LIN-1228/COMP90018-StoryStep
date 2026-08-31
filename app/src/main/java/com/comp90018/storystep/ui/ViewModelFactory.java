@@ -10,6 +10,8 @@ import androidx.lifecycle.ViewModelProvider;
 import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
+import com.comp90018.storystep.ui.journey.JourneysViewModel;
+import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
 
 /**
@@ -43,6 +45,13 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(appContainer.getAttractionRepository());
+        }
+        if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
+            return (T) new JourneysViewModel(appContainer.getJourneyRepository());
+        }
+        if (modelClass.isAssignableFrom(SessionRecoveryViewModel.class)) {
+            return (T) new SessionRecoveryViewModel(
+                    appContainer.getExplorationCoordinator());
         }
         throw new IllegalArgumentException("Unknown ViewModel class: " + modelClass.getName());
     }

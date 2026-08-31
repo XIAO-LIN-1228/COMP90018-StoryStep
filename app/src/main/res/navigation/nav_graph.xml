@@ -1,30 +1,152 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/nearbyAttractionsFragment">
+    app:startDestination="@id/onboardingFragment">
+
+    <fragment
+        android:id="@+id/onboardingFragment"
+        android:name="com.comp90018.storystep.ui.onboarding.OnboardingFragment"
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_onboarding">
+        <action android:id="@+id/action_onboarding_to_rationale" app:destination="@id/locationRationaleFragment" />
+        <action
+            android:id="@+id/action_onboarding_to_explore"
+            app:destination="@id/nearbyAttractionsFragment"
+            app:popUpTo="@id/onboardingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/locationRationaleFragment"
+        android:name="com.comp90018.storystep.ui.onboarding.LocationRationaleFragment"
+        android:label="@string/rationale_title"
+        tools:layout="@layout/fragment_location_rationale">
+        <action
+            android:id="@+id/action_rationale_to_explore"
+            app:destination="@id/nearbyAttractionsFragment"
+            app:popUpTo="@id/onboardingFragment"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <fragment
         android:id="@+id/nearbyAttractionsFragment"
         android:name="com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment"
-        android:label="@string/nearby_title"
-        tools:layout="@layout/fragment_nearby_attractions"
-        xmlns:tools="http://schemas.android.com/tools">
-        <action
-            android:id="@+id/action_nearby_to_detail"
-            app:destination="@id/attractionDetailFragment" />
+        android:label="@string/nav_explore"
+        tools:layout="@layout/fragment_nearby_attractions">
+        <action android:id="@+id/action_nearby_to_detail" app:destination="@id/attractionDetailFragment" />
+        <action android:id="@+id/action_nearby_to_exploration" app:destination="@id/explorationFragment" />
+        <action android:id="@+id/action_nearby_to_session_recovery" app:destination="@id/sessionRecoveryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/journeysFragment"
+        android:name="com.comp90018.storystep.ui.journey.JourneysFragment"
+        android:label="@string/nav_journeys"
+        tools:layout="@layout/fragment_journeys">
+        <action android:id="@+id/action_journeys_to_detail" app:destination="@id/journeyDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/savedFragment"
+        android:name="com.comp90018.storystep.ui.saved.SavedFragment"
+        android:label="@string/nav_saved"
+        tools:layout="@layout/fragment_saved">
+        <action android:id="@+id/action_saved_to_detail" app:destination="@id/attractionDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/profileFragment"
+        android:name="com.comp90018.storystep.ui.profile.ProfileFragment"
+        android:label="@string/nav_profile"
+        tools:layout="@layout/fragment_profile">
+        <action android:id="@+id/action_profile_to_recovery" app:destination="@id/recoveryStateFragment" />
+        <action android:id="@+id/action_profile_to_privacy_data" app:destination="@id/privacyDataFragment" />
     </fragment>
 
     <fragment
         android:id="@+id/attractionDetailFragment"
         android:name="com.comp90018.storystep.ui.detail.AttractionDetailFragment"
         android:label="@string/detail_title"
-        tools:layout="@layout/fragment_attraction_detail"
-        xmlns:tools="http://schemas.android.com/tools">
-        <!-- Passed manually as a Bundle argument; Safe Args is intentionally not used. -->
-        <argument
-            android:name="attractionId"
-            app:argType="string" />
+        tools:layout="@layout/fragment_attraction_detail">
+        <argument android:name="attractionId" app:argType="string" />
+        <action android:id="@+id/action_detail_to_exploration" app:destination="@id/explorationFragment" />
     </fragment>
 
+    <fragment
+        android:id="@+id/explorationFragment"
+        android:name="com.comp90018.storystep.ui.exploration.ExplorationFragment"
+        android:label="@string/exploration_title"
+        tools:layout="@layout/fragment_exploration">
+        <action android:id="@+id/action_exploration_to_arrival" app:destination="@id/arrivalFragment" />
+        <action android:id="@+id/action_exploration_to_summary" app:destination="@id/journeySummaryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/arrivalFragment"
+        android:name="com.comp90018.storystep.ui.exploration.ArrivalFragment"
+        android:label="@string/arrival_title"
+        tools:layout="@layout/fragment_arrival">
+        <action android:id="@+id/action_arrival_to_story" app:destination="@id/storyFragment" />
+        <action android:id="@+id/action_arrival_to_summary" app:destination="@id/journeySummaryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/storyFragment"
+        android:name="com.comp90018.storystep.ui.story.StoryFragment"
+        android:label="@string/story_toolbar_title"
+        tools:layout="@layout/fragment_story">
+        <action android:id="@+id/action_story_to_memory" app:destination="@id/memoryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/memoryFragment"
+        android:name="com.comp90018.storystep.ui.story.MemoryFragment"
+        android:label="@string/memory_title"
+        tools:layout="@layout/fragment_memory">
+        <action android:id="@+id/action_memory_to_summary" app:destination="@id/journeySummaryFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/journeySummaryFragment"
+        android:name="com.comp90018.storystep.ui.journey.JourneySummaryFragment"
+        android:label="@string/summary_title"
+        tools:layout="@layout/fragment_journey_summary">
+        <action android:id="@+id/action_summary_to_journey_detail" app:destination="@id/journeyDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/journeyDetailFragment"
+        android:name="com.comp90018.storystep.ui.journey.JourneyDetailFragment"
+        android:label="@string/home_journey_name"
+        tools:layout="@layout/fragment_journey_detail">
+        <action android:id="@+id/action_journey_detail_to_exploration" app:destination="@id/explorationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/recoveryStateFragment"
+        android:name="com.comp90018.storystep.ui.profile.RecoveryStateFragment"
+        android:label="@string/settings_location"
+        tools:layout="@layout/fragment_recovery_state" />
+
+    <fragment
+        android:id="@+id/sessionRecoveryFragment"
+        android:name="com.comp90018.storystep.ui.journey.SessionRecoveryFragment"
+        android:label="@string/session_recovery_title"
+        tools:layout="@layout/fragment_session_recovery">
+        <action android:id="@+id/action_session_recovery_to_exploration" app:destination="@id/explorationFragment" />
+        <action android:id="@+id/action_session_recovery_to_summary" app:destination="@id/journeySummaryFragment" />
+        <action
+            android:id="@+id/action_session_recovery_to_nearby"
+            app:destination="@id/nearbyAttractionsFragment"
+            app:popUpTo="@id/nearbyAttractionsFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/privacyDataFragment"
+        android:name="com.comp90018.storystep.ui.profile.PrivacyDataFragment"
+        android:label="@string/privacy_data_title"
+        tools:layout="@layout/fragment_privacy_data" />
 </navigation>

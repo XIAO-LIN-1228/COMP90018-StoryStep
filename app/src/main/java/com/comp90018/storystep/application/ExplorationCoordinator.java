@@ -176,6 +176,31 @@ public final class ExplorationCoordinator {
         });
     }
 
+    /**
+     * Ends collection and removes the unfinished session instead of saving it to journey history.
+     */
+    public void requestDiscard() {
+        if (!machine.stop().isChanged()) {
+            return;
+        }
+        closeSubscription();
+        String sessionId = machine.getSessionId();
+        publishSession();
+        sessionStore.discard(sessionId, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                machine.onDiscarded();
+                publishSession();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                machine.onStopFailed();
+                publishSession();
+            }
+        });
+    }
+
     // --- environment -------------------------------------------------------------------------
 
     /**

@@ -4,9 +4,17 @@ Prepared: 2026-08-31. Planning baseline: `762662e` (`framework-build`).
 
 Status: proposed execution plan, not a claim that the features or tests below are complete.
 
+Current frontend assessment: `feature/frontend-ui` contains the frontend implementation at
+`142c26f` and is integrating `origin/main@204708f`, including the REQ-02 process-wide session
+lifecycle. The branch is pushed for review; Android and physical-device acceptance remain partial.
+
 ## 1. How to use this plan
 
 This document turns the scope in [README](../README.md) into independently implementable and verifiable requirements. [CLAUDE.md](../CLAUDE.md) remains the engineering rulebook. The [assignment plan](assignment1_project_plan_draft.md) remains the high-level project/report draft; this document refines its delivery order, not the approved product scope.
+
+Repository guidance: `AGENTS.md` points to the restored root `CLAUDE.md`. Its current-state section
+was reconciled with the frontend/location integration while preserving the supplied scope, build,
+technology and architecture constraints.
 
 Read the documents in this order:
 
@@ -43,6 +51,40 @@ Specific integration work already visible in the code:
 - `ApiClientFactory` uses BASIC logging. Its comment about keys never leaking is too broad: request URLs can contain credentials or coordinates. NFR-04 must resolve this before real traffic.
 - Room schema export is disabled and backup rules are templates. Complete REQ-14 and NFR-04 before storing real user routes.
 - An attraction cache refresh must not erase saved attractions or visits. Review the existing `REPLACE` upsert when introducing relationships.
+
+### 2.1 Current frontend implementation snapshot
+
+The frontend is a cross-iteration clickable prototype, not a completed iteration. Its screens and
+navigation reach later user journeys, while most of the corresponding domain, persistence, sensor
+and network requirements remain incomplete. A rendered page or navigation action is therefore
+recorded as `FOUNDATION_ONLY` unless it is connected to the required production behavior.
+
+| Frontend area | Plan coverage | Current assessment on `feature/frontend-ui` | Next acceptance gate |
+|---|---|---|---|
+| App shell, onboarding and location rationale | I0; REQ-01; NFR-03 | XML screens, edge-to-edge shell, bottom navigation and explicit location explanation are implemented | Fresh-install Android test, first-run behavior, Back/Up and accessibility checks |
+| Home / nearby discovery | I1; REQ-01, REQ-03, REQ-04 | Professional home UI is integrated with the foreground location adapter, permission recovery, reference/live-origin labels and repository-backed attraction list | API 31+ permission matrix, provider-off/stale-fix tests, rotation/navigation tests and physical fix evidence |
+| Attraction details and start confirmation | I1; REQ-05 | ID-based repository loading, error presentation, confirmation dialog and exploration navigation exist | Bind destination to a real session; replace Save toast with REQ-17 persistence; add restoration/error tests |
+| Active exploration | I2; REQ-02, REQ-06, REQ-07, REQ-10, REQ-11 | Designed map/dashboard and stop dialog exist; one process-wide coordinator owns the real foreground location session, but dashboard values and route remain prototype presentation | Bind the dashboard to coordinator samples, then add route/motion/heading data and durable checkpoints |
+| Paused-session recovery | I1-I2; REQ-02, REQ-15 | Recovery appears only for a real paused process session; Resume, Finish and Discard command the shared coordinator, and elapsed time/segment come from its session summary | Implement Room-backed restoration after process death and verify the full interruption matrix |
+| Arrival, story and memory | I4; REQ-12, REQ-13 | Complete clickable visual flow exists, including a preview-only arrival action | Replace preview with quality-aware arrival detection and exactly-once persisted visit/story delivery |
+| Journeys, summary and detail | I4; REQ-15, REQ-16 | List/detail/summary pages and repository boundary exist, backed by deterministic in-memory journeys | Implement Room sessions/routes/visits, recovery, real summaries, deletion and offline relaunch tests |
+| Saved | I3; REQ-17 | Saved list and detail Save affordance exist, but the list reuses nearby data and Save only shows a toast | Dedicated durable saved-attraction repository, synchronized Save/Unsave state and failure handling |
+| Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Weather label, chips and related visual space exist as fixtures | Select real services, add cache/freshness, ranking/reasons and online/offline acceptance evidence |
+| Profile, capability recovery and privacy/data | NFR-03/04 and lifecycle support | Settings/recovery presentation and a dedicated Privacy & Data page exist; permissions open real system settings and destructive controls are confirmed prototype actions | Bind real permission/provider/session states and implement scoped history/saved deletion with backup-policy verification |
+
+Iteration-level interpretation:
+
+- I0 frontend readiness is substantially present, but accessibility and multi-device evidence are
+  not complete.
+- I1 is the active functional stage: REQ-01 and REQ-03 are merged with partial verification;
+  REQ-04/05 remain in review or progress.
+- I2-I4 have useful UI prototypes for parallel development, but they do not pass their iteration
+  exit gates because route/sensor binding, persistence, network and arrival behaviors are missing.
+- I5 stabilization has not started. A successful local build is regression evidence, not release
+  acceptance.
+
+Detailed command results and limitations are recorded in
+[EV-FRONTEND-2026-08-31-01](verification/EV-FRONTEND-2026-08-31-01.md).
 
 ## 3. Scope, assumptions and decisions
 
@@ -122,6 +164,7 @@ Android lifecycle events are forwarded into the coordinator by a thin adapter. T
 | ACTIVE + screen navigation/rotation | ACTIVE | Same logical session and totals; no duplicate subscription; rebind UI safely |
 | PAUSED + explicit Resume while visible and access available | ACTIVE | Same session ID; begin a new route segment; reset stale sensor/arrival windows |
 | ACTIVE or PAUSED + Stop | STOPPING, then COMPLETED after save | Stop sources immediately; persist once; show retry if save fails |
+| ACTIVE or PAUSED + Discard | STOPPING, then IDLE after deletion | Stop sources immediately; remove the unfinished session without adding history |
 | Relaunch with an unfinished record | PAUSED/INTERRUPTED presentation | No automatic sensor restart; offer Resume or Finish with preserved checkpoint |
 
 At most one unfinished session is allowed. Stop is idempotent. STARTING and STOPPING disable duplicate actions. Missing motion/heading sensors do not stop an otherwise usable location session. A stale/low-quality fix shows degraded guidance; it is not fabricated as a valid arrival.

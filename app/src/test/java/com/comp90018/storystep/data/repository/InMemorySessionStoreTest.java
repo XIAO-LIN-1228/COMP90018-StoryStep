@@ -110,6 +110,17 @@ public class InMemorySessionStoreTest {
     }
 
     @Test
+    public void discardingRemovesTheUnfinishedSession() {
+        SessionSummary created = create();
+        Result<Void> discarded = new Result<>();
+
+        store.discard(created.getId(), discarded);
+
+        assertTrue(discarded.succeeded());
+        assertNull(findUnfinished());
+    }
+
+    @Test
     public void nothingIsReportedWhenNoSessionWasEverCreated() {
         assertNull(findUnfinished());
     }

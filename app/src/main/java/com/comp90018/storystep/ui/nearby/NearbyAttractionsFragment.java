@@ -32,6 +32,9 @@ import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationAccessPolicy;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputLayout;
 
 /**
  * Start destination: the list of nearby attractions.
@@ -85,6 +88,14 @@ public class NearbyAttractionsFragment extends Fragment
     private TextView statusMessage;
     private TextView originLabel;
     private MaterialButton retryButton;
+    private View homeMap;
+    private MaterialCardView continueJourneyCard;
+    private TextInputLayout searchContainer;
+    private ChipGroup filterGroup;
+    private TextView sectionTitle;
+    private TextView seeAllButton;
+    private boolean listMode;
+    private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
     private MaterialButton sessionButton;
     private MaterialButton stopButton;
     private View permissionNotice;
@@ -123,6 +134,12 @@ public class NearbyAttractionsFragment extends Fragment
         statusMessage = view.findViewById(R.id.status_message);
         originLabel = view.findViewById(R.id.origin_label);
         retryButton = view.findViewById(R.id.retry_button);
+        homeMap = view.findViewById(R.id.home_map);
+        continueJourneyCard = view.findViewById(R.id.continue_journey_card);
+        searchContainer = view.findViewById(R.id.search_container);
+        filterGroup = view.findViewById(R.id.filter_group);
+        sectionTitle = view.findViewById(R.id.nearby_title);
+        seeAllButton = view.findViewById(R.id.see_all_button);
         sessionButton = view.findViewById(R.id.session_button);
         stopButton = view.findViewById(R.id.stop_button);
         permissionNotice = view.findViewById(R.id.permission_notice);
@@ -137,6 +154,10 @@ public class NearbyAttractionsFragment extends Fragment
                 .get(NearbyAttractionsViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
 
+        seeAllButton.setOnClickListener(v -> setListMode(!listMode));
+        view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_nearby_to_session_recovery));
         sessionButton.setOnClickListener(v -> onSessionButtonClicked());
         stopButton.setOnClickListener(v -> viewModel.onStopRequested());
         viewModel.loadIfNeeded();
@@ -341,6 +362,7 @@ public class NearbyAttractionsFragment extends Fragment
      * previously kept the purpose explanation from ever reaching the user.
      */
     private void renderSessionControls(NearbyUiState.SessionPhase phase) {
+        currentSessionPhase = phase;
         switch (phase) {
             case ACTIVE:
                 sessionButton.setText(R.string.nearby_stop_exploring);
@@ -365,6 +387,7 @@ public class NearbyAttractionsFragment extends Fragment
         sessionButton.setEnabled(!phase.isBusy());
         // A paused session must be endable without resuming it first.
         stopButton.setVisibility(phase.isPaused() ? View.VISIBLE : View.GONE);
+        updateContinueJourneyCard();
     }
 
     private void renderPermissionNotice(NearbyUiState.Status status,
@@ -448,5 +471,34 @@ public class NearbyAttractionsFragment extends Fragment
         arguments.putString(ARG_ATTRACTION_ID, item.getId());
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.action_nearby_to_detail, arguments);
+    }
+
+    private void setListMode(boolean enabled) {
+        listMode = enabled;
+        homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        updateContinueJourneyCard();
+        searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        sectionTitle.setText(enabled ? R.string.nearby_title : R.string.home_nearby);
+        seeAllButton.setText(enabled ? R.string.nav_explore : R.string.home_see_all);
+
+        View fragmentView = getView();
+        if (fragmentView == null) {
+            return;
+        }
+        View sectionHeader = fragmentView.findViewById(R.id.nearby_section_header);
+        ViewGroup.LayoutParams rawParams = sectionHeader.getLayoutParams();
+        if (rawParams instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
+                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) rawParams;
+            params.topToBottom = enabled ? R.id.filter_group : R.id.continue_journey_card;
+            sectionHeader.setLayoutParams(params);
+        }
+    }
+
+    /** The recovery card represents a real resumable session, never a permanent demo fixture. */
+    private void updateContinueJourneyCard() {
+        boolean resumable = currentSessionPhase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND;
+        continueJourneyCard.setVisibility(!listMode && resumable ? View.VISIBLE : View.GONE);
     }
 }

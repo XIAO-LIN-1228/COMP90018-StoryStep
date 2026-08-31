@@ -4,6 +4,11 @@ Prepared: 2026-08-31. Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
+Frontend integration snapshot: `feature/frontend-ui` includes the frontend implementation at
+`142c26f` and the session-lifecycle work merged to `main` at `204708f`, assessed in
+[EV-FRONTEND-2026-08-31-01](verification/EV-FRONTEND-2026-08-31-01.md). Screen presence is counted
+as `FOUNDATION_ONLY` unless the required data, lifecycle and acceptance behavior is connected.
+
 ## 1. Status rules and requirement ledger
 
 Development status: `NOT_STARTED`, `FOUNDATION_ONLY`, `IN_PROGRESS`, `IN_REVIEW`, `MERGED`.
@@ -14,34 +19,34 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 
 | Requirement | Iteration | Owner / reviewer | Development | Verification | PR / commit | Evidence / blocker |
 |---|---|---|---|---|---|---|
-| REQ-01 | I1 | M1 / M2 | IN_REVIEW | PARTIAL | feature/foreground-location @ 203baa8 | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
-| REQ-02 | I1 | M1 / M4 | IN_REVIEW | PARTIAL | feature/session-lifecycle | [EV-REQ02-2026-08-31-01](verification/EV-REQ02-2026-08-31-01.md); U passed, A/P NOT_RUN |
-| REQ-03 | I1 | M1 / M3 | IN_REVIEW | PARTIAL | feature/foreground-location @ 203baa8 | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
-| REQ-04 | I1 | M2 / M5 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-05 | I1 | M2 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-06 | I2, final wiring I3 | M2 / M1 | NOT_STARTED | NOT_RUN | - | - |
+| REQ-01 | I1 | M1 / M2 | MERGED | PARTIAL | `a828d0f`, `204708f` | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); [frontend assessment](verification/EV-FRONTEND-2026-08-31-01.md); U/build passed, A/P NOT_RUN |
+| REQ-02 | I1 | M1 / M4 | MERGED | PARTIAL | `8ca81aa`, `204708f` | [EV-REQ02-2026-08-31-01](verification/EV-REQ02-2026-08-31-01.md); coordinator/state machine and foreground pause-resume are integrated; recovery UI uses the process session, but durable restoration and A/P evidence remain |
+| REQ-03 | I1 | M1 / M3 | MERGED | PARTIAL | `a828d0f`, `204708f` | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U/build passed, physical fix matrix NOT_RUN |
+| REQ-04 | I1 | M2 / M5 | IN_REVIEW | PARTIAL | `a828d0f`, `142c26f` | Live/reference origins and state-preserving list are integrated; Android/physical acceptance remains NOT_RUN |
+| REQ-05 | I1 | M2 / M1 | IN_PROGRESS | NOT_RUN | `f30c538`, `142c26f` | Repository-backed details and start confirmation exist; destination/session binding, durable Save and restoration tests are missing |
+| REQ-06 | I2, final wiring I3 | M2 / M1 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Exploration dashboard is a static prototype, not a session-bound dashboard |
 | REQ-07 | I2 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-08 | I2 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
 | REQ-09 | I2 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
 | REQ-10 | I2 | M3 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-11 | I2 | M2 / M3 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-12 | I4 | M1 / M3 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-13 | I4 | M2 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
+| REQ-12 | I4 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Arrival preview screen exists; no detector or selected-target integration |
+| REQ-13 | I4 | M2 / M4 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Story/memory presentation exists; no exactly-once visit persistence or recovery |
 | REQ-14 | I1 | M4 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-15 | I1-I2 | M4 / M1 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-16 | I4 | M4 / M2 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-17 | I3 | M4 / M2 | NOT_STARTED | NOT_RUN | - | - |
+| REQ-15 | I1-I2 | M4 / M1 | IN_PROGRESS | PARTIAL | `8ca81aa`, `142c26f` + integration | In-memory session checkpoint/finish/discard and recovery presentation are connected; Room restoration and durable route/visit storage are missing |
+| REQ-16 | I4 | M4 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Journey list/detail/summary UI exists on fixture data; deletion/recovery/offline behavior is missing |
+| REQ-17 | I3 | M4 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Saved UI exists; Save is non-persistent and saved list reuses nearby results |
 | REQ-18 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-19 | I3 | M5 / M2 | NOT_STARTED | NOT_RUN | - | - |
+| REQ-19 | I3 | M5 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Weather presentation is fixture text only; service/cache/freshness are missing |
 | REQ-20 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-21 | I3 | M5 / M3 | NOT_STARTED | NOT_RUN | - | - |
 | REQ-22 | I4 | M2 / M5 | NOT_STARTED | NOT_RUN | - | - |
-| NFR-01 | All | M1 / M4 | FOUNDATION_ONLY | NOT_RUN | - | Historical results only |
-| NFR-02 | All | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| NFR-03 | All | M2 / M5 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| NFR-04 | Before real data, I5 | M4 / M5 | FOUNDATION_ONLY | NOT_RUN | - | - |
+| NFR-01 | All | M1 / M4 | IN_REVIEW | PARTIAL | `142c26f`, `204708f` | Automated build/test/lint evidence exists; API 26/31+/target-device matrix NOT_RUN |
+| NFR-02 | All | M1 / M3 | IN_REVIEW | PARTIAL | `8ca81aa`, `204708f` | Layering and one process-wide lifecycle coordinator have JVM coverage; Android lifecycle/navigation evidence remains NOT_RUN |
+| NFR-03 | All | M2 / M5 | IN_REVIEW | NOT_RUN | `142c26f` + integration | Screen system/design tokens, state-backed Session Recovery and Privacy & Data pages exist; TalkBack, 200% font, landscape and task usability NOT_RUN |
+| NFR-04 | Before real data, I5 | M4 / M5 | IN_PROGRESS | NOT_RUN | `a828d0f`, `142c26f` + integration | Foreground-only policy and privacy/data presentation exist; durable deletion, retention, backup and network-log safeguards remain open |
 | NFR-05 | I2-I5 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
-| NFR-06 | All | M1 / M2 | NOT_STARTED | NOT_RUN | - | Official rubric not supplied |
+| NFR-06 | All | M1 / M2 | IN_PROGRESS | NOT_RUN | `142c26f`, `204708f` | Traceability documents and repository guidance exist; official rubric/reviewer evidence remain missing |
 
 ## 2. Test levels, commands and environments
 

@@ -281,6 +281,30 @@ public class ExplorationCoordinatorTest {
     }
 
     @Test
+    public void aPausedSessionCanBeDiscardedWithoutEnteringHistory() {
+        activeSession();
+        coordinator.onVisibilityChanged(false);
+
+        coordinator.requestDiscard();
+
+        assertFalse(locationSource.isRegistered());
+        assertEquals(SessionState.IDLE, coordinator.summary().getState());
+        final SessionSummary[] unfinished = new SessionSummary[1];
+        sessionStore.findUnfinished(new RepositoryCallback<SessionSummary>() {
+            @Override
+            public void onSuccess(SessionSummary result) {
+                unfinished[0] = result;
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                throw new AssertionError(error);
+            }
+        });
+        assertNull(unfinished[0]);
+    }
+
+    @Test
     public void aFailedFinalSaveIsNotPresentedAsACompletedSession() {
         ExplorationCoordinator failing = coordinatorWith(new FailOnFinishSessionStore());
         failing.onVisibilityChanged(true);
@@ -440,6 +464,11 @@ public class ExplorationCoordinatorTest {
 
         @Override
         public void finish(SessionSummary summary, RepositoryCallback<Void> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void discard(String sessionId, RepositoryCallback<Void> callback) {
             callback.onError(new IOException("disk full"));
         }
 

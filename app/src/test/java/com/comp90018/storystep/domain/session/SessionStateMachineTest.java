@@ -270,6 +270,16 @@ public class SessionStateMachineTest {
     }
 
     @Test
+    public void aDiscardedSessionReturnsToIdleAndForgetsItsIdentity() {
+        activeSession();
+        machine.stop();
+
+        assertTrue(machine.onDiscarded().isChanged());
+        assertEquals(SessionState.IDLE, machine.getState());
+        assertNull(machine.getSessionId());
+    }
+
+    @Test
     public void aFailedSaveKeepsTheSessionStoppingSoItCanBeRetried() {
         activeSession();
         machine.stop();

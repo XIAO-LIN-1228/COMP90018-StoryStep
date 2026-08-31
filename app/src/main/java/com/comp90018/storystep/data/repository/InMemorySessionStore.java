@@ -84,6 +84,20 @@ public final class InMemorySessionStore implements SessionStore {
     }
 
     @Override
+    public void discard(String sessionId, RepositoryCallback<Void> callback) {
+        if (current == null) {
+            callback.onSuccess(null);
+            return;
+        }
+        if (sessionId == null || !sessionId.equals(current.getId())) {
+            callback.onError(new IllegalArgumentException("unknown session: " + sessionId));
+            return;
+        }
+        current = null;
+        callback.onSuccess(null);
+    }
+
+    @Override
     public void findUnfinished(RepositoryCallback<SessionSummary> callback) {
         boolean unfinished = current != null && current.getState() != SessionState.COMPLETED;
         callback.onSuccess(unfinished ? current : null);

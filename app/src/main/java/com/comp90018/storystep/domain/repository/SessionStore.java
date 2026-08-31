@@ -40,6 +40,14 @@ public interface SessionStore {
     void finish(SessionSummary summary, RepositoryCallback<Void> callback);
 
     /**
+     * Removes an unfinished session without adding it to journey history.
+     *
+     * <p>Idempotent for an already-removed id. Implementations must not silently discard a
+     * different active session.
+     */
+    void discard(String sessionId, RepositoryCallback<Void> callback);
+
+    /**
      * The unfinished session left by a previous run, if any.
      *
      * <p>Reports success with {@code null} when there is none. A restored session is never resumed

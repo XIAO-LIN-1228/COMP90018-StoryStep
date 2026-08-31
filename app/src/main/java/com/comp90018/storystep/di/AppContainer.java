@@ -6,12 +6,14 @@ import androidx.core.content.ContextCompat;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
+import com.comp90018.storystep.domain.repository.JourneyRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
@@ -19,8 +21,8 @@ import com.comp90018.storystep.platform.location.AndroidLocationSource;
 import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.platform.time.AndroidClock;
 
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
@@ -39,6 +41,7 @@ public class AppContainer {
 
     private final Context applicationContext;
     private final AttractionRepository attractionRepository;
+    private final JourneyRepository journeyRepository;
     private final LocationQualityPolicy locationQualityPolicy;
     private final Clock clock;
     private final SessionStore sessionStore;
@@ -48,12 +51,20 @@ public class AppContainer {
     private final ExecutorService ioExecutor;
 
     public AppContainer(Context applicationContext) {
-        this(applicationContext, new InMemoryAttractionRepository());
+        this(applicationContext, new InMemoryAttractionRepository(),
+                new InMemoryJourneyRepository());
     }
 
     public AppContainer(Context applicationContext, AttractionRepository attractionRepository) {
+        this(applicationContext, attractionRepository, new InMemoryJourneyRepository());
+    }
+
+    public AppContainer(Context applicationContext,
+                        AttractionRepository attractionRepository,
+                        JourneyRepository journeyRepository) {
         this.applicationContext = applicationContext.getApplicationContext();
         this.attractionRepository = attractionRepository;
+        this.journeyRepository = journeyRepository;
         this.locationQualityPolicy = LocationQualityPolicy.defaultPolicy();
         this.mainExecutor = ContextCompat.getMainExecutor(this.applicationContext);
         this.ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
@@ -75,6 +86,10 @@ public class AppContainer {
 
     public Context getApplicationContext() {
         return applicationContext;
+    }
+
+    public JourneyRepository getJourneyRepository() {
+        return journeyRepository;
     }
 
     /**

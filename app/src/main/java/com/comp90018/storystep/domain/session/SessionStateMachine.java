@@ -170,6 +170,16 @@ public final class SessionStateMachine {
         return new SessionTransition(SessionState.STOPPING, state);
     }
 
+    /** The unfinished session was deliberately removed rather than saved to history. */
+    public SessionTransition onDiscarded() {
+        if (state != SessionState.STOPPING) {
+            return unchanged();
+        }
+        reset();
+        state = SessionState.IDLE;
+        return new SessionTransition(SessionState.STOPPING, state);
+    }
+
     /**
      * The final save failed. The state stays {@code STOPPING} — collection has already ended, but
      * the session is not complete — and {@link #hasStopSaveFailed()} lets the screen offer a retry.
