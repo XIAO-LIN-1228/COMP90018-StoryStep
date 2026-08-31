@@ -166,7 +166,7 @@ public class NearbyAttractionsFragment extends Fragment
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
                 NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_nearby_to_exploration));
+                        .navigate(R.id.action_nearby_to_session_recovery));
         sessionButton.setOnClickListener(v -> onSessionButtonClicked());
         viewModel.loadIfNeeded();
     }

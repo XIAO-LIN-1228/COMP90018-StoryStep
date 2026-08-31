@@ -1,0 +1,129 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+StoryStep is a context-aware Android tourism companion for COMP90018 (University of Melbourne, Mobile Computing Systems Programming). It helps users discover nearby attractions and reveals location-triggered stories as they explore an area, using location, motion, orientation, weather, and cloud data — not turn-by-turn navigation.
+
+Current state: the layered Java/XML application skeleton and a cross-iteration frontend prototype
+are in place. The app includes onboarding, nearby discovery, attraction details, exploration,
+arrival/story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
+real foreground Android location adapter, permission recovery and quality-aware samples. Attraction
+and journey content still uses in-memory repositories; Room and Retrofit remain unwired for runtime
+data. A session coordinator, durable route/history storage, accelerometer movement estimation,
+magnetometer heading, arrival detection, real weather/attraction services and contextual ranking
+remain incomplete. `README.md` is the requirements/scope document and is the source of truth for
+what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
+delivery and evidence status.
+
+For requirement-by-requirement implementation, use `docs/development_plan.md` for task IDs, dependencies and acceptance behavior, `docs/verification_checklist.md` for verification status and evidence, and `docs/claude_code_handoff.md` for bounded implementation/review prompts. These are execution documents, not completed-feature claims or permission to expand the README scope. Read the selected requirement and its shared contracts before coding; keep unexecuted tests and unresolved decisions explicit.
+
+The on-disk directory and Git repository are named `COMP90018-StoryStep`, matching the current
+product identity.
+
+## Confirmed scope
+
+Core features:
+
+- Nearby attraction discovery
+- Context-aware attraction recommendations
+- User-initiated exploration sessions
+- Approximate distance and directional guidance
+- Location-triggered attraction stories
+- Visit history and saved attractions
+- Weather integration
+- Meaningful Internet or cloud connectivity
+
+Primary sensing capabilities:
+
+1. **Location/GPS** — nearby attractions, distance calculation, approximate route recording, arrival detection
+2. **Accelerometer** — movement-state estimation, device-orientation assistance
+3. **Magnetometer** — compass heading, direction to an attraction
+
+Explicitly outside the MVP — do not build these, and flag requests that drift into them:
+
+- Turn-by-turn navigation
+- Continuous background location tracking
+- Hotel or flight booking
+- Online payment
+- Real-time chat
+- Augmented-reality navigation
+- Emergency-service integration
+- iOS support
+
+## Commands
+
+```bash
+./gradlew assembleDebug           # build debug APK
+./gradlew test                    # JVM unit tests (app/src/test)
+./gradlew testDebugUnitTest --tests "com.comp90018.storystep.domain.geo.GeoCalculatorTest"   # single unit test class
+./gradlew connectedAndroidTest    # instrumented tests (needs emulator/device)
+./gradlew lint                    # Android Lint; report at app/build/reports/lint-results-debug.html
+./gradlew clean
+```
+
+Gradle's configuration cache is enabled (`gradle.properties`), so build-script changes trigger a full reconfigure; a stale-cache failure is fixed with `--no-configuration-cache` or `clean`. The build resolves its own JDK 25 toolchain via foojay (`gradle/gradle-daemon-jvm.properties`), so no local `JAVA_HOME` is required.
+
+## Package identity
+
+The package root is **`com.comp90018.storystep`** (all lowercase). `namespace`, `applicationId`, every source directory and every `package` declaration agree on it, and `ApplicationIdentityTest` (instrumented) asserts that the applicationId and `ui.MainActivity` still resolve under it. Keep new code under this root; do not reintroduce the capitalised `com.comp90018.StoryStep` form anywhere.
+
+Themes follow the same name: `Theme.StoryStep` / `Base.Theme.StoryStep`.
+
+## Build configuration notes
+
+This project is on AGP 9.3.1 / Gradle 9.5.0, which changed DSL that older Android examples still use — don't "fix" these back to the old forms:
+
+- `compileSdk { version = release(37) }` — block form, not `compileSdk = 37`.
+- Release build type uses `optimization { enable = false }`, not `isMinifyEnabled`.
+- R8 keep rules live in `app/src/main/keepRules/rules.keep` (AGP merges everything in that directory); there is no `proguard-rules.pro`.
+- All dependencies and plugin versions go through the version catalog at `gradle/libs.versions.toml` — add a `[versions]`/`[libraries]` entry and reference it as `libs.foo`, never a hardcoded coordinate string in `app/build.gradle.kts`.
+- `settings.gradle.kts` uses `FAIL_ON_PROJECT_REPOS`; repositories are declared centrally there, not per-module.
+
+## Technology constraints
+
+Fixed for this project — treat as non-negotiable:
+
+- Android only
+- Java for application code
+- XML for layouts (not Compose; `activity-ktx` is present only for `EdgeToEdge`)
+- Kotlin DSL for Gradle configuration
+- minSdk 26, compile/target SDK 37
+- Java 11 source and target compatibility
+
+## Intended architecture
+
+Layered: UI (Activities/Fragments + XML) → ViewModel/LiveData → Repository → local (Room) and remote (Retrofit/OkHttp, cloud) data sources, with location and sensor data sources beneath.
+
+The package layout under `com.comp90018.storystep` realises that:
+
+| Package | Holds | Android dependency |
+|---|---|---|
+| `domain.model` | Attraction, journey and immutable location models | none |
+| `domain.geo` | Distance/bearing maths and location-quality policies | none |
+| `domain.repository` | Attraction/journey contracts and `RepositoryCallback` | none |
+| `data.local` | Room entity, DAO, database, mapper | Room |
+| `data.remote` | Retrofit service, DTO, mapper, `ApiClientFactory` | Retrofit/OkHttp |
+| `data.repository` | In-memory attraction and journey prototype repositories | none |
+| `platform.location` | Location contracts, access policy and foreground Android adapter | Android in adapter only |
+| `platform.sensor` / `platform.connectivity` | Device-capability interfaces; production implementations remain pending | interfaces are framework-free |
+| `di` | `AppContainer` — manual wiring, no DI framework | Context only |
+| `ui` | `MainActivity`, `ViewModelFactory`, formatting helpers | full |
+| `ui.*` feature packages | Fragment + ViewModel/UI-state where behavior is connected; prototype Fragments elsewhere | full |
+
+`domain` must stay free of Android types — that is what keeps it unit-testable. New computation belongs there, not in `ui` or `data`.
+
+Three constraints shape the code:
+
+- **Keep sensor, distance, bearing, and recommendation logic outside Activity classes.** Activities wire up and display; the computation lives in plain classes.
+- **Core calculations must be independently JVM-testable** as unit tests under `app/src/test`, with no Android framework dependency. Distance, bearing/heading, movement-state classification, and recommendation ranking are the primary unit-test targets.
+- **Degrade gracefully** on missing sensors (accelerometer or magnetometer absent), denied permissions, unavailable location, offline state, and network failure. Sensor availability varies per device; the app must show a sensible fallback rather than crash. Location is collected only during a user-initiated foreground exploration session — continuous background tracking is out of scope.
+
+`ui.MainActivity` applies `EdgeToEdge.enable()` and pads the root view by `systemBars` insets; it hosts a `NavHostFragment` driven by `res/navigation/nav_graph.xml`. New screens are Fragments added to that graph and should follow the same inset handling. Safe Args is deliberately not used — arguments are passed as a plain `Bundle`.
+
+## Conventions
+
+- Feature work happens on branches (`feature/`, `fix/`, `docs/`, `test/`, `refactor/`) merged via PR — not directly on `main`.
+- Do not commit API keys or service credentials (weather API, cloud/Firebase). `local.properties` is gitignored and is the place for local SDK paths and keys.
+- All project documentation and code comments in English.

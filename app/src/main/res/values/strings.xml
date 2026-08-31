@@ -212,4 +212,45 @@
     <string name="offline_body">Saved stories and active journeys are still available.</string>
     <string name="offline_saved">View saved places</string>
     <string name="offline_retry">Try again</string>
+
+    <!-- Session recovery -->
+    <string name="session_recovery_title">Resume journey</string>
+    <string name="session_recovery_paused">PAUSED SAFELY</string>
+    <string name="session_recovery_headline">Continue where you left off</string>
+    <string name="session_recovery_body">This journey is paused on your device. StoryStep is not collecting location while it is paused.</string>
+    <string name="session_recovery_checkpoint">Last checkpoint · Today, 10:46</string>
+    <string name="session_recovery_progress_description">Three of six stories completed</string>
+    <string name="session_recovery_privacy_note">Location and sensors restart only after you choose Resume. The recovered journey never starts tracking automatically.</string>
+    <string name="session_recovery_resume">Resume journey</string>
+    <string name="session_recovery_finish">Finish without resuming</string>
+    <string name="session_recovery_discard">Discard this journey</string>
+    <string name="session_recovery_finish_title">Finish this journey?</string>
+    <string name="session_recovery_finish_body">Your current checkpoint will be used to create the journey summary. Location will remain off.</string>
+    <string name="session_recovery_finish_action">Finish journey</string>
+    <string name="session_recovery_discard_title">Discard this journey?</string>
+    <string name="session_recovery_discard_body">This removes the unfinished journey. Saved places are not affected.</string>
+    <string name="session_recovery_discard_action">Discard</string>
+
+    <!-- Privacy and data -->
+    <string name="privacy_data_title">Privacy &amp; data</string>
+    <string name="privacy_lock_icon_description">Privacy protected</string>
+    <string name="privacy_data_headline">Your exploration stays yours</string>
+    <string name="privacy_data_intro">StoryStep is designed for local, user-controlled exploration without an account.</string>
+    <string name="privacy_location_title">Location use</string>
+    <string name="privacy_location_body">Location is requested only after you start or resume an exploration. Collection stops when the app is no longer visible or you stop the journey.</string>
+    <string name="privacy_foreground_badge">Foreground only</string>
+    <string name="privacy_on_device_title">Stored on this device</string>
+    <string name="privacy_on_device_body">Journey summaries, sampled route points, discovered stories, memories and saved places are intended to remain local until you delete them.</string>
+    <string name="privacy_not_collected_title">Not collected</string>
+    <string name="privacy_not_collected_body">• No account or profile upload\n• No continuous background location\n• No public route sharing\n• No advertising analytics</string>
+    <string name="privacy_controls_title">Data controls</string>
+    <string name="privacy_manage_permissions">Manage app permissions</string>
+    <string name="privacy_clear_history">Clear journey history</string>
+    <string name="privacy_clear_saved">Clear saved places</string>
+    <string name="privacy_clear_history_title">Clear journey history?</string>
+    <string name="privacy_clear_history_body">This will remove journey summaries, sampled routes, visits and memories. Saved places remain available.</string>
+    <string name="privacy_clear_saved_title">Clear saved places?</string>
+    <string name="privacy_clear_saved_body">This will remove all saved places. Journey history remains available.</string>
+    <string name="privacy_clear_action">Clear</string>
+    <string name="prototype_data_unchanged">Prototype only — no local data was changed.</string>
 </resources>

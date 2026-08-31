@@ -37,6 +37,7 @@
         tools:layout="@layout/fragment_nearby_attractions">
         <action android:id="@+id/action_nearby_to_detail" app:destination="@id/attractionDetailFragment" />
         <action android:id="@+id/action_nearby_to_exploration" app:destination="@id/explorationFragment" />
+        <action android:id="@+id/action_nearby_to_session_recovery" app:destination="@id/sessionRecoveryFragment" />
     </fragment>
 
     <fragment
@@ -61,6 +62,7 @@
         android:label="@string/nav_profile"
         tools:layout="@layout/fragment_profile">
         <action android:id="@+id/action_profile_to_recovery" app:destination="@id/recoveryStateFragment" />
+        <action android:id="@+id/action_profile_to_privacy_data" app:destination="@id/privacyDataFragment" />
     </fragment>
 
     <fragment
@@ -127,4 +129,24 @@
         android:name="com.comp90018.storystep.ui.profile.RecoveryStateFragment"
         android:label="@string/settings_location"
         tools:layout="@layout/fragment_recovery_state" />
+
+    <fragment
+        android:id="@+id/sessionRecoveryFragment"
+        android:name="com.comp90018.storystep.ui.journey.SessionRecoveryFragment"
+        android:label="@string/session_recovery_title"
+        tools:layout="@layout/fragment_session_recovery">
+        <action android:id="@+id/action_session_recovery_to_exploration" app:destination="@id/explorationFragment" />
+        <action android:id="@+id/action_session_recovery_to_summary" app:destination="@id/journeySummaryFragment" />
+        <action
+            android:id="@+id/action_session_recovery_to_nearby"
+            app:destination="@id/nearbyAttractionsFragment"
+            app:popUpTo="@id/nearbyAttractionsFragment"
+            app:popUpToInclusive="false" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/privacyDataFragment"
+        android:name="com.comp90018.storystep.ui.profile.PrivacyDataFragment"
+        android:label="@string/privacy_data_title"
+        tools:layout="@layout/fragment_privacy_data" />
 </navigation>
