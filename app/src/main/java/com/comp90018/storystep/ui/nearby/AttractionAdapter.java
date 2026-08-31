@@ -12,8 +12,10 @@ import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
+import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.CategoryLabels;
 import com.comp90018.storystep.ui.DistanceText;
+import com.google.android.material.imageview.ShapeableImageView;
 
 /** Binds {@link AttractionListItem}s to the nearby list rows. */
 public class AttractionAdapter
@@ -64,12 +66,16 @@ public class AttractionAdapter
         private final TextView name;
         private final TextView category;
         private final TextView distance;
+        private final TextView reason;
+        private final ShapeableImageView image;
 
         AttractionViewHolder(@NonNull View itemView) {
             super(itemView);
             name = itemView.findViewById(R.id.attraction_name);
             category = itemView.findViewById(R.id.attraction_category);
             distance = itemView.findViewById(R.id.attraction_distance);
+            reason = itemView.findViewById(R.id.attraction_reason);
+            image = itemView.findViewById(R.id.attraction_image);
         }
 
         void bind(AttractionListItem item, OnAttractionSelected listener) {
@@ -80,6 +86,8 @@ public class AttractionAdapter
             name.setText(item.getName());
             category.setText(categoryLabel);
             distance.setText(distanceLabel);
+            reason.setText(AttractionArtwork.recommendationFor(item.getId()));
+            image.setImageResource(AttractionArtwork.drawableFor(item.getId()));
             itemView.setContentDescription(resources.getString(
                     R.string.attraction_item_description,
                     item.getName(),

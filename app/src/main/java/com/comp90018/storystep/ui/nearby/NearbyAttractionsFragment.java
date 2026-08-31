@@ -19,6 +19,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.textfield.TextInputLayout;
 
 /**
  * Start destination: the list of nearby attractions.
@@ -39,6 +42,13 @@ public class NearbyAttractionsFragment extends Fragment
     private ProgressBar loadingIndicator;
     private TextView statusMessage;
     private MaterialButton retryButton;
+    private View homeMap;
+    private MaterialCardView continueJourneyCard;
+    private TextInputLayout searchContainer;
+    private ChipGroup filterGroup;
+    private TextView sectionTitle;
+    private TextView seeAllButton;
+    private boolean listMode;
 
     @Nullable
     @Override
@@ -55,6 +65,12 @@ public class NearbyAttractionsFragment extends Fragment
         loadingIndicator = view.findViewById(R.id.loading_indicator);
         statusMessage = view.findViewById(R.id.status_message);
         retryButton = view.findViewById(R.id.retry_button);
+        homeMap = view.findViewById(R.id.home_map);
+        continueJourneyCard = view.findViewById(R.id.continue_journey_card);
+        searchContainer = view.findViewById(R.id.search_container);
+        filterGroup = view.findViewById(R.id.filter_group);
+        sectionTitle = view.findViewById(R.id.nearby_title);
+        seeAllButton = view.findViewById(R.id.see_all_button);
 
         adapter = new AttractionAdapter(this);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
@@ -65,6 +81,10 @@ public class NearbyAttractionsFragment extends Fragment
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
 
         retryButton.setOnClickListener(v -> viewModel.load());
+        seeAllButton.setOnClickListener(v -> setListMode(!listMode));
+        view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
+                NavHostFragment.findNavController(this)
+                        .navigate(R.id.action_nearby_to_exploration));
         viewModel.loadIfNeeded();
     }
 
@@ -100,5 +120,28 @@ public class NearbyAttractionsFragment extends Fragment
         arguments.putString(ARG_ATTRACTION_ID, item.getId());
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.action_nearby_to_detail, arguments);
+    }
+
+    private void setListMode(boolean enabled) {
+        listMode = enabled;
+        homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        continueJourneyCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        sectionTitle.setText(enabled ? R.string.nearby_title : R.string.home_nearby);
+        seeAllButton.setText(enabled ? R.string.nav_explore : R.string.home_see_all);
+
+        View fragmentView = getView();
+        if (fragmentView == null) {
+            return;
+        }
+        View sectionHeader = fragmentView.findViewById(R.id.nearby_section_header);
+        ViewGroup.LayoutParams rawParams = sectionHeader.getLayoutParams();
+        if (rawParams instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
+            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
+                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) rawParams;
+            params.topToBottom = enabled ? R.id.filter_group : R.id.continue_journey_card;
+            sectionHeader.setLayoutParams(params);
+        }
     }
 }

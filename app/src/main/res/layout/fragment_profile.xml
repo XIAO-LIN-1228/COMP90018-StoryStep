@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/brand_ivory"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:background="@drawable/bg_brand_header"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                app:cardBackgroundColor="@color/brand_teal_soft"
+                app:cardCornerRadius="36dp">
+                <TextView android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:text="@string/profile_initial" android:textColor="@color/brand_teal" android:textSize="30sp" android:textStyle="bold" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="@string/profile_title"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:gravity="center"
+                android:text="@string/profile_local"
+                android:textColor="#CCFFFFFF"
+                android:textSize="12sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+                <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="@string/profile_journeys" android:textColor="@color/white" android:textStyle="bold" />
+                <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="@string/profile_stories" android:textColor="@color/white" android:textStyle="bold" />
+                <TextView android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:text="@string/profile_memories" android:textColor="@color/white" android:textStyle="bold" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.StoryStep.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView android:id="@+id/location_settings_row" style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="72dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:lineSpacingExtra="4dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_location_row" android:textColor="@color/story_text_primary" />
+                    <TextView android:id="@+id/sensor_settings_row" style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="72dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:lineSpacingExtra="4dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_sensor_row" android:textColor="@color/story_text_primary" />
+                    <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="72dp" android:gravity="center_vertical" android:lineSpacingExtra="4dp" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_units_row" android:textColor="@color/story_text_primary" />
+                    <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_privacy" android:textColor="@color/story_text_primary" />
+                    <TextView android:id="@+id/clear_history_row" style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="64dp" android:background="?attr/selectableItemBackground" android:clickable="true" android:focusable="true" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_clear" android:textColor="@color/story_error" />
+                    <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:paddingStart="16dp" android:paddingEnd="16dp" android:text="@string/settings_about" android:textColor="@color/story_text_primary" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

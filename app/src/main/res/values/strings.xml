@@ -1,8 +1,14 @@
 <resources>
     <string name="app_name">StoryStep</string>
+    <string name="icon_check">✓</string>
+    <string name="icon_save">☆</string>
+    <string name="icon_lock">🔒</string>
+    <string name="icon_add">＋</string>
+    <string name="profile_initial">S</string>
+    <string name="recovery_icon">⌖</string>
 
     <!-- Nearby attractions screen -->
-    <string name="nearby_title">Nearby attractions</string>
+    <string name="nearby_title">Nearby stories</string>
     <string name="nearby_subtitle">Places to discover around you</string>
     <string name="nearby_loading">Loading nearby attractions</string>
     <string name="nearby_empty">No attractions found nearby. Try again from a different area.</string>
@@ -29,4 +35,165 @@
     <string name="category_public_art">Public art</string>
     <string name="category_cultural_site">Cultural site</string>
     <string name="category_university_landmark">University landmark</string>
+
+    <!-- Main navigation -->
+    <string name="nav_explore">Explore</string>
+    <string name="nav_journeys">Journeys</string>
+    <string name="nav_saved">Saved</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- First run -->
+    <string name="onboarding_headline">Every place has a story</string>
+    <string name="onboarding_body">Explore nearby landmarks and collect memories as you walk.</string>
+    <string name="onboarding_start">Get started</string>
+    <string name="onboarding_privacy">Location is used only during exploration</string>
+    <string name="rationale_title">Explore around you</string>
+    <string name="rationale_nearby">Find nearby stories</string>
+    <string name="rationale_nearby_body">Discover interesting places close to you.</string>
+    <string name="rationale_direction">Get distance and direction</string>
+    <string name="rationale_direction_body">See how far and which approximate direction to go.</string>
+    <string name="rationale_private">Your location stays private</string>
+    <string name="rationale_private_body">We only use it during an active exploration.</string>
+    <string name="rationale_use_location">Use my location</string>
+
+    <!-- Explore home -->
+    <string name="home_weather">Parkville · 18°C</string>
+    <string name="home_map_description">Map of nearby StoryStep locations</string>
+    <string name="home_continue_title">Continue your journey</string>
+    <string name="home_journey_name">University Heritage Walk</string>
+    <string name="home_journey_progress">3 of 6 stories discovered</string>
+    <string name="home_journey_meta">1.8 km  ·  32 min</string>
+    <string name="home_resume">Resume</string>
+    <string name="home_nearby">Nearby stories</string>
+    <string name="home_see_all">See all</string>
+    <string name="home_filter_all">All</string>
+    <string name="home_filter_indoor">Indoor</string>
+    <string name="home_filter_outdoor">Outdoor</string>
+    <string name="home_filter_unvisited">Unvisited</string>
+    <string name="search_places">Search places</string>
+    <string name="recommendation_nearby">A remarkable place close to your current location.</string>
+
+    <!-- Attraction detail and confirmation -->
+    <string name="detail_why_visit">Why visit</string>
+    <string name="detail_distance_demo">Approx. 280 m · 4 min walk</string>
+    <string name="detail_locked_story">This story will unlock when you arrive.</string>
+    <string name="detail_locked_supporting">Explore to learn more.</string>
+    <string name="detail_start_exploration">Start exploration</string>
+    <string name="detail_save">Save place</string>
+    <string name="detail_back">Go back</string>
+    <string name="confirm_title">Ready to explore?</string>
+    <string name="confirm_distance">Old Arts Building · 280 m away</string>
+    <string name="confirm_location">Location is used only while exploring.</string>
+    <string name="confirm_stop">You can stop at any time.</string>
+    <string name="confirm_start">Start</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Active exploration -->
+    <string name="exploration_title">Old Arts Building</string>
+    <string name="exploration_approximate">Approximate direction</string>
+    <string name="exploration_heading">North-east</string>
+    <string name="exploration_remaining">180 m remaining</string>
+    <string name="exploration_walking">Walking</string>
+    <string name="exploration_accuracy">GPS accuracy 6 m</string>
+    <string name="exploration_notice">Direction is an estimate, not turn-by-turn navigation.</string>
+    <string name="exploration_preview_arrival">Preview arrival</string>
+    <string name="exploration_stop">Stop exploration</string>
+    <string name="exploration_stop_title">Finish this exploration?</string>
+    <string name="exploration_stop_message">Your progress and discovered stories will be saved on this device.</string>
+    <string name="exploration_finish">Finish journey</string>
+
+    <!-- Arrival, story and memory -->
+    <string name="arrival_title">You’ve arrived</string>
+    <string name="arrival_place">Old Arts Building</string>
+    <string name="arrival_supporting">A new story is ready to unlock.</string>
+    <string name="arrival_discover">Discover the story</string>
+    <string name="not_now">Not now</string>
+    <string name="story_toolbar_title">The story</string>
+    <string name="story_discovered">Discovered today</string>
+    <string name="story_title">A landmark built to inspire</string>
+    <string name="story_paragraph_one">Completed in 1879, the Old Arts Building was designed to symbolise learning, faith, and the pursuit of knowledge.</string>
+    <string name="story_paragraph_two">Its Gothic Revival architecture and grand hall have welcomed generations of students, scholars, and ideas.</string>
+    <string name="story_add_memory">Add a memory</string>
+    <string name="memory_title">Add a memory</string>
+    <string name="memory_place_time">Old Arts Building  ·  Today, 10:14</string>
+    <string name="memory_add_photos">Add photos</string>
+    <string name="memory_optional">Optional</string>
+    <string name="memory_prompt">What do you want to remember?</string>
+    <string name="memory_hint">Write a note about this place…</string>
+    <string name="memory_private">Saved on this device</string>
+    <string name="memory_private_supporting">Only you can see this memory.</string>
+    <string name="memory_save">Save memory</string>
+    <string name="skip">Skip</string>
+    <string name="memory_photo_picker_demo">Photo picker will be connected in the next implementation stage.</string>
+
+    <!-- Journey summary and history -->
+    <string name="summary_title">Journey complete</string>
+    <string name="summary_supporting">Great work exploring the stories around you.</string>
+    <string name="summary_date">31 Aug 2026</string>
+    <string name="summary_time">42 min</string>
+    <string name="summary_distance">2.3 km</string>
+    <string name="summary_stories">4 stories</string>
+    <string name="summary_time_label">Time</string>
+    <string name="summary_distance_label">Distance</string>
+    <string name="summary_discovered_label">Discovered</string>
+    <string name="summary_memories">Memories</string>
+    <string name="summary_memory_one">Loved the details in the grand hall.</string>
+    <string name="summary_memory_two">A quiet moment in the garden.</string>
+    <string name="summary_view_journey">View journey</string>
+    <string name="done">Done</string>
+    <string name="journeys_title">Your journeys</string>
+    <string name="journeys_summary">5 journeys · 14 stories</string>
+    <string name="journeys_all">All</string>
+    <string name="journeys_month">This month</string>
+    <string name="journey_heritage">University Heritage Walk</string>
+    <string name="journey_museum">Museum &amp; Gardens</string>
+    <string name="journey_carlton">Carlton Evening Walk</string>
+    <string name="journey_date_one">31 Aug 2026</string>
+    <string name="journey_date_two">24 Aug 2026</string>
+    <string name="journey_date_three">18 Aug 2026</string>
+    <string name="journey_detail_places">Places discovered</string>
+    <string name="journey_explore_again">Explore again</string>
+    <string name="journey_stop_old_arts">Old Arts Building</string>
+    <string name="journey_stop_old_arts_meta">Today, 10:14 · 120 m</string>
+    <string name="journey_stop_museum">Ian Potter Museum</string>
+    <string name="journey_stop_museum_meta">Today, 10:28 · 450 m</string>
+    <string name="journey_stop_garden">System Garden</string>
+    <string name="journey_stop_garden_meta">Today, 10:41 · 310 m</string>
+
+    <!-- Saved and profile -->
+    <string name="saved_title">Saved</string>
+    <string name="saved_explore">Explore</string>
+    <string name="profile_title">Your activity</string>
+    <string name="profile_local">Stored on this device</string>
+    <string name="profile_journeys">5\njourneys</string>
+    <string name="profile_stories">14\nstories</string>
+    <string name="profile_memories">6\nmemories</string>
+    <string name="settings_location">Location &amp; permissions</string>
+    <string name="settings_location_value">Allowed while using app</string>
+    <string name="settings_sensor">Sensor status</string>
+    <string name="settings_sensor_value">GPS and compass available</string>
+    <string name="settings_units">Distance units</string>
+    <string name="settings_units_value">Kilometres</string>
+    <string name="settings_privacy">Privacy &amp; data</string>
+    <string name="settings_clear">Clear local history</string>
+    <string name="settings_about">About StoryStep</string>
+    <string name="settings_version">v1.0.0</string>
+    <string name="settings_location_row">Location &amp; permissions\nAllowed while using app</string>
+    <string name="settings_sensor_row">Sensor status\nGPS and compass available</string>
+    <string name="settings_units_row">Distance units\nKilometres</string>
+
+    <!-- Recovery states -->
+    <string name="location_access_title">Explore without sharing your location</string>
+    <string name="location_access_body">You can still browse stories. Turn on location when you’re ready to explore nearby places.</string>
+    <string name="location_open_settings">Open settings</string>
+    <string name="location_browse">Browse stories</string>
+    <string name="location_services_title">Turn on location services</string>
+    <string name="location_services_body">StoryStep needs GPS to calculate distance and detect when you arrive.</string>
+    <string name="location_turn_on_gps">Turn on GPS</string>
+    <string name="gps_improving">Improving location accuracy…</string>
+    <string name="gps_fallback">Direction is temporarily unavailable.</string>
+    <string name="offline_title">You’re offline</string>
+    <string name="offline_body">Saved stories and active journeys are still available.</string>
+    <string name="offline_saved">View saved places</string>
+    <string name="offline_retry">Try again</string>
 </resources>

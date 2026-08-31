@@ -5,18 +5,23 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.ui.CategoryLabels;
+import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.google.android.material.chip.Chip;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
  * Details of one attraction. The identifier arrives as a plain Bundle argument; Safe Args is
@@ -30,6 +35,7 @@ public class AttractionDetailFragment extends Fragment {
     private TextView categoryView;
     private TextView descriptionView;
     private Chip venueTypeChip;
+    private ImageView imageView;
 
     @Nullable
     @Override
@@ -46,6 +52,13 @@ public class AttractionDetailFragment extends Fragment {
         categoryView = view.findViewById(R.id.detail_category);
         descriptionView = view.findViewById(R.id.detail_description);
         venueTypeChip = view.findViewById(R.id.detail_venue_type);
+        imageView = view.findViewById(R.id.detail_image);
+
+        view.findViewById(R.id.detail_back_button).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigateUp());
+        view.findViewById(R.id.detail_save_button).setOnClickListener(v ->
+                Toast.makeText(requireContext(), R.string.saved_title, Toast.LENGTH_SHORT).show());
+        view.findViewById(R.id.detail_start_button).setOnClickListener(v -> showStartConfirmation());
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(AttractionDetailViewModel.class);
@@ -71,9 +84,23 @@ public class AttractionDetailFragment extends Fragment {
         nameView.setText(attraction.getName());
         categoryView.setText(CategoryLabels.labelOf(attraction.getCategory()));
         descriptionView.setText(attraction.getDescription());
+        imageView.setImageResource(AttractionArtwork.heroDrawableFor(attraction.getId()));
         venueTypeChip.setVisibility(View.VISIBLE);
         venueTypeChip.setText(attraction.isIndoor()
                 ? R.string.attraction_indoor
                 : R.string.attraction_outdoor);
+    }
+
+    private void showStartConfirmation() {
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.confirm_title)
+                .setMessage(getString(R.string.confirm_distance) + "\n\n"
+                        + getString(R.string.confirm_location) + "\n"
+                        + getString(R.string.confirm_stop))
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.confirm_start, (dialog, which) ->
+                        NavHostFragment.findNavController(this)
+                                .navigate(R.id.action_detail_to_exploration))
+                .show();
     }
 }

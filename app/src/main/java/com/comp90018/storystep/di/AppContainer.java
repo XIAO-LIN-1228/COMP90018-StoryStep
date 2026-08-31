@@ -3,9 +3,11 @@ package com.comp90018.storystep.di;
 import android.content.Context;
 
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
+import com.comp90018.storystep.domain.repository.JourneyRepository;
 
 /**
  * Manual dependency container for the application process.
@@ -20,14 +22,23 @@ public class AppContainer {
 
     private final Context applicationContext;
     private final AttractionRepository attractionRepository;
+    private final JourneyRepository journeyRepository;
 
     public AppContainer(Context applicationContext) {
-        this(applicationContext, new InMemoryAttractionRepository());
+        this(applicationContext, new InMemoryAttractionRepository(),
+                new InMemoryJourneyRepository());
     }
 
     public AppContainer(Context applicationContext, AttractionRepository attractionRepository) {
+        this(applicationContext, attractionRepository, new InMemoryJourneyRepository());
+    }
+
+    public AppContainer(Context applicationContext,
+                        AttractionRepository attractionRepository,
+                        JourneyRepository journeyRepository) {
         this.applicationContext = applicationContext.getApplicationContext();
         this.attractionRepository = attractionRepository;
+        this.journeyRepository = journeyRepository;
     }
 
     public AttractionRepository getAttractionRepository() {
@@ -36,6 +47,10 @@ public class AppContainer {
 
     public Context getApplicationContext() {
         return applicationContext;
+    }
+
+    public JourneyRepository getJourneyRepository() {
+        return journeyRepository;
     }
 
     /**

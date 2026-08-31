@@ -11,6 +11,7 @@ import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
+import com.comp90018.storystep.ui.journey.JourneysViewModel;
 
 /**
  * Builds ViewModels from the {@link AppContainer}, so Fragments never construct a repository,
@@ -42,6 +43,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(appContainer.getAttractionRepository());
+        }
+        if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
+            return (T) new JourneysViewModel(appContainer.getJourneyRepository());
         }
         throw new IllegalArgumentException("Unknown ViewModel class: " + modelClass.getName());
     }
