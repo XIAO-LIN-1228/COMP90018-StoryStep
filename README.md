@@ -212,6 +212,16 @@ A physical Android device is recommended for testing real location, acceleromete
 
 ## Development Workflow
 
+### Requirement-driven implementation
+
+- [Detailed development plan](docs/development_plan.md): functional requirements, implementation subtasks, dependencies, ownership and iteration gates.
+- [Verification checklist](docs/verification_checklist.md): acceptance cases, requirement status and evidence records.
+- [Claude Code handoff](docs/claude_code_handoff.md): prompts and workflow for implementing and reviewing one bounded issue at a time.
+
+These documents refine the scope above; they do not indicate that the planned features are complete. Follow `CLAUDE.md` for the repository's engineering constraints.
+
+### Branches and review
+
 Create a separate branch for each task:
 
 ```bash

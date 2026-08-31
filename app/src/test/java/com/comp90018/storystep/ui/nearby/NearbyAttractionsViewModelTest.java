@@ -6,17 +6,24 @@ import static org.junit.Assert.assertTrue;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
+import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.LocationOrigin;
+import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
+import com.comp90018.storystep.platform.location.LocationAccess;
+import com.comp90018.storystep.platform.location.LocationSource;
 
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -28,9 +35,38 @@ public class NearbyAttractionsViewModelTest {
 
     private static final GeoPoint ORIGIN = new GeoPoint(-37.79630, 144.96140);
 
+    /** Metres per degree of latitude on the mean sphere the calculator uses. */
+    private static final double METERS_PER_DEGREE_LATITUDE = 111_194.9;
+
+    private static final long START_MONOTONIC = 1_000L;
+
     private static Attraction attraction(String id, double latitude, double longitude) {
         return new Attraction(id, "Name " + id, AttractionCategory.PARK, "Description",
                 false, new GeoPoint(latitude, longitude));
+    }
+
+    /** A point the given number of metres due north of {@link #ORIGIN}. */
+    private static GeoPoint northOfOrigin(double meters) {
+        return new GeoPoint(
+                ORIGIN.getLatitude() + meters / METERS_PER_DEGREE_LATITUDE,
+                ORIGIN.getLongitude());
+    }
+
+    private static LocationSample sampleAt(GeoPoint position,
+                                           float accuracyMeters,
+                                           long monotonicMillis) {
+        return new LocationSample(position, accuracyMeters, 1_700_000_000_000L, monotonicMillis,
+                LocationOrigin.DEVICE);
+    }
+
+    private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository) {
+        return viewModelFor(repository, 3000.0);
+    }
+
+    private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository,
+                                                           double radiusMeters) {
+        return new NearbyAttractionsViewModel(repository, ORIGIN, radiusMeters,
+                new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()));
     }
 
     private static NearbyUiState observe(NearbyAttractionsViewModel viewModel) {
@@ -39,10 +75,19 @@ public class NearbyAttractionsViewModelTest {
         return seen.isEmpty() ? null : seen.get(seen.size() - 1);
     }
 
+    private static List<String> idsOf(NearbyUiState state) {
+        List<String> ids = new ArrayList<>();
+        for (AttractionListItem item : state.getItems()) {
+            ids.add(item.getId());
+        }
+        return ids;
+    }
+
+    // --- baseline list behaviour ---------------------------------------------------------------
+
     @Test
     public void loadPublishesContentWithCalculatedDistances() {
-        NearbyAttractionsViewModel viewModel = new NearbyAttractionsViewModel(
-                new InMemoryAttractionRepository(), ORIGIN, 3000.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
 
         viewModel.load();
         NearbyUiState state = observe(viewModel);
@@ -58,8 +103,7 @@ public class NearbyAttractionsViewModelTest {
 
     @Test
     public void itemsStayOrderedNearestFirst() {
-        NearbyAttractionsViewModel viewModel = new NearbyAttractionsViewModel(
-                new InMemoryAttractionRepository(), ORIGIN, 3000.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
 
         viewModel.load();
         List<AttractionListItem> items = observe(viewModel).getItems();
@@ -75,8 +119,7 @@ public class NearbyAttractionsViewModelTest {
     public void noResultsInRangeProduceTheEmptyState() {
         AttractionRepository repository = new InMemoryAttractionRepository(
                 Collections.singletonList(attraction("far", -37.90000, 145.10000)));
-        NearbyAttractionsViewModel viewModel =
-                new NearbyAttractionsViewModel(repository, ORIGIN, 100.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository, 100.0);
 
         viewModel.load();
 
@@ -85,8 +128,7 @@ public class NearbyAttractionsViewModelTest {
 
     @Test
     public void aRepositoryFailureProducesTheErrorState() {
-        NearbyAttractionsViewModel viewModel =
-                new NearbyAttractionsViewModel(new FailingRepository(), ORIGIN, 3000.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(new FailingRepository());
 
         viewModel.load();
 
@@ -96,8 +138,7 @@ public class NearbyAttractionsViewModelTest {
     @Test
     public void loadIfNeededDoesNotRefetchOnceAStateExists() {
         CountingRepository repository = new CountingRepository();
-        NearbyAttractionsViewModel viewModel =
-                new NearbyAttractionsViewModel(repository, ORIGIN, 3000.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
 
         viewModel.loadIfNeeded();
         viewModel.loadIfNeeded();
@@ -108,8 +149,7 @@ public class NearbyAttractionsViewModelTest {
     @Test
     public void retryAfterAFailureCanSucceed() {
         SwitchableRepository repository = new SwitchableRepository();
-        NearbyAttractionsViewModel viewModel =
-                new NearbyAttractionsViewModel(repository, ORIGIN, 3000.0);
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
 
         viewModel.load();
         assertEquals(NearbyUiState.Status.ERROR, observe(viewModel).getStatus());
@@ -118,6 +158,205 @@ public class NearbyAttractionsViewModelTest {
         viewModel.load();
         assertEquals(NearbyUiState.Status.CONTENT, observe(viewModel).getStatus());
     }
+
+    // --- origin labelling ----------------------------------------------------------------------
+
+    @Test
+    public void beforeAnyFixDistancesAreLabelledAsTheReferenceArea() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+
+        viewModel.load();
+        NearbyUiState state = observe(viewModel);
+
+        assertEquals(NearbyUiState.OriginLabel.REFERENCE_AREA, state.getOriginLabel());
+        assertTrue(state.isReferenceArea());
+    }
+
+    @Test
+    public void preciseAccessLabelsDistancesAsLive() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+
+        viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
+        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+
+        assertEquals(NearbyUiState.OriginLabel.LIVE_PRECISE, observe(viewModel).getOriginLabel());
+    }
+
+    @Test
+    public void approximateAccessIsLabelledSeparatelyFromPrecise() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+
+        viewModel.onLocationAccessChanged(LocationAccess.APPROXIMATE);
+        viewModel.onLocationSample(sampleAt(ORIGIN, 25.0f, START_MONOTONIC), START_MONOTONIC);
+
+        assertEquals(NearbyUiState.OriginLabel.LIVE_APPROXIMATE,
+                observe(viewModel).getOriginLabel());
+    }
+
+    @Test
+    public void stoppingTrackingReturnsToReferenceAreaBrowsing() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
+        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+
+        viewModel.onLocationTrackingStopped();
+        NearbyUiState state = observe(viewModel);
+
+        assertEquals(NearbyUiState.OriginLabel.REFERENCE_AREA, state.getOriginLabel());
+        assertEquals(NearbyUiState.Status.CONTENT, state.getStatus());
+    }
+
+    // --- moving origin -------------------------------------------------------------------------
+
+    @Test
+    public void movingWithinTheRequeryThresholdReordersWithoutAnotherQuery() {
+        // "near" is 100 m north of the origin, "far" is 240 m north.
+        CountingRepository repository = new CountingRepository(Arrays.asList(
+                attraction("near", northOfOrigin(100.0).getLatitude(), ORIGIN.getLongitude()),
+                attraction("far", northOfOrigin(240.0).getLatitude(), ORIGIN.getLongitude())));
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
+
+        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        assertEquals(Arrays.asList("near", "far"), idsOf(observe(viewModel)));
+        assertEquals(1, repository.nearbyCallCount);
+
+        // Walk 200 m north: below the 250 m threshold, so no new query, but "far" is now closer.
+        long later = START_MONOTONIC + 60_000L;
+        viewModel.onLocationSample(sampleAt(northOfOrigin(200.0), 10.0f, later), later);
+
+        assertEquals(Arrays.asList("far", "near"), idsOf(observe(viewModel)));
+        assertEquals("distances are recomputed locally, not refetched",
+                1, repository.nearbyCallCount);
+    }
+
+    @Test
+    public void movingBeyondTheRequeryThresholdAsksTheRepositoryAgain() {
+        CountingRepository repository = new CountingRepository();
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
+
+        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        assertEquals(1, repository.nearbyCallCount);
+
+        long later = START_MONOTONIC + 120_000L;
+        viewModel.onLocationSample(sampleAt(northOfOrigin(400.0), 10.0f, later), later);
+
+        assertEquals(2, repository.nearbyCallCount);
+    }
+
+    @Test
+    public void aRejectedSampleDoesNotChangeTheDisplayedState() {
+        CountingRepository repository = new CountingRepository();
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
+
+        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        NearbyUiState before = observe(viewModel);
+
+        // Accuracy 120 m is well beyond the policy limit.
+        long later = START_MONOTONIC + 5_000L;
+        viewModel.onLocationSample(sampleAt(northOfOrigin(400.0), 120.0f, later), later);
+
+        NearbyUiState after = observe(viewModel);
+        assertEquals(before.getStatus(), after.getStatus());
+        assertEquals(idsOf(before), idsOf(after));
+        assertEquals("a poor sample must not trigger a query", 1, repository.nearbyCallCount);
+    }
+
+    @Test
+    public void aLateResponseCannotRestoreAnOlderList() {
+        DeferredRepository repository = new DeferredRepository();
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
+
+        viewModel.load();
+        viewModel.load();
+
+        repository.complete(1, Collections.singletonList(
+                attraction("current", northOfOrigin(50.0).getLatitude(), ORIGIN.getLongitude())));
+        assertEquals(Collections.singletonList("current"), idsOf(observe(viewModel)));
+
+        // The first, slower request finally answers with the list the user has already moved past.
+        repository.complete(0, Collections.singletonList(
+                attraction("stale", northOfOrigin(80.0).getLatitude(), ORIGIN.getLongitude())));
+
+        assertEquals(Collections.singletonList("current"), idsOf(observe(viewModel)));
+    }
+
+    @Test
+    public void aLateFailureCannotOverwriteACurrentList() {
+        DeferredRepository repository = new DeferredRepository();
+        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
+
+        viewModel.load();
+        viewModel.load();
+        repository.complete(1, Collections.singletonList(
+                attraction("current", northOfOrigin(50.0).getLatitude(), ORIGIN.getLongitude())));
+
+        repository.fail(0, new IOException("slow request finally timed out"));
+
+        assertEquals(NearbyUiState.Status.CONTENT, observe(viewModel).getStatus());
+    }
+
+    // --- degraded access -----------------------------------------------------------------------
+
+    @Test
+    public void permissionNotYetRequestedAsksForItWithoutClearingTheList() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+        int itemCount = observe(viewModel).getItems().size();
+
+        viewModel.onLocationAccessChanged(LocationAccess.NOT_REQUESTED);
+        NearbyUiState state = observe(viewModel);
+
+        assertEquals(NearbyUiState.Status.PERMISSION_REQUIRED, state.getStatus());
+        assertEquals("browsing the reference area must survive a permission prompt",
+                itemCount, state.getItems().size());
+    }
+
+    @Test
+    public void aPermanentDenialIsDistinguishedFromARecoverableOne() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+
+        viewModel.onLocationAccessChanged(LocationAccess.DENIED);
+        assertEquals(NearbyUiState.Status.PERMISSION_DENIED, observe(viewModel).getStatus());
+
+        viewModel.onLocationAccessChanged(LocationAccess.PERMANENTLY_DENIED);
+        assertEquals(NearbyUiState.Status.PERMISSION_PERMANENTLY_DENIED,
+                observe(viewModel).getStatus());
+    }
+
+    @Test
+    public void grantedAccessWaitsForAFixRatherThanClaimingAPosition() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+
+        viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
+
+        assertEquals(NearbyUiState.Status.WAITING_FOR_FIX, observe(viewModel).getStatus());
+    }
+
+    @Test
+    public void aDisabledProviderIsReportedAsUnavailableLocation() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+
+        viewModel.onLocationUnavailable(LocationSource.Reason.PROVIDER_DISABLED);
+
+        assertEquals(NearbyUiState.Status.LOCATION_UNAVAILABLE, observe(viewModel).getStatus());
+    }
+
+    @Test
+    public void losingLocationRetainsTheAttractionsAlreadyOnScreen() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+        int itemCount = observe(viewModel).getItems().size();
+        assertTrue("precondition: the list has content", itemCount > 0);
+
+        viewModel.onLocationUnavailable(LocationSource.Reason.PROVIDER_DISABLED);
+
+        assertEquals(itemCount, observe(viewModel).getItems().size());
+    }
+
+    // --- fakes ---------------------------------------------------------------------------------
 
     private static class FailingRepository implements AttractionRepository {
         @Override
@@ -135,13 +374,21 @@ public class NearbyAttractionsViewModelTest {
 
     private static class CountingRepository implements AttractionRepository {
         int nearbyCallCount;
+        private final List<Attraction> results;
+
+        CountingRepository() {
+            this(Collections.singletonList(attraction("close", -37.79640, 144.96150)));
+        }
+
+        CountingRepository(List<Attraction> results) {
+            this.results = results;
+        }
 
         @Override
         public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
                                           RepositoryCallback<List<Attraction>> callback) {
             nearbyCallCount++;
-            callback.onSuccess(Collections.singletonList(
-                    attraction("close", -37.79640, 144.96150)));
+            callback.onSuccess(results);
         }
 
         @Override
@@ -169,6 +416,31 @@ public class NearbyAttractionsViewModelTest {
         public void loadAttraction(String attractionId,
                                    RepositoryCallback<Attraction> callback) {
             callback.onError(new UnsupportedOperationException());
+        }
+    }
+
+    /** Holds every callback so a test can answer requests out of order. */
+    private static class DeferredRepository implements AttractionRepository {
+        private final List<RepositoryCallback<List<Attraction>>> pending = new ArrayList<>();
+
+        @Override
+        public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
+                                          RepositoryCallback<List<Attraction>> callback) {
+            pending.add(callback);
+        }
+
+        @Override
+        public void loadAttraction(String attractionId,
+                                   RepositoryCallback<Attraction> callback) {
+            callback.onError(new UnsupportedOperationException());
+        }
+
+        void complete(int index, List<Attraction> results) {
+            pending.get(index).onSuccess(results);
+        }
+
+        void fail(int index, Throwable error) {
+            pending.get(index).onError(error);
         }
     }
 }
