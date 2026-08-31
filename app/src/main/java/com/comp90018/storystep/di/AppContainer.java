@@ -4,13 +4,20 @@ import android.content.Context;
 
 import androidx.core.content.ContextCompat;
 
+import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
+import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
+import com.comp90018.storystep.domain.repository.SessionStore;
+import com.comp90018.storystep.domain.session.SessionStateMachine;
+import com.comp90018.storystep.domain.time.Clock;
 import com.comp90018.storystep.platform.location.AndroidLocationSource;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.platform.time.AndroidClock;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executor;
@@ -33,6 +40,9 @@ public class AppContainer {
     private final Context applicationContext;
     private final AttractionRepository attractionRepository;
     private final LocationQualityPolicy locationQualityPolicy;
+    private final Clock clock;
+    private final SessionStore sessionStore;
+    private final ExplorationCoordinator explorationCoordinator;
 
     private final Executor mainExecutor;
     private final ExecutorService ioExecutor;
@@ -47,6 +57,16 @@ public class AppContainer {
         this.locationQualityPolicy = LocationQualityPolicy.defaultPolicy();
         this.mainExecutor = ContextCompat.getMainExecutor(this.applicationContext);
         this.ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
+        this.clock = new AndroidClock();
+        this.sessionStore = new InMemorySessionStore(clock);
+        // Assembled once, here, because the coordinator must outlive every screen: it owns the
+        // session and the single location subscription, and a session survives navigation.
+        this.explorationCoordinator = new ExplorationCoordinator(
+                new SessionStateMachine(clock),
+                sessionStore,
+                new AndroidLocationSource(this.applicationContext),
+                new LocationSampleFilter(locationQualityPolicy),
+                clock);
     }
 
     public AttractionRepository getAttractionRepository() {
@@ -75,14 +95,22 @@ public class AppContainer {
     }
 
     /**
-     * A new foreground location adapter.
+     * The process-wide session owner.
      *
-     * <p>Returned per caller rather than shared, because each instance owns one platform
-     * registration and its lifetime is the screen that started it. Once the exploration
-     * coordinator exists it becomes the single owner and this becomes an internal detail.
+     * <p>The only route to location updates. There is deliberately no accessor handing out a
+     * {@link LocationSource}: a screen that could register its own would be a second, invisible
+     * subscription running alongside the session's.
      */
-    public LocationSource createLocationSource() {
-        return new AndroidLocationSource(applicationContext);
+    public ExplorationCoordinator getExplorationCoordinator() {
+        return explorationCoordinator;
+    }
+
+    public SessionStore getSessionStore() {
+        return sessionStore;
+    }
+
+    public Clock getClock() {
+        return clock;
     }
 
     /**

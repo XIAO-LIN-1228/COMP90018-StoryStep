@@ -14,9 +14,9 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 
 | Requirement | Iteration | Owner / reviewer | Development | Verification | PR / commit | Evidence / blocker |
 |---|---|---|---|---|---|---|
-| REQ-01 | I1 | M1 / M2 | IN_REVIEW | PARTIAL | feature/foreground-location (uncommitted) | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
-| REQ-02 | I1 | M1 / M4 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-03 | I1 | M1 / M3 | IN_REVIEW | PARTIAL | feature/foreground-location (uncommitted) | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
+| REQ-01 | I1 | M1 / M2 | IN_REVIEW | PARTIAL | feature/foreground-location @ 203baa8 | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
+| REQ-02 | I1 | M1 / M4 | IN_REVIEW | PARTIAL | feature/session-lifecycle | [EV-REQ02-2026-08-31-01](verification/EV-REQ02-2026-08-31-01.md); U passed, A/P NOT_RUN |
+| REQ-03 | I1 | M1 / M3 | IN_REVIEW | PARTIAL | feature/foreground-location @ 203baa8 | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U passed, A/P NOT_RUN |
 | REQ-04 | I1 | M2 / M5 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-05 | I1 | M2 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-06 | I2, final wiring I3 | M2 / M1 | NOT_STARTED | NOT_RUN | - | - |

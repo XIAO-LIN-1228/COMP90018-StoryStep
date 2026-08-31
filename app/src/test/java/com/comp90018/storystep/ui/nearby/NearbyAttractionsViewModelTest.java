@@ -5,7 +5,9 @@ import static org.junit.Assert.assertTrue;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
+import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
@@ -13,8 +15,14 @@ import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
+import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.domain.model.SessionState;
+import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
+import com.comp90018.storystep.domain.session.FakeClock;
+import com.comp90018.storystep.domain.session.SessionStateMachine;
+import com.comp90018.storystep.platform.location.FakeLocationSource;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationSource;
 
@@ -65,8 +73,26 @@ public class NearbyAttractionsViewModelTest {
 
     private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository,
                                                            double radiusMeters) {
-        return new NearbyAttractionsViewModel(repository, ORIGIN, radiusMeters,
-                new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()));
+        return new NearbyAttractionsViewModel(repository, ORIGIN, radiusMeters, coordinator());
+    }
+
+    /**
+     * A real coordinator over fakes. The session transitions themselves are covered by
+     * {@code ExplorationCoordinatorTest}; here it exists so the ViewModel has the collaborator it
+     * publishes through, and the tests drive the ViewModel's observer methods directly.
+     */
+    private static ExplorationCoordinator coordinator() {
+        FakeClock clock = FakeClock.startingAt(1_000L);
+        return new ExplorationCoordinator(
+                new SessionStateMachine(clock),
+                new InMemorySessionStore(clock),
+                new FakeLocationSource(),
+                new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()),
+                clock);
+    }
+
+    private static SessionSummary sessionIn(SessionState state, PauseReason reason) {
+        return new SessionSummary("session-1", state, reason, 1_000L, 0L, 1);
     }
 
     private static NearbyUiState observe(NearbyAttractionsViewModel viewModel) {
@@ -178,7 +204,7 @@ public class NearbyAttractionsViewModelTest {
         viewModel.load();
 
         viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
-        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        viewModel.onSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC));
 
         assertEquals(NearbyUiState.OriginLabel.LIVE_PRECISE, observe(viewModel).getOriginLabel());
     }
@@ -189,23 +215,70 @@ public class NearbyAttractionsViewModelTest {
         viewModel.load();
 
         viewModel.onLocationAccessChanged(LocationAccess.APPROXIMATE);
-        viewModel.onLocationSample(sampleAt(ORIGIN, 25.0f, START_MONOTONIC), START_MONOTONIC);
+        viewModel.onSample(sampleAt(ORIGIN, 25.0f, START_MONOTONIC));
 
         assertEquals(NearbyUiState.OriginLabel.LIVE_APPROXIMATE,
                 observe(viewModel).getOriginLabel());
     }
 
     @Test
-    public void stoppingTrackingReturnsToReferenceAreaBrowsing() {
+    public void endingTheSessionReturnsToReferenceAreaBrowsing() {
         NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
-        viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
-        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        viewModel.onLocationAccessRequested(LocationAccess.PRECISE);
+        viewModel.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+        viewModel.onSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC));
 
-        viewModel.onLocationTrackingStopped();
+        viewModel.onSessionChanged(sessionIn(SessionState.COMPLETED, null));
         NearbyUiState state = observe(viewModel);
 
         assertEquals(NearbyUiState.OriginLabel.REFERENCE_AREA, state.getOriginLabel());
         assertEquals(NearbyUiState.Status.CONTENT, state.getStatus());
+        assertEquals(NearbyUiState.SessionPhase.IDLE, state.getSessionPhase());
+    }
+
+    @Test
+    public void aPausedSessionStopsClaimingACurrentPosition() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.onLocationAccessRequested(LocationAccess.PRECISE);
+        viewModel.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+        viewModel.onSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC));
+        assertEquals(NearbyUiState.OriginLabel.LIVE_PRECISE, observe(viewModel).getOriginLabel());
+
+        viewModel.onSessionChanged(sessionIn(SessionState.PAUSED, PauseReason.APP_NOT_VISIBLE));
+        NearbyUiState state = observe(viewModel);
+
+        // This is the defect the session work exists to fix: a screen that kept saying "your
+        // current location" after collection had already stopped.
+        assertEquals(NearbyUiState.OriginLabel.LIVE_PAUSED, state.getOriginLabel());
+        assertEquals(NearbyUiState.SessionPhase.PAUSED_BACKGROUND, state.getSessionPhase());
+        assertTrue("the list the user was reading must survive the pause",
+                state.getItems().size() > 0);
+    }
+
+    @Test
+    public void losingAccessAndLeavingTheAppArePausedForDifferentReasons() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+        viewModel.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+
+        viewModel.onSessionChanged(sessionIn(SessionState.PAUSED, PauseReason.PERMISSION_LOST));
+        assertEquals(NearbyUiState.SessionPhase.PAUSED_ACCESS_LOST,
+                observe(viewModel).getSessionPhase());
+
+        viewModel.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+        viewModel.onSessionChanged(sessionIn(SessionState.PAUSED, PauseReason.APP_NOT_VISIBLE));
+        assertEquals(NearbyUiState.SessionPhase.PAUSED_BACKGROUND,
+                observe(viewModel).getSessionPhase());
+    }
+
+    @Test
+    public void aStartInFlightIsReportedSoTheControlCanRefuseASecondPress() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+
+        viewModel.onSessionChanged(sessionIn(SessionState.STARTING, null));
+
+        assertTrue(observe(viewModel).getSessionPhase().isBusy());
     }
 
     // --- moving origin -------------------------------------------------------------------------
@@ -218,13 +291,13 @@ public class NearbyAttractionsViewModelTest {
                 attraction("far", northOfOrigin(240.0).getLatitude(), ORIGIN.getLongitude())));
         NearbyAttractionsViewModel viewModel = viewModelFor(repository);
 
-        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        viewModel.onSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC));
         assertEquals(Arrays.asList("near", "far"), idsOf(observe(viewModel)));
         assertEquals(1, repository.nearbyCallCount);
 
         // Walk 200 m north: below the 250 m threshold, so no new query, but "far" is now closer.
         long later = START_MONOTONIC + 60_000L;
-        viewModel.onLocationSample(sampleAt(northOfOrigin(200.0), 10.0f, later), later);
+        viewModel.onSample(sampleAt(northOfOrigin(200.0), 10.0f, later));
 
         assertEquals(Arrays.asList("far", "near"), idsOf(observe(viewModel)));
         assertEquals("distances are recomputed locally, not refetched",
@@ -236,31 +309,13 @@ public class NearbyAttractionsViewModelTest {
         CountingRepository repository = new CountingRepository();
         NearbyAttractionsViewModel viewModel = viewModelFor(repository);
 
-        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
+        viewModel.onSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC));
         assertEquals(1, repository.nearbyCallCount);
 
         long later = START_MONOTONIC + 120_000L;
-        viewModel.onLocationSample(sampleAt(northOfOrigin(400.0), 10.0f, later), later);
+        viewModel.onSample(sampleAt(northOfOrigin(400.0), 10.0f, later));
 
         assertEquals(2, repository.nearbyCallCount);
-    }
-
-    @Test
-    public void aRejectedSampleDoesNotChangeTheDisplayedState() {
-        CountingRepository repository = new CountingRepository();
-        NearbyAttractionsViewModel viewModel = viewModelFor(repository);
-
-        viewModel.onLocationSample(sampleAt(ORIGIN, 10.0f, START_MONOTONIC), START_MONOTONIC);
-        NearbyUiState before = observe(viewModel);
-
-        // Accuracy 120 m is well beyond the policy limit.
-        long later = START_MONOTONIC + 5_000L;
-        viewModel.onLocationSample(sampleAt(northOfOrigin(400.0), 120.0f, later), later);
-
-        NearbyUiState after = observe(viewModel);
-        assertEquals(before.getStatus(), after.getStatus());
-        assertEquals(idsOf(before), idsOf(after));
-        assertEquals("a poor sample must not trigger a query", 1, repository.nearbyCallCount);
     }
 
     @Test
@@ -305,7 +360,7 @@ public class NearbyAttractionsViewModelTest {
         viewModel.load();
         int itemCount = observe(viewModel).getItems().size();
 
-        viewModel.onLocationAccessChanged(LocationAccess.NOT_REQUESTED);
+        viewModel.onExplanationRequired();
         NearbyUiState state = observe(viewModel);
 
         assertEquals(NearbyUiState.Status.PERMISSION_REQUIRED, state.getStatus());
@@ -317,21 +372,45 @@ public class NearbyAttractionsViewModelTest {
     public void aPermanentDenialIsDistinguishedFromARecoverableOne() {
         NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
 
-        viewModel.onLocationAccessChanged(LocationAccess.DENIED);
+        viewModel.onLocationAccessRequested(LocationAccess.DENIED);
         assertEquals(NearbyUiState.Status.PERMISSION_DENIED, observe(viewModel).getStatus());
 
-        viewModel.onLocationAccessChanged(LocationAccess.PERMANENTLY_DENIED);
+        viewModel.onLocationAccessRequested(LocationAccess.PERMANENTLY_DENIED);
         assertEquals(NearbyUiState.Status.PERMISSION_PERMANENTLY_DENIED,
                 observe(viewModel).getStatus());
     }
 
     @Test
-    public void grantedAccessWaitsForAFixRatherThanClaimingAPosition() {
+    public void registeredButFixlessUpdatesShowWaitingRatherThanAPosition() {
         NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.onLocationAccessRequested(LocationAccess.PRECISE);
 
-        viewModel.onLocationAccessChanged(LocationAccess.PRECISE);
+        viewModel.onLocationUnavailable(LocationSource.Reason.NO_RECENT_FIX);
 
         assertEquals(NearbyUiState.Status.WAITING_FOR_FIX, observe(viewModel).getStatus());
+    }
+
+    @Test
+    public void aRoutineRecheckWithoutASessionDoesNotNagAboutADenial() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+
+        // The screen became visible again; nothing was asked for and no session is running.
+        viewModel.onLocationAccessChanged(LocationAccess.DENIED);
+
+        assertEquals("re-showing the denial on every launch would be nagging, not informing",
+                NearbyUiState.Status.CONTENT, observe(viewModel).getStatus());
+    }
+
+    @Test
+    public void losingAccessDuringASessionIsAlwaysReported() {
+        NearbyAttractionsViewModel viewModel = viewModelFor(new InMemoryAttractionRepository());
+        viewModel.load();
+        viewModel.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+
+        viewModel.onLocationAccessChanged(LocationAccess.DENIED);
+
+        assertEquals(NearbyUiState.Status.PERMISSION_DENIED, observe(viewModel).getStatus());
     }
 
     @Test
