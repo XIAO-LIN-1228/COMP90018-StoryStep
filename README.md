@@ -8,17 +8,7 @@ StoryStep helps tourists discover nearby attractions using location, motion, ori
 
 **Project status:** Planning and foundation development.
 
-## UI Implementation Preview
-
-The following screens were captured from the current Android emulator build. They show the
-implemented frontend rather than design-only mockups.
-
-| Session recovery | Privacy and data |
-|---|---|
-| <img src="docs/design/implementation/session_recovery_android.png" alt="StoryStep session recovery screen" width="320"> | <img src="docs/design/implementation/privacy_data_android.png" alt="StoryStep privacy and data screen" width="320"> |
-
-Additional implementation evidence is recorded in
-[the frontend verification record](docs/verification/EV-FRONTEND-2026-08-31-01.md).
+[View UI implementation screenshots](docs/design/implementation/)
 
 ## Core Features
 
