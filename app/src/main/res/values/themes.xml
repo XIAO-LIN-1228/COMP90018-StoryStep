@@ -10,7 +10,7 @@
         <item name="colorOnSurfaceVariant">@color/story_text_secondary</item>
         <item name="colorOutline">@color/story_outline</item>
         <item name="android:colorAccent">@color/brand_teal</item>
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/inter</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/brand_navy</item>
         <item name="android:navigationBarColor">@color/brand_ivory</item>

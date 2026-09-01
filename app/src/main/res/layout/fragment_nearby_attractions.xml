@@ -239,7 +239,7 @@
             android:text="@string/home_see_all"
             android:textColor="@color/brand_teal"
             android:textSize="14sp"
-            android:fontFamily="sans-serif-medium" />
+            android:fontFamily="@font/inter_semibold" />
     </LinearLayout>
 
     <!--

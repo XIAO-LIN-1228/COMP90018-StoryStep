@@ -42,7 +42,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:fontFamily="sans-serif-medium"
+                android:fontFamily="@font/manrope_semibold"
                 android:gravity="center"
                 android:includeFontPadding="false"
                 android:text="@string/profile_title"
@@ -66,17 +66,17 @@
                 android:orientation="horizontal">
 
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" android:text="@string/profile_journeys_count" android:textColor="@color/white" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_journeys_count" android:textColor="@color/white" android:textSize="18sp" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_journeys_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
                 </LinearLayout>
                 <View android:layout_width="1dp" android:layout_height="28dp" android:background="#33FFFFFF" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" android:text="@string/profile_stories_count" android:textColor="@color/white" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_stories_count" android:textColor="@color/white" android:textSize="18sp" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_stories_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
                 </LinearLayout>
                 <View android:layout_width="1dp" android:layout_height="28dp" android:background="#33FFFFFF" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="sans-serif-medium" android:includeFontPadding="false" android:text="@string/profile_memories_count" android:textColor="@color/white" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_memories_count" android:textColor="@color/white" android:textSize="18sp" />
                     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_memories_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
