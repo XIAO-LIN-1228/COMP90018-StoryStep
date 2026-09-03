@@ -1,21 +1,57 @@
 package com.comp90018.storystep.ui.exploration;
 
+import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
+import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.ui.DistanceText;
+import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.widget.StoryMapView;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-/** Prototype foreground exploration screen; real location and heading sources plug in later. */
+import java.util.concurrent.TimeUnit;
+
+/**
+ * The active exploration dashboard, bound to the process-wide session.
+ *
+ * <p>Every optional reading is rendered as explicitly unavailable when it is missing. A dashboard
+ * that showed "0 m remaining" because no fix had arrived would be claiming the user had arrived.
+ */
 public class ExplorationFragment extends Fragment {
+
+    private ExplorationViewModel viewModel;
+
+    /**
+     * True once this screen has actually seen a session. Without it, opening the dashboard with no
+     * session would immediately navigate away, and a second state update after the session ended
+     * would navigate twice.
+     */
+    private boolean sessionSeen;
+
+    private boolean navigatedAway;
+
+    private TextView destinationNameView;
+    private TextView durationView;
+    private TextView stateChip;
+    private TextView remainingView;
+    private TextView travelledView;
+    private TextView accuracyView;
+    private MaterialButton resumeButton;
+    private MaterialButton retrySaveButton;
+    private MaterialButton stopButton;
 
     @Nullable
     @Override
@@ -31,21 +67,145 @@ public class ExplorationFragment extends Fragment {
         StoryMapView map = view.findViewById(R.id.exploration_map);
         map.setExplorationMode(true);
 
+        destinationNameView = view.findViewById(R.id.exploration_destination_name);
+        durationView = view.findViewById(R.id.exploration_duration);
+        stateChip = view.findViewById(R.id.exploration_state_chip);
+        remainingView = view.findViewById(R.id.exploration_remaining);
+        travelledView = view.findViewById(R.id.exploration_travelled);
+        accuracyView = view.findViewById(R.id.exploration_accuracy);
+        resumeButton = view.findViewById(R.id.resume_exploration_button);
+        retrySaveButton = view.findViewById(R.id.retry_save_button);
+        stopButton = view.findViewById(R.id.stop_exploration_button);
+
         view.findViewById(R.id.exploration_back).setOnClickListener(v -> showStopDialog());
-        view.findViewById(R.id.stop_exploration_button).setOnClickListener(v -> showStopDialog());
-        view.findViewById(R.id.preview_arrival_button).setOnClickListener(v ->
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_exploration_to_arrival));
+        stopButton.setOnClickListener(v -> showStopDialog());
+        resumeButton.setOnClickListener(v -> viewModel.onResumeRequested());
+        retrySaveButton.setOnClickListener(v -> viewModel.onRetrySaveRequested());
+
+        // Arrival detection is REQ-12 and does not exist yet. The preview stays in debug builds
+        // only, so a prototype button cannot be mistaken for working arrival during a demo.
+        View previewArrival = view.findViewById(R.id.preview_arrival_button);
+        if (isDebuggableBuild()) {
+            previewArrival.setOnClickListener(v ->
+                    NavHostFragment.findNavController(this)
+                            .navigate(R.id.action_exploration_to_arrival));
+        } else {
+            previewArrival.setVisibility(View.GONE);
+        }
+
+        viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(ExplorationViewModel.class);
+        viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
     }
 
+    private void render(ExplorationUiState state) {
+        destinationNameView.setText(state.getDestinationName() == null
+                ? getString(R.string.exploration_no_destination)
+                : state.getDestinationName());
+        durationView.setText(formatDuration(state.getActiveDurationMillis()));
+        stateChip.setText(stateLabel(state));
+
+        remainingView.setText(state.hasRemainingDistance()
+                ? getString(R.string.exploration_remaining_format,
+                        DistanceText.format(getResources(), state.getRemainingDistanceMeters()))
+                : getString(R.string.exploration_remaining_unavailable));
+        travelledView.setText(getString(R.string.exploration_travelled_format,
+                DistanceText.format(getResources(), state.getTravelledDistanceMeters())));
+        accuracyView.setText(state.hasAccuracy()
+                ? getString(R.string.exploration_accuracy_format,
+                        Math.round(state.getAccuracyMeters()))
+                : getString(R.string.exploration_accuracy_unavailable));
+
+        resumeButton.setVisibility(state.isResumeVisible() ? View.VISIBLE : View.GONE);
+        retrySaveButton.setVisibility(state.isRetrySaveVisible() ? View.VISIBLE : View.GONE);
+        stopButton.setEnabled(state.isStopEnabled());
+
+        if (state.getState().hasSession()) {
+            sessionSeen = true;
+            return;
+        }
+        if (!sessionSeen || navigatedAway) {
+            return;
+        }
+        navigatedAway = true;
+        if (state.isFinished()) {
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_exploration_to_summary);
+        } else {
+            // Discarded: there is nothing left to show, and no journey to open.
+            NavHostFragment.findNavController(this).popBackStack();
+        }
+    }
+
+    private String stateLabel(ExplorationUiState state) {
+        if (state.isRetrySaveVisible()) {
+            return getString(R.string.exploration_save_failed);
+        }
+        switch (state.getState()) {
+            case STARTING:
+                return getString(R.string.exploration_state_starting);
+            case ACTIVE:
+                return state.getUnavailableReason() == null
+                        ? getString(R.string.exploration_state_active)
+                        : unavailableLabel(state.getUnavailableReason());
+            case PAUSED:
+                return pausedLabel(state.getPauseReason());
+            case STOPPING:
+                return getString(R.string.exploration_state_stopping);
+            case COMPLETED:
+                return getString(R.string.exploration_state_completed);
+            default:
+                return getString(R.string.exploration_state_idle);
+        }
+    }
+
+    private String pausedLabel(PauseReason reason) {
+        if (reason == PauseReason.PERMISSION_LOST) {
+            return getString(R.string.exploration_paused_permission);
+        }
+        if (reason == PauseReason.PROVIDER_LOST) {
+            return getString(R.string.exploration_paused_provider);
+        }
+        return getString(R.string.exploration_paused_background);
+    }
+
+    private String unavailableLabel(LocationSource.Reason reason) {
+        switch (reason) {
+            case PERMISSION_DENIED:
+                return getString(R.string.exploration_unavailable_permission);
+            case APPROXIMATE_ONLY:
+                return getString(R.string.exploration_unavailable_approximate);
+            case PROVIDER_DISABLED:
+                return getString(R.string.exploration_unavailable_provider);
+            default:
+                return getString(R.string.exploration_unavailable_no_fix);
+        }
+    }
+
+    /**
+     * Read from the installed application flags rather than {@code BuildConfig}, which this module
+     * does not generate; enabling that build feature is not worth a debug-only affordance.
+     */
+    private boolean isDebuggableBuild() {
+        return (requireContext().getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+    }
+
+    private String formatDuration(long millis) {
+        long minutes = TimeUnit.MILLISECONDS.toMinutes(millis);
+        long seconds = TimeUnit.MILLISECONDS.toSeconds(millis) - TimeUnit.MINUTES.toSeconds(minutes);
+        return getString(R.string.exploration_duration_format, minutes, seconds);
+    }
+
+    /** Finish saves the journey; Discard removes it. Both stop collection immediately. */
     private void showStopDialog() {
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.exploration_stop_title)
                 .setMessage(R.string.exploration_stop_message)
-                .setNegativeButton(R.string.cancel, null)
+                .setNeutralButton(R.string.cancel, null)
+                .setNegativeButton(R.string.exploration_discard, (dialog, which) ->
+                        viewModel.onDiscardRequested())
                 .setPositiveButton(R.string.exploration_finish, (dialog, which) ->
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.action_exploration_to_summary))
+                        viewModel.onStopRequested())
                 .show();
     }
 }

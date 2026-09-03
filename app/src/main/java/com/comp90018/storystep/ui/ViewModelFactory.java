@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider;
 import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
+import com.comp90018.storystep.ui.exploration.ExplorationViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
@@ -44,7 +45,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
-            return (T) new AttractionDetailViewModel(appContainer.getAttractionRepository());
+            return (T) new AttractionDetailViewModel(
+                    appContainer.getAttractionRepository(),
+                    appContainer.getExplorationCoordinator());
+        }
+        if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
+            return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
             return (T) new JourneysViewModel(appContainer.getJourneyRepository());

@@ -8,10 +8,13 @@ import static org.junit.Assert.assertTrue;
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
+import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
@@ -401,6 +404,169 @@ public class ExplorationCoordinatorTest {
         assertEquals(SessionState.ACTIVE, late.sessions.get(0).getState());
     }
 
+    // --- destination ---------------------------------------------------------------------------
+
+    @Test
+    public void selectingADestinationStartsNothing() {
+        becomeUsable();
+
+        coordinator.selectDestination(museum());
+
+        assertEquals("choosing where to go is not choosing to be tracked",
+                0, locationSource.registrationCount());
+        assertEquals(SessionState.IDLE, coordinator.summary().getState());
+        assertEquals("melbourne-museum", coordinator.getDestination().getId());
+    }
+
+    @Test
+    public void everyObserverIsToldTheDestination() {
+        coordinator.selectDestination(museum());
+
+        assertEquals(museum(), observer.destinations.get(observer.destinations.size() - 1));
+    }
+
+    @Test
+    public void aNewObserverIsGivenTheCurrentDestinationImmediately() {
+        coordinator.selectDestination(museum());
+
+        RecordingObserver late = new RecordingObserver();
+        coordinator.addObserver(late);
+
+        assertEquals(1, late.destinations.size());
+        assertEquals(museum(), late.destinations.get(0));
+    }
+
+    @Test
+    public void changingDestinationMidSessionKeepsTheSessionAndItsRoute() {
+        becomeUsable();
+        coordinator.requestStart(museum());
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 5.0f, 6_000L));
+        double travelled = coordinator.routeSnapshot().getTotalDistanceMeters();
+        String sessionId = coordinator.summary().getId();
+
+        coordinator.selectDestination(library());
+
+        assertEquals("changing your mind about where to go does not restart the walk",
+                sessionId, coordinator.summary().getId());
+        assertEquals(travelled, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.0);
+        assertEquals(1, locationSource.registrationCount());
+    }
+
+    // --- route ---------------------------------------------------------------------------------
+
+    @Test
+    public void aSessionStartsWithNoRoute() {
+        activeSession();
+
+        RouteSnapshot route = coordinator.routeSnapshot();
+        assertEquals(0.0, route.getTotalDistanceMeters(), 0.0);
+        assertFalse(route.hasFix());
+    }
+
+    @Test
+    public void acceptedSamplesAccumulateDistance() {
+        activeSession();
+
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 5.0f, 6_000L));
+
+        assertEquals("about 11 m for a ten-thousandth of a degree of latitude",
+                11.12, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.5);
+    }
+
+    @Test
+    public void aRejectedSampleNeverReachesTheRoute() {
+        activeSession();
+
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        // Accuracy 120 m is beyond the policy limit and must not move the total.
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 120.0f, 6_000L));
+
+        assertEquals(0.0, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.0);
+    }
+
+    @Test
+    public void travelDuringAPauseIsNotCounted() {
+        activeSession();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+
+        coordinator.onVisibilityChanged(false);
+        clock.advance(600_000L);
+        coordinator.onVisibilityChanged(true);
+        coordinator.requestResume();
+
+        // The user reappears a long way off; the app did not see the journey in between.
+        locationSource.emit(sampleAt(north(ORIGIN, 0.05), 5.0f, 601_000L));
+
+        assertEquals("untracked travel must never be added to the total",
+                0.0, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.001);
+        assertEquals(2, coordinator.routeSnapshot().getSegmentCount());
+    }
+
+    @Test
+    public void aDiscardedSessionLeavesNoRouteBehind() {
+        activeSession();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 5.0f, 6_000L));
+
+        coordinator.requestDiscard();
+
+        assertEquals(0.0, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.0);
+        assertFalse(coordinator.routeSnapshot().hasFix());
+    }
+
+    @Test
+    public void aFinishedRouteSurvivesUntilTheNextSessionStarts() {
+        activeSession();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 5.0f, 6_000L));
+
+        coordinator.requestStop();
+
+        assertEquals("the summary screen still needs to read what was walked",
+                11.12, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.5);
+
+        coordinator.requestStart();
+
+        assertEquals(0.0, coordinator.routeSnapshot().getTotalDistanceMeters(), 0.0);
+    }
+
+    @Test
+    public void anActiveSessionCheckpointsAtABoundedInterval() {
+        CountingSessionStore counting = new CountingSessionStore();
+        ExplorationCoordinator counted = coordinatorWith(counting);
+        counted.onVisibilityChanged(true);
+        counted.onLocationAccessChanged(LocationAccess.PRECISE);
+        counted.requestStart();
+        int afterStart = counting.checkpoints;
+
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        clock.advance(6_000L);
+        locationSource.emit(sampleAt(north(ORIGIN, 0.0001), 5.0f, 7_000L));
+
+        assertTrue("progress must not sit unsaved for long while a session runs",
+                counting.checkpoints > afterStart);
+    }
+
+    @Test
+    public void everyFixDoesNotCauseAWrite() {
+        CountingSessionStore counting = new CountingSessionStore();
+        ExplorationCoordinator counted = coordinatorWith(counting);
+        counted.onVisibilityChanged(true);
+        counted.onLocationAccessChanged(LocationAccess.PRECISE);
+        counted.requestStart();
+        int afterStart = counting.checkpoints;
+
+        for (int i = 1; i <= 4; i++) {
+            clock.advance(1_000L);
+            locationSource.emit(sampleAt(north(ORIGIN, 0.00005 * i), 5.0f, 1_000L * i));
+        }
+
+        assertEquals("a checkpoint per location callback would turn tracking into a write loop",
+                afterStart, counting.checkpoints);
+    }
+
     // --- helpers -------------------------------------------------------------------------------
 
     private void becomeUsable() {
@@ -422,6 +588,22 @@ public class ExplorationCoordinatorTest {
                 clock);
     }
 
+    private static GeoPoint north(GeoPoint from, double degrees) {
+        return new GeoPoint(from.getLatitude() + degrees, from.getLongitude());
+    }
+
+    private static Attraction museum() {
+        return new Attraction("melbourne-museum", "Melbourne Museum",
+                AttractionCategory.MUSEUM, "A museum.", true,
+                new GeoPoint(-37.80330, 144.97160));
+    }
+
+    private static Attraction library() {
+        return new Attraction("state-library", "State Library Victoria",
+                AttractionCategory.MUSEUM, "A library.", true,
+                new GeoPoint(-37.80980, 144.96490));
+    }
+
     private static LocationSample sampleAt(GeoPoint position,
                                            float accuracyMeters,
                                            long monotonicMillis) {
@@ -434,6 +616,18 @@ public class ExplorationCoordinatorTest {
         final List<SessionSummary> sessions = new ArrayList<>();
         final List<LocationSample> samples = new ArrayList<>();
         final List<LocationSource.Reason> unavailableReasons = new ArrayList<>();
+        final List<Attraction> destinations = new ArrayList<>();
+        final List<RouteSnapshot> routes = new ArrayList<>();
+
+        @Override
+        public void onDestinationChanged(Attraction destination) {
+            destinations.add(destination);
+        }
+
+        @Override
+        public void onRouteChanged(RouteSnapshot route) {
+            routes.add(route);
+        }
 
         @Override
         public void onSessionChanged(SessionSummary summary) {
@@ -448,6 +642,40 @@ public class ExplorationCoordinatorTest {
         @Override
         public void onLocationUnavailable(LocationSource.Reason reason) {
             unavailableReasons.add(reason);
+        }
+    }
+
+    /** Delegates to a real in-memory store while counting how often progress is written. */
+    private final class CountingSessionStore implements SessionStore {
+
+        private final InMemorySessionStore delegate = new InMemorySessionStore(clock);
+
+        int checkpoints;
+
+        @Override
+        public void create(RepositoryCallback<SessionSummary> callback) {
+            delegate.create(callback);
+        }
+
+        @Override
+        public void checkpoint(SessionSummary summary, RepositoryCallback<Void> callback) {
+            checkpoints++;
+            delegate.checkpoint(summary, callback);
+        }
+
+        @Override
+        public void finish(SessionSummary summary, RepositoryCallback<Void> callback) {
+            delegate.finish(summary, callback);
+        }
+
+        @Override
+        public void discard(String sessionId, RepositoryCallback<Void> callback) {
+            delegate.discard(sessionId, callback);
+        }
+
+        @Override
+        public void findUnfinished(RepositoryCallback<SessionSummary> callback) {
+            delegate.findUnfinished(callback);
         }
     }
 

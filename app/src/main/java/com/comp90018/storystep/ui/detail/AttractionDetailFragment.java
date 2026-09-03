@@ -92,15 +92,34 @@ public class AttractionDetailFragment extends Fragment {
     }
 
     private void showStartConfirmation() {
+        AttractionDetailUiState state = viewModel.getUiState().getValue();
+        Attraction attraction = state == null ? null : state.getAttraction();
+        if (attraction == null) {
+            return;
+        }
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.confirm_title)
-                .setMessage(getString(R.string.confirm_distance) + "\n\n"
+                .setMessage(getString(R.string.confirm_destination, attraction.getName()) + "\n\n"
                         + getString(R.string.confirm_location) + "\n"
                         + getString(R.string.confirm_stop))
                 .setNegativeButton(R.string.cancel, null)
-                .setPositiveButton(R.string.confirm_start, (dialog, which) ->
-                        NavHostFragment.findNavController(this)
-                                .navigate(R.id.action_detail_to_exploration))
+                .setPositiveButton(R.string.confirm_start, (dialog, which) -> startExploring())
                 .show();
+    }
+
+    /**
+     * Opens the dashboard only once a session is genuinely running. Without location access the
+     * destination is remembered and the user is returned to the nearby screen, which owns the
+     * permission flow; navigating to a dashboard with no session would show an explore screen that
+     * is not exploring.
+     */
+    private void startExploring() {
+        if (viewModel.onStartExplorationRequested()) {
+            NavHostFragment.findNavController(this).navigate(R.id.action_detail_to_exploration);
+            return;
+        }
+        Toast.makeText(requireContext(), R.string.start_needs_location, Toast.LENGTH_LONG).show();
+        NavHostFragment.findNavController(this)
+                .popBackStack(R.id.nearbyAttractionsFragment, false);
     }
 }
