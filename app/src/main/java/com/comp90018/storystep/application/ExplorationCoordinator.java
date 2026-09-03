@@ -1,8 +1,11 @@
 package com.comp90018.storystep.application;
 
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
+import com.comp90018.storystep.domain.geo.RouteAccumulator;
+import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
@@ -31,6 +34,9 @@ import java.util.List;
  */
 public final class ExplorationCoordinator {
 
+    /** No more than this much active progress may go unsaved while a session runs. */
+    private static final long CHECKPOINT_INTERVAL_MILLIS = 5_000L;
+
     /** What a screen needs to render the session. */
     public interface Observer {
 
@@ -41,6 +47,19 @@ public final class ExplorationCoordinator {
 
         /** Location cannot currently produce a usable position. */
         void onLocationUnavailable(LocationSource.Reason reason);
+
+        /**
+         * The attraction the user is exploring towards, or null when none is selected.
+         *
+         * <p>Default no-op: screens that only care about whether a session is running, such as the
+         * nearby list, have nothing to do with a destination change.
+         */
+        default void onDestinationChanged(Attraction destination) {
+        }
+
+        /** Travelled distance and the sampled trace after an accepted fix. */
+        default void onRouteChanged(RouteSnapshot route) {
+        }
     }
 
     private final SessionStateMachine machine;
@@ -48,6 +67,12 @@ public final class ExplorationCoordinator {
     private final LocationSource locationSource;
     private final LocationSampleFilter sampleFilter;
     private final Clock clock;
+
+    /**
+     * Owned here rather than injected: it holds the live session's route, so a second instance
+     * would mean a second, disagreeing answer to how far the user has walked.
+     */
+    private final RouteAccumulator route = new RouteAccumulator();
 
     private final List<Observer> observers = new ArrayList<>(2);
 
@@ -63,6 +88,14 @@ public final class ExplorationCoordinator {
     private boolean appVisible;
 
     private LocationAccess access = LocationAccess.NOT_REQUESTED;
+
+    private Attraction destination;
+
+    /**
+     * Monotonic time of the last checkpoint, so an active session writes progress at a bounded
+     * interval instead of on every fix.
+     */
+    private long lastCheckpointMonotonicMillis;
 
     public ExplorationCoordinator(SessionStateMachine machine,
                                   SessionStore sessionStore,
@@ -87,6 +120,8 @@ public final class ExplorationCoordinator {
             observers.add(observer);
         }
         observer.onSessionChanged(summary());
+        observer.onDestinationChanged(destination);
+        observer.onRouteChanged(route.snapshot());
     }
 
     public void removeObserver(Observer observer) {
@@ -97,7 +132,48 @@ public final class ExplorationCoordinator {
         return machine.summary();
     }
 
+    /** Travelled distance and the sampled trace of the current session. */
+    public RouteSnapshot routeSnapshot() {
+        return route.snapshot();
+    }
+
+    /** The attraction being explored towards, or null when the user has not chosen one. */
+    public Attraction getDestination() {
+        return destination;
+    }
+
+    /** True when the final save failed and the user still needs to retry it. */
+    public boolean hasStopSaveFailed() {
+        return machine.hasStopSaveFailed();
+    }
+
+    /** The permission level last reported to the coordinator. */
+    public LocationAccess getAccess() {
+        return access;
+    }
+
     // --- user commands -----------------------------------------------------------------------
+
+    /**
+     * Chooses, or changes, the attraction the user is heading towards.
+     *
+     * <p>Safe at any point in a session. Changing the destination mid-session deliberately touches
+     * nothing else: the same session keeps its id, its segment and every metre already walked,
+     * because the user changed their mind about where to go, not about whether they are exploring.
+     *
+     * <p>REQ-12 will additionally reset the arrival candidate here, since a partially satisfied
+     * dwell towards the old target says nothing about the new one.
+     */
+    public void selectDestination(Attraction attraction) {
+        destination = attraction;
+        publishDestination();
+    }
+
+    /** Selects {@code destination} and starts, for entry points that begin from a chosen place. */
+    public void requestStart(Attraction attraction) {
+        selectDestination(attraction);
+        requestStart();
+    }
 
     /** The user pressed Start. A second press while starting or running does nothing. */
     public void requestStart() {
@@ -117,6 +193,11 @@ public final class ExplorationCoordinator {
                 if (!machine.onSessionCreated(created.getId()).isChanged()) {
                     return;
                 }
+                // A new session starts from zero. Reset happens here rather than on Stop so that a
+                // finished route stays readable to the summary screen until the next session.
+                route.reset();
+                lastCheckpointMonotonicMillis = clock.monotonicMillis();
+                publishRoute();
                 // Conditions can change while the record is being written; the session now exists,
                 // so the honest outcome is a paused session rather than a cancelled start.
                 PauseReason blocked = blockingReason();
@@ -190,7 +271,10 @@ public final class ExplorationCoordinator {
             @Override
             public void onSuccess(Void result) {
                 machine.onDiscarded();
+                // A discarded session must leave nothing behind, including its route.
+                route.reset();
                 publishSession();
+                publishRoute();
             }
 
             @Override
@@ -270,6 +354,18 @@ public final class ExplorationCoordinator {
         locationSource.stopUpdates();
     }
 
+    /**
+     * Checkpoints at a bounded interval rather than on every fix, so an interruption loses at most
+     * a few seconds of progress without turning each location callback into a write.
+     */
+    private void checkpointIfDue(long nowMonotonicMillis) {
+        if (nowMonotonicMillis - lastCheckpointMonotonicMillis < CHECKPOINT_INTERVAL_MILLIS) {
+            return;
+        }
+        lastCheckpointMonotonicMillis = nowMonotonicMillis;
+        checkpoint();
+    }
+
     private void checkpoint() {
         if (!machine.getState().hasSession()) {
             return;
@@ -301,6 +397,19 @@ public final class ExplorationCoordinator {
         }
     }
 
+    private void publishDestination() {
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onDestinationChanged(destination);
+        }
+    }
+
+    private void publishRoute() {
+        RouteSnapshot snapshot = route.snapshot();
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onRouteChanged(snapshot);
+        }
+    }
+
     private void publishUnavailable(LocationSource.Reason reason) {
         for (Observer observer : new ArrayList<>(observers)) {
             observer.onLocationUnavailable(reason);
@@ -327,12 +436,16 @@ public final class ExplorationCoordinator {
             if (isStale() || !machine.getState().isCollecting()) {
                 return;
             }
-            if (!sampleFilter.offer(sample, clock.monotonicMillis()).isAccepted()) {
+            long now = clock.monotonicMillis();
+            if (!sampleFilter.offer(sample, now).isAccepted()) {
                 // A rejected sample is not an error: the next fix is usually fine, and showing a
                 // failure on every noisy reading is worse than slightly older distances.
                 return;
             }
+            route.offer(sample, machine.summary().getSegment());
             publishSample(sample);
+            publishRoute();
+            checkpointIfDue(now);
         }
 
         @Override

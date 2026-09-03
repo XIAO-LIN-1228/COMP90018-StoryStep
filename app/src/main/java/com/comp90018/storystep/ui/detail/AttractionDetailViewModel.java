@@ -4,7 +4,9 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 
@@ -12,10 +14,13 @@ import com.comp90018.storystep.domain.repository.RepositoryCallback;
 public class AttractionDetailViewModel extends ViewModel {
 
     private final AttractionRepository repository;
+    private final ExplorationCoordinator coordinator;
     private final MutableLiveData<AttractionDetailUiState> uiState = new MutableLiveData<>();
 
-    public AttractionDetailViewModel(AttractionRepository repository) {
+    public AttractionDetailViewModel(AttractionRepository repository,
+                                     ExplorationCoordinator coordinator) {
         this.repository = repository;
+        this.coordinator = coordinator;
     }
 
     public LiveData<AttractionDetailUiState> getUiState() {
@@ -39,6 +44,31 @@ public class AttractionDetailViewModel extends ViewModel {
                 uiState.setValue(AttractionDetailUiState.error());
             }
         });
+    }
+
+    /**
+     * The user confirmed "start exploring" for the attraction currently on screen.
+     *
+     * <p>The destination is recorded either way, so it is already selected when the user comes back
+     * with permission granted.
+     *
+     * @return true when a session is actually under way and the caller may open the dashboard;
+     *         false when location access is missing, in which case the caller must send the user
+     *         back to the nearby screen, which owns the Android permission and settings flow. This
+     *         screen deliberately does not duplicate that flow: two places asking for the same
+     *         permission is how apps end up in a request loop.
+     */
+    public boolean onStartExplorationRequested() {
+        AttractionDetailUiState state = uiState.getValue();
+        if (state == null || state.getAttraction() == null) {
+            return false;
+        }
+        if (!coordinator.getAccess().isGranted()) {
+            coordinator.selectDestination(state.getAttraction());
+            return false;
+        }
+        coordinator.requestStart(state.getAttraction());
+        return coordinator.summary().getState() != SessionState.IDLE;
     }
 
     /** Loads only if nothing has been published yet, so a rotation does not refetch. */
