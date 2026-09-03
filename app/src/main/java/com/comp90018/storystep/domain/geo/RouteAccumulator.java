@@ -111,6 +111,37 @@ public final class RouteAccumulator {
         return new RouteSnapshot(totalDistanceMeters, points, segmentCount, lastSample);
     }
 
+    /**
+     * Reloads a stored route so a restored session continues from its recorded totals.
+     *
+     * <p>The trace and the distance come back, but no last position does: the fix before the
+     * interruption must never be joined to the first fix after it. The next offered sample
+     * therefore starts a fresh segment, exactly as a resume does, and the gap contributes zero
+     * metres — which is the truth, because the app was not running to observe it.
+     *
+     * @param storedPoints        the sampled trace as read from storage, oldest first
+     * @param totalDistanceMeters the accumulated distance at the last checkpoint
+     * @param segmentCount        how many spans had contributed points
+     */
+    public void restore(List<RoutePoint> storedPoints,
+                        double totalDistanceMeters,
+                        int segmentCount) {
+        if (storedPoints == null) {
+            throw new IllegalArgumentException("storedPoints must not be null");
+        }
+        if (!(totalDistanceMeters >= 0.0) || Double.isInfinite(totalDistanceMeters)) {
+            throw new IllegalArgumentException(
+                    "totalDistanceMeters must be finite and not negative: " + totalDistanceMeters);
+        }
+        if (segmentCount < 0) {
+            throw new IllegalArgumentException("segmentCount must not be negative: " + segmentCount);
+        }
+        reset();
+        points.addAll(storedPoints);
+        this.totalDistanceMeters = totalDistanceMeters;
+        this.segmentCount = segmentCount;
+    }
+
     /** Clears everything. Called when a session ends or is discarded, never on a pause. */
     public void reset() {
         points.clear();

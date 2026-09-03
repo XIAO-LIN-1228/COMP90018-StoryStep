@@ -134,6 +134,8 @@
     <string name="exploration_retry_save">Retry saving</string>
     <string name="exploration_discard">Discard</string>
     <string name="exploration_save_failed">Could not save this journey. Try again.</string>
+    <string name="exploration_paused_interrupted">Paused — the app closed while this journey was running</string>
+    <string name="exploration_unsaved_progress">Progress could not be saved. Exploring continues, but recent distance may be lost if the app closes.</string>
     <string name="movement_moving">Walking</string>
     <string name="movement_stationary">Standing still</string>
     <string name="movement_unknown">Sensing…</string>

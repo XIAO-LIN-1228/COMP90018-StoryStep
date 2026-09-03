@@ -20,6 +20,9 @@ public class StoryStepApplication extends Application {
         visibilityTracker = new AppVisibilityTracker(
                 visible -> appContainer.getExplorationCoordinator().onVisibilityChanged(visible));
         visibilityTracker.register(this);
+        // Reads back a session the previous process left unfinished. It comes back paused and
+        // registers nothing; only the user can decide to continue it.
+        appContainer.getExplorationCoordinator().restoreInterruptedSession();
     }
 
     public AppContainer getAppContainer() {

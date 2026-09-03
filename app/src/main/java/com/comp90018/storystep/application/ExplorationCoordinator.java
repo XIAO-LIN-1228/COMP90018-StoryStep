@@ -12,7 +12,10 @@ import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.MotionSample;
 import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.domain.model.RestoredSession;
+import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
+import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.motion.MovementClassifier;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
@@ -79,6 +82,17 @@ public final class ExplorationCoordinator {
         /** Where the destination lies, and which way to turn if a compass is usable. */
         default void onGuidanceChanged(GuidanceSnapshot guidance) {
         }
+
+        /**
+         * True when the last attempt to save progress failed and the session is running on
+         * unsaved data.
+         *
+         * <p>Separate from a stop failure: the session is still collecting normally, but an
+         * interruption now would lose more than the checkpoint policy promises, and the user is
+         * entitled to know that before they walk another kilometre.
+         */
+        default void onDurabilityChanged(boolean checkpointFailed) {
+        }
     }
 
     /** A heading older than this describes where the phone used to point, not where it points. */
@@ -125,6 +139,18 @@ public final class ExplorationCoordinator {
      */
     private long lastCheckpointMonotonicMillis;
 
+    /**
+     * How many of the accumulated route points have been confirmed written.
+     *
+     * <p>Only advanced by a successful append, so a failed checkpoint simply re-offers the same
+     * points next time. The store ignores ones it already holds, which is what makes the retry
+     * safe rather than duplicating the trace.
+     */
+    private int persistedRoutePointCount;
+
+    /** True while the most recent checkpoint attempt is still unrecovered. */
+    private boolean checkpointFailed;
+
     /** Monotonic time of the last heading, used to decide whether the compass has gone quiet. */
     private long lastHeadingMonotonicMillis;
 
@@ -168,6 +194,7 @@ public final class ExplorationCoordinator {
         observer.onRouteChanged(route.snapshot());
         observer.onMovementChanged(movementSnapshot());
         observer.onGuidanceChanged(guidanceSnapshot());
+        observer.onDurabilityChanged(checkpointFailed);
     }
 
     public void removeObserver(Observer observer) {
@@ -229,6 +256,17 @@ public final class ExplorationCoordinator {
         return machine.hasStopSaveFailed();
     }
 
+    /**
+     * True when progress could not be saved and the session is running on unsaved data.
+     *
+     * <p>Cleared by the next checkpoint that succeeds. No user action is required — the next one
+     * is attempted automatically — but the screen must be able to say so, because the durability
+     * the checkpoint policy promises no longer holds.
+     */
+    public boolean hasCheckpointFailed() {
+        return checkpointFailed;
+    }
+
     /** The permission level last reported to the coordinator. */
     public LocationAccess getAccess() {
         return access;
@@ -252,6 +290,31 @@ public final class ExplorationCoordinator {
         // The bearing is to the new place from the moment it is chosen; the arrow must not keep
         // pointing at the old one until the next fix happens to arrive.
         publishGuidance();
+        persistDestination();
+    }
+
+    /**
+     * Stores the destination snapshot against the running session, if there is one.
+     *
+     * <p>A destination chosen with no session yet is not written: there is no record to attach it
+     * to. It is persisted at the first checkpoint after the session is created instead.
+     */
+    private void persistDestination() {
+        String sessionId = machine.getSessionId();
+        if (sessionId == null) {
+            return;
+        }
+        sessionStore.saveDestination(sessionId, destination, new RepositoryCallback<Void>() {
+            @Override
+            public void onSuccess(Void result) {
+                // Nothing to show: the destination is already on screen.
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                reportDurability(true);
+            }
+        });
     }
 
     /** Selects {@code destination} and starts, for entry points that begin from a chosen place. */
@@ -282,7 +345,12 @@ public final class ExplorationCoordinator {
                 // finished route stays readable to the summary screen until the next session.
                 route.reset();
                 movement.clear();
+                persistedRoutePointCount = 0;
+                reportDurability(false);
                 lastCheckpointMonotonicMillis = clock.monotonicMillis();
+                // A destination chosen before Start had no session to attach itself to; now it
+                // does, so the record knows where the user was heading from its first moment.
+                persistDestination();
                 publishRoute();
                 publishMovement();
                 // Conditions can change while the record is being written; the session now exists,
@@ -362,6 +430,8 @@ public final class ExplorationCoordinator {
                 // it recorded as walked.
                 route.reset();
                 movement.clear();
+                persistedRoutePointCount = 0;
+                reportDurability(false);
                 publishSession();
                 publishRoute();
                 publishMovement();
@@ -476,20 +546,129 @@ public final class ExplorationCoordinator {
         checkpoint();
     }
 
+    /**
+     * Writes the session's state and any route recorded since the last successful append.
+     *
+     * <p>Two writes rather than one because they carry different things: the summary is a small
+     * record that is rewritten each time, while the route only ever grows and is appended to. A
+     * checkpoint that rewrote the whole trace would get slower the longer the walk went on.
+     *
+     * <p>A failure here does not interrupt the session. Collection is working; only durability is
+     * degraded, the same points are re-offered next time, and the screen is told so the user is
+     * not left believing progress is safely stored when it is not.
+     */
     private void checkpoint() {
         if (!machine.getState().hasSession()) {
+            return;
+        }
+        String sessionId = machine.getSessionId();
+        if (sessionId == null) {
             return;
         }
         sessionStore.checkpoint(summary(), new RepositoryCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
-                // Nothing to show: a checkpoint is a durability measure, not a user action.
+                appendPendingRoute(sessionId);
             }
 
             @Override
             public void onError(Throwable error) {
-                // Surfacing and retrying checkpoint failures is REQ-15's durability work; losing
-                // one checkpoint must not interrupt a session that is otherwise running fine.
+                reportDurability(true);
+            }
+        });
+    }
+
+    /**
+     * Appends the points the store has not confirmed yet.
+     *
+     * <p>{@code persistedRoutePointCount} advances only on success, so an unconfirmed point is
+     * always re-sent rather than assumed written.
+     */
+    private void appendPendingRoute(String sessionId) {
+        RouteSnapshot snapshot = route.snapshot();
+        List<RoutePoint> points = snapshot.getPoints();
+        if (persistedRoutePointCount > points.size()) {
+            // The route was reset under a session that is somehow still running; start again from
+            // what actually exists rather than skipping points forever.
+            persistedRoutePointCount = 0;
+        }
+        int firstSequence = persistedRoutePointCount;
+        List<RoutePoint> pending = new ArrayList<>(points.subList(firstSequence, points.size()));
+        int confirmed = points.size();
+        sessionStore.appendRoute(sessionId, firstSequence, pending,
+                snapshot.getTotalDistanceMeters(), snapshot.getSegmentCount(),
+                new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        persistedRoutePointCount = confirmed;
+                        reportDurability(false);
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        reportDurability(true);
+                    }
+                });
+    }
+
+    private void reportDurability(boolean failed) {
+        if (checkpointFailed == failed) {
+            return;
+        }
+        checkpointFailed = failed;
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onDurabilityChanged(failed);
+        }
+    }
+
+    /**
+     * Adopts the unfinished session left behind by a process that ended, if there is one.
+     *
+     * <p>Called once at application start. The restored session is always paused and registers
+     * nothing: the app reopening is not the user asking to continue, and treating it as such would
+     * be exactly the background collection this project does not do.
+     *
+     * <p>A failure is deliberately silent. The app simply starts with no session, which is the
+     * same state it would have had if there were nothing to restore.
+     */
+    public void restoreInterruptedSession() {
+        if (machine.getState() != SessionState.IDLE) {
+            return;
+        }
+        sessionStore.findUnfinished(new RepositoryCallback<RestoredSession>() {
+            @Override
+            public void onSuccess(RestoredSession restored) {
+                if (restored == null
+                        || restored.getSummary().getState() == SessionState.COMPLETED) {
+                    return;
+                }
+                if (!machine.restore(restored.getSummary()).isChanged()) {
+                    // A session was started while the read was in flight; that one is the real
+                    // session and must not be replaced by a stale record.
+                    return;
+                }
+                RouteSnapshot storedRoute = restored.getRoute();
+                route.restore(storedRoute.getPoints(), storedRoute.getTotalDistanceMeters(),
+                        storedRoute.getSegmentCount());
+                persistedRoutePointCount = storedRoute.getPoints().size();
+                // The checkpoint interval is measured from now, not from whenever the previous
+                // process last wrote; a monotonic reading from before the relaunch means nothing
+                // here.
+                lastCheckpointMonotonicMillis = clock.monotonicMillis();
+                destination = restored.getDestination();
+                movement.clear();
+                headingSmoother.reset();
+                headingUsable = false;
+                publishSession();
+                publishDestination();
+                publishRoute();
+                publishMovement();
+                publishGuidance();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                // Nothing to restore that can be trusted; the app stays idle.
             }
         });
     }

@@ -45,6 +45,7 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     private RouteSnapshot route = RouteSnapshot.empty();
     private LocationSource.Reason unavailableReason;
     private MovementSnapshot movement = MovementSnapshot.unavailable();
+    private boolean checkpointFailed;
     private GuidanceSnapshot guidance = GuidanceSnapshot.unavailable();
 
     public ExplorationViewModel(ExplorationCoordinator coordinator) {
@@ -124,11 +125,18 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         publish();
     }
 
+    @Override
+    public void onDurabilityChanged(boolean failed) {
+        checkpointFailed = failed;
+        publish();
+    }
+
     private void publish() {
         // Always read the session back rather than caching the last published one: the tick's
         // whole job is to show a duration that grows without the session having changed.
         uiState.setValue(ExplorationUiState.from(coordinator.summary(), destination, route,
-                unavailableReason, coordinator.hasStopSaveFailed(), movement, guidance));
+                unavailableReason, coordinator.hasStopSaveFailed(), checkpointFailed, movement,
+                guidance));
     }
 
     @Override

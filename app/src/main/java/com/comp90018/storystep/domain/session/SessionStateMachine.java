@@ -92,6 +92,43 @@ public final class SessionStateMachine {
     }
 
     /**
+     * Adopts an unfinished session read back from storage after the process ended.
+     *
+     * <p>Accepted only from {@code IDLE}, and the restored session always lands in {@code PAUSED}:
+     * the user asked for a session before the process died, not for one that silently resumes
+     * collecting the moment the app is opened again.
+     *
+     * <p>The accumulated duration is taken from the stored value and no active span is opened, so
+     * nothing here subtracts a monotonic reading taken before a reboot from one taken after it.
+     * Time spent with the app dead is not collecting time and is never counted.
+     *
+     * @param persisted the stored session; must have an id and must not be completed
+     */
+    public SessionTransition restore(SessionSummary persisted) {
+        if (persisted == null) {
+            throw new IllegalArgumentException("persisted must not be null");
+        }
+        if (persisted.getId() == null || persisted.getId().isEmpty()) {
+            throw new IllegalArgumentException("persisted session must have an id");
+        }
+        if (persisted.getState() == SessionState.COMPLETED) {
+            throw new IllegalArgumentException("a completed session is not restorable");
+        }
+        if (state != SessionState.IDLE) {
+            return unchanged();
+        }
+        reset();
+        sessionId = persisted.getId();
+        startWallClockMillis = persisted.getStartWallClockMillis();
+        accumulatedActiveMillis = persisted.getActiveDurationMillis();
+        activeSinceMonotonicMillis = NO_ACTIVE_SPAN;
+        segment = Math.max(1, persisted.getSegment());
+        pauseReason = PauseReason.PROCESS_INTERRUPTED;
+        state = SessionState.PAUSED;
+        return new SessionTransition(SessionState.IDLE, state);
+    }
+
+    /**
      * The start could not complete: access was denied or cancelled, or the record could not be
      * written. No session is left behind, so nothing can later be mistaken for a real one.
      */

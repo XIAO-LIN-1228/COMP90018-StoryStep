@@ -14,6 +14,8 @@ import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.domain.model.RestoredSession;
+import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
@@ -292,10 +294,10 @@ public class ExplorationCoordinatorTest {
 
         assertFalse(locationSource.isRegistered());
         assertEquals(SessionState.IDLE, coordinator.summary().getState());
-        final SessionSummary[] unfinished = new SessionSummary[1];
-        sessionStore.findUnfinished(new RepositoryCallback<SessionSummary>() {
+        final RestoredSession[] unfinished = new RestoredSession[1];
+        sessionStore.findUnfinished(new RepositoryCallback<RestoredSession>() {
             @Override
-            public void onSuccess(SessionSummary result) {
+            public void onSuccess(RestoredSession result) {
                 unfinished[0] = result;
             }
 
@@ -664,6 +666,24 @@ public class ExplorationCoordinatorTest {
         }
 
         @Override
+        public void appendRoute(String sessionId,
+                                int firstSequence,
+                                List<RoutePoint> newPoints,
+                                double totalDistanceMeters,
+                                int segmentCount,
+                                RepositoryCallback<Void> callback) {
+            delegate.appendRoute(sessionId, firstSequence, newPoints, totalDistanceMeters,
+                    segmentCount, callback);
+        }
+
+        @Override
+        public void saveDestination(String sessionId,
+                                    Attraction destination,
+                                    RepositoryCallback<Void> callback) {
+            delegate.saveDestination(sessionId, destination, callback);
+        }
+
+        @Override
         public void finish(SessionSummary summary, RepositoryCallback<Void> callback) {
             delegate.finish(summary, callback);
         }
@@ -674,7 +694,7 @@ public class ExplorationCoordinatorTest {
         }
 
         @Override
-        public void findUnfinished(RepositoryCallback<SessionSummary> callback) {
+        public void findUnfinished(RepositoryCallback<RestoredSession> callback) {
             delegate.findUnfinished(callback);
         }
     }
@@ -691,6 +711,23 @@ public class ExplorationCoordinatorTest {
         }
 
         @Override
+        public void appendRoute(String sessionId,
+                                int firstSequence,
+                                List<RoutePoint> newPoints,
+                                double totalDistanceMeters,
+                                int segmentCount,
+                                RepositoryCallback<Void> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void saveDestination(String sessionId,
+                                    Attraction destination,
+                                    RepositoryCallback<Void> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
         public void finish(SessionSummary summary, RepositoryCallback<Void> callback) {
             callback.onError(new IOException("disk full"));
         }
@@ -701,7 +738,7 @@ public class ExplorationCoordinatorTest {
         }
 
         @Override
-        public void findUnfinished(RepositoryCallback<SessionSummary> callback) {
+        public void findUnfinished(RepositoryCallback<RestoredSession> callback) {
             callback.onSuccess(null);
         }
     }

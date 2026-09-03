@@ -56,6 +56,7 @@ public class ExplorationFragment extends Fragment {
     private ImageView directionArrow;
     private MaterialButton resumeButton;
     private MaterialButton retrySaveButton;
+    private TextView noticeView;
     private MaterialButton stopButton;
 
     @Nullable
@@ -84,6 +85,7 @@ public class ExplorationFragment extends Fragment {
         resumeButton = view.findViewById(R.id.resume_exploration_button);
         retrySaveButton = view.findViewById(R.id.retry_save_button);
         stopButton = view.findViewById(R.id.stop_exploration_button);
+        noticeView = view.findViewById(R.id.exploration_notice);
 
         view.findViewById(R.id.exploration_back).setOnClickListener(v -> showStopDialog());
         stopButton.setOnClickListener(v -> showStopDialog());
@@ -125,6 +127,12 @@ public class ExplorationFragment extends Fragment {
                 : getString(R.string.exploration_accuracy_unavailable));
         movementView.setText(DirectionLabels.movementOf(state.getMovementState()));
         renderDirection(state);
+
+        // The durability warning replaces the standing notice rather than joining it: a second
+        // line of small text under an unread one is a line nobody reads.
+        noticeView.setText(state.isUnsavedProgressWarningVisible()
+                ? getString(R.string.exploration_unsaved_progress)
+                : getString(R.string.exploration_notice));
 
         resumeButton.setVisibility(state.isResumeVisible() ? View.VISIBLE : View.GONE);
         retrySaveButton.setVisibility(state.isRetrySaveVisible() ? View.VISIBLE : View.GONE);
@@ -203,6 +211,9 @@ public class ExplorationFragment extends Fragment {
         }
         if (reason == PauseReason.PROVIDER_LOST) {
             return getString(R.string.exploration_paused_provider);
+        }
+        if (reason == PauseReason.PROCESS_INTERRUPTED) {
+            return getString(R.string.exploration_paused_interrupted);
         }
         return getString(R.string.exploration_paused_background);
     }
