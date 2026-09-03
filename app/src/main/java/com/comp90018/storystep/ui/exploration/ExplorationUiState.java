@@ -1,8 +1,12 @@
 package com.comp90018.storystep.ui.exploration;
 
 import com.comp90018.storystep.domain.geo.GeoCalculator;
+import com.comp90018.storystep.domain.guidance.CardinalDirection;
+import com.comp90018.storystep.domain.guidance.GuidanceSnapshot;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.LocationSample;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
+import com.comp90018.storystep.domain.model.MovementState;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
@@ -27,6 +31,8 @@ public final class ExplorationUiState {
     private final Float accuracyMeters;
     private final LocationSource.Reason unavailableReason;
     private final boolean stopSaveFailed;
+    private final MovementSnapshot movement;
+    private final GuidanceSnapshot guidance;
 
     private ExplorationUiState(String destinationName,
                                SessionState state,
@@ -36,7 +42,9 @@ public final class ExplorationUiState {
                                Double remainingDistanceMeters,
                                Float accuracyMeters,
                                LocationSource.Reason unavailableReason,
-                               boolean stopSaveFailed) {
+                               boolean stopSaveFailed,
+                               MovementSnapshot movement,
+                               GuidanceSnapshot guidance) {
         this.destinationName = destinationName;
         this.state = state;
         this.pauseReason = pauseReason;
@@ -46,10 +54,12 @@ public final class ExplorationUiState {
         this.accuracyMeters = accuracyMeters;
         this.unavailableReason = unavailableReason;
         this.stopSaveFailed = stopSaveFailed;
+        this.movement = movement;
+        this.guidance = guidance;
     }
 
     /**
-     * Combines the coordinator's three independent facts into one renderable state.
+     * Combines the coordinator's independent facts into one renderable state.
      *
      * @param unavailableReason the last reported reason location produced nothing, or null once a
      *                          fix has been accepted again
@@ -58,7 +68,9 @@ public final class ExplorationUiState {
                                           Attraction destination,
                                           RouteSnapshot route,
                                           LocationSource.Reason unavailableReason,
-                                          boolean stopSaveFailed) {
+                                          boolean stopSaveFailed,
+                                          MovementSnapshot movement,
+                                          GuidanceSnapshot guidance) {
         LocationSample last = route.getLastSample();
         Double remaining = null;
         if (last != null && destination != null) {
@@ -74,7 +86,9 @@ public final class ExplorationUiState {
                 remaining,
                 last == null ? null : last.getAccuracyMeters(),
                 last == null ? unavailableReason : null,
-                stopSaveFailed);
+                stopSaveFailed,
+                movement,
+                guidance);
     }
 
     /** Null when the user started exploring without choosing a destination. */
@@ -149,5 +163,47 @@ public final class ExplorationUiState {
     /** True before any session exists, for example after a discard. */
     public boolean isIdle() {
         return state == SessionState.IDLE;
+    }
+
+    // --- movement ------------------------------------------------------------------------------
+
+    /** Never null; {@code UNAVAILABLE} on a device with no accelerometer. */
+    public MovementState getMovementState() {
+        return movement.getState();
+    }
+
+    public long getMovingMillis() {
+        return movement.getMovingMillis();
+    }
+
+    public long getStationaryMillis() {
+        return movement.getStationaryMillis();
+    }
+
+    // --- direction -----------------------------------------------------------------------------
+
+    /**
+     * True when an arrow may be drawn.
+     *
+     * <p>False does not mean the direction is unknown — {@link #hasCardinal()} may still hold. It
+     * means only that the device cannot say which way it is facing, so a turn cannot be shown.
+     */
+    public boolean hasDirectionArrow() {
+        return guidance.hasRelativeBearing();
+    }
+
+    /** Degrees to rotate the arrow: positive is clockwise. Check {@link #hasDirectionArrow()}. */
+    public double getRelativeBearingDegrees() {
+        return guidance.getRelativeBearingDegrees();
+    }
+
+    /** True when the destination's compass direction is known, with or without a heading. */
+    public boolean hasCardinal() {
+        return guidance.getCardinal() != null;
+    }
+
+    /** The eight-point label for the destination's bearing, or null when there is no bearing. */
+    public CardinalDirection getCardinal() {
+        return guidance.getCardinal();
     }
 }

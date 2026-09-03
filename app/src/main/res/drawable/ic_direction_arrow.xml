@@ -1,0 +1,13 @@
+<!--
+    Points straight up at zero rotation, so the view's rotation is exactly the relative bearing.
+    A symmetrical or compass-rose icon would leave "which end is the front" ambiguous once rotated.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="@color/brand_teal"
+        android:pathData="M12,2 L20,20 L12,16 L4,20 Z" />
+</vector>

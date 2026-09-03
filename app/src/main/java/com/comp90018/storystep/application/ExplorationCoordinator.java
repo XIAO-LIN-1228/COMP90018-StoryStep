@@ -2,17 +2,28 @@ package com.comp90018.storystep.application;
 
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.geo.RouteAccumulator;
+import com.comp90018.storystep.domain.guidance.CircularSmoother;
+import com.comp90018.storystep.domain.guidance.DirectionGuidance;
+import com.comp90018.storystep.domain.guidance.GuidanceSnapshot;
+import com.comp90018.storystep.domain.guidance.TrueHeading;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationSample;
+import com.comp90018.storystep.domain.model.MotionSample;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.motion.MovementClassifier;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.platform.sensor.HeadingAccuracy;
+import com.comp90018.storystep.platform.sensor.HeadingSource;
+import com.comp90018.storystep.platform.sensor.MotionSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,19 +71,36 @@ public final class ExplorationCoordinator {
         /** Travelled distance and the sampled trace after an accepted fix. */
         default void onRouteChanged(RouteSnapshot route) {
         }
+
+        /** The movement estimate and its accumulated durations. */
+        default void onMovementChanged(MovementSnapshot movement) {
+        }
+
+        /** Where the destination lies, and which way to turn if a compass is usable. */
+        default void onGuidanceChanged(GuidanceSnapshot guidance) {
+        }
     }
+
+    /** A heading older than this describes where the phone used to point, not where it points. */
+    private static final long HEADING_STALE_AFTER_MILLIS = 5_000L;
 
     private final SessionStateMachine machine;
     private final SessionStore sessionStore;
     private final LocationSource locationSource;
     private final LocationSampleFilter sampleFilter;
     private final Clock clock;
+    private final SensingSources sensing;
 
     /**
      * Owned here rather than injected: it holds the live session's route, so a second instance
      * would mean a second, disagreeing answer to how far the user has walked.
      */
     private final RouteAccumulator route = new RouteAccumulator();
+
+    /** Same reason as the route: one session, one answer to how long the user has been walking. */
+    private final MovementClassifier movement = new MovementClassifier();
+
+    private final CircularSmoother headingSmoother = new CircularSmoother();
 
     private final List<Observer> observers = new ArrayList<>(2);
 
@@ -97,16 +125,32 @@ public final class ExplorationCoordinator {
      */
     private long lastCheckpointMonotonicMillis;
 
+    /** Monotonic time of the last heading, used to decide whether the compass has gone quiet. */
+    private long lastHeadingMonotonicMillis;
+
+    private boolean headingUsable;
+
+    /** Location only. A device with no motion or compass sensing is a supported configuration. */
     public ExplorationCoordinator(SessionStateMachine machine,
                                   SessionStore sessionStore,
                                   LocationSource locationSource,
                                   LocationSampleFilter sampleFilter,
                                   Clock clock) {
+        this(machine, sessionStore, locationSource, sampleFilter, clock, SensingSources.none());
+    }
+
+    public ExplorationCoordinator(SessionStateMachine machine,
+                                  SessionStore sessionStore,
+                                  LocationSource locationSource,
+                                  LocationSampleFilter sampleFilter,
+                                  Clock clock,
+                                  SensingSources sensing) {
         this.machine = machine;
         this.sessionStore = sessionStore;
         this.locationSource = locationSource;
         this.sampleFilter = sampleFilter;
         this.clock = clock;
+        this.sensing = sensing;
     }
 
     // --- observers ---------------------------------------------------------------------------
@@ -122,6 +166,8 @@ public final class ExplorationCoordinator {
         observer.onSessionChanged(summary());
         observer.onDestinationChanged(destination);
         observer.onRouteChanged(route.snapshot());
+        observer.onMovementChanged(movementSnapshot());
+        observer.onGuidanceChanged(guidanceSnapshot());
     }
 
     public void removeObserver(Observer observer) {
@@ -135,6 +181,42 @@ public final class ExplorationCoordinator {
     /** Travelled distance and the sampled trace of the current session. */
     public RouteSnapshot routeSnapshot() {
         return route.snapshot();
+    }
+
+    /**
+     * The movement estimate, or {@code UNAVAILABLE} when this device cannot produce one.
+     *
+     * <p>Reported as unavailable rather than unknown when the sensor is absent, so the screen can
+     * say "this phone has no motion sensor" instead of leaving the user waiting for a reading that
+     * will never arrive.
+     */
+    public MovementSnapshot movementSnapshot() {
+        return sensing.hasMotion() ? movement.snapshot() : MovementSnapshot.unavailable();
+    }
+
+    /** Where the destination lies relative to the user, as far as current data can say. */
+    public GuidanceSnapshot guidanceSnapshot() {
+        LocationSample last = route.snapshot().getLastSample();
+        GeoPoint from = last == null ? null : last.getPosition();
+        GeoPoint target = destination == null ? null : destination.getLocation();
+        return DirectionGuidance.compute(from, target, currentTrueHeading());
+    }
+
+    /**
+     * The smoothed true-north heading, or null when it cannot be trusted.
+     *
+     * <p>Null covers four separate situations — no compass, an unreliable reading, no fix to derive
+     * declination from, and a heading that has gone stale — and they collapse here on purpose: the
+     * only thing the arrow needs to know is whether it may be drawn.
+     */
+    private Double currentTrueHeading() {
+        if (!headingUsable || !headingSmoother.hasValue()) {
+            return null;
+        }
+        if (clock.monotonicMillis() - lastHeadingMonotonicMillis > HEADING_STALE_AFTER_MILLIS) {
+            return null;
+        }
+        return headingSmoother.value();
     }
 
     /** The attraction being explored towards, or null when the user has not chosen one. */
@@ -167,6 +249,9 @@ public final class ExplorationCoordinator {
     public void selectDestination(Attraction attraction) {
         destination = attraction;
         publishDestination();
+        // The bearing is to the new place from the moment it is chosen; the arrow must not keep
+        // pointing at the old one until the next fix happens to arrive.
+        publishGuidance();
     }
 
     /** Selects {@code destination} and starts, for entry points that begin from a chosen place. */
@@ -196,8 +281,10 @@ public final class ExplorationCoordinator {
                 // A new session starts from zero. Reset happens here rather than on Stop so that a
                 // finished route stays readable to the summary screen until the next session.
                 route.reset();
+                movement.clear();
                 lastCheckpointMonotonicMillis = clock.monotonicMillis();
                 publishRoute();
+                publishMovement();
                 // Conditions can change while the record is being written; the session now exists,
                 // so the honest outcome is a paused session rather than a cancelled start.
                 PauseReason blocked = blockingReason();
@@ -271,10 +358,14 @@ public final class ExplorationCoordinator {
             @Override
             public void onSuccess(Void result) {
                 machine.onDiscarded();
-                // A discarded session must leave nothing behind, including its route.
+                // A discarded session must leave nothing behind, including its route and the time
+                // it recorded as walked.
                 route.reset();
+                movement.clear();
                 publishSession();
                 publishRoute();
+                publishMovement();
+                publishGuidance();
             }
 
             @Override
@@ -338,10 +429,22 @@ public final class ExplorationCoordinator {
     private void openSubscription() {
         closeSubscription();
         // A resumed session starts a new segment, so its first fix must not be compared against a
-        // position recorded before the pause.
+        // position recorded before the pause. The motion windows and the compass smoothing are
+        // reset for the same reason: readings from before the gap describe a different walk.
         sampleFilter.reset();
+        movement.reset();
+        headingSmoother.reset();
+        headingUsable = false;
         subscription = new Subscription(++generation);
         locationSource.startUpdates(subscription);
+        // A missing sensor is not an error and must not stop the session: the location half of the
+        // session is exactly as useful on a phone with no compass.
+        if (sensing.hasMotion()) {
+            sensing.getMotionSource().startUpdates(subscription);
+        }
+        if (sensing.hasHeading()) {
+            sensing.getHeadingSource().startUpdates(subscription);
+        }
     }
 
     private void closeSubscription() {
@@ -352,6 +455,13 @@ public final class ExplorationCoordinator {
         // Bump before unregistering: anything already queued for the old generation is now stale.
         generation++;
         locationSource.stopUpdates();
+        if (sensing.getMotionSource() != null) {
+            sensing.getMotionSource().stopUpdates();
+        }
+        if (sensing.getHeadingSource() != null) {
+            sensing.getHeadingSource().stopUpdates();
+        }
+        headingUsable = false;
     }
 
     /**
@@ -416,6 +526,20 @@ public final class ExplorationCoordinator {
         }
     }
 
+    private void publishMovement() {
+        MovementSnapshot snapshot = movementSnapshot();
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onMovementChanged(snapshot);
+        }
+    }
+
+    private void publishGuidance() {
+        GuidanceSnapshot snapshot = guidanceSnapshot();
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onGuidanceChanged(snapshot);
+        }
+    }
+
     /**
      * One registration's callbacks, tagged with the generation that created it.
      *
@@ -423,7 +547,8 @@ public final class ExplorationCoordinator {
      * itself: it is the only way to tell a callback from the current subscription apart from one
      * queued by a subscription that has since been replaced.
      */
-    private final class Subscription implements LocationSource.Listener {
+    private final class Subscription
+            implements LocationSource.Listener, MotionSource.Listener, HeadingSource.Listener {
 
         private final int ownGeneration;
 
@@ -445,7 +570,48 @@ public final class ExplorationCoordinator {
             route.offer(sample, machine.summary().getSegment());
             publishSample(sample);
             publishRoute();
+            // Moving changes the bearing to the destination even when the phone has not turned.
+            publishGuidance();
             checkpointIfDue(now);
+        }
+
+        @Override
+        public void onMotionSample(MotionSample sample) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            movement.offer(sample);
+            publishMovement();
+        }
+
+        @Override
+        public void onHeadingChanged(float magneticHeadingDegrees, HeadingAccuracy accuracy) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            if (!accuracy.isUsable()) {
+                // Keep the smoothed history but stop trusting it: an uncalibrated compass points
+                // somewhere plausible and wrong, which is worse than showing no arrow at all.
+                headingUsable = false;
+                publishGuidance();
+                return;
+            }
+            LocationSample last = route.snapshot().getLastSample();
+            Float declination = last == null
+                    ? null
+                    : sensing.declinationAt(last.getPosition(), last.getWallClockMillis());
+            if (declination == null) {
+                // Without a position there is no declination, and without declination a magnetic
+                // heading is not a true heading. Reporting it as one would be a silent lie of
+                // roughly eleven degrees in Melbourne, and far more in other parts of the world.
+                headingUsable = false;
+                publishGuidance();
+                return;
+            }
+            headingSmoother.offer(TrueHeading.degrees(magneticHeadingDegrees, declination));
+            lastHeadingMonotonicMillis = clock.monotonicMillis();
+            headingUsable = true;
+            publishGuidance();
         }
 
         @Override

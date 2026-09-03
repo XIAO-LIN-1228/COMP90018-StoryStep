@@ -5,6 +5,7 @@ import android.content.Context;
 import androidx.core.content.ContextCompat;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.application.SensingSources;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
 import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
@@ -19,6 +20,8 @@ import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
 import com.comp90018.storystep.platform.location.AndroidLocationSource;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.platform.sensor.AndroidDeclinationSource;
+import com.comp90018.storystep.platform.sensor.AndroidSensorHub;
 import com.comp90018.storystep.platform.time.AndroidClock;
 
 import java.util.concurrent.Executor;
@@ -70,6 +73,10 @@ public class AppContainer {
         this.ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
         this.clock = new AndroidClock();
         this.sessionStore = new InMemorySessionStore(clock);
+        // One hub for both sensors: the accelerometer is needed by motion estimation and by the
+        // compass, and registering it twice would double the callback rate and the power cost for
+        // readings that are identical.
+        AndroidSensorHub sensorHub = new AndroidSensorHub(this.applicationContext);
         // Assembled once, here, because the coordinator must outlive every screen: it owns the
         // session and the single location subscription, and a session survives navigation.
         this.explorationCoordinator = new ExplorationCoordinator(
@@ -77,7 +84,9 @@ public class AppContainer {
                 sessionStore,
                 new AndroidLocationSource(this.applicationContext),
                 new LocationSampleFilter(locationQualityPolicy),
-                clock);
+                clock,
+                new SensingSources(sensorHub, sensorHub.asHeadingSource(),
+                        new AndroidDeclinationSource()));
     }
 
     public AttractionRepository getAttractionRepository() {

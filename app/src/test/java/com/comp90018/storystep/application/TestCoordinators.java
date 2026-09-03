@@ -19,13 +19,21 @@ public final class TestCoordinators {
     private TestCoordinators() {
     }
 
+    /** Location only: the configuration of a device with no motion or compass sensing. */
     public static ExplorationCoordinator with(FakeClock clock, FakeLocationSource locationSource) {
+        return with(clock, locationSource, SensingSources.none());
+    }
+
+    public static ExplorationCoordinator with(FakeClock clock,
+                                              FakeLocationSource locationSource,
+                                              SensingSources sensing) {
         return new ExplorationCoordinator(
                 new SessionStateMachine(clock),
                 new InMemorySessionStore(clock),
                 locationSource,
                 new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()),
-                clock);
+                clock,
+                sensing);
     }
 
     /** A coordinator with its own fresh fakes, for tests that never drive time or location. */

@@ -1,6 +1,6 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
-Prepared: 2026-08-31. Requirements: [development plan](development_plan.md).
+Prepared: 2026-08-31. Last updated: 2026-09-03. Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
@@ -8,6 +8,20 @@ Frontend integration snapshot: `feature/frontend-ui` includes the frontend imple
 `142c26f` and the session-lifecycle work merged to `main` at `204708f`, assessed in
 [EV-FRONTEND-2026-08-31-01](verification/EV-FRONTEND-2026-08-31-01.md). Screen presence is counted
 as `FOUNDATION_ONLY` unless the required data, lifecycle and acceptance behavior is connected.
+
+Branch snapshot, 2026-09-03. Two rounds of work sit on unmerged branches and are recorded below as
+`IN_REVIEW`, not as merged behavior:
+
+- `feature/exploration-dashboard` at `04b4794`, from `main@9a85c7b`: destination selection, the
+  session-bound exploration dashboard and in-memory route accumulation
+  ([EV-REQ05-REQ07-2026-09-03-01](verification/EV-REQ05-REQ07-2026-09-03-01.md)).
+- `feature/motion-and-heading`, from `04b4794`: accelerometer acquisition, movement estimation,
+  magnetometer heading and directional guidance
+  ([EV-REQ08-REQ11-2026-09-03-01](verification/EV-REQ08-REQ11-2026-09-03-01.md)). **Uncommitted at
+  the time of writing**; the commit column must be filled in once a commit exists.
+
+Neither round has been run on a device or an emulator. Every physical acceptance case for
+REQ-05 through REQ-11 remains NOT_RUN, and the sensing thresholds under D-07 remain unvalidated.
 
 ## 1. Status rules and requirement ledger
 
@@ -23,14 +37,14 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 | REQ-02 | I1 | M1 / M4 | MERGED | PARTIAL | `8ca81aa`, `204708f` | [EV-REQ02-2026-08-31-01](verification/EV-REQ02-2026-08-31-01.md); coordinator/state machine and foreground pause-resume are integrated; recovery UI uses the process session, but durable restoration and A/P evidence remain |
 | REQ-03 | I1 | M1 / M3 | MERGED | PARTIAL | `a828d0f`, `204708f` | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U/build passed, physical fix matrix NOT_RUN |
 | REQ-04 | I1 | M2 / M5 | IN_REVIEW | PARTIAL | `a828d0f`, `142c26f` | Live/reference origins and state-preserving list are integrated; Android/physical acceptance remains NOT_RUN |
-| REQ-05 | I1 | M2 / M1 | IN_PROGRESS | NOT_RUN | `f30c538`, `142c26f` | Repository-backed details and start confirmation exist; destination/session binding, durable Save and restoration tests are missing |
-| REQ-06 | I2, final wiring I3 | M2 / M1 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Exploration dashboard is a static prototype, not a session-bound dashboard |
-| REQ-07 | I2 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-08 | I2 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-09 | I2 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
-| REQ-10 | I2 | M3 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-11 | I2 | M2 / M3 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-12 | I4 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Arrival preview screen exists; no detector or selected-target integration |
+| REQ-05 | I1 | M2 / M1 | IN_REVIEW | PARTIAL | `04b4794` | [EV-REQ05-REQ07-2026-09-03-01](verification/EV-REQ05-REQ07-2026-09-03-01.md); REQ-05.2 destination selection and gated session start are implemented and unit-tested; AT-05A device half and AT-05B NOT_RUN; durable Save still depends on REQ-17 |
+| REQ-06 | I2, final wiring I3 | M2 / M1 | IN_REVIEW | PARTIAL | `04b4794` | Same evidence; dashboard is bound to the coordinator with state, duration, distances and Stop/Resume/Discard/retry. AT-06A U part only; AT-06B cannot pass until REQ-19 supplies weather, and font-scale/landscape/TalkBack NOT_RUN |
+| REQ-07 | I2 | M1 / M3 | IN_REVIEW | PARTIAL | `04b4794` | Same evidence; segment-aware accumulation, 5 s point sampling and bounded checkpoints pass AT-07A on synthetic traces. AT-07B NOT_RUN — no measured outdoor walk. Route lives only in memory; durable storage is REQ-15 |
+| REQ-08 | I2 | M3 / M1 | IN_REVIEW | PARTIAL | `feature/motion-and-heading` (uncommitted) | [EV-REQ08-REQ11-2026-09-03-01](verification/EV-REQ08-REQ11-2026-09-03-01.md); one shared accelerometer registration serving motion and heading, session-scoped lifecycle. AT-08A/B asserted through fakes only — `AndroidSensorHub` has never executed on a device and has no automated coverage |
+| REQ-09 | I2 | M3 / M1 | IN_REVIEW | PARTIAL | `feature/motion-and-heading` (uncommitted) | Same evidence; AT-09A passes against the new labelled fixtures, including rotation-without-walking. AT-09B NOT_RUN — no recorded trials, so the 0.35/0.7 m/s^2 thresholds are unvalidated and the physical targets are unsupported |
+| REQ-10 | I2 | M3 / M1 | IN_REVIEW | PARTIAL | `feature/motion-and-heading` (uncommitted) | Same evidence; AT-10A passes (350+15 = true 5; 359/1 stays near north). **Contract change**: `HeadingSource` now reports magnetic heading plus accuracy, with declination applied in `domain.guidance`. AT-10B NOT_RUN — display remapping and real magnetometer accuracy unobserved |
+| REQ-11 | I2 | M2 / M3 | IN_REVIEW | PARTIAL | `feature/motion-and-heading` (uncommitted) | Same evidence; AT-11A passes, and guidance degrades arrow → cardinal → unavailable as heading then position are removed. AT-11B device half NOT_RUN — arrow/text agreement unverified on hardware |
+| REQ-12 | I4 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f`, `04b4794` | Arrival screen exists but no detector; from `04b4794` its entry point is restricted to debuggable builds so a prototype cannot be mistaken for arrival detection in a demo. The coordinator now carries the selected destination REQ-12 will need |
 | REQ-13 | I4 | M2 / M4 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Story/memory presentation exists; no exactly-once visit persistence or recovery |
 | REQ-14 | I1 | M4 / M1 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-15 | I1-I2 | M4 / M1 | IN_PROGRESS | PARTIAL | `8ca81aa`, `142c26f` + integration | In-memory session checkpoint/finish/discard and recovery presentation are connected; Room restoration and durable route/visit storage are missing |
@@ -41,11 +55,11 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 | REQ-20 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
 | REQ-21 | I3 | M5 / M3 | NOT_STARTED | NOT_RUN | - | - |
 | REQ-22 | I4 | M2 / M5 | NOT_STARTED | NOT_RUN | - | - |
-| NFR-01 | All | M1 / M4 | IN_REVIEW | PARTIAL | `142c26f`, `204708f` | Automated build/test/lint evidence exists; API 26/31+/target-device matrix NOT_RUN |
-| NFR-02 | All | M1 / M3 | IN_REVIEW | PARTIAL | `8ca81aa`, `204708f` | Layering and one process-wide lifecycle coordinator have JVM coverage; Android lifecycle/navigation evidence remains NOT_RUN |
+| NFR-01 | All | M1 / M4 | IN_REVIEW | PARTIAL | `142c26f`, `204708f`, `04b4794` + branch | AT-Q01A holds on both 2026-09-03 rounds: `test assembleDebug lint` succeeds, 274 JVM tests with 0 failures, Lint 0 errors. AT-Q01B (API 26/31+/target matrix) NOT_RUN |
+| NFR-02 | All | M1 / M3 | IN_REVIEW | PARTIAL | `8ca81aa`, `204708f`, `04b4794` + branch | One coordinator now owns location, motion and heading; `domain.motion` and `domain.guidance` are free of Android imports. AT-Q02B and all Android lifecycle/navigation evidence remain NOT_RUN |
 | NFR-03 | All | M2 / M5 | IN_REVIEW | NOT_RUN | `142c26f` + integration | Screen system/design tokens, state-backed Session Recovery and Privacy & Data pages exist; TalkBack, 200% font, landscape and task usability NOT_RUN |
 | NFR-04 | Before real data, I5 | M4 / M5 | IN_PROGRESS | NOT_RUN | `a828d0f`, `142c26f` + integration | Foreground-only policy and privacy/data presentation exist; durable deletion, retention, backup and network-log safeguards remain open |
-| NFR-05 | I2-I5 | M3 / M1 | NOT_STARTED | NOT_RUN | - | - |
+| NFR-05 | I2-I5 | M3 / M1 | NOT_STARTED | NOT_RUN | - | Now in scope: sensors are registered from `04b4794` onwards, so AT-Q05A (no source left registered after Stop; battery and memory over a 20-minute trial) needs a device run before I5 |
 | NFR-06 | All | M1 / M2 | IN_PROGRESS | NOT_RUN | `142c26f`, `204708f` | Traceability documents and repository guidance exist; official rubric/reviewer evidence remain missing |
 
 ## 2. Test levels, commands and environments
@@ -113,6 +127,16 @@ Create these during SET-01 or the first owning requirement. Fixture names are sp
 | FX-SECRETS | Clearly fake key marker and synthetic location marker in URL/header/logging paths | Logging/privacy checks |
 
 Distances in fixtures must be independently computed or checked against known simple cases; avoid asserting a calculator against itself. Clock-controlled tests must not rely on `sleep()` to simulate dwell or expiry.
+
+What exists as of 2026-09-03, and what is still only a specification:
+
+| Fixture | State |
+|---|---|
+| FX-MOTION | Partly real. `app/src/test/.../domain/motion/MotionFixtures.java` provides seeded still, walking, rotation-without-walking and borderline traces with documented expected labels. The insufficient-window case is asserted in `MovementClassifierTest` rather than generated as a trace. Synthetic only: it proves the classifier's specified behaviour, never anything about a real device. |
+| FX-ROUTE | Not a shared module. `RouteAccumulatorTest` builds its own traces from known latitude steps, with expected distances derived from the geometry rather than from `GeoCalculator`. The coarse-only segment case is not covered. |
+| FX-HEADING | Not a shared module. The 350+15 and 359/1 cases live inline in `TrueHeadingTest` and `CircularSmootherTest`; screen-rotation variants are not covered anywhere, because they need the Android sensor stack. |
+| FX-LOCATION | Partly real, through `LocationSampleFilterTest` and `GeoPointTest`. |
+| Everything else | Specification only. |
 
 Initial scoring fixture under section 4.5/REQ-21: for two equally distant attractions at distance component 0.8, unavailable time context (neutral 0.5), known unsaved 0 and unvisited 1, rain gives indoor score 0.76 and outdoor score 0.51. Neutral weather gives each 0.635 before tie-breaks. Assert these values within a small numeric tolerance when those weights are approved; test the known-time preference separately and revise the documented fixture if D-07 changes it.
 

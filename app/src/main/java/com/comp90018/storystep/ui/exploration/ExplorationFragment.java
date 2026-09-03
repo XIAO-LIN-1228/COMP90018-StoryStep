@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -16,6 +17,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.ui.DirectionLabels;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.widget.StoryMapView;
@@ -49,6 +51,9 @@ public class ExplorationFragment extends Fragment {
     private TextView remainingView;
     private TextView travelledView;
     private TextView accuracyView;
+    private TextView directionView;
+    private TextView movementView;
+    private ImageView directionArrow;
     private MaterialButton resumeButton;
     private MaterialButton retrySaveButton;
     private MaterialButton stopButton;
@@ -73,6 +78,9 @@ public class ExplorationFragment extends Fragment {
         remainingView = view.findViewById(R.id.exploration_remaining);
         travelledView = view.findViewById(R.id.exploration_travelled);
         accuracyView = view.findViewById(R.id.exploration_accuracy);
+        directionView = view.findViewById(R.id.exploration_direction);
+        movementView = view.findViewById(R.id.exploration_movement);
+        directionArrow = view.findViewById(R.id.exploration_direction_arrow);
         resumeButton = view.findViewById(R.id.resume_exploration_button);
         retrySaveButton = view.findViewById(R.id.retry_save_button);
         stopButton = view.findViewById(R.id.stop_exploration_button);
@@ -115,6 +123,8 @@ public class ExplorationFragment extends Fragment {
                 ? getString(R.string.exploration_accuracy_format,
                         Math.round(state.getAccuracyMeters()))
                 : getString(R.string.exploration_accuracy_unavailable));
+        movementView.setText(DirectionLabels.movementOf(state.getMovementState()));
+        renderDirection(state);
 
         resumeButton.setVisibility(state.isResumeVisible() ? View.VISIBLE : View.GONE);
         retrySaveButton.setVisibility(state.isRetrySaveVisible() ? View.VISIBLE : View.GONE);
@@ -134,6 +144,34 @@ public class ExplorationFragment extends Fragment {
         } else {
             // Discarded: there is nothing left to show, and no journey to open.
             NavHostFragment.findNavController(this).popBackStack();
+        }
+    }
+
+    /**
+     * Three levels of direction, degrading one step at a time.
+     *
+     * <p>An arrow needs a position, a destination and a working compass. Take the compass away and
+     * the cardinal direction is still true and still useful, so it is shown without an arrow rather
+     * than replaced by nothing — a user told "the museum is north-east of you" can act on that.
+     * Only when the position itself is unknown does the whole line become unavailable.
+     *
+     * <p>The direction is always stated in words. The arrow is a second, visual rendering of the
+     * same fact, never the only one, which is what keeps the screen usable without sight.
+     */
+    private void renderDirection(ExplorationUiState state) {
+        if (!state.hasCardinal()) {
+            directionArrow.setVisibility(View.GONE);
+            directionView.setText(R.string.exploration_direction_unavailable);
+            return;
+        }
+        String cardinal = getString(DirectionLabels.cardinalOf(state.getCardinal()));
+        if (state.hasDirectionArrow()) {
+            directionArrow.setVisibility(View.VISIBLE);
+            directionArrow.setRotation((float) state.getRelativeBearingDegrees());
+            directionView.setText(getString(R.string.direction_towards, cardinal));
+        } else {
+            directionArrow.setVisibility(View.GONE);
+            directionView.setText(getString(R.string.direction_no_compass, cardinal));
         }
     }
 
