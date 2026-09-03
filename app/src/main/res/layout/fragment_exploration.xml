@@ -87,22 +87,49 @@
                 android:textColor="@color/brand_teal_dark"
                 android:textStyle="bold" />
 
-            <TextView
-                style="@style/TextAppearance.StoryStep.Headline"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/exploration_direction"
                 android:layout_marginTop="10dp"
-                android:text="@string/exploration_direction_unavailable" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                style="@style/TextAppearance.StoryStep.Title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/exploration_remaining"
-                android:layout_marginTop="2dp"
-                android:text="@string/exploration_remaining_unavailable"
-                android:textColor="@color/brand_teal" />
+                <!--
+                    Decorative: the direction text beside it says the same thing in words, and a
+                    screen reader announcing a rotation angle would be noise, not information.
+                -->
+                <ImageView
+                    android:id="@+id/exploration_direction_arrow"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="12dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_direction_arrow"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/TextAppearance.StoryStep.Headline"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/exploration_direction"
+                        android:text="@string/exploration_direction_unavailable" />
+
+                    <TextView
+                        style="@style/TextAppearance.StoryStep.Title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/exploration_remaining"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/exploration_remaining_unavailable"
+                        android:textColor="@color/brand_teal" />
+                </LinearLayout>
+            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -121,6 +148,15 @@
                     android:id="@+id/exploration_travelled"
                     android:layout_weight="1"
                     android:text="@string/exploration_travelled_zero" />
+
+                <TextView
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/exploration_movement"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="@string/movement_unknown" />
 
                 <TextView
                     style="@style/TextAppearance.StoryStep.Supporting"

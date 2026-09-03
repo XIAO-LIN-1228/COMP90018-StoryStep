@@ -134,6 +134,22 @@
     <string name="exploration_retry_save">Retry saving</string>
     <string name="exploration_discard">Discard</string>
     <string name="exploration_save_failed">Could not save this journey. Try again.</string>
+    <string name="movement_moving">Walking</string>
+    <string name="movement_stationary">Standing still</string>
+    <string name="movement_unknown">Sensing…</string>
+    <string name="movement_unavailable">No motion sensor</string>
+
+    <string name="direction_north">north</string>
+    <string name="direction_north_east">north-east</string>
+    <string name="direction_east">east</string>
+    <string name="direction_south_east">south-east</string>
+    <string name="direction_south">south</string>
+    <string name="direction_south_west">south-west</string>
+    <string name="direction_west">west</string>
+    <string name="direction_north_west">north-west</string>
+    <string name="direction_towards">Head %1$s</string>
+    <string name="direction_no_compass">%1$s of you · no compass on this device</string>
+
     <string name="exploration_stop_title">Finish this exploration?</string>
     <string name="exploration_stop_message">Your progress and discovered stories will be saved on this device.</string>
     <string name="exploration_finish">Finish journey</string>

@@ -10,9 +10,19 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
-    <!-- GPS is optional so the app still installs on devices without it. -->
+    <!--
+        Every sensing capability is optional. The app degrades to what a device actually has:
+        no accelerometer means no movement estimate, no compass means bearing-and-distance
+        guidance without an arrow, and neither stops an exploration session from recording.
+    -->
     <uses-feature
         android:name="android.hardware.location.gps"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.accelerometer"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.sensor.compass"
         android:required="false" />
 
     <application

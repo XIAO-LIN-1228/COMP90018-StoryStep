@@ -8,18 +8,25 @@ import static org.junit.Assert.assertTrue;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.application.SensingSources;
 import com.comp90018.storystep.application.TestCoordinators;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
+import com.comp90018.storystep.domain.model.MotionSample;
+import com.comp90018.storystep.domain.model.MovementState;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.platform.sensor.FakeHeadingSource;
+import com.comp90018.storystep.platform.sensor.FakeMotionSource;
+import com.comp90018.storystep.platform.sensor.FixedDeclinationSource;
+import com.comp90018.storystep.platform.sensor.HeadingAccuracy;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -201,7 +208,101 @@ public class ExplorationViewModelTest {
         assertFalse(ticker.running);
     }
 
+    // --- sensing ------------------------------------------------------------------------------
+
+    @Test
+    public void withoutAnAccelerometerMovementReadsAsUnavailable() {
+        startTowardsMuseum();
+
+        assertEquals("this fixture has no sensing at all, which is a supported device",
+                MovementState.UNAVAILABLE, state().getMovementState());
+    }
+
+    @Test
+    public void aWalkingUserIsReportedAsMoving() {
+        FakeMotionSource motionSource = new FakeMotionSource();
+        useCoordinator(new SensingSources(motionSource, null, null));
+        startTowardsMuseum();
+
+        for (int i = 0; i < 200; i++) {
+            // A 2 Hz stride at about 3 m/s squared, 50 ms apart: ten seconds of walking.
+            double seconds = i * 0.05;
+            float z = (float) (9.81 + 3.0 * Math.sin(2.0 * Math.PI * 2.0 * seconds));
+            motionSource.emit(new MotionSample(0.0f, 0.0f, z, (long) (seconds * 1000)));
+        }
+
+        assertEquals(MovementState.MOVING, state().getMovementState());
+        assertTrue(state().getMovingMillis() > 0L);
+    }
+
+    @Test
+    public void withoutACompassTheDirectionIsGivenWithoutAnArrow() {
+        startTowardsMuseum();
+
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+
+        assertFalse("no compass means no arrow to rotate", state().hasDirectionArrow());
+        assertTrue("but the user can still be told which way the place lies",
+                state().hasCardinal());
+        assertTrue("and the distance is unaffected by the missing sensor",
+                state().hasRemainingDistance());
+    }
+
+    @Test
+    public void aUsableHeadingProducesAnArrow() {
+        FakeHeadingSource headingSource = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, headingSource, FixedDeclinationSource.melbourne()));
+        startTowardsMuseum();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+
+        headingSource.emit(0.0f);
+
+        assertTrue(state().hasDirectionArrow());
+    }
+
+    @Test
+    public void anUnreliableHeadingHidesTheArrowButKeepsTheDirection() {
+        FakeHeadingSource headingSource = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, headingSource, FixedDeclinationSource.melbourne()));
+        startTowardsMuseum();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        headingSource.emit(0.0f);
+
+        headingSource.emit(0.0f, HeadingAccuracy.UNRELIABLE);
+
+        assertFalse(state().hasDirectionArrow());
+        assertTrue(state().hasCardinal());
+    }
+
+    @Test
+    public void withNoFixThereIsNoDirectionAtAll() {
+        FakeHeadingSource headingSource = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, headingSource, FixedDeclinationSource.melbourne()));
+        startTowardsMuseum();
+
+        headingSource.emit(0.0f);
+
+        assertFalse("a heading with nowhere to stand says nothing about where to go",
+                state().hasCardinal());
+        assertFalse(state().hasDirectionArrow());
+    }
+
     // --- helpers -------------------------------------------------------------------------------
+
+    /**
+     * Rebuilds the coordinator and the ViewModel with a different sensing configuration.
+     *
+     * <p>Called before the session starts, so each test describes one device rather than a device
+     * that grew a compass halfway through a walk.
+     */
+    private void useCoordinator(SensingSources sensing) {
+        viewModel.onCleared();
+        coordinator = TestCoordinators.with(clock, locationSource, sensing);
+        ticker = new ManualTicker();
+        viewModel = new ExplorationViewModel(coordinator, ticker);
+        viewModel.getUiState().observeForever(state -> {
+        });
+    }
 
     private void becomeUsable() {
         coordinator.onVisibilityChanged(true);
