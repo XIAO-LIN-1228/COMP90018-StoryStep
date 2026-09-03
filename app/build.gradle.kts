@@ -16,6 +16,22 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Room writes the schema of every version here. The JSON files are committed so that
+        // MigrationTestHelper can build an old database and migrate it, which is the only way to
+        // prove a migration preserves user-owned history.
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments["room.schemaLocation"] = "$projectDir/schemas"
+            }
+        }
+    }
+
+    sourceSets {
+        // MigrationTestHelper reads the exported schemas from the instrumented test assets.
+        getByName("androidTest") {
+            assets.srcDir("$projectDir/schemas")
+        }
     }
 
     buildTypes {

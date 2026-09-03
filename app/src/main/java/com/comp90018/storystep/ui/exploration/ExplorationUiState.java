@@ -31,6 +31,7 @@ public final class ExplorationUiState {
     private final Float accuracyMeters;
     private final LocationSource.Reason unavailableReason;
     private final boolean stopSaveFailed;
+    private final boolean checkpointFailed;
     private final MovementSnapshot movement;
     private final GuidanceSnapshot guidance;
 
@@ -43,6 +44,7 @@ public final class ExplorationUiState {
                                Float accuracyMeters,
                                LocationSource.Reason unavailableReason,
                                boolean stopSaveFailed,
+                               boolean checkpointFailed,
                                MovementSnapshot movement,
                                GuidanceSnapshot guidance) {
         this.destinationName = destinationName;
@@ -54,6 +56,7 @@ public final class ExplorationUiState {
         this.accuracyMeters = accuracyMeters;
         this.unavailableReason = unavailableReason;
         this.stopSaveFailed = stopSaveFailed;
+        this.checkpointFailed = checkpointFailed;
         this.movement = movement;
         this.guidance = guidance;
     }
@@ -69,6 +72,7 @@ public final class ExplorationUiState {
                                           RouteSnapshot route,
                                           LocationSource.Reason unavailableReason,
                                           boolean stopSaveFailed,
+                                          boolean checkpointFailed,
                                           MovementSnapshot movement,
                                           GuidanceSnapshot guidance) {
         LocationSample last = route.getLastSample();
@@ -87,6 +91,7 @@ public final class ExplorationUiState {
                 last == null ? null : last.getAccuracyMeters(),
                 last == null ? unavailableReason : null,
                 stopSaveFailed,
+                checkpointFailed,
                 movement,
                 guidance);
     }
@@ -153,6 +158,17 @@ public final class ExplorationUiState {
     /** The session ended but could not be saved; the user must be able to retry, not navigate on. */
     public boolean isRetrySaveVisible() {
         return stopSaveFailed;
+    }
+
+    /**
+     * Progress could not be written and the session is running on unsaved data.
+     *
+     * <p>Only shown while a session is actually in progress. After a stop, the failure that
+     * matters is the final save, and two warnings about the same storage problem would just
+     * compete for the user's attention.
+     */
+    public boolean isUnsavedProgressWarningVisible() {
+        return checkpointFailed && state.hasSession() && !stopSaveFailed;
     }
 
     /** True once the session is saved, which is when the summary screen may be opened. */

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
@@ -141,7 +142,12 @@ public class InMemorySessionStoreTest {
     }
 
     private SessionSummary findUnfinished() {
-        Result<SessionSummary> result = new Result<>();
+        RestoredSession restored = findRestored();
+        return restored == null ? null : restored.getSummary();
+    }
+
+    private RestoredSession findRestored() {
+        Result<RestoredSession> result = new Result<>();
         store.findUnfinished(result);
         assertTrue(result.succeeded());
         return result.value;

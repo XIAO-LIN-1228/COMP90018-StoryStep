@@ -1,6 +1,6 @@
 package com.comp90018.storystep.data.repository;
 
-import com.comp90018.storystep.domain.geo.GeoCalculator;
+import com.comp90018.storystep.domain.geo.NearbyAttractions;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionNotFoundException;
@@ -9,7 +9,6 @@ import com.comp90018.storystep.domain.repository.RepositoryCallback;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -36,21 +35,7 @@ public final class InMemoryAttractionRepository implements AttractionRepository 
                                       double radiusMeters,
                                       RepositoryCallback<List<Attraction>> callback) {
         try {
-            if (origin == null) {
-                throw new IllegalArgumentException("origin must not be null");
-            }
-            if (radiusMeters <= 0.0) {
-                throw new IllegalArgumentException("radiusMeters must be positive");
-            }
-            List<Attraction> nearby = new ArrayList<>();
-            for (Attraction attraction : attractions) {
-                if (GeoCalculator.distanceMeters(origin, attraction.getLocation())
-                        <= radiusMeters) {
-                    nearby.add(attraction);
-                }
-            }
-            Collections.sort(nearby, byDistanceFrom(origin));
-            callback.onSuccess(Collections.unmodifiableList(nearby));
+            callback.onSuccess(NearbyAttractions.within(attractions, origin, radiusMeters));
         } catch (RuntimeException error) {
             callback.onError(error);
         }
@@ -65,18 +50,5 @@ public final class InMemoryAttractionRepository implements AttractionRepository 
             }
         }
         callback.onError(new AttractionNotFoundException(attractionId));
-    }
-
-    private static Comparator<Attraction> byDistanceFrom(GeoPoint origin) {
-        return new Comparator<Attraction>() {
-            @Override
-            public int compare(Attraction first, Attraction second) {
-                double firstDistance = GeoCalculator.distanceMeters(origin, first.getLocation());
-                double secondDistance = GeoCalculator.distanceMeters(origin, second.getLocation());
-                int byDistance = Double.compare(firstDistance, secondDistance);
-                // Stable, reproducible order when two attractions are equally close.
-                return byDistance != 0 ? byDistance : first.getId().compareTo(second.getId());
-            }
-        };
     }
 }

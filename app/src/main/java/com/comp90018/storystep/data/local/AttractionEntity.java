@@ -36,4 +36,22 @@ public class AttractionEntity {
 
     @ColumnInfo(name = "longitude")
     public double longitude;
+
+    /**
+     * Where this row came from — {@link #PROVENANCE_SEED} for the bundled demonstration set, and
+     * later a provider identifier for fetched content.
+     *
+     * <p>Recorded because a seeded place and a place returned by a real service are not
+     * interchangeable evidence, and a screen that cannot tell them apart will eventually present
+     * one as the other.
+     */
+    @ColumnInfo(name = "provenance")
+    public String provenance;
+
+    /** When this row was written, in epoch milliseconds. Zero for rows predating the column. */
+    @ColumnInfo(name = "fetched_at_millis")
+    public long fetchedAtMillis;
+
+    /** The bundled demonstration data set; not fetched from any service. */
+    public static final String PROVENANCE_SEED = "seed";
 }

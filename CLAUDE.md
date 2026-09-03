@@ -10,12 +10,15 @@ Current state: the layered Java/XML application skeleton and a cross-iteration f
 are in place. The app includes onboarding, nearby discovery, attraction details, exploration,
 arrival/story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
 real foreground Android location adapter, permission recovery and quality-aware samples. A
-process-wide session coordinator now owns the foreground location subscription and implements
-start, pause, resume, finish and discard against a process-lifetime session store. Attraction and
-journey content still uses in-memory repositories; Room and Retrofit remain unwired for runtime
-data. Durable session restoration and route/history storage, accelerometer movement estimation,
-magnetometer heading, arrival detection, real weather/attraction services and contextual ranking
-remain incomplete. `README.md` is the requirements/scope document and is the source of truth for
+process-wide session coordinator owns the foreground location, accelerometer and magnetometer
+subscriptions and implements start, pause, resume, finish and discard, with movement-state
+estimation, true-north heading and directional guidance. Room is wired for runtime data: cached
+attractions, sessions, sampled route points and visits live in `storystep.db` at schema version 2,
+and an unfinished session is restored as paused on the next launch. Journey history still reads an
+in-memory fixture repository, and Retrofit remains unwired — no network request is made anywhere.
+Arrival detection, exactly-once visit writing, saved attractions, real weather/attraction services
+and contextual ranking remain incomplete. No instrumented test has been run on a device or
+emulator. `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.
 
@@ -84,6 +87,7 @@ This project is on AGP 9.3.1 / Gradle 9.5.0, which changed DSL that older Androi
 - `compileSdk { version = release(37) }` — block form, not `compileSdk = 37`.
 - Release build type uses `optimization { enable = false }`, not `isMinifyEnabled`.
 - R8 keep rules live in `app/src/main/keepRules/rules.keep` (AGP merges everything in that directory); there is no `proguard-rules.pro`.
+- Room schemas are exported to `app/schemas/` via the `room.schemaLocation` annotation-processor argument in `defaultConfig.javaCompileOptions`, and that directory is also an `androidTest` assets source so `MigrationTestHelper` can read it. Commit every exported JSON; a schema change means a new version plus a `Migration` in `StoryStepMigrations.all()`, never `fallbackToDestructiveMigration`.
 - All dependencies and plugin versions go through the version catalog at `gradle/libs.versions.toml` — add a `[versions]`/`[libraries]` entry and reference it as `libs.foo`, never a hardcoded coordinate string in `app/build.gradle.kts`.
 - `settings.gradle.kts` uses `FAIL_ON_PROJECT_REPOS`; repositories are declared centrally there, not per-module.
 
@@ -109,9 +113,9 @@ The package layout under `com.comp90018.storystep` realises that:
 | `domain.model` | Attraction, journey and immutable location models | none |
 | `domain.geo` | Distance/bearing maths and location-quality policies | none |
 | `domain.repository` | Attraction/journey contracts and `RepositoryCallback` | none |
-| `data.local` | Room entity, DAO, database, mapper | Room |
-| `data.remote` | Retrofit service, DTO, mapper, `ApiClientFactory` | Retrofit/OkHttp |
-| `data.repository` | In-memory attraction and journey prototype repositories | none |
+| `data.local` | Room entities, DAOs, database, migrations, mappers, `Transactions` | Room |
+| `data.remote` | Retrofit service, DTO, mapper, `ApiClientFactory`; declared, never called | Retrofit/OkHttp |
+| `data.repository` | Room attraction and session stores; in-memory equivalents kept as test fakes | none |
 | `platform.location` | Location contracts, access policy and foreground Android adapter | Android in adapter only |
 | `platform.sensor` / `platform.connectivity` | Device-capability interfaces; production implementations remain pending | interfaces are framework-free |
 | `di` | `AppContainer` — manual wiring, no DI framework | Context only |

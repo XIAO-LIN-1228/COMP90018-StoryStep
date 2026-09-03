@@ -1,0 +1,93 @@
+package com.comp90018.storystep.data.local;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Index;
+import androidx.room.PrimaryKey;
+
+/**
+ * Room row for one exploration session.
+ *
+ * <p>The destination is stored as a flattened snapshot rather than a foreign key into
+ * {@code attractions}: the cache is refreshed and evicted on its own schedule, and a session that
+ * could no longer name the place it was heading towards would have lost user-owned history to a
+ * cache decision.
+ *
+ * <p>{@code finished} is indexed and stored explicitly instead of being derived from
+ * {@code state}, because "is there an unfinished session?" is asked on every launch and is the
+ * query that enforces the at-most-one rule.
+ */
+@Entity(tableName = "sessions", indices = {@Index("finished")})
+public class SessionEntity {
+
+    @PrimaryKey
+    @NonNull
+    @ColumnInfo(name = "id")
+    public String id = "";
+
+    /** {@link com.comp90018.storystep.domain.model.SessionState} name. */
+    @ColumnInfo(name = "state")
+    public String state;
+
+    /** {@link com.comp90018.storystep.domain.model.PauseReason} name, or null when collecting. */
+    @Nullable
+    @ColumnInfo(name = "pause_reason")
+    public String pauseReason;
+
+    @ColumnInfo(name = "start_wall_clock_millis")
+    public long startWallClockMillis;
+
+    /** Zero while the session is unfinished. */
+    @ColumnInfo(name = "end_wall_clock_millis")
+    public long endWallClockMillis;
+
+    /** Collecting time only; paused and process-dead spans are never included. */
+    @ColumnInfo(name = "active_duration_millis")
+    public long activeDurationMillis;
+
+    @ColumnInfo(name = "distance_meters")
+    public double distanceMeters;
+
+    /** The session's current collection span; one more than the number of resumes. */
+    @ColumnInfo(name = "segment")
+    public int segment;
+
+    /** How many spans actually contributed route points. */
+    @ColumnInfo(name = "segment_count")
+    public int segmentCount;
+
+    /** True once the session has been permanently ended. Drives the at-most-one-unfinished rule. */
+    @ColumnInfo(name = "finished")
+    public boolean finished;
+
+    @ColumnInfo(name = "last_checkpoint_wall_clock_millis")
+    public long lastCheckpointWallClockMillis;
+
+    @Nullable
+    @ColumnInfo(name = "destination_id")
+    public String destinationId;
+
+    @Nullable
+    @ColumnInfo(name = "destination_name")
+    public String destinationName;
+
+    /** Stable lower-case category code; see {@link com.comp90018.storystep.data.AttractionCategoryCodec}. */
+    @Nullable
+    @ColumnInfo(name = "destination_category")
+    public String destinationCategory;
+
+    @Nullable
+    @ColumnInfo(name = "destination_description")
+    public String destinationDescription;
+
+    @ColumnInfo(name = "destination_indoor")
+    public boolean destinationIndoor;
+
+    @ColumnInfo(name = "destination_latitude")
+    public double destinationLatitude;
+
+    @ColumnInfo(name = "destination_longitude")
+    public double destinationLongitude;
+}

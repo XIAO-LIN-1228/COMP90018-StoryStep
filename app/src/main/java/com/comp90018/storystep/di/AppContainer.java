@@ -6,9 +6,11 @@ import androidx.core.content.ContextCompat;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.application.SensingSources;
-import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.local.RoomTransactions;
+import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
-import com.comp90018.storystep.data.repository.InMemorySessionStore;
+import com.comp90018.storystep.data.repository.RoomAttractionRepository;
+import com.comp90018.storystep.data.repository.RoomSessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
@@ -43,6 +45,7 @@ public class AppContainer {
     private static final int IO_THREAD_COUNT = 2;
 
     private final Context applicationContext;
+    private final StoryStepDatabase database;
     private final AttractionRepository attractionRepository;
     private final JourneyRepository journeyRepository;
     private final LocationQualityPolicy locationQualityPolicy;
@@ -53,26 +56,42 @@ public class AppContainer {
     private final Executor mainExecutor;
     private final ExecutorService ioExecutor;
 
+    /**
+     * The production assembly: attractions come from the Room cache and sessions are durable.
+     *
+     * <p>Overriding the repository is left to the two constructors below so a test or a debug
+     * entry point can supply a fake without also having to stand up a database.
+     */
     public AppContainer(Context applicationContext) {
-        this(applicationContext, new InMemoryAttractionRepository(),
-                new InMemoryJourneyRepository());
+        this(applicationContext, null, new InMemoryJourneyRepository());
     }
 
     public AppContainer(Context applicationContext, AttractionRepository attractionRepository) {
         this(applicationContext, attractionRepository, new InMemoryJourneyRepository());
     }
 
+    /**
+     * @param attractionRepository an override, or null to read the Room cache
+     */
     public AppContainer(Context applicationContext,
                         AttractionRepository attractionRepository,
                         JourneyRepository journeyRepository) {
         this.applicationContext = applicationContext.getApplicationContext();
-        this.attractionRepository = attractionRepository;
         this.journeyRepository = journeyRepository;
         this.locationQualityPolicy = LocationQualityPolicy.defaultPolicy();
         this.mainExecutor = ContextCompat.getMainExecutor(this.applicationContext);
         this.ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
         this.clock = new AndroidClock();
-        this.sessionStore = new InMemorySessionStore(clock);
+        // Opened here, once, because the database is process-scoped: a second instance would mean
+        // a second connection pool and two views of the same file.
+        this.database = StoryStepDatabase.create(this.applicationContext);
+        this.attractionRepository = attractionRepository != null
+                ? attractionRepository
+                : new RoomAttractionRepository(
+                        database.attractionDao(), clock, ioExecutor, mainExecutor);
+        this.sessionStore = new RoomSessionStore(
+                new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
+                clock, ioExecutor, mainExecutor);
         // One hub for both sensors: the accelerometer is needed by motion estimation and by the
         // compass, and registering it twice would double the callback rate and the power cost for
         // readings that are identical.
@@ -131,6 +150,16 @@ public class AppContainer {
 
     public SessionStore getSessionStore() {
         return sessionStore;
+    }
+
+    /**
+     * The process-scoped database.
+     *
+     * <p>Exposed for the repositories added by later requirements to build on, not for screens:
+     * a Fragment holding a DAO would be a main-thread query waiting to happen.
+     */
+    public StoryStepDatabase getDatabase() {
+        return database;
     }
 
     public Clock getClock() {
