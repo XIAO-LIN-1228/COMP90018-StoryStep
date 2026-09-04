@@ -11,6 +11,7 @@ import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.platform.location.LocationSource;
 
 /**
@@ -47,6 +48,8 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     private MovementSnapshot movement = MovementSnapshot.unavailable();
     private boolean checkpointFailed;
     private GuidanceSnapshot guidance = GuidanceSnapshot.unavailable();
+    private Visit pendingStory;
+    private boolean visitSaveFailed;
 
     public ExplorationViewModel(ExplorationCoordinator coordinator) {
         this(coordinator, new HandlerTicker());
@@ -80,6 +83,31 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     /** Retries the final save after it failed; the session is already no longer collecting. */
     public void onRetrySaveRequested() {
         coordinator.requestStop();
+    }
+
+    /**
+     * The user chose to open the revealed story.
+     *
+     * <p>Consumes the prompt but does not mark the story read — that happens when the story screen
+     * actually shows it, so a navigation that never arrives does not lose the story.
+     */
+    public void onStoryRequested() {
+        coordinator.consumeArrival();
+    }
+
+    /**
+     * The user dismissed the arrival prompt.
+     *
+     * <p>The visit stays recorded and unread: "not now" is not "never", and the story is still
+     * there to be opened from this session later.
+     */
+    public void onArrivalDismissed() {
+        coordinator.consumeArrival();
+    }
+
+    /** Retries an arrival that could not be recorded. */
+    public void onRetryVisitRequested() {
+        coordinator.retryVisit();
     }
 
     // --- coordinator observer ------------------------------------------------------------------
@@ -131,12 +159,24 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         publish();
     }
 
+    @Override
+    public void onPendingStoryChanged(Visit changed) {
+        pendingStory = changed;
+        publish();
+    }
+
+    @Override
+    public void onVisitSaveFailed(boolean failed) {
+        visitSaveFailed = failed;
+        publish();
+    }
+
     private void publish() {
         // Always read the session back rather than caching the last published one: the tick's
         // whole job is to show a duration that grows without the session having changed.
         uiState.setValue(ExplorationUiState.from(coordinator.summary(), destination, route,
                 unavailableReason, coordinator.hasStopSaveFailed(), checkpointFailed, movement,
-                guidance));
+                guidance, pendingStory, visitSaveFailed));
     }
 
     @Override

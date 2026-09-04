@@ -1,6 +1,5 @@
 package com.comp90018.storystep.ui.exploration;
 
-import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +19,7 @@ import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.ui.DirectionLabels;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.comp90018.storystep.ui.widget.StoryMapView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -58,6 +58,12 @@ public class ExplorationFragment extends Fragment {
     private MaterialButton retrySaveButton;
     private TextView noticeView;
     private MaterialButton stopButton;
+    private View arrivalBanner;
+    private TextView arrivalBannerText;
+    private MaterialButton arrivalViewStoryButton;
+    private MaterialButton arrivalLaterButton;
+    private TextView visitSaveFailedNotice;
+    private MaterialButton retryVisitButton;
 
     @Nullable
     @Override
@@ -92,19 +98,18 @@ public class ExplorationFragment extends Fragment {
         resumeButton.setOnClickListener(v -> viewModel.onResumeRequested());
         retrySaveButton.setOnClickListener(v -> viewModel.onRetrySaveRequested());
 
-        // Arrival detection is REQ-12 and does not exist yet. The preview stays in debug builds
-        // only, so a prototype button cannot be mistaken for working arrival during a demo.
-        View previewArrival = view.findViewById(R.id.preview_arrival_button);
-        if (isDebuggableBuild()) {
-            previewArrival.setOnClickListener(v ->
-                    NavHostFragment.findNavController(this)
-                            .navigate(R.id.action_exploration_to_arrival));
-        } else {
-            previewArrival.setVisibility(View.GONE);
-        }
-
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(ExplorationViewModel.class);
+
+        arrivalBanner = view.findViewById(R.id.arrival_banner);
+        arrivalBannerText = view.findViewById(R.id.arrival_banner_text);
+        arrivalViewStoryButton = view.findViewById(R.id.arrival_view_story_button);
+        arrivalLaterButton = view.findViewById(R.id.arrival_later_button);
+        visitSaveFailedNotice = view.findViewById(R.id.visit_save_failed_notice);
+        retryVisitButton = view.findViewById(R.id.retry_visit_button);
+        arrivalLaterButton.setOnClickListener(v -> viewModel.onArrivalDismissed());
+        retryVisitButton.setOnClickListener(v -> viewModel.onRetryVisitRequested());
+
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
     }
 
@@ -137,6 +142,7 @@ public class ExplorationFragment extends Fragment {
         resumeButton.setVisibility(state.isResumeVisible() ? View.VISIBLE : View.GONE);
         retrySaveButton.setVisibility(state.isRetrySaveVisible() ? View.VISIBLE : View.GONE);
         stopButton.setEnabled(state.isStopEnabled());
+        renderArrival(state);
 
         if (state.getState().hasSession()) {
             sessionSeen = true;
@@ -153,6 +159,37 @@ public class ExplorationFragment extends Fragment {
             // Discarded: there is nothing left to show, and no journey to open.
             NavHostFragment.findNavController(this).popBackStack();
         }
+    }
+
+    /**
+     * Shows the arrival prompt, or the fact that an arrival could not be saved.
+     *
+     * <p>The click listener is rebound on every render rather than once, because the attraction it
+     * opens changes with the state. Reading the story does not mark it read here — the story
+     * screen does that when it actually shows it, so a navigation that never lands loses nothing.
+     */
+    private void renderArrival(ExplorationUiState state) {
+        boolean visible = state.isArrivalBannerVisible();
+        arrivalBanner.setVisibility(visible ? View.VISIBLE : View.GONE);
+        if (visible) {
+            String name = state.getArrivedAttractionName();
+            arrivalBannerText.setText(getString(R.string.exploration_arrival_banner_format,
+                    name == null ? getString(R.string.exploration_no_destination) : name));
+            String attractionId = state.getArrivedAttractionId();
+            arrivalViewStoryButton.setOnClickListener(v -> openStory(attractionId));
+        }
+
+        boolean failed = state.isVisitSaveFailed();
+        visitSaveFailedNotice.setVisibility(failed ? View.VISIBLE : View.GONE);
+        retryVisitButton.setVisibility(failed ? View.VISIBLE : View.GONE);
+    }
+
+    private void openStory(String attractionId) {
+        viewModel.onStoryRequested();
+        Bundle arguments = new Bundle();
+        arguments.putString(NearbyAttractionsFragment.ARG_ATTRACTION_ID, attractionId);
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.action_exploration_to_story, arguments);
     }
 
     /**
@@ -229,14 +266,6 @@ public class ExplorationFragment extends Fragment {
             default:
                 return getString(R.string.exploration_unavailable_no_fix);
         }
-    }
-
-    /**
-     * Read from the installed application flags rather than {@code BuildConfig}, which this module
-     * does not generate; enabling that build feature is not worth a debug-only affordance.
-     */
-    private boolean isDebuggableBuild() {
-        return (requireContext().getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
     private String formatDuration(long millis) {

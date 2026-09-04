@@ -1,11 +1,15 @@
 package com.comp90018.storystep.data.repository;
 
+import android.database.sqlite.SQLiteConstraintException;
+
 import com.comp90018.storystep.data.AttractionCategoryCodec;
 import com.comp90018.storystep.data.local.RoutePointDao;
 import com.comp90018.storystep.data.local.RoutePointEntity;
 import com.comp90018.storystep.data.local.SessionDao;
 import com.comp90018.storystep.data.local.SessionEntity;
 import com.comp90018.storystep.data.local.Transactions;
+import com.comp90018.storystep.data.local.VisitDao;
+import com.comp90018.storystep.data.local.VisitEntity;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
@@ -15,6 +19,8 @@ import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.time.Clock;
@@ -44,6 +50,7 @@ public final class RoomSessionStore implements SessionStore {
     private final Transactions transactions;
     private final SessionDao sessionDao;
     private final RoutePointDao routePointDao;
+    private final VisitDao visitDao;
     private final Clock clock;
     private final Executor ioExecutor;
     private final Executor mainExecutor;
@@ -51,12 +58,14 @@ public final class RoomSessionStore implements SessionStore {
     public RoomSessionStore(Transactions transactions,
                             SessionDao sessionDao,
                             RoutePointDao routePointDao,
+                            VisitDao visitDao,
                             Clock clock,
                             Executor ioExecutor,
                             Executor mainExecutor) {
         this.transactions = requireNonNull(transactions, "transactions");
         this.sessionDao = requireNonNull(sessionDao, "sessionDao");
         this.routePointDao = requireNonNull(routePointDao, "routePointDao");
+        this.visitDao = requireNonNull(visitDao, "visitDao");
         this.clock = requireNonNull(clock, "clock");
         this.ioExecutor = requireNonNull(ioExecutor, "ioExecutor");
         this.mainExecutor = requireNonNull(mainExecutor, "mainExecutor");
@@ -266,6 +275,92 @@ public final class RoomSessionStore implements SessionStore {
     }
 
     @Override
+    public void recordVisit(Visit visit, RepositoryCallback<Visit> callback) {
+        if (visit == null) {
+            fail(callback, new IllegalArgumentException("visit must not be null"));
+            return;
+        }
+        run(callback, new Work<Visit>() {
+            @Override
+            public Visit perform() {
+                final Visit[] recorded = new Visit[1];
+                transactions.runInTransaction(new Runnable() {
+                    @Override
+                    public void run() {
+                        requireSession(visit.getSessionId());
+                        // Checked inside the transaction rather than relying only on the unique
+                        // index: it turns the common case into a clear typed answer, while the
+                        // index below still catches a race this check cannot see.
+                        if (visitDao.find(visit.getSessionId(), visit.getAttractionId()) != null) {
+                            throw new DuplicateVisitException(
+                                    visit.getSessionId(), visit.getAttractionId());
+                        }
+                        try {
+                            visitDao.insert(toEntity(visit));
+                        } catch (SQLiteConstraintException conflict) {
+                            throw new DuplicateVisitException(
+                                    visit.getSessionId(), visit.getAttractionId(), conflict);
+                        }
+                        recorded[0] = visit;
+                    }
+                });
+                return recorded[0];
+            }
+        });
+    }
+
+    @Override
+    public void findUnreadVisit(String sessionId, RepositoryCallback<Visit> callback) {
+        if (sessionId == null) {
+            fail(callback, new IllegalArgumentException("sessionId must not be null"));
+            return;
+        }
+        run(callback, new Work<Visit>() {
+            @Override
+            public Visit perform() {
+                VisitEntity stored = visitDao.findFirstUnread(sessionId);
+                return stored == null ? null : toDomain(stored);
+            }
+        });
+    }
+
+    @Override
+    public void findVisit(String sessionId,
+                          String attractionId,
+                          RepositoryCallback<Visit> callback) {
+        if (sessionId == null || attractionId == null) {
+            fail(callback, new IllegalArgumentException("sessionId and attractionId are required"));
+            return;
+        }
+        run(callback, new Work<Visit>() {
+            @Override
+            public Visit perform() {
+                VisitEntity stored = visitDao.find(sessionId, attractionId);
+                return stored == null ? null : toDomain(stored);
+            }
+        });
+    }
+
+    @Override
+    public void markVisitRead(String sessionId,
+                              String attractionId,
+                              RepositoryCallback<Void> callback) {
+        if (sessionId == null || attractionId == null) {
+            fail(callback, new IllegalArgumentException("sessionId and attractionId are required"));
+            return;
+        }
+        run(callback, new Work<Void>() {
+            @Override
+            public Void perform() {
+                // No row is not a failure. Reading a story is a presentation fact, and a story
+                // opened from content that has no visit behind it simply has nothing to mark.
+                visitDao.markRead(sessionId, attractionId);
+                return null;
+            }
+        });
+    }
+
+    @Override
     public void findUnfinished(RepositoryCallback<RestoredSession> callback) {
         run(callback, new Work<RestoredSession>() {
             @Override
@@ -403,6 +498,22 @@ public final class RoomSessionStore implements SessionStore {
                 entity.accuracyMeters,
                 entity.wallClockMillis,
                 Math.max(1, entity.segment));
+    }
+
+    private static VisitEntity toEntity(Visit visit) {
+        VisitEntity entity = new VisitEntity();
+        entity.sessionId = visit.getSessionId();
+        entity.attractionId = visit.getAttractionId();
+        entity.arrivalWallClockMillis = visit.getArrivalWallClockMillis();
+        entity.attractionName = visit.getAttractionName();
+        entity.story = visit.getStory();
+        entity.unread = visit.isUnread();
+        return entity;
+    }
+
+    private static Visit toDomain(VisitEntity entity) {
+        return new Visit(entity.sessionId, entity.attractionId, entity.arrivalWallClockMillis,
+                entity.attractionName, entity.story, entity.unread);
     }
 
     private SessionEntity requireSession(String sessionId) {

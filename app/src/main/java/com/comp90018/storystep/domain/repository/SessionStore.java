@@ -4,6 +4,7 @@ import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
 
 import java.util.List;
 
@@ -93,6 +94,44 @@ public interface SessionStore {
      * different active session.
      */
     void discard(String sessionId, RepositoryCallback<Void> callback);
+
+    /**
+     * Records one arrival, exactly once per session and attraction.
+     *
+     * <p>Fails with {@link DuplicateVisitException} when the pair is already recorded. That is not
+     * an error the user needs to see: it means the visit is already safe, and the caller's job is
+     * to stop, not to retry or to announce a second arrival.
+     *
+     * <p>Any other failure means nothing was written. The caller must not tell the user the visit
+     * was saved; it must offer a retry, which is safe precisely because the second attempt either
+     * succeeds or reports the duplicate above.
+     */
+    void recordVisit(Visit visit, RepositoryCallback<Visit> callback);
+
+    /**
+     * The session's oldest visit whose story the user has not opened yet.
+     *
+     * <p>Reports success with {@code null} when there is none. This is what makes a story survive
+     * an interruption: the visit row already exists, so the story is recovered by reading it back
+     * rather than by detecting the arrival a second time.
+     */
+    void findUnreadVisit(String sessionId, RepositoryCallback<Visit> callback);
+
+    /**
+     * One recorded visit, or {@code null} when the pair was never recorded.
+     *
+     * <p>Addressed by the pair rather than by "the next unread one", because a story can be opened
+     * by choice as well as in response to a prompt, and a session may hold more than one.
+     */
+    void findVisit(String sessionId, String attractionId, RepositoryCallback<Visit> callback);
+
+    /**
+     * Marks a visit's story as read. Idempotent, and succeeds for an already-read visit.
+     *
+     * <p>Reading is a presentation fact, not a second visit: this never inserts a row, so a story
+     * reopened from history cannot create history of its own.
+     */
+    void markVisitRead(String sessionId, String attractionId, RepositoryCallback<Void> callback);
 
     /**
      * The unfinished session left by a previous run, if any.

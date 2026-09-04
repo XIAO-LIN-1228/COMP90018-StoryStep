@@ -1,6 +1,7 @@
 package com.comp90018.storystep.data.repository;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -8,6 +9,8 @@ import static org.junit.Assert.assertTrue;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
 
@@ -127,6 +130,164 @@ public class InMemorySessionStoreTest {
     }
 
     // --- helpers -------------------------------------------------------------------------------
+
+    // --- visits ---------------------------------------------------------------------------------
+
+    @Test
+    public void aVisitIsRecordedAgainstTheRunningSession() {
+        SessionSummary session = create();
+
+        Result<Visit> result = new Result<>();
+        store.recordVisit(visit(session.getId(), "old-arts"), result);
+
+        assertTrue(result.succeeded());
+        assertEquals("old-arts", result.value.getAttractionId());
+    }
+
+    @Test
+    public void asecondVisitToTheSamePlaceInOneSessionIsRejected() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        Result<Visit> second = new Result<>();
+        store.recordVisit(visit(session.getId(), "old-arts"), second);
+
+        // The exactly-once guarantee: a repeated arrival is refused by the store, not deduplicated
+        // by whichever caller happens to notice.
+        assertTrue(second.failed());
+        assertTrue(second.error instanceof DuplicateVisitException);
+    }
+
+    @Test
+    public void twoPlacesInOneSessionAreBothRecorded() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        Result<Visit> second = new Result<>();
+        store.recordVisit(visit(session.getId(), "system-garden"), second);
+
+        assertTrue(second.succeeded());
+    }
+
+    @Test
+    public void aVisitForAnUnknownSessionIsRejected() {
+        create();
+
+        Result<Visit> result = new Result<>();
+        store.recordVisit(visit("session-does-not-exist", "old-arts"), result);
+
+        assertTrue(result.failed());
+    }
+
+    @Test
+    public void anUnreadVisitIsFoundAndAReadOneIsNot() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        assertNotNull(findUnread(session.getId()));
+
+        Result<Void> marked = new Result<>();
+        store.markVisitRead(session.getId(), "old-arts", marked);
+        assertTrue(marked.succeeded());
+
+        assertNull(findUnread(session.getId()));
+    }
+
+    @Test
+    public void avisitCanBeLookedUpByItsSessionAndAttractionPair() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        Result<Visit> found = new Result<>();
+        store.findVisit(session.getId(), "old-arts", found);
+        assertTrue(found.succeeded());
+        assertNotNull(found.value);
+
+        Result<Visit> missing = new Result<>();
+        store.findVisit(session.getId(), "system-garden", missing);
+        assertTrue("a place that was never visited is absent, not an error", missing.succeeded());
+        assertNull(missing.value);
+    }
+
+    @Test
+    public void areadVisitIsStillFoundByItsPair() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+        Result<Void> marked = new Result<>();
+        store.markVisitRead(session.getId(), "old-arts", marked);
+
+        Result<Visit> found = new Result<>();
+        store.findVisit(session.getId(), "old-arts", found);
+
+        // Reopening a story from history has to keep working after it has been read once.
+        assertNotNull(found.value);
+        assertFalse(found.value.isUnread());
+    }
+
+    @Test
+    public void markingAnUnknownVisitReadIsNotAFailure() {
+        SessionSummary session = create();
+
+        Result<Void> result = new Result<>();
+        store.markVisitRead(session.getId(), "never-visited", result);
+
+        // Nothing to mark is not the same as something going wrong.
+        assertTrue(result.succeeded());
+    }
+
+    @Test
+    public void markingAVisitReadDoesNotCreateAnother() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        Result<Void> marked = new Result<>();
+        store.markVisitRead(session.getId(), "old-arts", marked);
+
+        Result<Visit> again = new Result<>();
+        store.recordVisit(visit(session.getId(), "old-arts"), again);
+        assertTrue("reading a story must not free the pair to be recorded again", again.failed());
+    }
+
+    @Test
+    public void discardingASessionRemovesItsVisits() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        Result<Void> discarded = new Result<>();
+        store.discard(session.getId(), discarded);
+        assertTrue(discarded.succeeded());
+
+        assertNull(findUnread(session.getId()));
+    }
+
+    @Test
+    public void afinishedSessionKeepsItsVisits() {
+        SessionSummary session = create();
+        recordVisit(session.getId(), "old-arts");
+
+        finish(session);
+
+        // Finishing is what turns a session into history; its visits are that history.
+        assertNotNull(findUnread(session.getId()));
+    }
+
+    private Visit visit(String sessionId, String attractionId) {
+        return new Visit(sessionId, attractionId, 5_000L, "Old Arts Building",
+                "The 1924 clocktower building.", true);
+    }
+
+    private void recordVisit(String sessionId, String attractionId) {
+        Result<Visit> result = new Result<>();
+        store.recordVisit(visit(sessionId, attractionId), result);
+        assertTrue(result.succeeded());
+    }
+
+    private Visit findUnread(String sessionId) {
+        Result<Visit> result = new Result<>();
+        store.findUnreadVisit(sessionId, result);
+        assertTrue(result.succeeded());
+        return result.value;
+    }
 
     private SessionSummary create() {
         Result<SessionSummary> result = new Result<>();

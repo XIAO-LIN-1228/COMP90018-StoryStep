@@ -19,6 +19,7 @@ import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -694,6 +695,30 @@ public class ExplorationCoordinatorTest {
         }
 
         @Override
+        public void recordVisit(Visit visit, RepositoryCallback<Visit> callback) {
+            delegate.recordVisit(visit, callback);
+        }
+
+        @Override
+        public void findUnreadVisit(String sessionId, RepositoryCallback<Visit> callback) {
+            delegate.findUnreadVisit(sessionId, callback);
+        }
+
+        @Override
+        public void findVisit(String sessionId,
+                              String attractionId,
+                              RepositoryCallback<Visit> callback) {
+            delegate.findVisit(sessionId, attractionId, callback);
+        }
+
+        @Override
+        public void markVisitRead(String sessionId,
+                                  String attractionId,
+                                  RepositoryCallback<Void> callback) {
+            delegate.markVisitRead(sessionId, attractionId, callback);
+        }
+
+        @Override
         public void findUnfinished(RepositoryCallback<RestoredSession> callback) {
             delegate.findUnfinished(callback);
         }
@@ -734,6 +759,30 @@ public class ExplorationCoordinatorTest {
 
         @Override
         public void discard(String sessionId, RepositoryCallback<Void> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void recordVisit(Visit visit, RepositoryCallback<Visit> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void findUnreadVisit(String sessionId, RepositoryCallback<Visit> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void findVisit(String sessionId,
+                              String attractionId,
+                              RepositoryCallback<Visit> callback) {
+            callback.onError(new IOException("disk full"));
+        }
+
+        @Override
+        public void markVisitRead(String sessionId,
+                                  String attractionId,
+                                  RepositoryCallback<Void> callback) {
             callback.onError(new IOException("disk full"));
         }
 

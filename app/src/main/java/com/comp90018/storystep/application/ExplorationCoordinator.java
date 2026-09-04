@@ -1,5 +1,7 @@
 package com.comp90018.storystep.application;
 
+import com.comp90018.storystep.domain.arrival.ArrivalDetector;
+import com.comp90018.storystep.domain.arrival.ArrivalPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.geo.RouteAccumulator;
 import com.comp90018.storystep.domain.guidance.CircularSmoother;
@@ -18,6 +20,8 @@ import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.motion.MovementClassifier;
+import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
@@ -93,6 +97,26 @@ public final class ExplorationCoordinator {
          */
         default void onDurabilityChanged(boolean checkpointFailed) {
         }
+
+        /**
+         * The recorded visit whose story has not been offered on screen yet, or null when there
+         * is none to offer.
+         *
+         * <p>Only ever carries a visit that is already durably stored, so nothing here can claim
+         * an arrival that was not saved.
+         */
+        default void onPendingStoryChanged(Visit pendingStory) {
+        }
+
+        /**
+         * True when recording an arrival failed and nothing was written.
+         *
+         * <p>Distinct from a checkpoint failure because the remedy differs: this one has a visit
+         * waiting to be retried, and until it succeeds the app must not suggest the place has
+         * been visited.
+         */
+        default void onVisitSaveFailed(boolean failed) {
+        }
     }
 
     /** A heading older than this describes where the phone used to point, not where it points. */
@@ -115,6 +139,12 @@ public final class ExplorationCoordinator {
     private final MovementClassifier movement = new MovementClassifier();
 
     private final CircularSmoother headingSmoother = new CircularSmoother();
+
+    /**
+     * Owned here for the same reason as the route: the candidate stay is part of the live session,
+     * and a second detector would be watching a different approach to the same place.
+     */
+    private final ArrivalDetector arrival;
 
     private final List<Observer> observers = new ArrayList<>(2);
 
@@ -156,6 +186,23 @@ public final class ExplorationCoordinator {
 
     private boolean headingUsable;
 
+    /**
+     * The recorded visit whose story has not been presented in this process yet.
+     *
+     * <p>Process-scoped on purpose, and paired with the durable {@code unread} flag rather than
+     * replacing it. The flag answers "has the user read this story", which must survive the app
+     * being killed; this field answers "have we already offered it on screen", which must not,
+     * because otherwise rotating the phone would announce the same arrival twice.
+     */
+    private Visit pendingStory;
+
+    /**
+     * The visit a failed write was trying to record, kept so Retry has something to retry.
+     *
+     * <p>Non-null exactly while the failure is unrecovered, which is also what the screen shows.
+     */
+    private Visit failedVisit;
+
     /** Location only. A device with no motion or compass sensing is a supported configuration. */
     public ExplorationCoordinator(SessionStateMachine machine,
                                   SessionStore sessionStore,
@@ -171,12 +218,24 @@ public final class ExplorationCoordinator {
                                   LocationSampleFilter sampleFilter,
                                   Clock clock,
                                   SensingSources sensing) {
+        this(machine, sessionStore, locationSource, sampleFilter, clock, sensing,
+                ArrivalPolicy.defaultPolicy());
+    }
+
+    public ExplorationCoordinator(SessionStateMachine machine,
+                                  SessionStore sessionStore,
+                                  LocationSource locationSource,
+                                  LocationSampleFilter sampleFilter,
+                                  Clock clock,
+                                  SensingSources sensing,
+                                  ArrivalPolicy arrivalPolicy) {
         this.machine = machine;
         this.sessionStore = sessionStore;
         this.locationSource = locationSource;
         this.sampleFilter = sampleFilter;
         this.clock = clock;
         this.sensing = sensing;
+        this.arrival = new ArrivalDetector(arrivalPolicy);
     }
 
     // --- observers ---------------------------------------------------------------------------
@@ -195,6 +254,8 @@ public final class ExplorationCoordinator {
         observer.onMovementChanged(movementSnapshot());
         observer.onGuidanceChanged(guidanceSnapshot());
         observer.onDurabilityChanged(checkpointFailed);
+        observer.onPendingStoryChanged(pendingStory);
+        observer.onVisitSaveFailed(failedVisit != null);
     }
 
     public void removeObserver(Observer observer) {
@@ -267,6 +328,48 @@ public final class ExplorationCoordinator {
         return checkpointFailed;
     }
 
+    /**
+     * The stored visit whose story has not been offered on screen yet, or null when there is none.
+     */
+    public Visit getPendingStory() {
+        return pendingStory;
+    }
+
+    /**
+     * Marks the pending story as offered, so it is not announced again in this process.
+     *
+     * <p>Deliberately does not mark it read. Dismissing the prompt means "not now", and the story
+     * stays recoverable; only actually opening it is reading it.
+     */
+    public void consumeArrival() {
+        if (pendingStory == null) {
+            return;
+        }
+        pendingStory = null;
+        publishPendingStory();
+    }
+
+    /** True when an arrival could not be recorded and the user still needs to retry it. */
+    public boolean hasVisitSaveFailed() {
+        return failedVisit != null;
+    }
+
+    /**
+     * Retries the arrival that failed to save.
+     *
+     * <p>Safe to call repeatedly: a retry that discovers the visit is already there is treated as
+     * the success it is, rather than recording a second one.
+     */
+    public void retryVisit() {
+        if (failedVisit == null) {
+            return;
+        }
+        Visit retried = failedVisit;
+        failedVisit = null;
+        publishVisitSaveFailed();
+        storeVisit(retried);
+    }
+
     /** The permission level last reported to the coordinator. */
     public LocationAccess getAccess() {
         return access;
@@ -281,11 +384,13 @@ public final class ExplorationCoordinator {
      * nothing else: the same session keeps its id, its segment and every metre already walked,
      * because the user changed their mind about where to go, not about whether they are exploring.
      *
-     * <p>REQ-12 will additionally reset the arrival candidate here, since a partially satisfied
-     * dwell towards the old target says nothing about the new one.
+     * <p>The arrival candidate is reset, since a partially satisfied dwell towards the old target
+     * says nothing about the new one — and carrying it over would let changing destination
+     * manufacture an instant arrival at a place the user has not reached.
      */
     public void selectDestination(Attraction attraction) {
         destination = attraction;
+        arrival.setTarget(attraction);
         publishDestination();
         // The bearing is to the new place from the moment it is chosen; the arrow must not keep
         // pointing at the old one until the next fix happens to arrive.
@@ -346,7 +451,14 @@ public final class ExplorationCoordinator {
                 route.reset();
                 movement.clear();
                 persistedRoutePointCount = 0;
+                // Arrival state belongs to a session. A story left unread by the previous walk is
+                // still in history, but it is not this walk's news, and a failed write against a
+                // session that has ended can never be retried successfully.
+                pendingStory = null;
+                failedVisit = null;
                 reportDurability(false);
+                publishPendingStory();
+                publishVisitSaveFailed();
                 lastCheckpointMonotonicMillis = clock.monotonicMillis();
                 // A destination chosen before Start had no session to attach itself to; now it
                 // does, so the record knows where the user was heading from its first moment.
@@ -431,7 +543,13 @@ public final class ExplorationCoordinator {
                 route.reset();
                 movement.clear();
                 persistedRoutePointCount = 0;
+                // The session's visits went with it; an offer to read a story from a walk that no
+                // longer exists would be pointing at nothing.
+                pendingStory = null;
+                failedVisit = null;
                 reportDurability(false);
+                publishPendingStory();
+                publishVisitSaveFailed();
                 publishSession();
                 publishRoute();
                 publishMovement();
@@ -503,6 +621,7 @@ public final class ExplorationCoordinator {
         // reset for the same reason: readings from before the gap describe a different walk.
         sampleFilter.reset();
         movement.reset();
+        arrival.reset();
         headingSmoother.reset();
         headingUsable = false;
         subscription = new Subscription(++generation);
@@ -611,6 +730,52 @@ public final class ExplorationCoordinator {
                 });
     }
 
+    /**
+     * Records the arrival the detector just reported, if there is a session to record it against.
+     *
+     * <p>The name and story are copied from the destination as it is right now, so the visit stays
+     * readable after the attraction cache is refreshed or the place disappears from the provider.
+     */
+    private void recordArrival() {
+        String sessionId = machine.getSessionId();
+        if (sessionId == null || destination == null) {
+            return;
+        }
+        storeVisit(new Visit(
+                sessionId,
+                destination.getId(),
+                clock.wallClockMillis(),
+                destination.getName(),
+                destination.getDescription(),
+                true));
+    }
+
+    /**
+     * Writes one visit and reacts to the three outcomes that mean different things.
+     *
+     * <p>A duplicate is success: the visit is already recorded, and the only wrong response would
+     * be to announce the same arrival a second time. A genuine failure wrote nothing, so it is
+     * reported as a failure and never as a saved visit — the user is offered a retry instead.
+     */
+    private void storeVisit(Visit visit) {
+        sessionStore.recordVisit(visit, new RepositoryCallback<Visit>() {
+            @Override
+            public void onSuccess(Visit recorded) {
+                pendingStory = recorded;
+                publishPendingStory();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                if (error instanceof DuplicateVisitException) {
+                    return;
+                }
+                failedVisit = visit;
+                publishVisitSaveFailed();
+            }
+        });
+    }
+
     private void reportDurability(boolean failed) {
         if (checkpointFailed == failed) {
             return;
@@ -656,9 +821,13 @@ public final class ExplorationCoordinator {
                 // here.
                 lastCheckpointMonotonicMillis = clock.monotonicMillis();
                 destination = restored.getDestination();
+                arrival.setTarget(destination);
                 movement.clear();
                 headingSmoother.reset();
                 headingUsable = false;
+                // A story the user never got to read is recovered by reading the visit back, not
+                // by detecting the arrival again: the row already exists and must stay unique.
+                restorePendingStory(restored.getSummary().getId());
                 publishSession();
                 publishDestination();
                 publishRoute();
@@ -669,6 +838,33 @@ public final class ExplorationCoordinator {
             @Override
             public void onError(Throwable error) {
                 // Nothing to restore that can be trusted; the app stays idle.
+            }
+        });
+    }
+
+    /**
+     * Re-offers the restored session's unread story, if it has one.
+     *
+     * <p>A failure is silent: not finding a story to re-offer leaves the session exactly as
+     * usable as it was, and the visit itself is untouched either way.
+     */
+    private void restorePendingStory(String sessionId) {
+        if (sessionId == null) {
+            return;
+        }
+        sessionStore.findUnreadVisit(sessionId, new RepositoryCallback<Visit>() {
+            @Override
+            public void onSuccess(Visit unread) {
+                if (unread == null || !unread.getSessionId().equals(machine.getSessionId())) {
+                    return;
+                }
+                pendingStory = unread;
+                publishPendingStory();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                // Nothing to re-offer.
             }
         });
     }
@@ -719,6 +915,20 @@ public final class ExplorationCoordinator {
         }
     }
 
+    private void publishPendingStory() {
+        Visit snapshot = pendingStory;
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onPendingStoryChanged(snapshot);
+        }
+    }
+
+    private void publishVisitSaveFailed() {
+        boolean failed = failedVisit != null;
+        for (Observer observer : new ArrayList<>(observers)) {
+            observer.onVisitSaveFailed(failed);
+        }
+    }
+
     /**
      * One registration's callbacks, tagged with the generation that created it.
      *
@@ -741,6 +951,14 @@ public final class ExplorationCoordinator {
                 return;
             }
             long now = clock.monotonicMillis();
+            // Offered before the route filter, not after it. That filter discards movement below
+            // its minimum displacement as receiver noise, which is precisely what standing at the
+            // destination produces — behind it, the dwell would stop accumulating at the moment
+            // the user actually arrives. The detector applies its own, stricter, quality rules.
+            if (access == LocationAccess.PRECISE
+                    && arrival.offer(sample, now).isArrival()) {
+                recordArrival();
+            }
             if (!sampleFilter.offer(sample, now).isAccepted()) {
                 // A rejected sample is not an error: the next fix is usually fine, and showing a
                 // failure on every noisy reading is worse than slightly older distances.

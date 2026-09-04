@@ -8,17 +8,19 @@ StoryStep is a context-aware Android tourism companion for COMP90018 (University
 
 Current state: the layered Java/XML application skeleton and a cross-iteration frontend prototype
 are in place. The app includes onboarding, nearby discovery, attraction details, exploration,
-arrival/story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
+story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
 real foreground Android location adapter, permission recovery and quality-aware samples. A
 process-wide session coordinator owns the foreground location, accelerometer and magnetometer
 subscriptions and implements start, pause, resume, finish and discard, with movement-state
 estimation, true-north heading and directional guidance. Room is wired for runtime data: cached
 attractions, sessions, sampled route points and visits live in `storystep.db` at schema version 2,
-and an unfinished session is restored as paused on the next launch. Journey history still reads an
-in-memory fixture repository, and Retrofit remains unwired — no network request is made anywhere.
-Arrival detection, exactly-once visit writing, saved attractions, real weather/attraction services
-and contextual ranking remain incomplete. No instrumented test has been run on a device or
-emulator. `README.md` is the requirements/scope document and is the source of truth for
+and an unfinished session is restored as paused on the next launch. Arrival detection works: a
+sustained, credible stay at the selected destination records exactly one visit and offers its
+story on the exploration dashboard. Journey history still reads an in-memory fixture repository,
+and Retrofit remains unwired — no network request is made anywhere. Saved attractions, real
+weather/attraction services and contextual ranking remain incomplete. Instrumented tests have run
+on an emulator (API 36) but never on a physical device, so every physical acceptance case is still
+outstanding. `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.
 
@@ -112,7 +114,8 @@ The package layout under `com.comp90018.storystep` realises that:
 |---|---|---|
 | `domain.model` | Attraction, journey and immutable location models | none |
 | `domain.geo` | Distance/bearing maths and location-quality policies | none |
-| `domain.repository` | Attraction/journey contracts and `RepositoryCallback` | none |
+| `domain.arrival` | Arrival thresholds and the sustained-stay detector | none |
+| `domain.repository` | Attraction/journey/session contracts and `RepositoryCallback` | none |
 | `data.local` | Room entities, DAOs, database, migrations, mappers, `Transactions` | Room |
 | `data.remote` | Retrofit service, DTO, mapper, `ApiClientFactory`; declared, never called | Retrofit/OkHttp |
 | `data.repository` | Room attraction and session stores; in-memory equivalents kept as test fakes | none |

@@ -79,17 +79,8 @@
         android:name="com.comp90018.storystep.ui.exploration.ExplorationFragment"
         android:label="@string/exploration_no_destination"
         tools:layout="@layout/fragment_exploration">
-        <action android:id="@+id/action_exploration_to_arrival" app:destination="@id/arrivalFragment" />
+        <action android:id="@+id/action_exploration_to_story" app:destination="@id/storyFragment" />
         <action android:id="@+id/action_exploration_to_summary" app:destination="@id/journeySummaryFragment" />
-    </fragment>
-
-    <fragment
-        android:id="@+id/arrivalFragment"
-        android:name="com.comp90018.storystep.ui.exploration.ArrivalFragment"
-        android:label="@string/arrival_title"
-        tools:layout="@layout/fragment_arrival">
-        <action android:id="@+id/action_arrival_to_story" app:destination="@id/storyFragment" />
-        <action android:id="@+id/action_arrival_to_summary" app:destination="@id/journeySummaryFragment" />
     </fragment>
 
     <fragment
@@ -97,6 +88,7 @@
         android:name="com.comp90018.storystep.ui.story.StoryFragment"
         android:label="@string/story_toolbar_title"
         tools:layout="@layout/fragment_story">
+        <argument android:name="attractionId" app:argType="string" />
         <action android:id="@+id/action_story_to_memory" app:destination="@id/memoryFragment" />
     </fragment>
 

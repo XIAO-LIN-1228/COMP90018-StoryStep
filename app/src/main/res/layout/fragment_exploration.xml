@@ -174,13 +174,76 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/exploration_notice" />
 
+            <!--
+                The arrival prompt lives on the dashboard rather than as a separate screen: the
+                session is still running, and pushing a full-screen interstitial over a live walk
+                would interrupt the very thing the user is doing.
+            -->
+            <LinearLayout
+                android:id="@+id/arrival_banner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@color/brand_teal_soft"
+                android:orientation="vertical"
+                android:padding="12dp"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/arrival_banner_text"
+                    style="@style/TextAppearance.StoryStep.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/exploration_arrival_supporting" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/arrival_view_story_button"
+                        style="@style/Widget.StoryStep.Button.Primary"
+                        android:layout_width="0dp"
+                        android:layout_height="@dimen/primary_button_height"
+                        android:layout_weight="1"
+                        android:text="@string/exploration_arrival_view_story" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/arrival_later_button"
+                        style="@style/Widget.StoryStep.Button.Outlined"
+                        android:layout_width="wrap_content"
+                        android:layout_height="@dimen/primary_button_height"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/not_now" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/visit_save_failed_notice"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/exploration_visit_save_failed"
+                android:textColor="@color/story_error"
+                android:visibility="gone" />
+
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/preview_arrival_button"
-                style="@style/Widget.StoryStep.Button.Primary"
+                android:id="@+id/retry_visit_button"
+                style="@style/Widget.StoryStep.Button.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="12dp"
-                android:text="@string/exploration_preview_arrival" />
+                android:layout_marginTop="8dp"
+                android:text="@string/exploration_retry_visit"
+                android:visibility="gone" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/resume_exploration_button"

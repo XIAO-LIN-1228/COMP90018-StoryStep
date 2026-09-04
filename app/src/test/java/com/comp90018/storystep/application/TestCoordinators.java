@@ -3,6 +3,7 @@ package com.comp90018.storystep.application;
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
+import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
@@ -27,9 +28,17 @@ public final class TestCoordinators {
     public static ExplorationCoordinator with(FakeClock clock,
                                               FakeLocationSource locationSource,
                                               SensingSources sensing) {
+        return with(clock, locationSource, sensing, new InMemorySessionStore(clock));
+    }
+
+    /** For tests that need to see, or break, what the store was asked to write. */
+    public static ExplorationCoordinator with(FakeClock clock,
+                                              FakeLocationSource locationSource,
+                                              SensingSources sensing,
+                                              SessionStore sessionStore) {
         return new ExplorationCoordinator(
                 new SessionStateMachine(clock),
-                new InMemorySessionStore(clock),
+                sessionStore,
                 locationSource,
                 new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()),
                 clock,
