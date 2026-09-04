@@ -1,6 +1,6 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
-Prepared: 2026-08-31. Last updated: 2026-09-04. Requirements: [development plan](development_plan.md).
+Prepared: 2026-08-31. Last updated: 2026-09-05. Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
@@ -20,7 +20,21 @@ Branch snapshot, 2026-09-04. The two rounds recorded here on 2026-09-03 are now 
   movement estimation, magnetometer heading and directional guidance
   ([EV-REQ08-REQ11-2026-09-03-01](verification/EV-REQ08-REQ11-2026-09-03-01.md)).
 
+`feature/durable-persistence` has since merged to `main` as `728b7fc`, so REQ-14 and REQ-15 are
+recorded as `MERGED` below.
+
 One round is in progress on an unmerged branch and is recorded below as `IN_REVIEW`:
+
+- `feature/arrival-and-story`, from `main@728b7fc`: arrival detection and the exactly-once visit
+  that reveals a story
+  ([EV-REQ12-REQ13-2026-09-05-01](verification/EV-REQ12-REQ13-2026-09-05-01.md)). **Uncommitted at
+  the time of writing**; the commit column must be filled in once a commit exists. This round ran
+  `connectedAndroidTest` for the first time in the project's history — 22 instrumented tests pass
+  on a Pixel_8 AVD at API 36 — and drove the arrival-to-story flow end to end on that emulator.
+  Every physical (`P`) case remains NOT_RUN: an emulator has no receiver drift, and no run has
+  been done on API 26 or API 31+.
+
+Superseded, now merged:
 
 - `feature/durable-persistence`, from `main@a9ff994`: Room wired into the running application,
   schema version 2 with sessions, route points and visits, a durable session store and
@@ -28,10 +42,13 @@ One round is in progress on an unmerged branch and is recorded below as `IN_REVI
   ([EV-REQ14-REQ15-2026-09-04-01](verification/EV-REQ14-REQ15-2026-09-04-01.md)). **Uncommitted at
   the time of writing**; the commit column must be filled in once a commit exists.
 
-Merging did not run anything on a device. `./gradlew connectedAndroidTest` has still never been
-executed on this project. Every physical acceptance case for REQ-05 through REQ-11 remains
-NOT_RUN, the sensing thresholds under D-07 remain unvalidated, and the schema migration added by
-the persistence round has never touched real SQLite.
+`./gradlew connectedAndroidTest` was executed for the first time during the arrival round, on
+2026-09-05: 22 instrumented tests pass on a Pixel_8 AVD at API 36, so the shipped migration has
+now touched real SQLite and the DAO contracts have been exercised against Room rather than fakes.
+That is the `A` level only. Every physical (`P`) acceptance case for REQ-05 through REQ-13 remains
+NOT_RUN — no test has run on a physical handset, on API 26 or on API 31+ — and the sensing
+thresholds under D-07 remain unvalidated, because an emulator supplies clean fixes with no
+receiver drift, no multipath and perfectly reported accuracy.
 
 ## 1. Status rules and requirement ledger
 
@@ -54,10 +71,10 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 | REQ-09 | I2 | M3 / M1 | MERGED | PARTIAL | `23b61a0`, `a9ff994` | Same evidence; AT-09A passes against the new labelled fixtures, including rotation-without-walking. AT-09B NOT_RUN — no recorded trials, so the 0.35/0.7 m/s^2 thresholds are unvalidated and the physical targets are unsupported |
 | REQ-10 | I2 | M3 / M1 | MERGED | PARTIAL | `23b61a0`, `a9ff994` | Same evidence; AT-10A passes (350+15 = true 5; 359/1 stays near north). **Contract change**: `HeadingSource` now reports magnetic heading plus accuracy, with declination applied in `domain.guidance`. AT-10B NOT_RUN — display remapping and real magnetometer accuracy unobserved |
 | REQ-11 | I2 | M2 / M3 | MERGED | PARTIAL | `23b61a0`, `a9ff994` | Same evidence; AT-11A passes, and guidance degrades arrow → cardinal → unavailable as heading then position are removed. AT-11B device half NOT_RUN — arrow/text agreement unverified on hardware |
-| REQ-12 | I4 | M1 / M3 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f`, `04b4794` | Arrival screen exists but no detector; from `04b4794` its entry point is restricted to debuggable builds so a prototype cannot be mistaken for arrival detection in a demo. The coordinator now carries the selected destination REQ-12 will need |
-| REQ-13 | I4 | M2 / M4 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Story/memory presentation exists; no exactly-once visit persistence or recovery |
-| REQ-14 | I1 | M4 / M1 | IN_REVIEW | PARTIAL | `feature/durable-persistence` (uncommitted) | [EV-REQ14-REQ15-2026-09-04-01](verification/EV-REQ14-REQ15-2026-09-04-01.md); schema export on with `1.json` and `2.json` committed; `RoomAttractionRepository` is the runtime source and seeds idempotently with provenance. AT-14A U part only — its R/A half and all of AT-14B need `connectedAndroidTest`, which has never run. Unknown-indoor classification deferred to REQ-18 |
-| REQ-15 | I1-I2 | M4 / M1 | IN_REVIEW | PARTIAL | `8ca81aa`, `204708f`, `feature/durable-persistence` (uncommitted) | [EV-REQ14-REQ15-2026-09-04-01](verification/EV-REQ14-REQ15-2026-09-04-01.md); `RoomSessionStore` implements the whole contract, route points are appended incrementally and an interrupted session is restored paused at launch. **Contract change**: `findUnfinished` yields `RestoredSession`, and `appendRoute`/`saveDestination` are new. AT-15A/B U parts pass; the process-kill and migration halves are NOT_RUN. Visits table ships unused until REQ-13 |
+| REQ-12 | I4 | M1 / M3 | IN_REVIEW | PARTIAL | `feature/arrival-and-story` (uncommitted) | [EV-REQ12-REQ13-2026-09-05-01](verification/EV-REQ12-REQ13-2026-09-05-01.md); `domain.arrival` implements the section 4.5 rules as `ArrivalPolicy` + `ArrivalDetector`, fed the raw fix before route filtering so a stationary user at the target still qualifies. AT-12A passes and AT-12B's U half passes. **AT-12B physical half NOT_RUN** — no real-GNSS approach walked, so the 50/25 m and 3-fix/10 s thresholds stay unvalidated. The prototype arrival screen and its debug-only entry point are deleted |
+| REQ-13 | I4 | M2 / M4 | IN_REVIEW | PARTIAL | `feature/arrival-and-story` (uncommitted) | Same evidence; visits are written through the existing unique `(session_id, attraction_id)` index with **no schema change**, a duplicate is treated as already-recorded rather than as an error, and the arrival prompt is a dashboard banner consumed once per process while `unread` survives relaunch. AT-13A passes including its emulator half. AT-13B partly passes — injected write failures are JVM-only, and the invented 1879 story strings are deleted per REQ-13.4 |
+| REQ-14 | I1 | M4 / M1 | MERGED | PARTIAL | `740221a`, `728b7fc` | [EV-REQ14-REQ15-2026-09-04-01](verification/EV-REQ14-REQ15-2026-09-04-01.md); schema export on with `1.json` and `2.json` committed; `RoomAttractionRepository` is the runtime source and seeds idempotently with provenance. AT-14A and AT-14B both now pass on an emulator (API 36) — see [EV-REQ12-REQ13-2026-09-05-01](verification/EV-REQ12-REQ13-2026-09-05-01.md) for that run; only API 26 / 31+ coverage is outstanding. Unknown-indoor classification deferred to REQ-18 |
+| REQ-15 | I1-I2 | M4 / M1 | MERGED | PARTIAL | `8ca81aa`, `204708f`, `740221a`, `728b7fc` | [EV-REQ14-REQ15-2026-09-04-01](verification/EV-REQ14-REQ15-2026-09-04-01.md); `RoomSessionStore` implements the whole contract, route points are appended incrementally and an interrupted session is restored paused at launch. **Contract change**: `findUnfinished` yields `RestoredSession`, and `appendRoute`/`saveDestination` are new. AT-15A/B U parts pass, and the migration half now passes on an emulator. The process-kill path was exercised end to end during the arrival round (force-stop and relaunch restored the session as paused). The visits table is no longer unused — REQ-13 writes to it |
 | REQ-16 | I4 | M4 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Journey list/detail/summary UI exists on fixture data; deletion/recovery/offline behavior is missing |
 | REQ-17 | I3 | M4 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Saved UI exists; Save is non-persistent and saved list reuses nearby results |
 | REQ-18 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |

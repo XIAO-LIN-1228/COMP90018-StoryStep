@@ -50,6 +50,7 @@
             android:orientation="vertical">
 
             <ImageView
+                android:id="@+id/story_hero"
                 android:layout_width="match_parent"
                 android:layout_height="180dp"
                 android:contentDescription="@null"
@@ -73,29 +74,36 @@
                     android:textStyle="bold" />
 
                 <TextView
+                    android:id="@+id/story_place_name"
                     style="@style/TextAppearance.StoryStep.Headline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp"
-                    android:text="@string/story_title" />
+                    android:layout_marginTop="14dp" />
 
                 <TextView
+                    android:id="@+id/story_body"
                     style="@style/TextAppearance.StoryStep.Body"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="@string/story_paragraph_one" />
+                    android:lineSpacingExtra="4dp" />
 
+                <!--
+                    Where the text came from, stated on the screen that shows it. The seed dataset
+                    is not a live provider, and saying so is what keeps a demo from reading as a
+                    researched fact about the place.
+                -->
                 <TextView
-                    style="@style/TextAppearance.StoryStep.Body"
+                    android:id="@+id/story_attribution"
+                    style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp"
-                    android:text="@string/story_paragraph_two" />
+                    android:layout_marginTop="16dp"
+                    android:text="@string/story_attribution"
+                    android:textColor="@color/story_text_tertiary" />
 
                 <com.google.android.material.imageview.ShapeableImageView
+                    android:id="@+id/story_thumb"
                     android:layout_width="match_parent"
                     android:layout_height="180dp"
                     android:layout_marginTop="20dp"

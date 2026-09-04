@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.data.local.DirectTransactions;
 import com.comp90018.storystep.data.local.FakeRoutePointDao;
+import com.comp90018.storystep.data.local.FakeVisitDao;
 import com.comp90018.storystep.data.local.FakeSessionDao;
 import com.comp90018.storystep.data.repository.RoomSessionStore;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
@@ -48,6 +49,7 @@ public class ExplorationCoordinatorDurabilityTest {
     private FakeClock clock;
     private FakeSessionDao sessionDao;
     private FakeRoutePointDao routePointDao;
+    private FakeVisitDao visitDao;
     private SessionStore store;
     private FakeLocationSource locationSource;
     private ExplorationCoordinator coordinator;
@@ -57,7 +59,9 @@ public class ExplorationCoordinatorDurabilityTest {
         clock = FakeClock.startingAt(1_000L);
         sessionDao = new FakeSessionDao();
         routePointDao = new FakeRoutePointDao();
-        store = new RoomSessionStore(new DirectTransactions(), sessionDao, routePointDao, clock,
+        visitDao = new FakeVisitDao();
+        store = new RoomSessionStore(new DirectTransactions(), sessionDao, routePointDao, visitDao,
+                clock,
                 Runnable::run, Runnable::run);
         locationSource = new FakeLocationSource();
         coordinator = newCoordinator();

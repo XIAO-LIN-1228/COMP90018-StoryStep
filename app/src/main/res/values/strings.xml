@@ -105,8 +105,12 @@
     <string name="cancel">Cancel</string>
 
     <!-- Active exploration -->
+    <string name="exploration_arrival_banner_format">You’ve arrived at %1$s</string>
+    <string name="exploration_arrival_supporting">A new story is ready to read.</string>
+    <string name="exploration_arrival_view_story">Read the story</string>
+    <string name="exploration_visit_save_failed">This arrival could not be saved, so it is not in your history yet.</string>
+    <string name="exploration_retry_visit">Retry saving this arrival</string>
     <string name="exploration_notice">Direction is an estimate, not turn-by-turn navigation.</string>
-    <string name="exploration_preview_arrival">Preview arrival</string>
     <string name="exploration_stop">Stop exploration</string>
     <string name="exploration_duration_zero">0:00</string>
     <string name="exploration_duration_format">%1$d:%2$02d</string>
@@ -157,16 +161,12 @@
     <string name="exploration_finish">Finish journey</string>
 
     <!-- Arrival, story and memory -->
-    <string name="arrival_title">You’ve arrived</string>
-    <string name="arrival_place">Old Arts Building</string>
-    <string name="arrival_supporting">A new story is ready to unlock.</string>
-    <string name="arrival_discover">Discover the story</string>
     <string name="not_now">Not now</string>
     <string name="story_toolbar_title">The story</string>
+    <string name="story_attribution">Seed dataset · COMP90018 demo</string>
+    <string name="story_no_content">No story is available for this place yet.</string>
+    <string name="story_loading">Loading the story…</string>
     <string name="story_discovered">Discovered today</string>
-    <string name="story_title">A landmark built to inspire</string>
-    <string name="story_paragraph_one">Completed in 1879, the Old Arts Building was designed to symbolise learning, faith, and the pursuit of knowledge.</string>
-    <string name="story_paragraph_two">Its Gothic Revival architecture and grand hall have welcomed generations of students, scholars, and ideas.</string>
     <string name="story_add_memory">Add a memory</string>
     <string name="memory_title">Add a memory</string>
     <string name="memory_place_time">Old Arts Building  ·  Today, 10:14</string>

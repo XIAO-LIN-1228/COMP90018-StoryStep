@@ -6,6 +6,8 @@ import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.time.Clock;
@@ -33,6 +35,9 @@ public final class InMemorySessionStore implements SessionStore {
 
     /** The current session's stored trace, mirroring what the Room store keeps in its own table. */
     private final List<RoutePoint> routePoints = new ArrayList<>();
+
+    /** The current session's recorded arrivals, keyed by session and attraction like the table. */
+    private final List<Visit> visits = new ArrayList<>();
 
     private double totalDistanceMeters;
     private int segmentCount;
@@ -163,8 +168,90 @@ public final class InMemorySessionStore implements SessionStore {
         }
         current = null;
         clearRoute();
+        // Visits are owned by the session and go with it, exactly as the foreign key's cascade
+        // does in the Room store. Saved attractions would not be, and there are none to touch.
+        visits.clear();
         destination = null;
         callback.onSuccess(null);
+    }
+
+    @Override
+    public void recordVisit(Visit visit, RepositoryCallback<Visit> callback) {
+        if (visit == null) {
+            callback.onError(new IllegalArgumentException("visit must not be null"));
+            return;
+        }
+        if (current == null || !current.getId().equals(visit.getSessionId())) {
+            callback.onError(new IllegalArgumentException("unknown session: "
+                    + visit.getSessionId()));
+            return;
+        }
+        if (find(visit.getSessionId(), visit.getAttractionId()) != null) {
+            callback.onError(new DuplicateVisitException(
+                    visit.getSessionId(), visit.getAttractionId()));
+            return;
+        }
+        visits.add(visit);
+        callback.onSuccess(visit);
+    }
+
+    @Override
+    public void findUnreadVisit(String sessionId, RepositoryCallback<Visit> callback) {
+        if (sessionId == null) {
+            callback.onError(new IllegalArgumentException("sessionId must not be null"));
+            return;
+        }
+        for (Visit visit : visits) {
+            if (visit.getSessionId().equals(sessionId) && visit.isUnread()) {
+                callback.onSuccess(visit);
+                return;
+            }
+        }
+        callback.onSuccess(null);
+    }
+
+    @Override
+    public void findVisit(String sessionId,
+                          String attractionId,
+                          RepositoryCallback<Visit> callback) {
+        if (sessionId == null || attractionId == null) {
+            callback.onError(
+                    new IllegalArgumentException("sessionId and attractionId are required"));
+            return;
+        }
+        callback.onSuccess(find(sessionId, attractionId));
+    }
+
+    @Override
+    public void markVisitRead(String sessionId,
+                              String attractionId,
+                              RepositoryCallback<Void> callback) {
+        if (sessionId == null || attractionId == null) {
+            callback.onError(
+                    new IllegalArgumentException("sessionId and attractionId are required"));
+            return;
+        }
+        for (int i = 0; i < visits.size(); i++) {
+            Visit stored = visits.get(i);
+            if (stored.getSessionId().equals(sessionId)
+                    && stored.getAttractionId().equals(attractionId)) {
+                visits.set(i, stored.asRead());
+                break;
+            }
+        }
+        // An unknown pair is not a failure, matching the Room store: nothing to mark is not the
+        // same as something going wrong.
+        callback.onSuccess(null);
+    }
+
+    private Visit find(String sessionId, String attractionId) {
+        for (Visit visit : visits) {
+            if (visit.getSessionId().equals(sessionId)
+                    && visit.getAttractionId().equals(attractionId)) {
+                return visit;
+            }
+        }
+        return null;
     }
 
     @Override

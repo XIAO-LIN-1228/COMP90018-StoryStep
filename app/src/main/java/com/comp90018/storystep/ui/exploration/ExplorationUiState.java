@@ -11,6 +11,7 @@ import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.platform.location.LocationSource;
 
 /**
@@ -34,6 +35,8 @@ public final class ExplorationUiState {
     private final boolean checkpointFailed;
     private final MovementSnapshot movement;
     private final GuidanceSnapshot guidance;
+    private final Visit pendingStory;
+    private final boolean visitSaveFailed;
 
     private ExplorationUiState(String destinationName,
                                SessionState state,
@@ -46,7 +49,9 @@ public final class ExplorationUiState {
                                boolean stopSaveFailed,
                                boolean checkpointFailed,
                                MovementSnapshot movement,
-                               GuidanceSnapshot guidance) {
+                               GuidanceSnapshot guidance,
+                               Visit pendingStory,
+                               boolean visitSaveFailed) {
         this.destinationName = destinationName;
         this.state = state;
         this.pauseReason = pauseReason;
@@ -59,6 +64,8 @@ public final class ExplorationUiState {
         this.checkpointFailed = checkpointFailed;
         this.movement = movement;
         this.guidance = guidance;
+        this.pendingStory = pendingStory;
+        this.visitSaveFailed = visitSaveFailed;
     }
 
     /**
@@ -74,7 +81,9 @@ public final class ExplorationUiState {
                                           boolean stopSaveFailed,
                                           boolean checkpointFailed,
                                           MovementSnapshot movement,
-                                          GuidanceSnapshot guidance) {
+                                          GuidanceSnapshot guidance,
+                                          Visit pendingStory,
+                                          boolean visitSaveFailed) {
         LocationSample last = route.getLastSample();
         Double remaining = null;
         if (last != null && destination != null) {
@@ -93,7 +102,39 @@ public final class ExplorationUiState {
                 stopSaveFailed,
                 checkpointFailed,
                 movement,
-                guidance);
+                guidance,
+                pendingStory,
+                visitSaveFailed);
+    }
+
+    /**
+     * True when a recorded arrival is waiting to be offered to the user.
+     *
+     * <p>Only ever true for a visit that is already stored, so the banner cannot promise a story
+     * from an arrival that failed to save.
+     */
+    public boolean isArrivalBannerVisible() {
+        return pendingStory != null;
+    }
+
+    /** The arrived-at attraction's name, or null when no arrival is pending. */
+    public String getArrivedAttractionName() {
+        return pendingStory == null ? null : pendingStory.getAttractionName();
+    }
+
+    /** The arrived-at attraction's id, for opening its story. Null when no arrival is pending. */
+    public String getArrivedAttractionId() {
+        return pendingStory == null ? null : pendingStory.getAttractionId();
+    }
+
+    /**
+     * True when an arrival could not be recorded.
+     *
+     * <p>Deliberately never shown at the same time as the banner: one says a visit is saved and
+     * ready to read, the other says nothing was saved at all.
+     */
+    public boolean isVisitSaveFailed() {
+        return visitSaveFailed;
     }
 
     /** Null when the user started exploring without choosing a destination. */

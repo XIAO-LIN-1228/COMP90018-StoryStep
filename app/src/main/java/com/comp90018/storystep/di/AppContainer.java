@@ -91,7 +91,7 @@ public class AppContainer {
                         database.attractionDao(), clock, ioExecutor, mainExecutor);
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
-                clock, ioExecutor, mainExecutor);
+                database.visitDao(), clock, ioExecutor, mainExecutor);
         // One hub for both sensors: the accelerometer is needed by motion estimation and by the
         // compass, and registering it twice would double the callback rate and the power cost for
         // readings that are identical.

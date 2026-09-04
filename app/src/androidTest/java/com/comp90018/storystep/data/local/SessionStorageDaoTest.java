@@ -167,6 +167,61 @@ public class SessionStorageDaoTest {
                 attractionDao.findById("old-arts"));
     }
 
+    @Test
+    public void theOldestUnreadVisitIsTheOneOfferedBack() {
+        sessionDao.insert(session("s1", false));
+        visitDao.insert(visitAt("s1", "system-garden", 2_000L));
+        visitDao.insert(visitAt("s1", "old-arts", 1_000L));
+
+        VisitEntity unread = visitDao.findFirstUnread("s1");
+
+        // After an interruption the user should be offered the story they were about to read,
+        // not whichever one happened to be recorded last.
+        assertNotNull(unread);
+        assertEquals("old-arts", unread.attractionId);
+    }
+
+    @Test
+    public void aReadVisitIsNoLongerOffered() {
+        sessionDao.insert(session("s1", false));
+        visitDao.insert(visit("s1", "old-arts"));
+
+        assertEquals(1, visitDao.markRead("s1", "old-arts"));
+
+        assertNull(visitDao.findFirstUnread("s1"));
+        assertEquals("marking a story read must not remove the visit",
+                1, visitDao.countBySession("s1"));
+    }
+
+    @Test
+    public void markingAnUnknownVisitReadChangesNothing() {
+        sessionDao.insert(session("s1", false));
+        visitDao.insert(visit("s1", "old-arts"));
+
+        assertEquals(0, visitDao.markRead("s1", "never-visited"));
+
+        assertNotNull(visitDao.findFirstUnread("s1"));
+    }
+
+    @Test
+    public void anUnreadVisitBelongsOnlyToItsOwnSession() {
+        sessionDao.insert(session("s1", false));
+        sessionDao.insert(session("s2", true));
+        visitDao.insert(visit("s2", "old-arts"));
+
+        assertNull(visitDao.findFirstUnread("s1"));
+        assertNotNull(visitDao.findFirstUnread("s2"));
+    }
+
+    @Test
+    public void aVisitCanBeLookedUpByItsSessionAndAttractionPair() {
+        sessionDao.insert(session("s1", false));
+        visitDao.insert(visit("s1", "old-arts"));
+
+        assertNotNull(visitDao.find("s1", "old-arts"));
+        assertNull(visitDao.find("s1", "system-garden"));
+    }
+
     // --- fixtures ------------------------------------------------------------------------------
 
     private static SessionEntity session(String id, boolean finished) {
@@ -201,6 +256,12 @@ public class SessionStorageDaoTest {
         entity.longitude = 144.96140;
         entity.accuracyMeters = 8.0f;
         entity.wallClockMillis = 1_700_000_000_000L + sequence;
+        return entity;
+    }
+
+    private static VisitEntity visitAt(String sessionId, String attractionId, long arrivalMillis) {
+        VisitEntity entity = visit(sessionId, attractionId);
+        entity.arrivalWallClockMillis = arrivalMillis;
         return entity;
     }
 

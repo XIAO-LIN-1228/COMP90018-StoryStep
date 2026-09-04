@@ -14,6 +14,7 @@ import com.comp90018.storystep.ui.exploration.ExplorationViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
+import com.comp90018.storystep.ui.story.StoryViewModel;
 
 /**
  * Builds ViewModels from the {@link AppContainer}, so Fragments never construct a repository,
@@ -54,6 +55,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
             return (T) new JourneysViewModel(appContainer.getJourneyRepository());
+        }
+        if (modelClass.isAssignableFrom(StoryViewModel.class)) {
+            return (T) new StoryViewModel(
+                    appContainer.getAttractionRepository(),
+                    appContainer.getSessionStore(),
+                    appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(SessionRecoveryViewModel.class)) {
             return (T) new SessionRecoveryViewModel(

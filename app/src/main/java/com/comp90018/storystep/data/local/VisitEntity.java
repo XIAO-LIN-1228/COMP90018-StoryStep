@@ -18,8 +18,9 @@ import androidx.room.PrimaryKey;
  * <p>The attraction name and story are copied in rather than referenced, for the same reason the
  * session snapshots its destination — history must stay readable after the cache moves on.
  *
- * <p>Nothing writes to this table yet. It is created here with the rest of the schema because the
- * migration that adds it must be shipped and tested once, not split across two releases.
+ * <p>Written by the arrival path through {@code RoomSessionStore}. The table shipped with the rest
+ * of the schema before anything wrote to it, so that the migration adding it was shipped and tested
+ * once rather than split across two releases.
  */
 @Entity(
         tableName = "visits",
