@@ -94,8 +94,31 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 2 to 3: adds the saved-attraction table.
+     *
+     * <p>Purely additive — there is nothing to back-fill, because nothing before this version
+     * recorded a save. The table deliberately has no foreign key onto {@code attractions}; see
+     * {@link SavedAttractionEntity} for why a cascade there would be a silent unsave.
+     */
+    public static final Migration MIGRATION_2_3 = new Migration(2, 3) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `saved_attractions` ("
+                    + "`attraction_id` TEXT NOT NULL, "
+                    + "`name` TEXT, "
+                    + "`category` TEXT, "
+                    + "`description` TEXT, "
+                    + "`indoor` INTEGER NOT NULL, "
+                    + "`latitude` REAL NOT NULL, "
+                    + "`longitude` REAL NOT NULL, "
+                    + "`saved_at_millis` INTEGER NOT NULL, "
+                    + "PRIMARY KEY(`attraction_id`))");
+        }
+    };
+
     /** Every migration, in order, for the builder and the migration test. */
     public static Migration[] all() {
-        return new Migration[]{MIGRATION_1_2};
+        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3};
     }
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -36,6 +37,7 @@ public class AttractionDetailFragment extends Fragment {
     private TextView descriptionView;
     private Chip venueTypeChip;
     private ImageView imageView;
+    private ImageButton saveButton;
 
     @Nullable
     @Override
@@ -53,16 +55,18 @@ public class AttractionDetailFragment extends Fragment {
         descriptionView = view.findViewById(R.id.detail_description);
         venueTypeChip = view.findViewById(R.id.detail_venue_type);
         imageView = view.findViewById(R.id.detail_image);
-
-        view.findViewById(R.id.detail_back_button).setOnClickListener(v ->
-                NavHostFragment.findNavController(this).navigateUp());
-        view.findViewById(R.id.detail_save_button).setOnClickListener(v ->
-                Toast.makeText(requireContext(), R.string.saved_title, Toast.LENGTH_SHORT).show());
-        view.findViewById(R.id.detail_start_button).setOnClickListener(v -> showStartConfirmation());
+        saveButton = view.findViewById(R.id.detail_save_button);
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(AttractionDetailViewModel.class);
+
+        view.findViewById(R.id.detail_back_button).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigateUp());
+        saveButton.setOnClickListener(v -> viewModel.onSaveToggleRequested());
+        view.findViewById(R.id.detail_start_button).setOnClickListener(v -> showStartConfirmation());
+
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
 
         Bundle arguments = getArguments();
         String attractionId = arguments == null
@@ -73,6 +77,7 @@ public class AttractionDetailFragment extends Fragment {
 
     private void render(AttractionDetailUiState state) {
         Attraction attraction = state.getAttraction();
+        renderSaveButton(state);
         if (state.getStatus() != AttractionDetailUiState.Status.CONTENT || attraction == null) {
             boolean failed = state.getStatus() == AttractionDetailUiState.Status.ERROR;
             nameView.setText(failed ? getString(R.string.detail_error) : "");
@@ -89,6 +94,31 @@ public class AttractionDetailFragment extends Fragment {
         venueTypeChip.setText(attraction.isIndoor()
                 ? R.string.attraction_indoor
                 : R.string.attraction_outdoor);
+    }
+
+    /**
+     * The bookmark is hidden until there is something to save, so it cannot be pressed against an
+     * attraction that failed to load. Its label changes with its state — an icon alone tells a
+     * screen reader nothing about which way pressing it goes.
+     */
+    private void renderSaveButton(AttractionDetailUiState state) {
+        boolean loaded = state.getStatus() == AttractionDetailUiState.Status.CONTENT
+                && state.getAttraction() != null;
+        saveButton.setVisibility(loaded ? View.VISIBLE : View.GONE);
+        saveButton.setImageResource(state.isSaved()
+                ? R.drawable.ic_bookmark_filled
+                : R.drawable.ic_bookmark_outline);
+        saveButton.setContentDescription(getString(state.isSaved()
+                ? R.string.detail_unsave
+                : R.string.detail_save));
+    }
+
+    private void reportSaveFailure(Boolean failed) {
+        if (!Boolean.TRUE.equals(failed)) {
+            return;
+        }
+        Toast.makeText(requireContext(), R.string.detail_save_failed, Toast.LENGTH_SHORT).show();
+        viewModel.consumeSaveFailure();
     }
 
     private void showStartConfirmation() {

@@ -95,6 +95,8 @@
     <string name="detail_locked_supporting">Explore to learn more.</string>
     <string name="detail_start_exploration">Start exploration</string>
     <string name="detail_save">Save place</string>
+    <string name="detail_unsave">Remove from saved</string>
+    <string name="detail_save_failed">Could not update your saved places. Try again.</string>
     <string name="detail_back">Go back</string>
     <string name="confirm_title">Ready to explore?</string>
     <string name="confirm_destination">Exploring towards %1$s.</string>
@@ -227,6 +229,12 @@
     <string name="profile_memories_label">Memories</string>
     <string name="profile_avatar_description">StoryStep profile</string>
     <string name="saved_search">Search saved places</string>
+    <string name="saved_empty">Nothing saved yet. Tap the bookmark on a place to keep it here.</string>
+    <string name="saved_error">Could not load your saved places.</string>
+    <string name="saved_cleared">Saved places cleared.</string>
+    <string name="saved_clear_failed">Could not clear your saved places. Try again.</string>
+    <string name="attraction_save">Save this place</string>
+    <string name="attraction_unsave">Remove this place from saved</string>
     <string name="nearby_back">Back to Explore</string>
     <string name="nearby_results">Places near Parkville</string>
     <string name="settings_location">Location &amp; permissions</string>

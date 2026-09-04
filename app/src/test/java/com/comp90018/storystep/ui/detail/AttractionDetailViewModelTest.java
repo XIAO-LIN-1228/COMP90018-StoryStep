@@ -11,7 +11,12 @@ import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.application.TestCoordinators;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
+import com.comp90018.storystep.data.repository.DeferredSavedAttractions;
+import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
+import com.comp90018.storystep.data.repository.TestSavedAttractions;
+import com.comp90018.storystep.data.local.FakeSavedAttractionDao;
 import com.comp90018.storystep.domain.model.SessionState;
+import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
 import com.comp90018.storystep.platform.location.LocationAccess;
@@ -37,8 +42,8 @@ public class AttractionDetailViewModelTest {
     @Test
     public void loadsAKnownAttraction() {
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(
-                        new InMemoryAttractionRepository(), TestCoordinators.idle());
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), TestCoordinators.idle());
 
         viewModel.load("melbourne-museum");
         AttractionDetailUiState state = observe(viewModel);
@@ -52,8 +57,8 @@ public class AttractionDetailViewModelTest {
     @Test
     public void anUnknownIdentifierProducesTheErrorState() {
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(
-                        new InMemoryAttractionRepository(), TestCoordinators.idle());
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), TestCoordinators.idle());
 
         viewModel.load("does-not-exist");
         AttractionDetailUiState state = observe(viewModel);
@@ -65,8 +70,8 @@ public class AttractionDetailViewModelTest {
     @Test
     public void aMissingArgumentProducesTheErrorStateInsteadOfCrashing() {
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(
-                        new InMemoryAttractionRepository(), TestCoordinators.idle());
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), TestCoordinators.idle());
 
         viewModel.load(null);
 
@@ -82,7 +87,8 @@ public class AttractionDetailViewModelTest {
         coordinator.onVisibilityChanged(true);
         coordinator.onLocationAccessChanged(LocationAccess.DENIED);
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(new InMemoryAttractionRepository(), coordinator);
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), coordinator);
         viewModel.load("melbourne-museum");
 
         assertFalse("the dashboard must not open for a session that never started",
@@ -99,7 +105,8 @@ public class AttractionDetailViewModelTest {
         coordinator.onVisibilityChanged(true);
         coordinator.onLocationAccessChanged(LocationAccess.PRECISE);
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(new InMemoryAttractionRepository(), coordinator);
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), coordinator);
         viewModel.load("melbourne-museum");
 
         assertTrue(viewModel.onStartExplorationRequested());
@@ -114,10 +121,101 @@ public class AttractionDetailViewModelTest {
         coordinator.onVisibilityChanged(true);
         coordinator.onLocationAccessChanged(LocationAccess.PRECISE);
         AttractionDetailViewModel viewModel =
-                new AttractionDetailViewModel(new InMemoryAttractionRepository(), coordinator);
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), coordinator);
 
         assertFalse(viewModel.onStartExplorationRequested());
         assertEquals(SessionState.IDLE, coordinator.summary().getState());
         assertNull(coordinator.getDestination());
+    }
+
+    // --- saving ------------------------------------------------------------------------------
+
+    @Test
+    public void savingAndUnsavingFlipTheBookmarkAndTheStore() {
+        FakeSavedAttractionDao dao = new FakeSavedAttractionDao();
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.over(dao), TestCoordinators.idle());
+        viewModel.load("melbourne-museum");
+        assertFalse(observe(viewModel).isSaved());
+
+        viewModel.onSaveToggleRequested();
+
+        assertTrue(observe(viewModel).isSaved());
+        assertEquals(1, dao.count());
+
+        viewModel.onSaveToggleRequested();
+
+        assertFalse(observe(viewModel).isSaved());
+        assertEquals(0, dao.count());
+    }
+
+    @Test
+    public void aSaveByAnotherScreenUpdatesThisOne() {
+        RoomSavedAttractionRepository saved = TestSavedAttractions.empty();
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(), saved,
+                        TestCoordinators.idle());
+        viewModel.load("melbourne-museum");
+
+        // Stands in for the nearby list saving the same place while the detail screen is open.
+        saved.save(observe(viewModel).getAttraction(), new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                throw new AssertionError(error);
+            }
+        });
+
+        assertTrue(observe(viewModel).isSaved());
+    }
+
+    @Test
+    public void aSecondTapWhileTheWriteIsOutstandingIsIgnored() {
+        DeferredSavedAttractions saved = new DeferredSavedAttractions();
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(), saved,
+                        TestCoordinators.idle());
+        viewModel.load("melbourne-museum");
+
+        viewModel.onSaveToggleRequested();
+        assertTrue("the screen must show the write is under way",
+                observe(viewModel).isSaveInFlight());
+
+        // The second tap arrives before the first write has answered. Without serialisation this
+        // would issue an unsave for a record the first write has not created yet.
+        viewModel.onSaveToggleRequested();
+
+        assertEquals("only one write may be outstanding", 1, saved.pending.size());
+
+        saved.completeNext();
+        AttractionDetailUiState state = observe(viewModel);
+        assertTrue("the one write that ran was the save", state.isSaved());
+        assertFalse("the screen accepts input again once the write resolves",
+                state.isSaveInFlight());
+    }
+
+    @Test
+    public void aFailedSaveIsReportedAndLeavesTheBookmarkAlone() {
+        FakeSavedAttractionDao dao = new FakeSavedAttractionDao();
+        dao.failWrites = new IllegalStateException("disk full");
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.over(dao), TestCoordinators.idle());
+        viewModel.load("melbourne-museum");
+
+        viewModel.onSaveToggleRequested();
+
+        AttractionDetailUiState state = observe(viewModel);
+        assertFalse("a failed write must not look like a successful one", state.isSaved());
+        assertFalse("the screen must accept another attempt", state.isSaveInFlight());
+        assertTrue(Boolean.TRUE.equals(viewModel.getSaveFailed().getValue()));
+
+        viewModel.consumeSaveFailure();
+        assertFalse(Boolean.TRUE.equals(viewModel.getSaveFailed().getValue()));
     }
 }
