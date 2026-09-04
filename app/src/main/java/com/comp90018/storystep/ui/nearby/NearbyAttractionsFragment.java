@@ -13,6 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -48,7 +49,7 @@ import com.google.android.material.textfield.TextInputLayout;
  * control, and the coordinator ends it as soon as the app stops being visible.
  */
 public class NearbyAttractionsFragment extends Fragment
-        implements AttractionAdapter.OnAttractionSelected {
+        implements AttractionAdapter.OnAttractionSelected, AttractionAdapter.OnSaveToggled {
 
     /** Bundle key read by {@link com.comp90018.storystep.ui.detail.AttractionDetailFragment}. */
     public static final String ARG_ATTRACTION_ID = "attractionId";
@@ -154,13 +155,14 @@ public class NearbyAttractionsFragment extends Fragment
         permissionNoticeMessage = view.findViewById(R.id.permission_notice_message);
         permissionNoticeAction = view.findViewById(R.id.permission_notice_action);
 
-        adapter = new AttractionAdapter(this);
+        adapter = new AttractionAdapter(this, this);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(NearbyAttractionsViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         nearbyBackButton.setOnClickListener(v -> setListMode(false));
@@ -480,6 +482,19 @@ public class NearbyAttractionsFragment extends Fragment
         arguments.putString(ARG_ATTRACTION_ID, item.getId());
         NavController navController = NavHostFragment.findNavController(this);
         navController.navigate(R.id.action_nearby_to_detail, arguments);
+    }
+
+    @Override
+    public void onSaveToggled(AttractionListItem item) {
+        viewModel.onSaveToggleRequested(item);
+    }
+
+    private void reportSaveFailure(Boolean failed) {
+        if (!Boolean.TRUE.equals(failed)) {
+            return;
+        }
+        Toast.makeText(requireContext(), R.string.detail_save_failed, Toast.LENGTH_SHORT).show();
+        viewModel.consumeSaveFailure();
     }
 
     private void setListMode(boolean enabled) {

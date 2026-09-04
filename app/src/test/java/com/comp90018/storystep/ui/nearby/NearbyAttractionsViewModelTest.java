@@ -1,13 +1,17 @@
 package com.comp90018.storystep.ui.nearby;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.data.local.FakeSavedAttractionDao;
 import com.comp90018.storystep.data.repository.InMemoryAttractionRepository;
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
+import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
+import com.comp90018.storystep.data.repository.TestSavedAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
@@ -20,6 +24,7 @@ import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
+import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
@@ -73,7 +78,14 @@ public class NearbyAttractionsViewModelTest {
 
     private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository,
                                                            double radiusMeters) {
-        return new NearbyAttractionsViewModel(repository, ORIGIN, radiusMeters, coordinator());
+        return viewModelFor(repository, radiusMeters, TestSavedAttractions.empty());
+    }
+
+    private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository,
+                                                           double radiusMeters,
+                                                           SavedAttractionRepository saved) {
+        return new NearbyAttractionsViewModel(
+                repository, saved, ORIGIN, radiusMeters, coordinator());
     }
 
     /**
@@ -522,4 +534,72 @@ public class NearbyAttractionsViewModelTest {
             pending.get(index).onError(error);
         }
     }
+
+    // --- saved state -------------------------------------------------------------------------
+
+    @Test
+    public void savingARowFlipsItsBookmarkWithoutQueryingAgain() {
+        CountingRepository repository = new CountingRepository(
+                Collections.singletonList(attraction("near", ORIGIN.getLatitude(),
+                        ORIGIN.getLongitude())));
+        FakeSavedAttractionDao dao = new FakeSavedAttractionDao();
+        NearbyAttractionsViewModel viewModel =
+                viewModelFor(repository, 3000.0, TestSavedAttractions.over(dao));
+        viewModel.load();
+        int queriesAfterLoad = repository.nearbyCallCount;
+        assertFalse(viewModel.getUiState().getValue().getItems().get(0).isSaved());
+
+        viewModel.onSaveToggleRequested(viewModel.getUiState().getValue().getItems().get(0));
+
+        assertTrue(viewModel.getUiState().getValue().getItems().get(0).isSaved());
+        assertEquals(1, dao.count());
+        assertEquals("the candidate set did not change, so the repository must not be asked again",
+                queriesAfterLoad, repository.nearbyCallCount);
+
+        viewModel.onSaveToggleRequested(viewModel.getUiState().getValue().getItems().get(0));
+
+        assertFalse(viewModel.getUiState().getValue().getItems().get(0).isSaved());
+        assertEquals(0, dao.count());
+        assertEquals(queriesAfterLoad, repository.nearbyCallCount);
+    }
+
+    @Test
+    public void aSaveMadeOnAnotherScreenReachesTheRows() {
+        RoomSavedAttractionRepository saved = TestSavedAttractions.empty();
+        Attraction near = attraction("near", ORIGIN.getLatitude(), ORIGIN.getLongitude());
+        NearbyAttractionsViewModel viewModel = viewModelFor(
+                new CountingRepository(Collections.singletonList(near)), 3000.0, saved);
+        viewModel.load();
+
+        // Stands in for the detail screen saving the same place while this list is on the stack.
+        saved.save(near, new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean result) {
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                throw new AssertionError(error);
+            }
+        });
+
+        assertTrue(viewModel.getUiState().getValue().getItems().get(0).isSaved());
+    }
+
+    @Test
+    public void aFailedSaveIsReportedAndTheRowKeepsItsState() {
+        FakeSavedAttractionDao dao = new FakeSavedAttractionDao();
+        dao.failWrites = new IllegalStateException("disk full");
+        NearbyAttractionsViewModel viewModel = viewModelFor(
+                new CountingRepository(Collections.singletonList(
+                        attraction("near", ORIGIN.getLatitude(), ORIGIN.getLongitude()))),
+                3000.0, TestSavedAttractions.over(dao));
+        viewModel.load();
+
+        viewModel.onSaveToggleRequested(viewModel.getUiState().getValue().getItems().get(0));
+
+        assertFalse(viewModel.getUiState().getValue().getItems().get(0).isSaved());
+        assertTrue(Boolean.TRUE.equals(viewModel.getSaveFailed().getValue()));
+    }
+
 }

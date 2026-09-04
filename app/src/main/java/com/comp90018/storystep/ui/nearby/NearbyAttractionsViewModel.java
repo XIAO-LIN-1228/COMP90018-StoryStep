@@ -13,12 +13,15 @@ import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
+import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Screen state for the nearby list.
@@ -33,7 +36,7 @@ import java.util.List;
  * publishes and performs no geographic calculation.
  */
 public class NearbyAttractionsViewModel extends ViewModel
-        implements ExplorationCoordinator.Observer {
+        implements ExplorationCoordinator.Observer, SavedAttractionRepository.Observer {
 
     /**
      * Movement required before asking the repository again. Smaller moves only recompute the
@@ -42,11 +45,19 @@ public class NearbyAttractionsViewModel extends ViewModel
     private static final double REQUERY_DISTANCE_METERS = 250.0;
 
     private final AttractionRepository repository;
+    private final SavedAttractionRepository savedAttractions;
     private final GeoPoint referenceOrigin;
     private final double radiusMeters;
     private final ExplorationCoordinator coordinator;
 
     private final MutableLiveData<NearbyUiState> uiState = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> saveFailed = new MutableLiveData<>(false);
+
+    /** Identifiers the saved store last reported. Drives each row's bookmark. */
+    private Set<String> savedIds = Collections.emptySet();
+
+    /** Rows whose save is still being written; a further tap on one of them is ignored. */
+    private final Set<String> pendingSaveIds = new HashSet<>();
 
     /** Origin the currently displayed distances are measured from. */
     private GeoPoint currentOrigin;
@@ -75,27 +86,42 @@ public class NearbyAttractionsViewModel extends ViewModel
     private int requestGeneration;
 
     public NearbyAttractionsViewModel(AttractionRepository repository,
+                                      SavedAttractionRepository savedAttractions,
                                       GeoPoint referenceOrigin,
                                       double radiusMeters,
                                       ExplorationCoordinator coordinator) {
         this.repository = repository;
+        this.savedAttractions = savedAttractions;
         this.referenceOrigin = referenceOrigin;
         this.radiusMeters = radiusMeters;
         this.coordinator = coordinator;
         this.currentOrigin = referenceOrigin;
         coordinator.addObserver(this);
+        savedAttractions.addObserver(this);
     }
 
     @Override
     protected void onCleared() {
-        // The coordinator outlives this ViewModel; leaving the observer registered would keep a
+        // Both collaborators outlive this ViewModel; leaving the observers registered would keep a
         // destroyed screen's state alive and publishing.
         coordinator.removeObserver(this);
+        savedAttractions.removeObserver(this);
         super.onCleared();
     }
 
     public LiveData<NearbyUiState> getUiState() {
         return uiState;
+    }
+
+    /** True once a save or unsave has failed; the screen consumes it and reports it once. */
+    public LiveData<Boolean> getSaveFailed() {
+        return saveFailed;
+    }
+
+    public void consumeSaveFailure() {
+        if (Boolean.TRUE.equals(saveFailed.getValue())) {
+            saveFailed.setValue(false);
+        }
     }
 
     /** Loads from the current origin. Safe to call again for a retry. */
@@ -189,6 +215,69 @@ public class NearbyAttractionsViewModel extends ViewModel
             default:
                 throw new IllegalArgumentException("not an access problem: " + access);
         }
+    }
+
+    // --- saving --------------------------------------------------------------------------------
+
+    /**
+     * The user pressed a row's bookmark.
+     *
+     * <p>Ignored while a write for that row is outstanding, so a rapid double tap resolves to one
+     * write per completed round trip rather than two racing at the same record. The rows the user
+     * is not touching stay interactive.
+     */
+    public void onSaveToggleRequested(AttractionListItem item) {
+        if (item == null || pendingSaveIds.contains(item.getId())) {
+            return;
+        }
+        final String attractionId = item.getId();
+        Attraction attraction = findLoaded(attractionId);
+        boolean wasSaved = savedIds.contains(attractionId);
+        if (attraction == null && !wasSaved) {
+            // Nothing to copy into the saved record; the list and the loaded set have diverged.
+            return;
+        }
+        pendingSaveIds.add(attractionId);
+
+        RepositoryCallback<Boolean> callback = new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean changed) {
+                pendingSaveIds.remove(attractionId);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                pendingSaveIds.remove(attractionId);
+                // The identifier set was never updated, so the rows already show the truth; only
+                // the failure itself still needs reporting.
+                saveFailed.setValue(true);
+            }
+        };
+        if (wasSaved) {
+            savedAttractions.unsave(attractionId, callback);
+        } else {
+            savedAttractions.save(attraction, callback);
+        }
+    }
+
+    @Override
+    public void onSavedIdsChanged(Set<String> ids) {
+        savedIds = ids;
+        // Rebuild the rows from what is already loaded: the saved state changed, the candidate set
+        // did not, so there is nothing to ask the repository for.
+        NearbyUiState current = uiState.getValue();
+        if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
+            publishContent(loadedAttractions);
+        }
+    }
+
+    private Attraction findLoaded(String attractionId) {
+        for (Attraction attraction : loadedAttractions) {
+            if (attraction.getId().equals(attractionId)) {
+                return attraction;
+            }
+        }
+        return null;
     }
 
     // --- coordinator observer ------------------------------------------------------------------
@@ -362,7 +451,8 @@ public class NearbyAttractionsViewModel extends ViewModel
                     attraction.getId(),
                     attraction.getName(),
                     attraction.getCategory(),
-                    GeoCalculator.distanceMeters(currentOrigin, attraction.getLocation())));
+                    GeoCalculator.distanceMeters(currentOrigin, attraction.getLocation()),
+                    savedIds.contains(attraction.getId())));
         }
         // The repository sorts by distance from the origin it was queried with. After the user
         // moves without triggering a re-query, that order is stale, so sort by the distances just

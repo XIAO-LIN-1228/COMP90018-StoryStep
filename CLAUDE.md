@@ -7,20 +7,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 StoryStep is a context-aware Android tourism companion for COMP90018 (University of Melbourne, Mobile Computing Systems Programming). It helps users discover nearby attractions and reveals location-triggered stories as they explore an area, using location, motion, orientation, weather, and cloud data — not turn-by-turn navigation.
 
 Current state: the layered Java/XML application skeleton and a cross-iteration frontend prototype
-are in place. The app includes onboarding, nearby discovery, attraction details, exploration,
-story, journey, saved and profile/recovery screens. Nearby discovery is integrated with a
-real foreground Android location adapter, permission recovery and quality-aware samples. A
-process-wide session coordinator owns the foreground location, accelerometer and magnetometer
-subscriptions and implements start, pause, resume, finish and discard, with movement-state
-estimation, true-north heading and directional guidance. Room is wired for runtime data: cached
-attractions, sessions, sampled route points and visits live in `storystep.db` at schema version 2,
-and an unfinished session is restored as paused on the next launch. Arrival detection works: a
-sustained, credible stay at the selected destination records exactly one visit and offers its
-story on the exploration dashboard. Journey history still reads an in-memory fixture repository,
-and Retrofit remains unwired — no network request is made anywhere. Saved attractions, real
-weather/attraction services and contextual ranking remain incomplete. Instrumented tests have run
-on an emulator (API 36) but never on a physical device, so every physical acceptance case is still
-outstanding. `README.md` is the requirements/scope document and is the source of truth for
+are in place. The app includes onboarding, nearby discovery, attraction details, exploration, story,
+journey, saved and profile/recovery screens. Nearby discovery is integrated with a real foreground
+Android location adapter, permission recovery and quality-aware samples. A process-wide session
+coordinator owns the foreground location, accelerometer and magnetometer subscriptions and
+implements start, pause, resume, finish and discard, with movement-state estimation, true-north
+heading and directional guidance. Room is wired for runtime data: cached attractions, sessions,
+sampled route points, visits and saved attractions live in `storystep.db` at schema version 3, and
+an unfinished session is restored as paused on the next launch. Arrival detection works: a
+sustained, credible stay at the selected destination records exactly one visit and offers its story
+on the exploration dashboard. Saved attractions are durable: a place is kept as a self-contained
+copy in a table with no foreign key onto the attraction cache, and one process-scoped repository
+keeps the detail screen, the nearby rows and the saved list in agreement. Journey history still
+reads an in-memory fixture repository, and Retrofit remains unwired — no network request is made
+anywhere. Real weather/attraction services and contextual ranking remain incomplete. Instrumented
+tests have run on an emulator (API 36) but never on a physical device, so every physical acceptance
+case is still outstanding.
+`README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.
 

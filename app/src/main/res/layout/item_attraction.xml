@@ -37,7 +37,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@id/attraction_action_icon"
+            app:layout_constraintEnd_toStartOf="@id/attraction_save_button"
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Old Arts Building" />
@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="14dp"
             android:layout_marginTop="3dp"
-            app:layout_constraintEnd_toStartOf="@id/attraction_action_icon"
+            app:layout_constraintEnd_toStartOf="@id/attraction_save_button"
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             app:layout_constraintTop_toBottomOf="@id/attraction_name"
             tools:text="University landmark" />
@@ -81,14 +81,19 @@
             app:layout_constraintStart_toEndOf="@id/attraction_image"
             tools:text="280 m" />
 
-        <ImageView
-            android:id="@+id/attraction_action_icon"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
+        <!--
+            A real toggle rather than the decorative pin this slot used to hold: the saved state
+            has to be both visible and changeable from the list. 48dp so the touch target meets the
+            accessibility minimum; the icon inside keeps the original visual weight.
+        -->
+        <ImageButton
+            android:id="@+id/attraction_save_button"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
             android:background="@drawable/bg_icon_surface"
-            android:contentDescription="@null"
-            android:padding="8dp"
-            android:src="@drawable/ic_location_outline"
+            android:contentDescription="@string/attraction_save"
+            android:padding="14dp"
+            android:src="@drawable/ic_bookmark_outline"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>

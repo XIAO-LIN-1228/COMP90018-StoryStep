@@ -14,6 +14,8 @@ import com.comp90018.storystep.ui.exploration.ExplorationViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
+import com.comp90018.storystep.ui.profile.PrivacyDataViewModel;
+import com.comp90018.storystep.ui.saved.SavedViewModel;
 import com.comp90018.storystep.ui.story.StoryViewModel;
 
 /**
@@ -41,6 +43,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(NearbyAttractionsViewModel.class)) {
             return (T) new NearbyAttractionsViewModel(
                     appContainer.getAttractionRepository(),
+                    appContainer.getSavedAttractionRepository(),
                     appContainer.getReferenceOrigin(),
                     appContainer.getNearbySearchRadiusMeters(),
                     appContainer.getExplorationCoordinator());
@@ -48,6 +51,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(
                     appContainer.getAttractionRepository(),
+                    appContainer.getSavedAttractionRepository(),
                     appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
@@ -61,6 +65,14 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getAttractionRepository(),
                     appContainer.getSessionStore(),
                     appContainer.getExplorationCoordinator());
+        }
+        if (modelClass.isAssignableFrom(SavedViewModel.class)) {
+            return (T) new SavedViewModel(
+                    appContainer.getSavedAttractionRepository(),
+                    appContainer.getReferenceOrigin());
+        }
+        if (modelClass.isAssignableFrom(PrivacyDataViewModel.class)) {
+            return (T) new PrivacyDataViewModel(appContainer.getSavedAttractionRepository());
         }
         if (modelClass.isAssignableFrom(SessionRecoveryViewModel.class)) {
             return (T) new SessionRecoveryViewModel(

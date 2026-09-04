@@ -75,6 +75,38 @@ public class StoryStepMigrationTest {
     }
 
     @Test
+    public void migratingFromTwoToThreeAddsTheSavedTableAndKeepsWhatWasThere() throws IOException {
+        SupportSQLiteDatabase version2 = helper.createDatabase(TEST_DATABASE, 2);
+        ContentValues row = new ContentValues();
+        row.put("id", "old-arts");
+        row.put("name", "Old Arts Building");
+        row.put("category", "university_landmark");
+        row.put("description", "The 1924 clocktower building.");
+        row.put("indoor", 0);
+        row.put("latitude", -37.79810);
+        row.put("longitude", 144.95910);
+        row.put("provenance", "seed");
+        row.put("fetched_at_millis", 0L);
+        version2.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, row);
+        version2.close();
+
+        SupportSQLiteDatabase version3 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 3, true, StoryStepMigrations.MIGRATION_2_3);
+
+        Cursor cached = version3.query("SELECT name FROM attractions WHERE id = 'old-arts'");
+        assertTrue("an additive migration must not disturb existing rows", cached.moveToFirst());
+        assertEquals("Old Arts Building", cached.getString(0));
+        cached.close();
+
+        Cursor saved = version3.query("SELECT COUNT(*) FROM saved_attractions");
+        assertTrue(saved.moveToFirst());
+        assertEquals("the new table starts empty; nothing before this version recorded a save",
+                0, saved.getInt(0));
+        saved.close();
+        version3.close();
+    }
+
+    @Test
     public void theMigratedDatabaseCarriesTheNewSessionTables() throws IOException {
         helper.createDatabase(TEST_DATABASE, 1).close();
         helper.runMigrationsAndValidate(
@@ -92,6 +124,7 @@ public class StoryStepMigrationTest {
         assertEquals(0, database.sessionDao().countUnfinished());
         assertNotNull(database.routePointDao().findBySession("none"));
         assertEquals(0, database.visitDao().countBySession("none"));
+        assertEquals(0, database.savedAttractionDao().count());
         database.close();
     }
 }

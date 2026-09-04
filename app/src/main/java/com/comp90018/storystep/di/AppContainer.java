@@ -10,6 +10,7 @@ import com.comp90018.storystep.data.local.RoomTransactions;
 import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.RoomAttractionRepository;
+import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
@@ -17,6 +18,7 @@ import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.JourneyRepository;
+import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
@@ -51,6 +53,7 @@ public class AppContainer {
     private final LocationQualityPolicy locationQualityPolicy;
     private final Clock clock;
     private final SessionStore sessionStore;
+    private final SavedAttractionRepository savedAttractionRepository;
     private final ExplorationCoordinator explorationCoordinator;
 
     private final Executor mainExecutor;
@@ -89,6 +92,11 @@ public class AppContainer {
                 ? attractionRepository
                 : new RoomAttractionRepository(
                         database.attractionDao(), clock, ioExecutor, mainExecutor);
+        // Process-scoped rather than per-screen: the detail screen, the nearby list and the saved
+        // list all observe the same set of saved identifiers, and a second instance would mean a
+        // second cache that no write ever reaches.
+        this.savedAttractionRepository = new RoomSavedAttractionRepository(
+                database.savedAttractionDao(), clock, ioExecutor, mainExecutor);
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
                 database.visitDao(), clock, ioExecutor, mainExecutor);
@@ -150,6 +158,16 @@ public class AppContainer {
 
     public SessionStore getSessionStore() {
         return sessionStore;
+    }
+
+    /**
+     * The user's saved attractions.
+     *
+     * <p>Independent of {@link #getAttractionRepository()} on purpose: refreshing or replacing the
+     * attraction cache must never remove a place the user chose to keep.
+     */
+    public SavedAttractionRepository getSavedAttractionRepository() {
+        return savedAttractionRepository;
     }
 
     /**
