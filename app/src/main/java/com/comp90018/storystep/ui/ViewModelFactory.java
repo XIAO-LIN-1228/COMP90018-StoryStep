@@ -17,6 +17,7 @@ import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
 import com.comp90018.storystep.ui.profile.PrivacyDataViewModel;
 import com.comp90018.storystep.ui.saved.SavedViewModel;
 import com.comp90018.storystep.ui.story.StoryViewModel;
+import com.comp90018.storystep.ui.weather.WeatherViewModel;
 
 /**
  * Builds ViewModels from the {@link AppContainer}, so Fragments never construct a repository,
@@ -65,6 +66,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getAttractionRepository(),
                     appContainer.getSessionStore(),
                     appContainer.getExplorationCoordinator());
+        }
+        if (modelClass.isAssignableFrom(WeatherViewModel.class)) {
+            return (T) new WeatherViewModel(
+                    appContainer.getWeatherRepository(),
+                    appContainer.getExplorationCoordinator(),
+                    appContainer.getReferenceOrigin());
         }
         if (modelClass.isAssignableFrom(SavedViewModel.class)) {
             return (T) new SavedViewModel(

@@ -64,10 +64,10 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp)
-    implementation(libs.okhttp.logging.interceptor)
 
     testImplementation(libs.junit)
     testImplementation(libs.arch.core.testing)
+    testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(libs.espresso.core)
     androidTestImplementation(libs.ext.junit)

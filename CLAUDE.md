@@ -13,16 +13,20 @@ Android location adapter, permission recovery and quality-aware samples. A proce
 coordinator owns the foreground location, accelerometer and magnetometer subscriptions and
 implements start, pause, resume, finish and discard, with movement-state estimation, true-north
 heading and directional guidance. Room is wired for runtime data: cached attractions, sessions,
-sampled route points, visits and saved attractions live in `storystep.db` at schema version 3, and
+sampled route points, visits, saved attractions and cached weather live in `storystep.db` at
+schema version 4, and
 an unfinished session is restored as paused on the next launch. Arrival detection works: a
 sustained, credible stay at the selected destination records exactly one visit and offers its story
 on the exploration dashboard. Saved attractions are durable: a place is kept as a self-contained
 copy in a table with no foreign key onto the attraction cache, and one process-scoped repository
-keeps the detail screen, the nearby rows and the saved list in agreement. Journey history still
-reads an in-memory fixture repository, and Retrofit remains unwired — no network request is made
-anywhere. Real weather/attraction services and contextual ranking remain incomplete. Instrumented
-tests have run on an emulator (API 36) but never on a physical device, so every physical acceptance
-case is still outstanding.
+keeps the detail screen, the nearby rows and the saved list in agreement. Weather is real and is the app's
+first and only network traffic: Open-Meteo's current-conditions endpoint behind a local cache at
+schema version 4, keyed by a coarse area grid rather than by position, cache-first with per-area
+request coalescing, served stale-and-labelled when a refresh fails and reported as offline when
+nothing is cached. Journey history still reads an in-memory fixture repository, and the attraction
+path is still seed data — no remote attraction service is wired, and contextual ranking has not
+started. Instrumented tests have run on an emulator (API 36) but never on a physical device, and
+never on API 26 or 31+, so every physical acceptance case is still outstanding.
 `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.
@@ -118,12 +122,13 @@ The package layout under `com.comp90018.storystep` realises that:
 | `domain.model` | Attraction, journey and immutable location models | none |
 | `domain.geo` | Distance/bearing maths and location-quality policies | none |
 | `domain.arrival` | Arrival thresholds and the sustained-stay detector | none |
+| `domain.weather` | Area grid, freshness policy and the weather result type | none |
 | `domain.repository` | Attraction/journey/session contracts and `RepositoryCallback` | none |
 | `data.local` | Room entities, DAOs, database, migrations, mappers, `Transactions` | Room |
-| `data.remote` | Retrofit service, DTO, mapper, `ApiClientFactory`; declared, never called | Retrofit/OkHttp |
+| `data.remote` | Retrofit services, DTOs, mappers, `ApiClientFactory`; only the weather path is called | Retrofit/OkHttp |
 | `data.repository` | Room attraction and session stores; in-memory equivalents kept as test fakes | none |
 | `platform.location` | Location contracts, access policy and foreground Android adapter | Android in adapter only |
-| `platform.sensor` / `platform.connectivity` | Device-capability interfaces; production implementations remain pending | interfaces are framework-free |
+| `platform.sensor` / `platform.connectivity` | Device-capability interfaces plus their Android adapters | interfaces are framework-free |
 | `di` | `AppContainer` — manual wiring, no DI framework | Context only |
 | `ui` | `MainActivity`, `ViewModelFactory`, formatting helpers | full |
 | `ui.*` feature packages | Fragment + ViewModel/UI-state where behavior is connected; prototype Fragments elsewhere | full |

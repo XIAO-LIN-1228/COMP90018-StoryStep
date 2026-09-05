@@ -48,7 +48,7 @@ Specific integration work already visible in the code:
 - `AppContainer.getReferenceOrigin()` returns `DEMO_ORIGIN`; the nearby ViewModel has a final origin. REQ-03/04 must replace the fixed runtime assumption.
 - `RepositoryCallback` already requires Room/network implementations to deliver on the main thread. Preserve and test that contract; do not report it as missing.
 - `GeoPoint` checks coordinate ranges but does not explicitly reject `NaN`. REQ-03 adds finite-input tests and validation before sensor/remote input is trusted.
-- `ApiClientFactory` uses BASIC logging. Its comment about keys never leaking is too broad: request URLs can contain credentials or coordinates. NFR-04 must resolve this before real traffic.
+- `ApiClientFactory` used BASIC logging with a comment claiming keys could never leak. That was too broad — request URLs carry credentials or coordinates — and it was resolved on the weather branch before the first real request: logging now records method, host, path and status only, and the `logging-interceptor` dependency is gone.
 - Room schema export is disabled and backup rules are templates. Complete REQ-14 and NFR-04 before storing real user routes.
 - An attraction cache refresh must not erase saved attractions or visits. Review the existing `REPLACE` upsert when introducing relationships.
 
@@ -69,7 +69,7 @@ recorded as `FOUNDATION_ONLY` unless it is connected to the required production 
 | Arrival, story and memory | I4; REQ-12, REQ-13 | Complete clickable visual flow exists, including a preview-only arrival action | Replace preview with quality-aware arrival detection and exactly-once persisted visit/story delivery |
 | Journeys, summary and detail | I4; REQ-15, REQ-16 | List/detail/summary pages and repository boundary exist, backed by deterministic in-memory journeys | Implement Room sessions/routes/visits, recovery, real summaries, deletion and offline relaunch tests |
 | Saved | I3; REQ-17 | Durable `saved_attractions` table and process-scoped repository; detail, nearby rows and the saved list share one saved-id set; per-attraction toggle serialisation; Clear saved places wired | Re-run AT-17B once REQ-18 supplies a refreshable remote cache; fall back to the saved copy when the detail screen's cache lookup misses; make the saved search control real |
-| Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Weather label, chips and related visual space exist as fixtures | Select real services, add cache/freshness, ranking/reasons and online/offline acceptance evidence |
+| Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Real Open-Meteo observations on the nearby card and the exploration dashboard, cached per 0.05-degree area at schema version 4, refreshed after 30 min, served stale-and-labelled when a refresh fails and reported as offline when nothing is cached; chips remain fixtures | Copy the snapshot into session records once REQ-16 gives it a reader; implement REQ-20.2 retry/backoff; add ranking/reasons (REQ-21/22) and a visible provider attribution |
 | Profile, capability recovery and privacy/data | NFR-03/04 and lifecycle support | Settings/recovery presentation and a dedicated Privacy & Data page exist; permissions open real system settings and destructive controls are confirmed prototype actions | Bind real permission/provider/session states and implement scoped history/saved deletion with backup-policy verification |
 
 Iteration-level interpretation:
@@ -113,7 +113,7 @@ The defaults below make planning concrete. They are proposed product policies, n
 | ID | Decision and proposed default | Owner | Resolve before |
 |---|---|---|---|
 | D-01 | Replace M1-M5 with actual members; confirm dates, capacity and submission artifacts | M1/team | Iteration planning |
-| D-02 | Select attraction and weather services; approve licensing, caching, authentication, quotas and cost | M5 + M1 | REQ-18/19 production integration |
+| D-02 | Select attraction and weather services; approve licensing, caching, authentication, quotas and cost | M5 + M1 | REQ-18/19 production integration. **Weather half resolved 2026-09-05: Open-Meteo** — HTTPS, free for non-commercial use, no API key and no account, so no credential has to be kept out of Git and a reviewer can run the app with no setup. Rejected: OpenWeatherMap, which needs a registered key the rest of the team would not hold. Attraction half still open for REQ-18 |
 | D-03 | Obtain the official rubric; verify sensor-count interpretation, cloud expectations, report/demo and AI-use disclosure rules | M1/team | Claiming assessment compliance |
 | D-04 | Foreground policy: background/lock pauses collection; returning requires explicit Resume; rotation does not create a new session | M1 + M4 | REQ-02 |
 | D-05 | Track visits for the selected destination; do not unlock every nearby attraction simultaneously | M1 + M2 | REQ-12 |

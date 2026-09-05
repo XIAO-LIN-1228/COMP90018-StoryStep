@@ -1,6 +1,6 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
-Prepared: 2026-08-31. Last updated: 2026-09-05. Requirements: [development plan](development_plan.md).
+Prepared: 2026-08-31. Last updated: 2026-09-05 (weather round). Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
@@ -24,6 +24,17 @@ Branch snapshot, 2026-09-04. The two rounds recorded here on 2026-09-03 are now 
 recorded as `MERGED` below.
 
 One round is in progress on an unmerged branch and is recorded below as `IN_REVIEW`:
+
+- `feature/weather-context`, from `main@5800a99`: weather integration and the cache/failure policy
+  around it ([EV-REQ19-2026-09-05-01](verification/EV-REQ19-2026-09-05-01.md)). **Uncommitted at
+  the time of writing**; the commit column must be filled in once a commit exists. This is the
+  first round in which the application has issued a network request at all — before it,
+  `AndroidManifest.xml` carried no `INTERNET` permission and `data.remote` was never called. Both
+  the JVM suite (488 tests) and the instrumented suite (36 tests on a Pixel_8 AVD at API 36) pass,
+  and the whole online/offline/stale/retry walkthrough was driven end to end on that emulator
+  against the live Open-Meteo service. Every physical (`P`) case remains NOT_RUN.
+
+Merged since:
 
 - `feature/arrival-and-story`, from `main@728b7fc`: arrival detection and the exactly-once visit
   that reveals a story
@@ -65,7 +76,7 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 | REQ-03 | I1 | M1 / M3 | MERGED | PARTIAL | `a828d0f`, `204708f` | [EV-REQ01-REQ03-2026-08-31-01](verification/EV-REQ01-REQ03-2026-08-31-01.md); U/build passed, physical fix matrix NOT_RUN |
 | REQ-04 | I1 | M2 / M5 | IN_REVIEW | PARTIAL | `a828d0f`, `142c26f` | Live/reference origins and state-preserving list are integrated; Android/physical acceptance remains NOT_RUN |
 | REQ-05 | I1 | M2 / M1 | MERGED | PARTIAL | `b54b3f6`, `35659ef` | [EV-REQ05-REQ07-2026-09-03-01](verification/EV-REQ05-REQ07-2026-09-03-01.md); REQ-05.2 destination selection and gated session start are implemented and unit-tested; AT-05A device half and AT-05B NOT_RUN; durable Save still depends on REQ-17 |
-| REQ-06 | I2, final wiring I3 | M2 / M1 | MERGED | PARTIAL | `b54b3f6`, `35659ef` | Same evidence; dashboard is bound to the coordinator with state, duration, distances and Stop/Resume/Discard/retry. AT-06A U part only; AT-06B cannot pass until REQ-19 supplies weather, and font-scale/landscape/TalkBack NOT_RUN |
+| REQ-06 | I2, final wiring I3 | M2 / M1 | MERGED | PARTIAL | `b54b3f6`, `35659ef` | Same evidence; dashboard is bound to the coordinator with state, duration, distances and Stop/Resume/Discard/retry. AT-06A U part only. AT-06B's weather dependency is now met — REQ-19 adds an optional weather section that reads "unavailable" rather than zero when there is nothing to show, verified offline on an emulator — so the remaining AT-06B gap is font-scale/landscape/TalkBack, still NOT_RUN |
 | REQ-07 | I2 | M1 / M3 | MERGED | PARTIAL | `b54b3f6`, `35659ef` | Same evidence; segment-aware accumulation, 5 s point sampling and bounded checkpoints pass AT-07A on synthetic traces. AT-07B NOT_RUN — no measured outdoor walk. Route lives only in memory; durable storage is REQ-15 |
 | REQ-08 | I2 | M3 / M1 | MERGED | PARTIAL | `23b61a0`, `a9ff994` | [EV-REQ08-REQ11-2026-09-03-01](verification/EV-REQ08-REQ11-2026-09-03-01.md); one shared accelerometer registration serving motion and heading, session-scoped lifecycle. AT-08A/B asserted through fakes only — `AndroidSensorHub` has never executed on a device and has no automated coverage |
 | REQ-09 | I2 | M3 / M1 | MERGED | PARTIAL | `23b61a0`, `a9ff994` | Same evidence; AT-09A passes against the new labelled fixtures, including rotation-without-walking. AT-09B NOT_RUN — no recorded trials, so the 0.35/0.7 m/s^2 thresholds are unvalidated and the physical targets are unsupported |
@@ -78,14 +89,14 @@ Use VERIFIED only after all applicable case IDs, final integrations and quality 
 | REQ-16 | I4 | M4 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Journey list/detail/summary UI exists on fixture data; deletion/recovery/offline behavior is missing |
 | REQ-17 | I3 | M4 / M2 | IN_REVIEW | PARTIAL | `feature/saved-attractions` (uncommitted) | [EV-REQ17-2026-09-05-01](verification/EV-REQ17-2026-09-05-01.md); schema version 3 adds `saved_attractions`, keyed on the attraction id and holding a content snapshot with **no foreign key** onto `attractions`, so a cache refresh or eviction cannot unsave a place. A process-scoped `SavedAttractionRepository` publishes the saved-id set, which keeps the detail screen, the nearby rows and the saved list in agreement; rapid toggles are serialised per attraction and a failed write reverts and explains. The privacy screen's Clear saved places is wired; Clear journey history stays a prototype for REQ-16. AT-17A passes on an emulator (API 36) end to end, including force-stop and offline relaunch. **AT-17B is partial** — cache-clearing is proved not to unsave, but there is no remote cache to refresh until REQ-18. Physical device NOT_RUN. `loadSavedIds` is exposed for REQ-21 but nothing consumes it |
 | REQ-18 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
-| REQ-19 | I3 | M5 / M2 | FOUNDATION_ONLY | NOT_RUN | `f30c538`, `142c26f` | Weather presentation is fixture text only; service/cache/freshness are missing |
-| REQ-20 | I3 | M5 / M4 | FOUNDATION_ONLY | NOT_RUN | - | - |
+| REQ-19 | I3 | M5 / M2 | IN_REVIEW | PARTIAL | `feature/weather-context` (uncommitted) | [EV-REQ19-2026-09-05-01](verification/EV-REQ19-2026-09-05-01.md); **the project's first real network traffic**. Open-Meteo resolves the weather half of D-02 — HTTPS, free, no API key, so nothing has to be kept out of Git. Schema version 4 adds `weather_cache`; `CachedWeatherRepository` is cache-first with per-area coalescing and stale fallback; one `WeatherViewModel` serves the nearby card and a new dashboard section. AT-19A/AT-19B pass on an emulator (API 36) against the live provider. **REQ-19.3 is half done**: weather is displayed but not copied into the session record — deferred to REQ-16, which needs a schema change anyway and is the only thing that would read it. Physical NOT_RUN |
+| REQ-20 | I3 | M5 / M4 | IN_PROGRESS | PARTIAL | `feature/weather-context` (uncommitted) | Same evidence. REQ-20.1 and REQ-20.3 are implemented **for the weather path only**: freshness policy, cache-as-fallback labelled stale, explicit provenance, `AndroidConnectivityMonitor` as a hint rather than a gate, per-area request coalescing, atomic replace so a malformed response cannot overwrite good data, and typed reasons separating no-network, timeout, HTTP error, rate limit, malformed and no-cache. AT-20A and AT-20B pass on an emulator. **REQ-20.2 is not implemented** — there is no automatic retry or backoff at all, only a user tap. Nothing applies to the attraction path, which has no remote source until REQ-18 |
 | REQ-21 | I3 | M5 / M3 | NOT_STARTED | NOT_RUN | - | - |
 | REQ-22 | I4 | M2 / M5 | NOT_STARTED | NOT_RUN | - | - |
-| NFR-01 | All | M1 / M4 | IN_REVIEW | PARTIAL | `a9ff994` + branch | AT-Q01A holds on 2026-09-04: `test assembleDebug lint` succeeds, 331 JVM tests with 0 failures, Lint 0 errors (70 warnings, all pre-existing `UnusedResources`). AT-Q01B (API 26/31+/target matrix) NOT_RUN, and `connectedAndroidTest` has still never been executed |
+| NFR-01 | All | M1 / M4 | IN_REVIEW | PARTIAL | `a9ff994` + branch | AT-Q01A holds on 2026-09-05: `test assembleDebug lint connectedDebugAndroidTest` all succeed — 488 JVM tests and 36 instrumented tests with 0 failures, Lint 0 errors and 70 warnings, unchanged from the baseline. AT-Q01B (API 26/31+/target matrix) NOT_RUN; only API 36 has ever been exercised |
 | NFR-02 | All | M1 / M3 | IN_REVIEW | PARTIAL | `a9ff994` + branch | One coordinator owns location, motion and heading; `domain.*` is free of Android imports. Room work introduced the first real off-main-thread repositories: `RoomAttractionRepository` and `RoomSessionStore` query on `AppContainer.getIoExecutor()` and answer on the main executor, and `Transactions` keeps the store itself free of `RoomDatabase`. AT-Q02B and all Android lifecycle/navigation evidence remain NOT_RUN |
 | NFR-03 | All | M2 / M5 | IN_REVIEW | NOT_RUN | `142c26f` + integration | Screen system/design tokens, state-backed Session Recovery and Privacy & Data pages exist; TalkBack, 200% font, landscape and task usability NOT_RUN |
-| NFR-04 | Before real data, I5 | M4 / M5 | IN_PROGRESS | NOT_RUN | `a828d0f`, `204708f` + branch | Foreground-only policy and privacy/data presentation exist. Route points and visits now cascade from their session, so discarding one removes exactly its own records; the Privacy & Data clear actions are still presentation only, and backup exclusion, retention and network-log safeguards remain open |
+| NFR-04 | Before real data, I5 | M4 / M5 | IN_PROGRESS | NOT_RUN | `a828d0f`, `204708f` + branch | Foreground-only policy and privacy/data presentation exist. Route points and visits now cascade from their session, so discarding one removes exactly its own records; the Privacy & Data clear actions are still presentation only, and backup exclusion and retention remain open. **NFR-04.3 is now closed**: `ApiClientFactory` used OkHttp logging at `BASIC` on the false premise that omitting headers protected the key — `BASIC` logs the whole query string, and the weather request carries coordinates. It is replaced by an interceptor logging method, host, path and status only, the `logging-interceptor` dependency is removed, and a full logcat scan across the REQ-19 walkthrough matched no coordinate or query parameter |
 | NFR-05 | I2-I5 | M3 / M1 | NOT_STARTED | NOT_RUN | - | Now in scope: sensors are registered from `04b4794` onwards, so AT-Q05A (no source left registered after Stop; battery and memory over a 20-minute trial) needs a device run before I5 |
 | NFR-06 | All | M1 / M2 | IN_PROGRESS | NOT_RUN | `142c26f`, `204708f` | Traceability documents and repository guidance exist; official rubric/reviewer evidence remain missing |
 

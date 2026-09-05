@@ -1,6 +1,7 @@
 package com.comp90018.storystep.di;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 
 import androidx.core.content.ContextCompat;
 
@@ -8,6 +9,9 @@ import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.application.SensingSources;
 import com.comp90018.storystep.data.local.RoomTransactions;
 import com.comp90018.storystep.data.local.StoryStepDatabase;
+import com.comp90018.storystep.data.remote.ApiClientFactory;
+import com.comp90018.storystep.data.remote.RetrofitWeatherSource;
+import com.comp90018.storystep.data.repository.CachedWeatherRepository;
 import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.RoomAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
@@ -20,8 +24,11 @@ import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.JourneyRepository;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
+import com.comp90018.storystep.domain.repository.WeatherRepository;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
+import com.comp90018.storystep.domain.weather.WeatherFreshnessPolicy;
+import com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor;
 import com.comp90018.storystep.platform.location.AndroidLocationSource;
 import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.platform.sensor.AndroidDeclinationSource;
@@ -54,6 +61,7 @@ public class AppContainer {
     private final Clock clock;
     private final SessionStore sessionStore;
     private final SavedAttractionRepository savedAttractionRepository;
+    private final WeatherRepository weatherRepository;
     private final ExplorationCoordinator explorationCoordinator;
 
     private final Executor mainExecutor;
@@ -97,6 +105,18 @@ public class AppContainer {
         // second cache that no write ever reaches.
         this.savedAttractionRepository = new RoomSavedAttractionRepository(
                 database.savedAttractionDao(), clock, ioExecutor, mainExecutor);
+        // The app's only network client. Process-scoped so the cache, the in-flight map and the
+        // single OkHttp connection pool are shared: a per-screen instance would mean each screen
+        // issuing its own request for the same observation.
+        this.weatherRepository = new CachedWeatherRepository(
+                database.weatherCacheDao(),
+                new RetrofitWeatherSource(
+                        ApiClientFactory.createWeatherService(isDebuggable(this.applicationContext))),
+                new AndroidConnectivityMonitor(this.applicationContext),
+                WeatherFreshnessPolicy.defaultPolicy(),
+                clock,
+                ioExecutor,
+                mainExecutor);
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
                 database.visitDao(), clock, ioExecutor, mainExecutor);
@@ -114,6 +134,16 @@ public class AppContainer {
                 clock,
                 new SensingSources(sensorHub, sensorHub.asHeadingSource(),
                         new AndroidDeclinationSource()));
+    }
+
+    /**
+     * Whether this install is a debug build, read from the manifest rather than {@code BuildConfig}
+     * so the project does not have to turn on build-config generation for one boolean.
+     *
+     * <p>Only gates the queryless HTTP logging in {@code ApiClientFactory}.
+     */
+    private static boolean isDebuggable(Context context) {
+        return (context.getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
     }
 
     public AttractionRepository getAttractionRepository() {
@@ -168,6 +198,17 @@ public class AppContainer {
      */
     public SavedAttractionRepository getSavedAttractionRepository() {
         return savedAttractionRepository;
+    }
+
+    /**
+     * Current-area weather, cached locally.
+     *
+     * <p>The app's only network-backed repository. Every screen that shows weather goes through
+     * this one instance, which is what makes the coalescing and freshness rules in
+     * {@code CachedWeatherRepository} effective rather than per-screen.
+     */
+    public WeatherRepository getWeatherRepository() {
+        return weatherRepository;
     }
 
     /**
