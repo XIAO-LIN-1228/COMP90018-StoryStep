@@ -72,7 +72,26 @@
     <string name="rationale_use_location">Use my location</string>
 
     <!-- Explore home -->
-    <string name="home_weather">Parkville · 18°C</string>
+    <!--
+        Weather. The temperature and the condition are formatted from a real observation; the
+        suffixes say how current it is and whose area it describes, because an observation shown
+        while a refresh failed must never read the same as one just fetched, and the demonstration
+        reference area must never read as the user's own position.
+    -->
+    <string name="weather_reading">%1$s · %2$s</string>
+    <string name="weather_reading_suffixed">%1$s · %2$s</string>
+    <string name="weather_temperature">%1$d°C</string>
+    <string name="weather_clear">Clear</string>
+    <string name="weather_cloudy">Cloudy</string>
+    <string name="weather_rain">Rain</string>
+    <string name="weather_snow">Snow</string>
+    <string name="weather_condition_unknown">Weather unclear</string>
+    <string name="weather_loading">Checking weather…</string>
+    <string name="weather_unavailable">Weather unavailable</string>
+    <string name="weather_offline">Offline</string>
+    <string name="weather_age_minutes">%1$d min ago</string>
+    <string name="weather_age_hours">%1$d h ago</string>
+    <string name="weather_reference_area">Reference area</string>
     <string name="home_map_description">Map of nearby StoryStep locations</string>
     <string name="home_continue_title">Continue your journey</string>
     <string name="home_journey_name">University Heritage Walk</string>

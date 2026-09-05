@@ -117,8 +117,29 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 3 to 4: adds the weather cache.
+     *
+     * <p>Additive, and the new table holds nothing the user owns — it is the last observation
+     * fetched per area, keyed by a coarse grid cell rather than by a position. Nothing is
+     * back-filled because there is no earlier weather to carry forward, and losing the whole table
+     * would cost one network request.
+     */
+    public static final Migration MIGRATION_3_4 = new Migration(3, 4) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `weather_cache` ("
+                    + "`area_key` TEXT NOT NULL, "
+                    + "`condition` TEXT, "
+                    + "`temperature_celsius` REAL NOT NULL, "
+                    + "`observed_at_millis` INTEGER NOT NULL, "
+                    + "`fetched_at_millis` INTEGER NOT NULL, "
+                    + "PRIMARY KEY(`area_key`))");
+        }
+    };
+
     /** Every migration, in order, for the builder and the migration test. */
     public static Migration[] all() {
-        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3};
+        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4};
     }
 }

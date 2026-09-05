@@ -19,6 +19,9 @@ import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.ui.DirectionLabels;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.comp90018.storystep.ui.WeatherText;
+import com.comp90018.storystep.ui.weather.WeatherUiState;
+import com.comp90018.storystep.ui.weather.WeatherViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.comp90018.storystep.ui.widget.StoryMapView;
 import com.google.android.material.button.MaterialButton;
@@ -53,6 +56,8 @@ public class ExplorationFragment extends Fragment {
     private TextView accuracyView;
     private TextView directionView;
     private TextView movementView;
+    private TextView weatherView;
+    private WeatherViewModel weatherViewModel;
     private ImageView directionArrow;
     private MaterialButton resumeButton;
     private MaterialButton retrySaveButton;
@@ -87,6 +92,7 @@ public class ExplorationFragment extends Fragment {
         accuracyView = view.findViewById(R.id.exploration_accuracy);
         directionView = view.findViewById(R.id.exploration_direction);
         movementView = view.findViewById(R.id.exploration_movement);
+        weatherView = view.findViewById(R.id.exploration_weather);
         directionArrow = view.findViewById(R.id.exploration_direction_arrow);
         resumeButton = view.findViewById(R.id.resume_exploration_button);
         retrySaveButton = view.findViewById(R.id.retry_save_button);
@@ -111,6 +117,27 @@ public class ExplorationFragment extends Fragment {
         retryVisitButton.setOnClickListener(v -> viewModel.onRetryVisitRequested());
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+
+        // The same ViewModel the nearby screen uses. Both instances read one process-scoped
+        // repository, so arriving here from the list does not issue a second request for an
+        // observation that was fetched a moment ago.
+        weatherViewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(WeatherViewModel.class);
+        weatherViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderWeather);
+        weatherView.setOnClickListener(v -> weatherViewModel.load());
+        weatherViewModel.load();
+    }
+
+    /**
+     * Renders the optional weather section.
+     *
+     * <p>An unavailable observation says so rather than showing a zero, and never blocks the rest
+     * of the dashboard: a session has to be startable, watchable and stoppable with no weather at
+     * all.
+     */
+    private void renderWeather(WeatherUiState state) {
+        weatherView.setText(WeatherText.format(getResources(), state, System.currentTimeMillis()));
+        weatherView.setClickable(state.isRetryable());
     }
 
     private void render(ExplorationUiState state) {

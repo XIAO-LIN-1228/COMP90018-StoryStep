@@ -9,9 +9,9 @@ import androidx.room.RoomDatabase;
 /**
  * The application database.
  *
- * <p>Schema version 3 holds the cached attraction table, exploration sessions, their sampled route
- * points, their visits and the user's saved attractions. Cached weather is added in a later
- * stage.
+ * <p>Schema version 4 holds the cached attraction table, exploration sessions, their sampled route
+ * points, their visits, the user's saved attractions and the cached weather observation for each
+ * area.
  *
  * <p><b>Migration policy:</b> every schema change must bump {@code version} and ship a
  * {@link androidx.room.migration.Migration} added to {@link StoryStepMigrations#all()} — the
@@ -29,9 +29,10 @@ import androidx.room.RoomDatabase;
                 SessionEntity.class,
                 RoutePointEntity.class,
                 VisitEntity.class,
-                SavedAttractionEntity.class
+                SavedAttractionEntity.class,
+                WeatherCacheEntity.class
         },
-        version = 3,
+        version = 4,
         exportSchema = true)
 public abstract class StoryStepDatabase extends RoomDatabase {
 
@@ -46,6 +47,8 @@ public abstract class StoryStepDatabase extends RoomDatabase {
     public abstract VisitDao visitDao();
 
     public abstract SavedAttractionDao savedAttractionDao();
+
+    public abstract WeatherCacheDao weatherCacheDao();
 
     public static StoryStepDatabase create(Context context) {
         return Room.databaseBuilder(

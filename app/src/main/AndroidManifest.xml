@@ -11,6 +11,16 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <!--
+        Weather is fetched on demand while the app is in the foreground: on opening a screen that
+        shows it, and then only when the cached observation for the area has expired. There is no
+        background sync, no polling and no upload — nothing leaves the device except a request for
+        the weather at the centre of a coarse grid cell, never the user's own coordinates.
+        ACCESS_NETWORK_STATE only lets the app say "offline" instead of a generic failure.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
         Every sensing capability is optional. The app degrades to what a device actually has:
         no accelerometer means no movement estimate, no compass means bearing-and-distance
         guidance without an arrow, and neither stops an exploration session from recording.

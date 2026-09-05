@@ -166,6 +166,19 @@
                     android:text="@string/exploration_accuracy_unavailable" />
             </LinearLayout>
 
+            <!--
+                Weather is an independent optional section, not a column of the row above. It has
+                its own source and its own failure, and it must be able to say "unavailable"
+                without the travelled distance beside it going blank too.
+            -->
+            <TextView
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/exploration_weather"
+                android:layout_marginTop="8dp"
+                android:text="@string/weather_loading" />
+
             <TextView
                 style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="match_parent"

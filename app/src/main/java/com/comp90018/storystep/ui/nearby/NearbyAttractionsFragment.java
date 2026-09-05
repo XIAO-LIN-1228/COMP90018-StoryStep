@@ -32,6 +32,9 @@ import com.comp90018.storystep.R;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationAccessPolicy;
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.comp90018.storystep.ui.WeatherText;
+import com.comp90018.storystep.ui.weather.WeatherUiState;
+import com.comp90018.storystep.ui.weather.WeatherViewModel;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.ChipGroup;
@@ -94,6 +97,8 @@ public class NearbyAttractionsFragment extends Fragment
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
+    private TextView weatherReading;
+    private WeatherViewModel weatherViewModel;
     private TextView homeTitle;
     private TextInputLayout searchContainer;
     private ChipGroup filterGroup;
@@ -144,6 +149,7 @@ public class NearbyAttractionsFragment extends Fragment
         homeHeader = view.findViewById(R.id.home_header);
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
         weatherCard = view.findViewById(R.id.weather_card);
+        weatherReading = view.findViewById(R.id.weather_reading);
         homeTitle = view.findViewById(R.id.home_title);
         searchContainer = view.findViewById(R.id.search_container);
         filterGroup = view.findViewById(R.id.filter_group);
@@ -163,6 +169,16 @@ public class NearbyAttractionsFragment extends Fragment
                 .get(NearbyAttractionsViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
         viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
+
+        // Its own ViewModel rather than a field on the nearby one: weather has a different source,
+        // a different failure mode and a different refresh rule, and a weather outage must not be
+        // able to put the attraction list into an error state.
+        weatherViewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(WeatherViewModel.class);
+        weatherViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderWeather);
+        // Tapping the card retries, which is the only recovery a user has for a failed fetch.
+        weatherCard.setOnClickListener(v -> weatherViewModel.load());
+        weatherViewModel.load();
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         nearbyBackButton.setOnClickListener(v -> setListMode(false));
@@ -495,6 +511,19 @@ public class NearbyAttractionsFragment extends Fragment
         }
         Toast.makeText(requireContext(), R.string.detail_save_failed, Toast.LENGTH_SHORT).show();
         viewModel.consumeSaveFailure();
+    }
+
+    /**
+     * Renders the weather card.
+     *
+     * <p>The card stays visible in every state, including unavailable: replacing it with nothing
+     * would leave the user unable to retry, and a gap that appears and disappears is harder to
+     * read than a line that says what it knows.
+     */
+    private void renderWeather(WeatherUiState state) {
+        weatherReading.setText(
+                WeatherText.format(getResources(), state, System.currentTimeMillis()));
+        weatherCard.setClickable(state.isRetryable());
     }
 
     private void setListMode(boolean enabled) {
