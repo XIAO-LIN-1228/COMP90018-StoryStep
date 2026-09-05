@@ -38,14 +38,14 @@ public final class PrivacyDataFragment extends Fragment {
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(PrivacyDataViewModel.class);
         viewModel.getSavedCleared().observe(getViewLifecycleOwner(), this::reportSavedCleared);
+        viewModel.getHistoryCleared().observe(getViewLifecycleOwner(), this::reportHistoryCleared);
 
         view.findViewById(R.id.privacy_data_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
         view.findViewById(R.id.privacy_manage_permissions).setOnClickListener(v ->
                 openAppSettings());
         view.findViewById(R.id.privacy_clear_history).setOnClickListener(v ->
-                confirmPrototypeClear(R.string.privacy_clear_history_title,
-                        R.string.privacy_clear_history_body));
+                confirmClearHistory());
         view.findViewById(R.id.privacy_clear_saved).setOnClickListener(v ->
                 confirmClearSaved());
     }
@@ -78,15 +78,32 @@ public final class PrivacyDataFragment extends Fragment {
         viewModel.consumeSavedCleared();
     }
 
-    /** Still a prototype: clearing journey history waits on REQ-16's deletion rules. */
-    private void confirmPrototypeClear(int title, int message) {
+    /**
+     * Confirms clearing journey history.
+     *
+     * <p>The message states the scope in full — what goes, what stays, and that it cannot be
+     * undone — because this is the only point at which the user can still say no. Cancelling uses
+     * a null listener, so declining is guaranteed to change nothing.
+     */
+    private void confirmClearHistory() {
         new MaterialAlertDialogBuilder(requireContext())
-                .setTitle(title)
-                .setMessage(message)
+                .setTitle(R.string.privacy_clear_history_title)
+                .setMessage(R.string.privacy_clear_history_body)
                 .setNegativeButton(R.string.cancel, null)
                 .setPositiveButton(R.string.privacy_clear_action, (dialog, which) ->
-                        Toast.makeText(requireContext(), R.string.prototype_data_unchanged,
-                                Toast.LENGTH_SHORT).show())
+                        viewModel.onClearHistoryConfirmed())
                 .show();
+    }
+
+    private void reportHistoryCleared(PrivacyDataViewModel.ClearOutcome outcome) {
+        if (outcome == null) {
+            return;
+        }
+        Toast.makeText(requireContext(),
+                outcome == PrivacyDataViewModel.ClearOutcome.CLEARED
+                        ? R.string.history_cleared
+                        : R.string.history_clear_failed,
+                Toast.LENGTH_SHORT).show();
+        viewModel.consumeHistoryCleared();
     }
 }

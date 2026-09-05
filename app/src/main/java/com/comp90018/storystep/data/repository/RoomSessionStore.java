@@ -13,6 +13,8 @@ import com.comp90018.storystep.data.local.VisitEntity;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
+import com.comp90018.storystep.domain.model.MovementState;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
@@ -20,6 +22,8 @@ import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherCondition;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
@@ -200,6 +204,44 @@ public final class RoomSessionStore implements SessionStore {
                     public void run() {
                         SessionEntity stored = requireSession(sessionId);
                         applyDestination(stored, target);
+                        sessionDao.update(stored);
+                    }
+                });
+                return null;
+            }
+        });
+    }
+
+
+    @Override
+    public void saveSessionContext(String sessionId,
+                                   MovementSnapshot movement,
+                                   WeatherSnapshot weather,
+                                   RepositoryCallback<Void> callback) {
+        if (sessionId == null) {
+            fail(callback, new IllegalArgumentException("sessionId must not be null"));
+            return;
+        }
+        final MovementSnapshot recordedMovement =
+                movement == null ? MovementSnapshot.unavailable() : movement;
+        final WeatherSnapshot recordedWeather = weather;
+        run(callback, new Work<Void>() {
+            @Override
+            public Void perform() {
+                transactions.runInTransaction(new Runnable() {
+                    @Override
+                    public void run() {
+                        SessionEntity stored = sessionDao.findById(sessionId);
+                        if (stored == null) {
+                            // The session was discarded while the capture was in flight. Nothing
+                            // to degrade, and inventing a row here would resurrect a walk the user
+                            // deliberately threw away.
+                            return;
+                        }
+                        applyMovement(stored, recordedMovement);
+                        if (recordedWeather != null) {
+                            applyWeather(stored, recordedWeather);
+                        }
                         sessionDao.update(stored);
                     }
                 });
@@ -391,9 +433,32 @@ public final class RoomSessionStore implements SessionStore {
                 summary.getPauseReason() == null ? null : summary.getPauseReason().name();
         entity.activeDurationMillis = summary.getActiveDurationMillis();
         entity.segment = summary.getSegment();
+        // Sticky, and set here so every write path records it. `finish` clears `pause_reason`, so
+        // without this the finished row would keep no evidence that it was ever interrupted and
+        // the history label would be unrecoverable.
+        if (summary.getPauseReason() == PauseReason.PROCESS_INTERRUPTED) {
+            entity.interrupted = true;
+        }
         if (summary.getStartWallClockMillis() > 0L) {
             entity.startWallClockMillis = summary.getStartWallClockMillis();
         }
+    }
+
+
+    private static void applyMovement(SessionEntity entity, MovementSnapshot movement) {
+        MovementState state = movement.getState();
+        entity.movementState = state == null ? MovementState.UNAVAILABLE.name() : state.name();
+        entity.movementStationaryMillis = movement.getStationaryMillis();
+        entity.movementMovingMillis = movement.getMovingMillis();
+    }
+
+    private static void applyWeather(SessionEntity entity, WeatherSnapshot weather) {
+        entity.weatherAreaKey = weather.getAreaKey();
+        WeatherCondition condition = weather.getCondition();
+        entity.weatherCondition = condition == null ? null : condition.name();
+        entity.weatherTemperatureCelsius = weather.getTemperatureCelsius();
+        entity.weatherObservedAtMillis = weather.getObservedAtMillis();
+        entity.weatherFetchedAtMillis = weather.getFetchedAtMillis();
     }
 
     private static void applyDestination(SessionEntity entity, Attraction destination) {

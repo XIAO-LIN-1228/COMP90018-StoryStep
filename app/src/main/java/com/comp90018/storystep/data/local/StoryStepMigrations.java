@@ -138,8 +138,47 @@ public final class StoryStepMigrations {
         }
     };
 
+
+    /**
+     * Version 4 to 5: records the weather observed while a session ran, the movement totals it
+     * accumulated and whether it was ever interrupted.
+     *
+     * <p>Additive, and the only back-fill that is honest is the interrupted flag: a session still
+     * paused for a process interruption was in fact interrupted, and history must keep saying so
+     * after {@code finish} clears its pause reason. Nothing here invents weather for a walk that
+     * happened before the app recorded any — those rows keep a null area key, which is exactly how
+     * "no weather was recorded" is spelled.
+     */
+    public static final Migration MIGRATION_4_5 = new Migration(4, 5) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `weather_area_key` TEXT");
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `weather_condition` TEXT");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `weather_temperature_celsius` REAL NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `weather_observed_at_millis` INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `weather_fetched_at_millis` INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `movement_state` TEXT");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `movement_stationary_millis` INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `movement_moving_millis` INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `sessions` "
+                    + "ADD COLUMN `interrupted` INTEGER NOT NULL DEFAULT 0");
+            // The one fact version 4 did record: a session still carrying this pause reason was
+            // interrupted, so the rows that can be labelled honestly are labelled.
+            database.execSQL("UPDATE `sessions` SET `interrupted` = 1 "
+                    + "WHERE `pause_reason` = 'PROCESS_INTERRUPTED'");
+            database.execSQL("CREATE INDEX IF NOT EXISTS "
+                    + "`index_sessions_finished_end_wall_clock_millis` "
+                    + "ON `sessions` (`finished`, `end_wall_clock_millis`)");
+        }
+    };
+
     /** Every migration, in order, for the builder and the migration test. */
     public static Migration[] all() {
-        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4};
+        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5};
     }
 }

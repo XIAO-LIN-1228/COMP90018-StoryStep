@@ -15,11 +15,13 @@ import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RestoredSession;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -651,6 +653,15 @@ public class ExplorationCoordinatorTest {
     /** Delegates to a real in-memory store while counting how often progress is written. */
     private final class CountingSessionStore implements SessionStore {
 
+        @Override
+        public void saveSessionContext(String sessionId,
+                                       MovementSnapshot movement,
+                                       WeatherSnapshot weather,
+                                       RepositoryCallback<Void> callback) {
+            // Context is decoration on the record; these tests are about the session itself.
+            callback.onSuccess(null);
+        }
+
         private final InMemorySessionStore delegate = new InMemorySessionStore(clock);
 
         int checkpoints;
@@ -725,6 +736,15 @@ public class ExplorationCoordinatorTest {
     }
 
     private static class FailingSessionStore implements SessionStore {
+
+        @Override
+        public void saveSessionContext(String sessionId,
+                                       MovementSnapshot movement,
+                                       WeatherSnapshot weather,
+                                       RepositoryCallback<Void> callback) {
+            // Context is decoration on the record; these tests are about the session itself.
+            callback.onSuccess(null);
+        }
         @Override
         public void create(RepositoryCallback<SessionSummary> callback) {
             callback.onError(new IOException("disk full"));

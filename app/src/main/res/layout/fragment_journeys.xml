@@ -8,7 +8,7 @@
     <LinearLayout
         android:id="@+id/journeys_header"
         android:layout_width="0dp"
-        android:layout_height="88dp"
+        android:layout_height="72dp"
         android:background="@drawable/bg_brand_header"
         android:gravity="center_vertical"
         android:orientation="vertical"
@@ -26,30 +26,7 @@
             android:textColor="@color/white"
             android:textSize="21sp" />
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="@string/journeys_summary"
-            android:textColor="#CCFFFFFF"
-            android:textSize="13sp" />
     </LinearLayout>
-
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/journey_filters"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/journeys_header"
-        app:singleSelection="true">
-
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/journeys_all" />
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/journeys_month" />
-    </com.google.android.material.chip.ChipGroup>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/journey_list"
@@ -57,13 +34,13 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingStart="16dp"
-        android:paddingTop="8dp"
+        android:paddingTop="16dp"
         android:paddingEnd="16dp"
         android:paddingBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/journey_filters" />
+        app:layout_constraintTop_toBottomOf="@id/journeys_header" />
 
     <ProgressBar
         android:id="@+id/journeys_loading"

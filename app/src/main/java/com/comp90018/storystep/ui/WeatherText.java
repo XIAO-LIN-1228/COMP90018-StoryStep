@@ -4,6 +4,7 @@ import android.content.res.Resources;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.WeatherCondition;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.WeatherUnavailableException;
 import com.comp90018.storystep.ui.weather.WeatherUiState;
 
@@ -65,6 +66,22 @@ public final class WeatherText {
                     resources.getString(R.string.weather_reference_area));
         }
         return reading;
+    }
+
+    /**
+     * A stored observation, labelled with when it was observed.
+     *
+     * <p>Always labelled, unlike {@link #format}, which labels only stale readings. This one is
+     * being shown next to a walk that happened days ago: the temperature is a fact about that
+     * afternoon, and presenting it without a time would read as a claim about now.
+     */
+    public static String formatRecorded(Resources resources, WeatherSnapshot snapshot) {
+        String temperature = resources.getString(R.string.weather_temperature,
+                Math.round(snapshot.getTemperatureCelsius()));
+        String condition = resources.getString(conditionLabel(snapshot.getCondition()));
+        String reading = resources.getString(R.string.weather_reading, temperature, condition);
+        return append(resources, reading, resources.getString(R.string.weather_recorded_at,
+                HistoryText.formatTime(snapshot.getObservedAtMillis())));
     }
 
     private static String append(Resources resources, String reading, String suffix) {

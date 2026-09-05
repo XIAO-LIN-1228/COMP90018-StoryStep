@@ -217,23 +217,53 @@
     <string name="summary_view_journey">View journey</string>
     <string name="done">Done</string>
     <string name="journeys_title">Your journeys</string>
-    <string name="journeys_summary">5 journeys · 14 stories</string>
-    <string name="journeys_all">All</string>
-    <string name="journeys_month">This month</string>
-    <string name="journey_heritage">University Heritage Walk</string>
-    <string name="journey_museum">Museum &amp; Gardens</string>
-    <string name="journey_carlton">Carlton Evening Walk</string>
-    <string name="journey_date_one">31 Aug 2026</string>
-    <string name="journey_date_two">24 Aug 2026</string>
-    <string name="journey_date_three">18 Aug 2026</string>
     <string name="journey_detail_places">Places discovered</string>
     <string name="journey_explore_again">Explore again</string>
-    <string name="journey_stop_old_arts">Old Arts Building</string>
-    <string name="journey_stop_old_arts_meta">Today, 10:14 · 120 m</string>
-    <string name="journey_stop_museum">Ian Potter Museum</string>
-    <string name="journey_stop_museum_meta">Today, 10:28 · 450 m</string>
-    <string name="journey_stop_garden">System Garden</string>
-    <string name="journey_stop_garden_meta">Today, 10:41 · 310 m</string>
+
+    <!-- History list -->
+    <string name="history_empty">No journeys yet. Start exploring and your walks will be recorded here.</string>
+    <string name="history_error">Could not read your journeys from this device.</string>
+    <string name="history_untitled">Exploration</string>
+    <string name="history_walk_towards">Towards %1$s</string>
+    <string name="history_stats_format">%1$s · %2$s</string>
+    <string name="history_interrupted">Interrupted</string>
+    <string name="history_has_gaps">Recorded in %1$d parts</string>
+    <string name="history_duration_minutes">%1$d min</string>
+    <string name="history_duration_hours">%1$dh %2$dm</string>
+    <string name="history_duration_under_a_minute">Under a minute</string>
+    <plurals name="history_visit_count">
+        <item quantity="one">%d place visited</item>
+        <item quantity="other">%d places visited</item>
+    </plurals>
+    <plurals name="history_route_segments">
+        <item quantity="one">Route sketch, %d recorded part</item>
+        <item quantity="other">Route sketch, %d recorded parts</item>
+    </plurals>
+
+    <!-- History detail -->
+    <string name="history_detail_error">Could not open this journey.</string>
+    <string name="history_detail_not_found">This journey is no longer on this device.</string>
+    <string name="history_movement_label">Movement</string>
+    <string name="history_movement_unavailable">Not recorded — this phone has no motion sensor.</string>
+    <string name="history_movement_format">Moving %1$s · still %2$s</string>
+    <string name="history_weather_label">Weather</string>
+    <string name="history_weather_none">Not recorded during this walk.</string>
+    <string name="weather_recorded_at">recorded %1$s</string>
+    <string name="history_route_label">Route</string>
+    <string name="history_route_none">No route was recorded for this journey.</string>
+    <string name="history_route_caption">Approximate route from sampled points. Gaps are time that was not recorded. This is not a navigation route.</string>
+    <string name="history_no_story">No story was recorded here.</string>
+    <string name="history_visit_time">Arrived %1$s</string>
+
+    <!-- History deletion -->
+    <string name="history_delete">Delete journey</string>
+    <string name="history_delete_title">Delete this journey?</string>
+    <string name="history_delete_body">Removes this journey\'s summary, its recorded route and its visits from this device. Saved places are kept. This cannot be undone.</string>
+    <string name="history_delete_action">Delete</string>
+    <string name="history_deleted">Journey deleted.</string>
+    <string name="history_delete_failed">Could not delete this journey. Nothing was removed.</string>
+    <string name="history_cleared">Journey history cleared.</string>
+    <string name="history_clear_failed">Could not clear your history. Nothing was removed.</string>
 
     <!-- Saved and profile -->
     <string name="saved_title">Saved</string>
@@ -322,9 +352,8 @@
     <string name="privacy_clear_history">Clear journey history</string>
     <string name="privacy_clear_saved">Clear saved places</string>
     <string name="privacy_clear_history_title">Clear journey history?</string>
-    <string name="privacy_clear_history_body">This will remove journey summaries, sampled routes, visits and memories. Saved places remain available.</string>
+    <string name="privacy_clear_history_body">Removes every finished journey on this device, together with its recorded route, its visits and the stories it revealed. Saved places are kept. A journey that is still in progress is not affected. This cannot be undone.</string>
     <string name="privacy_clear_saved_title">Clear saved places?</string>
     <string name="privacy_clear_saved_body">This will remove all saved places. Journey history remains available.</string>
     <string name="privacy_clear_action">Clear</string>
-    <string name="prototype_data_unchanged">Prototype only — no local data was changed.</string>
 </resources>

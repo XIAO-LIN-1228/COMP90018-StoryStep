@@ -1,12 +1,14 @@
 package com.comp90018.storystep.data.repository;
 
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
@@ -42,6 +44,8 @@ public final class InMemorySessionStore implements SessionStore {
     private double totalDistanceMeters;
     private int segmentCount;
     private Attraction destination;
+    private MovementSnapshot movement = MovementSnapshot.unavailable();
+    private WeatherSnapshot weather;
 
     private int nextId = 1;
 
@@ -134,6 +138,35 @@ public final class InMemorySessionStore implements SessionStore {
         callback.onSuccess(null);
     }
 
+
+    @Override
+    public void saveSessionContext(String sessionId,
+                                   MovementSnapshot movement,
+                                   WeatherSnapshot weather,
+                                   RepositoryCallback<Void> callback) {
+        if (current == null || sessionId == null || !sessionId.equals(current.getId())) {
+            callback.onError(new IllegalArgumentException("unknown session: " + sessionId));
+            return;
+        }
+        this.movement = movement == null ? MovementSnapshot.unavailable() : movement;
+        // Never cleared once recorded: a session that loses network halfway must not lose the
+        // observation it already had.
+        if (weather != null) {
+            this.weather = weather;
+        }
+        callback.onSuccess(null);
+    }
+
+    /** The movement totals recorded for the current session; test-visible. */
+    public MovementSnapshot recordedMovement() {
+        return movement;
+    }
+
+    /** The weather recorded for the current session, or null when none was; test-visible. */
+    public WeatherSnapshot recordedWeather() {
+        return weather;
+    }
+
     @Override
     public void finish(SessionSummary summary, RepositoryCallback<Void> callback) {
         if (current != null && current.getState() == SessionState.COMPLETED
@@ -172,6 +205,8 @@ public final class InMemorySessionStore implements SessionStore {
         // does in the Room store. Saved attractions would not be, and there are none to touch.
         visits.clear();
         destination = null;
+        movement = MovementSnapshot.unavailable();
+        weather = null;
         callback.onSuccess(null);
     }
 

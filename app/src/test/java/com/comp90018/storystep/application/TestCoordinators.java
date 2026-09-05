@@ -1,9 +1,11 @@
 package com.comp90018.storystep.application;
 
 import com.comp90018.storystep.data.repository.InMemorySessionStore;
+import com.comp90018.storystep.domain.arrival.ArrivalPolicy;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.repository.SessionStore;
+import com.comp90018.storystep.domain.repository.WeatherRepository;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
@@ -36,13 +38,29 @@ public final class TestCoordinators {
                                               FakeLocationSource locationSource,
                                               SensingSources sensing,
                                               SessionStore sessionStore) {
+        return with(clock, locationSource, sensing, sessionStore, null);
+    }
+
+    /**
+     * With a weather service, for tests about the observation recorded alongside the session.
+     *
+     * @param weather the service, or null for the no-weather configuration every other overload
+     *                builds — a session must behave identically either way
+     */
+    public static ExplorationCoordinator with(FakeClock clock,
+                                              FakeLocationSource locationSource,
+                                              SensingSources sensing,
+                                              SessionStore sessionStore,
+                                              WeatherRepository weather) {
         return new ExplorationCoordinator(
                 new SessionStateMachine(clock),
                 sessionStore,
                 locationSource,
                 new LocationSampleFilter(LocationQualityPolicy.defaultPolicy()),
                 clock,
-                sensing);
+                sensing,
+                ArrivalPolicy.defaultPolicy(),
+                weather);
     }
 
     /** A coordinator with its own fresh fakes, for tests that never drive time or location. */

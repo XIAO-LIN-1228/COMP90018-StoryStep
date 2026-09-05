@@ -43,19 +43,40 @@ public class StoryViewModel extends ViewModel {
 
     /** Loads only if nothing has been published yet, so a rotation does not reload. */
     public void loadIfNeeded(String attractionId) {
+        loadIfNeeded(attractionId, null);
+    }
+
+    /** Loads only if nothing has been published yet, so a rotation does not reload. */
+    public void loadIfNeeded(String attractionId, String explicitSessionId) {
         if (uiState.getValue() == null) {
-            load(attractionId);
+            load(attractionId, explicitSessionId);
         }
     }
 
     public void load(String attractionId) {
+        load(attractionId, null);
+    }
+
+    /**
+     * Loads the story for {@code attractionId}.
+     *
+     * @param explicitSessionId the walk the story belongs to, when it is being reopened from
+     *                          history. Null means the running session, which is the right answer
+     *                          only while the user is actually on that walk: a historical story
+     *                          resolved against the running session would show a different walk's
+     *                          record, or fall back to the cache and lose the text the visit
+     *                          actually preserved.
+     */
+    public void load(String attractionId, String explicitSessionId) {
         if (attractionId == null) {
             uiState.setValue(StoryUiState.unavailable());
             return;
         }
         uiState.setValue(StoryUiState.loading());
 
-        String sessionId = coordinator.summary().getId();
+        String sessionId = explicitSessionId != null
+                ? explicitSessionId
+                : coordinator.summary().getId();
         if (sessionId == null) {
             loadFromCache(attractionId);
             return;

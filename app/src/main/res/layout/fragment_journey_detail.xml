@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/brand_ivory">
@@ -27,6 +28,7 @@
             app:tint="@color/white" />
 
         <TextView
+            android:id="@+id/journey_detail_title"
             style="@style/TextAppearance.StoryStep.AppBar"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -38,7 +40,30 @@
             android:textSize="19sp" />
     </LinearLayout>
 
+    <ProgressBar
+        android:id="@+id/journey_detail_loading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/journey_detail_header" />
+
+    <TextView
+        android:id="@+id/journey_detail_status"
+        style="@style/TextAppearance.StoryStep.Body"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/journey_detail_header"
+        tools:text="This journey is no longer on this device." />
+
     <ScrollView
+        android:id="@+id/journey_detail_content"
         android:layout_width="0dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/explore_again_button"
@@ -52,24 +77,94 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/summary_date" />
-
-            <com.comp90018.storystep.ui.widget.StoryMapView
-                android:id="@+id/journey_detail_map"
+            <TextView
+                android:id="@+id/journey_detail_date"
+                style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:layout_marginTop="10dp" />
+                android:layout_height="wrap_content"
+                tools:text="3 days ago" />
+
+            <TextView
+                android:id="@+id/journey_detail_stats"
+                style="@style/TextAppearance.StoryStep.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                tools:text="42 min  ·  2.3 km · 4 places visited" />
+
+            <TextView
+                android:id="@+id/journey_detail_label"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:textColor="@color/brand_coral"
+                tools:text="Interrupted" />
 
             <TextView
                 style="@style/TextAppearance.StoryStep.Title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
+                android:text="@string/history_route_label" />
+
+            <com.comp90018.storystep.ui.widget.RouteSketchView
+                android:id="@+id/journey_detail_route"
+                android:layout_width="match_parent"
+                android:layout_height="180dp"
+                android:layout_marginTop="10dp" />
+
+            <TextView
+                android:id="@+id/journey_detail_route_caption"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/history_route_caption" />
+
+            <TextView
+                style="@style/TextAppearance.StoryStep.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/history_movement_label" />
+
+            <TextView
+                android:id="@+id/journey_detail_movement"
+                style="@style/TextAppearance.StoryStep.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                tools:text="Moving 31 min · still 11 min" />
+
+            <TextView
+                style="@style/TextAppearance.StoryStep.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/history_weather_label" />
+
+            <TextView
+                android:id="@+id/journey_detail_weather"
+                style="@style/TextAppearance.StoryStep.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                tools:text="Cloudy 14°C · recorded 10:42" />
+
+            <TextView
+                android:id="@+id/journey_detail_places_heading"
+                style="@style/TextAppearance.StoryStep.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
                 android:text="@string/journey_detail_places" />
 
-            <include layout="@layout/item_journey_stop_old_arts" />
-            <include layout="@layout/item_journey_stop_museum" />
-            <include layout="@layout/item_journey_stop_garden" />
+            <LinearLayout
+                android:id="@+id/journey_detail_stops"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
         </LinearLayout>
     </ScrollView>
 
