@@ -11,6 +11,7 @@ import com.comp90018.storystep.StoryStepApplication;
 import com.comp90018.storystep.di.AppContainer;
 import com.comp90018.storystep.ui.detail.AttractionDetailViewModel;
 import com.comp90018.storystep.ui.exploration.ExplorationViewModel;
+import com.comp90018.storystep.ui.journey.JourneyDetailViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
@@ -58,8 +59,11 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
             return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator());
         }
+        if (modelClass.isAssignableFrom(JourneyDetailViewModel.class)) {
+            return (T) new JourneyDetailViewModel(appContainer.getHistoryRepository());
+        }
         if (modelClass.isAssignableFrom(JourneysViewModel.class)) {
-            return (T) new JourneysViewModel(appContainer.getJourneyRepository());
+            return (T) new JourneysViewModel(appContainer.getHistoryRepository());
         }
         if (modelClass.isAssignableFrom(StoryViewModel.class)) {
             return (T) new StoryViewModel(
@@ -79,7 +83,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getReferenceOrigin());
         }
         if (modelClass.isAssignableFrom(PrivacyDataViewModel.class)) {
-            return (T) new PrivacyDataViewModel(appContainer.getSavedAttractionRepository());
+            return (T) new PrivacyDataViewModel(
+                    appContainer.getSavedAttractionRepository(),
+                    appContainer.getHistoryRepository());
         }
         if (modelClass.isAssignableFrom(SessionRecoveryViewModel.class)) {
             return (T) new SessionRecoveryViewModel(

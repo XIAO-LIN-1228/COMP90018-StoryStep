@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -16,12 +17,18 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
-import com.comp90018.storystep.domain.model.Journey;
+import com.comp90018.storystep.domain.model.SessionHistoryEntry;
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
-/** Journey-history top-level destination backed by JourneyRepository. */
-public class JourneysFragment extends Fragment implements JourneyAdapter.OnJourneySelected {
+/** The user's recorded journeys, read from the session tables. */
+public class JourneysFragment extends Fragment
+        implements JourneyAdapter.OnJourneySelected, JourneyAdapter.OnJourneyDeleteRequested {
 
+    /** Bundle key for the session a detail screen should open. */
+    public static final String ARG_SESSION_ID = "sessionId";
+
+    private JourneysViewModel viewModel;
     private JourneyAdapter adapter;
     private RecyclerView list;
     private ProgressBar loading;
@@ -41,31 +48,59 @@ public class JourneysFragment extends Fragment implements JourneyAdapter.OnJourn
         list = view.findViewById(R.id.journey_list);
         loading = view.findViewById(R.id.journeys_loading);
         status = view.findViewById(R.id.journeys_status);
-        adapter = new JourneyAdapter(this);
+        adapter = new JourneyAdapter(this, this);
         list.setLayoutManager(new LinearLayoutManager(requireContext()));
         list.setAdapter(adapter);
 
-        JourneysViewModel viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+        viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(JourneysViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getDeleteFailed().observe(getViewLifecycleOwner(), this::reportDeleteFailure);
         viewModel.loadIfNeeded();
     }
 
     private void render(JourneysUiState state) {
-        boolean content = state.getStatus() == JourneysUiState.Status.CONTENT;
-        loading.setVisibility(state.getStatus() == JourneysUiState.Status.LOADING
-                ? View.VISIBLE : View.GONE);
-        list.setVisibility(content ? View.VISIBLE : View.GONE);
-        status.setVisibility(content || state.getStatus() == JourneysUiState.Status.LOADING
-                ? View.GONE : View.VISIBLE);
-        status.setText(state.getStatus() == JourneysUiState.Status.ERROR
-                ? R.string.nearby_error : R.string.nearby_empty);
+        JourneysUiState.Status current = state.getStatus();
+        loading.setVisibility(current == JourneysUiState.Status.LOADING ? View.VISIBLE : View.GONE);
+        list.setVisibility(current == JourneysUiState.Status.CONTENT ? View.VISIBLE : View.GONE);
+
+        boolean hasMessage = current == JourneysUiState.Status.EMPTY
+                || current == JourneysUiState.Status.ERROR;
+        status.setVisibility(hasMessage ? View.VISIBLE : View.GONE);
+        if (hasMessage) {
+            status.setText(current == JourneysUiState.Status.EMPTY
+                    ? R.string.history_empty : R.string.history_error);
+        }
         adapter.submitList(state.getJourneys());
     }
 
+    private void reportDeleteFailure(Boolean failed) {
+        if (!Boolean.TRUE.equals(failed)) {
+            return;
+        }
+        Toast.makeText(requireContext(), R.string.history_delete_failed, Toast.LENGTH_SHORT).show();
+        viewModel.consumeDeleteFailure();
+    }
+
     @Override
-    public void onJourneySelected(Journey journey) {
-        NavHostFragment.findNavController(this).navigate(R.id.action_journeys_to_detail);
+    public void onJourneySelected(SessionHistoryEntry journey) {
+        Bundle arguments = new Bundle();
+        arguments.putString(ARG_SESSION_ID, journey.getId());
+        NavHostFragment.findNavController(this)
+                .navigate(R.id.action_journeys_to_detail, arguments);
+    }
+
+    @Override
+    public void onJourneyDeleteRequested(SessionHistoryEntry journey) {
+        // Confirmed before anything is written, and cancelling leaves the record untouched: this
+        // is the user's own history and there is no undo behind it.
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.history_delete_title)
+                .setMessage(R.string.history_delete_body)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(R.string.history_delete_action, (dialog, which) ->
+                        viewModel.onDeleteConfirmed(journey.getId()))
+                .show();
     }
 
     @Override

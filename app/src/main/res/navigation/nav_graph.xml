@@ -89,6 +89,8 @@
         android:label="@string/story_toolbar_title"
         tools:layout="@layout/fragment_story">
         <argument android:name="attractionId" app:argType="string" />
+        <!-- Present only when a story is reopened from history; the running session otherwise. -->
+        <argument android:name="sessionId" app:argType="string" app:nullable="true" android:defaultValue="@null" />
         <action android:id="@+id/action_story_to_memory" app:destination="@id/memoryFragment" />
     </fragment>
 
@@ -113,7 +115,9 @@
         android:name="com.comp90018.storystep.ui.journey.JourneyDetailFragment"
         android:label="@string/home_journey_name"
         tools:layout="@layout/fragment_journey_detail">
+        <argument android:name="sessionId" app:argType="string" />
         <action android:id="@+id/action_journey_detail_to_exploration" app:destination="@id/explorationFragment" />
+        <action android:id="@+id/action_journey_detail_to_story" app:destination="@id/storyFragment" />
     </fragment>
 
     <fragment

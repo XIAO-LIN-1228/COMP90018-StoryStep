@@ -6,6 +6,8 @@ import androidx.room.Insert;
 import androidx.room.Query;
 import androidx.room.Update;
 
+import java.util.List;
+
 /**
  * Synchronous data access for sessions. Callers must invoke these methods off the main thread;
  * {@link com.comp90018.storystep.data.repository.RoomSessionStore} owns that scheduling.
@@ -40,4 +42,41 @@ public interface SessionDao {
     /** Removes the session; its route points and visits cascade with it. */
     @Query("DELETE FROM sessions WHERE id = :sessionId")
     int deleteById(String sessionId);
+
+    /**
+     * Every finished session, most recently ended first, with the number of places it visited.
+     *
+     * <p>The visit count is a correlated subquery rather than a join with a group-by: a session
+     * with no visits still has to appear, and this shape rides {@code index_visits_session_id}
+     * without changing the row count.
+     *
+     * <p>The ordering is a total order. Two sessions can end in the same millisecond — synthetic
+     * test data reliably does — and a partial order would leave their relative position up to
+     * SQLite, which is not something a test or a user should have to guess at.
+     */
+    @Query("SELECT s.id AS id, "
+            + "s.start_wall_clock_millis AS startWallClockMillis, "
+            + "s.end_wall_clock_millis AS endWallClockMillis, "
+            + "s.active_duration_millis AS activeDurationMillis, "
+            + "s.distance_meters AS distanceMeters, "
+            + "s.segment_count AS segmentCount, "
+            + "s.interrupted AS interrupted, "
+            + "s.destination_name AS destinationName, "
+            + "(SELECT COUNT(*) FROM visits v WHERE v.session_id = s.id) AS visitCount "
+            + "FROM sessions s WHERE s.finished != 0 "
+            + "ORDER BY s.end_wall_clock_millis DESC, s.start_wall_clock_millis DESC, s.id ASC")
+    List<SessionHistoryRow> findFinished();
+
+    @Query("SELECT COUNT(*) FROM sessions WHERE finished != 0")
+    int countFinished();
+
+    /**
+     * Removes every finished session; their route points and visits cascade with them.
+     *
+     * <p>Deliberately restricted to finished rows. A session in progress, or one restored as
+     * paused, is not history, and clearing history must not silently discard a walk the user is
+     * still on.
+     */
+    @Query("DELETE FROM sessions WHERE finished != 0")
+    int deleteAllFinished();
 }

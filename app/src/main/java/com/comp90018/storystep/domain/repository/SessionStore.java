@@ -1,10 +1,12 @@
 package com.comp90018.storystep.domain.repository;
 
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 
 import java.util.List;
 
@@ -77,6 +79,31 @@ public interface SessionStore {
     void saveDestination(String sessionId,
                          Attraction destination,
                          RepositoryCallback<Void> callback);
+
+
+    /**
+     * Records the movement totals the session accumulated and, when one is available, the weather
+     * observed while it ran.
+     *
+     * <p>Both are copied into the session rather than looked up when history is read. The weather
+     * cache is keyed by area and refreshed on its own schedule, and the motion estimate exists only
+     * while the sensors are registered: neither could answer "what was it like during that walk?"
+     * after the fact.
+     *
+     * <p>Movement is always applied. Weather is applied only when {@code weather} is non-null and
+     * is <b>never cleared once recorded</b>: a session that loses network halfway must not lose the
+     * observation it already had. The snapshot carries its own observation time, so history can
+     * label it rather than present it as the weather of the whole walk.
+     *
+     * <p>A failure here degrades the record, not the session. Callers must not treat it as a
+     * checkpoint or stop failure, and must not tell the user their walk failed to save.
+     *
+     * @param weather the observation to record, or null to leave any existing one untouched
+     */
+    void saveSessionContext(String sessionId,
+                            MovementSnapshot movement,
+                            WeatherSnapshot weather,
+                            RepositoryCallback<Void> callback);
 
     /**
      * Ends the session permanently. Idempotent: finishing an already-finished session succeeds

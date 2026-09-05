@@ -16,6 +16,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.comp90018.storystep.ui.journey.JourneysFragment;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 
 /**
@@ -62,7 +63,11 @@ public class StoryFragment extends Fragment {
         String attractionId = arguments == null
                 ? null
                 : arguments.getString(NearbyAttractionsFragment.ARG_ATTRACTION_ID);
-        viewModel.loadIfNeeded(attractionId);
+        // Present only when the story was reopened from history; null means the running session.
+        String sessionId = arguments == null
+                ? null
+                : arguments.getString(JourneysFragment.ARG_SESSION_ID);
+        viewModel.loadIfNeeded(attractionId, sessionId);
     }
 
     private void render(StoryUiState state) {

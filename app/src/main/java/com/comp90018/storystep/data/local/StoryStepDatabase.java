@@ -9,9 +9,9 @@ import androidx.room.RoomDatabase;
 /**
  * The application database.
  *
- * <p>Schema version 4 holds the cached attraction table, exploration sessions, their sampled route
- * points, their visits, the user's saved attractions and the cached weather observation for each
- * area.
+ * <p>Schema version 5 holds the cached attraction table, exploration sessions with the weather and
+ * movement recorded while they ran, their sampled route points, their visits, the user's saved
+ * attractions and the cached weather observation for each area.
  *
  * <p><b>Migration policy:</b> every schema change must bump {@code version} and ship a
  * {@link androidx.room.migration.Migration} added to {@link StoryStepMigrations#all()} — the
@@ -32,7 +32,7 @@ import androidx.room.RoomDatabase;
                 SavedAttractionEntity.class,
                 WeatherCacheEntity.class
         },
-        version = 4,
+        version = 5,
         exportSchema = true)
 public abstract class StoryStepDatabase extends RoomDatabase {
 

@@ -13,11 +13,13 @@ import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.RestoredSession;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -401,6 +403,15 @@ public class ExplorationCoordinatorArrivalTest {
     /** A real store whose visit writes can be made to fail, and unfailed again. */
     private static final class FailableSessionStore implements SessionStore {
 
+        @Override
+        public void saveSessionContext(String sessionId,
+                                       MovementSnapshot movement,
+                                       WeatherSnapshot weather,
+                                       RepositoryCallback<Void> callback) {
+            // Context is decoration on the record; these tests are about the session itself.
+            callback.onSuccess(null);
+        }
+
         private final InMemorySessionStore delegate;
 
         final List<Visit> recorded = new ArrayList<>();
@@ -486,6 +497,15 @@ public class ExplorationCoordinatorArrivalTest {
 
     /** A store that reports an interrupted session which already holds an unread visit. */
     private static final class RestoringSessionStore implements SessionStore {
+
+        @Override
+        public void saveSessionContext(String sessionId,
+                                       MovementSnapshot movement,
+                                       WeatherSnapshot weather,
+                                       RepositoryCallback<Void> callback) {
+            // Context is decoration on the record; these tests are about the session itself.
+            callback.onSuccess(null);
+        }
 
         private static final String SESSION_ID = "interrupted-session";
 

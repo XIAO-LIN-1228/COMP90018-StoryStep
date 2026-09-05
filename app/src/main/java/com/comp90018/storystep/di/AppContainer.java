@@ -6,22 +6,23 @@ import android.content.pm.ApplicationInfo;
 import androidx.core.content.ContextCompat;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.domain.arrival.ArrivalPolicy;
 import com.comp90018.storystep.application.SensingSources;
 import com.comp90018.storystep.data.local.RoomTransactions;
 import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.remote.ApiClientFactory;
 import com.comp90018.storystep.data.remote.RetrofitWeatherSource;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
-import com.comp90018.storystep.data.repository.InMemoryJourneyRepository;
 import com.comp90018.storystep.data.repository.RoomAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
+import com.comp90018.storystep.data.repository.RoomHistoryRepository;
 import com.comp90018.storystep.data.repository.RoomSessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
-import com.comp90018.storystep.domain.repository.JourneyRepository;
+import com.comp90018.storystep.domain.repository.HistoryRepository;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.repository.WeatherRepository;
@@ -56,7 +57,7 @@ public class AppContainer {
     private final Context applicationContext;
     private final StoryStepDatabase database;
     private final AttractionRepository attractionRepository;
-    private final JourneyRepository journeyRepository;
+    private final HistoryRepository historyRepository;
     private final LocationQualityPolicy locationQualityPolicy;
     private final Clock clock;
     private final SessionStore sessionStore;
@@ -74,21 +75,21 @@ public class AppContainer {
      * entry point can supply a fake without also having to stand up a database.
      */
     public AppContainer(Context applicationContext) {
-        this(applicationContext, null, new InMemoryJourneyRepository());
+        this(applicationContext, null, null);
     }
 
     public AppContainer(Context applicationContext, AttractionRepository attractionRepository) {
-        this(applicationContext, attractionRepository, new InMemoryJourneyRepository());
+        this(applicationContext, attractionRepository, null);
     }
 
     /**
      * @param attractionRepository an override, or null to read the Room cache
+     * @param historyRepository    an override, or null to read the Room session tables
      */
     public AppContainer(Context applicationContext,
                         AttractionRepository attractionRepository,
-                        JourneyRepository journeyRepository) {
+                        HistoryRepository historyRepository) {
         this.applicationContext = applicationContext.getApplicationContext();
-        this.journeyRepository = journeyRepository;
         this.locationQualityPolicy = LocationQualityPolicy.defaultPolicy();
         this.mainExecutor = ContextCompat.getMainExecutor(this.applicationContext);
         this.ioExecutor = Executors.newFixedThreadPool(IO_THREAD_COUNT);
@@ -120,6 +121,11 @@ public class AppContainer {
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
                 database.visitDao(), clock, ioExecutor, mainExecutor);
+        this.historyRepository = historyRepository != null
+                ? historyRepository
+                : new RoomHistoryRepository(
+                        new RoomTransactions(database), database.sessionDao(),
+                        database.routePointDao(), database.visitDao(), ioExecutor, mainExecutor);
         // One hub for both sensors: the accelerometer is needed by motion estimation and by the
         // compass, and registering it twice would double the callback rate and the power cost for
         // readings that are identical.
@@ -133,7 +139,12 @@ public class AppContainer {
                 new LocationSampleFilter(locationQualityPolicy),
                 clock,
                 new SensingSources(sensorHub, sensorHub.asHeadingSource(),
-                        new AndroidDeclinationSource()));
+                        new AndroidDeclinationSource()),
+                ArrivalPolicy.defaultPolicy(),
+                // The session records the weather it was walked in. Passed the same process-scoped
+                // repository every screen uses, so the capture is a cache read rather than an
+                // extra request.
+                weatherRepository);
     }
 
     /**
@@ -154,8 +165,15 @@ public class AppContainer {
         return applicationContext;
     }
 
-    public JourneyRepository getJourneyRepository() {
-        return journeyRepository;
+    /**
+     * The user's exploration history.
+     *
+     * <p>Reads the same tables {@link #getSessionStore()} writes, through its own contract: the
+     * store is the live session's write path, and history is a read-and-delete path used by
+     * entirely different screens.
+     */
+    public HistoryRepository getHistoryRepository() {
+        return historyRepository;
     }
 
     /**

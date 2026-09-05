@@ -2,6 +2,7 @@ package com.comp90018.storystep.application;
 
 import com.comp90018.storystep.domain.arrival.ArrivalDetector;
 import com.comp90018.storystep.domain.arrival.ArrivalPolicy;
+import com.comp90018.storystep.domain.weather.WeatherResult;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.geo.RouteAccumulator;
 import com.comp90018.storystep.domain.guidance.CircularSmoother;
@@ -21,9 +22,11 @@ import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.motion.MovementClassifier;
 import com.comp90018.storystep.domain.model.Visit;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.DuplicateVisitException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SessionStore;
+import com.comp90018.storystep.domain.repository.WeatherRepository;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.time.Clock;
 import com.comp90018.storystep.platform.location.LocationAccess;
@@ -203,6 +206,21 @@ public final class ExplorationCoordinator {
      */
     private Visit failedVisit;
 
+    /**
+     * The weather service, or null on a build that has none.
+     *
+     * <p>Nullable rather than a no-op implementation because a session must run identically
+     * whether or not weather is available: everything this field guards is decoration on the
+     * historical record, and none of it may reach the session's own state.
+     */
+    private final WeatherRepository weather;
+
+    /** The observation recorded for this session, or null when none has been captured yet. */
+    private WeatherSnapshot capturedWeather;
+
+    /** True while a capture is in flight, so a burst of fixes produces one request. */
+    private boolean weatherCaptureInFlight;
+
     /** Location only. A device with no motion or compass sensing is a supported configuration. */
     public ExplorationCoordinator(SessionStateMachine machine,
                                   SessionStore sessionStore,
@@ -229,6 +247,23 @@ public final class ExplorationCoordinator {
                                   Clock clock,
                                   SensingSources sensing,
                                   ArrivalPolicy arrivalPolicy) {
+        this(machine, sessionStore, locationSource, sampleFilter, clock, sensing, arrivalPolicy,
+                null);
+    }
+
+    /**
+     * The full assembly, including the weather recorded alongside the session.
+     *
+     * @param weather the weather service, or null on a build with none — a supported configuration
+     */
+    public ExplorationCoordinator(SessionStateMachine machine,
+                                  SessionStore sessionStore,
+                                  LocationSource locationSource,
+                                  LocationSampleFilter sampleFilter,
+                                  Clock clock,
+                                  SensingSources sensing,
+                                  ArrivalPolicy arrivalPolicy,
+                                  WeatherRepository weather) {
         this.machine = machine;
         this.sessionStore = sessionStore;
         this.locationSource = locationSource;
@@ -236,6 +271,7 @@ public final class ExplorationCoordinator {
         this.clock = clock;
         this.sensing = sensing;
         this.arrival = new ArrivalDetector(arrivalPolicy);
+        this.weather = weather;
     }
 
     // --- observers ---------------------------------------------------------------------------
@@ -451,6 +487,9 @@ public final class ExplorationCoordinator {
                 route.reset();
                 movement.clear();
                 persistedRoutePointCount = 0;
+                // Weather belongs to the walk it was observed during, not to the app.
+                capturedWeather = null;
+                weatherCaptureInFlight = false;
                 // Arrival state belongs to a session. A story left unread by the previous walk is
                 // still in history, but it is not this walk's news, and a failed write against a
                 // session that has ended can never be retried successfully.
@@ -507,6 +546,56 @@ public final class ExplorationCoordinator {
         }
         closeSubscription();
         publishSession();
+        // Chained rather than issued alongside `finish`: both are a read-modify-write of the whole
+        // session row on a two-thread pool, so running them concurrently would lose one of them.
+        // `saveContext` always continues, so a failed or absent capture cannot hold up the stop.
+        captureWeatherFinally(new Runnable() {
+            @Override
+            public void run() {
+                saveContext(new Runnable() {
+                    @Override
+                    public void run() {
+                        finishSession();
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * One last attempt to record the weather, for a session that never managed it while running.
+     *
+     * <p>A walk can easily end without a capture: the first fix may have arrived while the network
+     * was gone, or the service may have been failing all along. This is the fallback, and like the
+     * capture itself it cannot fail in a way the user sees — {@code afterwards} runs either way,
+     * so Stop is never held up by the weather.
+     */
+    private void captureWeatherFinally(Runnable afterwards) {
+        LocationSample last = route.snapshot().getLastSample();
+        if (weather == null || capturedWeather != null || weatherCaptureInFlight || last == null) {
+            afterwards.run();
+            return;
+        }
+        weatherCaptureInFlight = true;
+        weather.loadWeather(last.getPosition(), new RepositoryCallback<WeatherResult>() {
+            @Override
+            public void onSuccess(WeatherResult result) {
+                weatherCaptureInFlight = false;
+                if (result != null && capturedWeather == null) {
+                    capturedWeather = result.getSnapshot();
+                }
+                afterwards.run();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                weatherCaptureInFlight = false;
+                afterwards.run();
+            }
+        });
+    }
+
+    private void finishSession() {
         sessionStore.finish(summary(), new RepositoryCallback<Void>() {
             @Override
             public void onSuccess(Void result) {
@@ -543,6 +632,8 @@ public final class ExplorationCoordinator {
                 route.reset();
                 movement.clear();
                 persistedRoutePointCount = 0;
+                capturedWeather = null;
+                weatherCaptureInFlight = false;
                 // The session's visits went with it; an offer to read a story from a walk that no
                 // longer exists would be pointing at nothing.
                 pendingStory = null;
@@ -823,6 +914,12 @@ public final class ExplorationCoordinator {
                 destination = restored.getDestination();
                 arrival.setTarget(destination);
                 movement.clear();
+                // Deliberately not read back from the restored record. A null snapshot here means
+                // the next fix tries again, and `saveSessionContext` never clears an observation
+                // that is already stored, so a restored session can only gain weather, not lose
+                // the weather it already had.
+                capturedWeather = null;
+                weatherCaptureInFlight = false;
                 headingSmoother.reset();
                 headingUsable = false;
                 // A story the user never got to read is recovered by reading the visit back, not
@@ -867,6 +964,80 @@ public final class ExplorationCoordinator {
                 // Nothing to re-offer.
             }
         });
+    }
+
+
+    /**
+     * Records the weather where the session is actually happening, once.
+     *
+     * <p>Driven by the first accepted fix rather than by {@code create()}: at the moment a session
+     * starts there is usually no position yet, and the only coordinate available is the
+     * demonstration reference origin. Recording that would write some other area's weather into
+     * the user's own history, which is worse than recording none.
+     *
+     * <p>Strictly fire-and-forget. The callbacks touch nothing but the capture's own state — no
+     * durability flag, no observer, no session state — because a weather failure must never be
+     * able to disturb a walk that is going fine.
+     */
+    private void captureWeatherIfNeeded(LocationSample sample) {
+        if (weather == null || capturedWeather != null || weatherCaptureInFlight) {
+            return;
+        }
+        if (!machine.getState().hasSession()) {
+            return;
+        }
+        weatherCaptureInFlight = true;
+        weather.loadWeather(sample.getPosition(), new RepositoryCallback<WeatherResult>() {
+            @Override
+            public void onSuccess(WeatherResult result) {
+                weatherCaptureInFlight = false;
+                if (result == null || capturedWeather != null) {
+                    return;
+                }
+                capturedWeather = result.getSnapshot();
+                saveContext(null);
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                // Nothing to degrade. The session has no weather to show in history, which is an
+                // honest outcome, and Stop will make one more attempt.
+                weatherCaptureInFlight = false;
+            }
+        });
+    }
+
+    /**
+     * Writes the movement totals, and the weather if one was captured, onto the session record.
+     *
+     * <p>{@code afterwards} runs whether the write succeeded or failed: this is decoration on the
+     * record, and a caller waiting on it — Stop — must not be blocked by it.
+     */
+    private void saveContext(Runnable afterwards) {
+        String sessionId = machine.getSessionId();
+        if (sessionId == null) {
+            if (afterwards != null) {
+                afterwards.run();
+            }
+            return;
+        }
+        sessionStore.saveSessionContext(sessionId, movementSnapshot(), capturedWeather,
+                new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                        if (afterwards != null) {
+                            afterwards.run();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        // The record is poorer; the session is not. Deliberately silent.
+                        if (afterwards != null) {
+                            afterwards.run();
+                        }
+                    }
+                });
     }
 
     private void publishSession() {
@@ -965,6 +1136,7 @@ public final class ExplorationCoordinator {
                 return;
             }
             route.offer(sample, machine.summary().getSegment());
+            captureWeatherIfNeeded(sample);
             publishSample(sample);
             publishRoute();
             // Moving changes the bearing to the destination even when the phone has not turned.

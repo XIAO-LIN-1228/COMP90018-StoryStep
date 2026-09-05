@@ -111,4 +111,13 @@ public final class FakeVisitDao implements VisitDao {
         copy.unread = source.unread;
         return copy;
     }
+
+    /** Mirrors the {@code ON DELETE CASCADE} the real schema declares. */
+    public void cascadeDelete(String sessionId) {
+        deleteBySession(sessionId);
+    }
+
+    public int totalRows() {
+        return rows.size();
+    }
 }

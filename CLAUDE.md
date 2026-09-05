@@ -14,17 +14,22 @@ coordinator owns the foreground location, accelerometer and magnetometer subscri
 implements start, pause, resume, finish and discard, with movement-state estimation, true-north
 heading and directional guidance. Room is wired for runtime data: cached attractions, sessions,
 sampled route points, visits, saved attractions and cached weather live in `storystep.db` at
-schema version 4, and
+schema version 5, and
 an unfinished session is restored as paused on the next launch. Arrival detection works: a
 sustained, credible stay at the selected destination records exactly one visit and offers its story
 on the exploration dashboard. Saved attractions are durable: a place is kept as a self-contained
 copy in a table with no foreign key onto the attraction cache, and one process-scoped repository
 keeps the detail screen, the nearby rows and the saved list in agreement. Weather is real and is the app's
-first and only network traffic: Open-Meteo's current-conditions endpoint behind a local cache at
-schema version 4, keyed by a coarse area grid rather than by position, cache-first with per-area
+first and only network traffic: Open-Meteo's current-conditions endpoint behind a local cache,
+keyed by a coarse area grid rather than by position, cache-first with per-area
 request coalescing, served stale-and-labelled when a refresh fails and reported as offline when
-nothing is cached. Journey history still reads an in-memory fixture repository, and the attraction
-path is still seed data — no remote attraction service is wired, and contextual ranking has not
+nothing is cached. The weather a session was walked in, its movement totals and whether it was ever
+interrupted are copied onto the session row at schema version 5, which is what lets history describe
+a walk without the network or the attraction cache. Journey history is real: a `HistoryRepository`
+over the same session tables backs the list and detail screens, the route is drawn as a segmented
+sketch that never bridges the gaps between collection spans, and per-session and clear-all deletion
+remove exactly the route points and visits the session owns while leaving saved places untouched.
+The attraction path is still seed data — no remote attraction service is wired, and contextual ranking has not
 started. Instrumented tests have run on an emulator (API 36) but never on a physical device, and
 never on API 26 or 31+, so every physical acceptance case is still outstanding.
 `README.md` is the requirements/scope document and is the source of truth for

@@ -141,6 +141,110 @@ public class StoryStepMigrationTest {
     }
 
     @Test
+    public void migratingFromFourToFiveAddsTheSessionContextAndLabelsInterruptedSessions()
+            throws IOException {
+        SupportSQLiteDatabase version4 = helper.createDatabase(TEST_DATABASE, 4);
+
+        ContentValues interrupted = sessionValues("interrupted-walk", "PROCESS_INTERRUPTED");
+        version4.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT,
+                interrupted);
+        ContentValues ordinary = sessionValues("ordinary-walk", null);
+        version4.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT,
+                ordinary);
+
+        ContentValues point = new ContentValues();
+        point.put("session_id", "interrupted-walk");
+        point.put("sequence", 0);
+        point.put("segment", 1);
+        point.put("latitude", -37.79630);
+        point.put("longitude", 144.96140);
+        point.put("accuracy_meters", 8.0);
+        point.put("wall_clock_millis", 1_700_000_000_000L);
+        version4.insert("route_points", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT,
+                point);
+
+        ContentValues visit = new ContentValues();
+        visit.put("session_id", "interrupted-walk");
+        visit.put("attraction_id", "old-arts");
+        visit.put("arrival_wall_clock_millis", 1_700_000_000_000L);
+        visit.put("attraction_name", "Old Arts Building");
+        visit.put("story", "A recorded story.");
+        visit.put("unread", 1);
+        version4.insert("visits", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, visit);
+
+        ContentValues saved = new ContentValues();
+        saved.put("attraction_id", "museum");
+        saved.put("name", "Melbourne Museum");
+        saved.put("category", "museum");
+        saved.put("description", "Natural history and culture.");
+        saved.put("indoor", 1);
+        saved.put("latitude", -37.80320);
+        saved.put("longitude", 144.97170);
+        saved.put("saved_at_millis", 1_700_000_000_000L);
+        version4.insert("saved_attractions",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, saved);
+        version4.close();
+
+        SupportSQLiteDatabase version5 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 5, true, StoryStepMigrations.MIGRATION_4_5);
+
+        // Every user-owned record survives an additive migration.
+        assertEquals(2, count(version5, "SELECT COUNT(*) FROM sessions"));
+        assertEquals(1, count(version5, "SELECT COUNT(*) FROM route_points"));
+        assertEquals(1, count(version5, "SELECT COUNT(*) FROM visits"));
+        assertEquals("a saved place has nothing to do with a session schema change",
+                1, count(version5, "SELECT COUNT(*) FROM saved_attractions"));
+
+        // The one fact version 4 recorded that can be carried forward.
+        assertEquals("a session still paused for a process interruption was in fact interrupted",
+                1, count(version5,
+                        "SELECT interrupted FROM sessions WHERE id = 'interrupted-walk'"));
+        assertEquals("a session with no such pause reason must not be labelled",
+                0, count(version5, "SELECT interrupted FROM sessions WHERE id = 'ordinary-walk'"));
+
+        // Nothing invents weather for a walk that happened before the app recorded any.
+        Cursor weather = version5.query(
+                "SELECT weather_area_key, weather_observed_at_millis, movement_state "
+                        + "FROM sessions WHERE id = 'ordinary-walk'");
+        assertTrue(weather.moveToFirst());
+        assertTrue("a null area key is how 'no weather was recorded' is spelled",
+                weather.isNull(0));
+        assertEquals("a zero instant can never produce a snapshot, which is the point",
+                0L, weather.getLong(1));
+        assertTrue("movement that was never recorded stays null", weather.isNull(2));
+        weather.close();
+
+        version5.close();
+    }
+
+    private static ContentValues sessionValues(String id, String pauseReason) {
+        ContentValues session = new ContentValues();
+        session.put("id", id);
+        session.put("state", pauseReason == null ? "COMPLETED" : "PAUSED");
+        session.put("pause_reason", pauseReason);
+        session.put("start_wall_clock_millis", 1_700_000_000_000L);
+        session.put("end_wall_clock_millis", pauseReason == null ? 1_700_000_100_000L : 0L);
+        session.put("active_duration_millis", 100_000L);
+        session.put("distance_meters", 250.0);
+        session.put("segment", 1);
+        session.put("segment_count", 1);
+        session.put("finished", pauseReason == null ? 1 : 0);
+        session.put("last_checkpoint_wall_clock_millis", 1_700_000_050_000L);
+        session.put("destination_indoor", 0);
+        session.put("destination_latitude", 0.0);
+        session.put("destination_longitude", 0.0);
+        return session;
+    }
+
+    private static int count(SupportSQLiteDatabase database, String query) {
+        Cursor cursor = database.query(query);
+        assertTrue(cursor.moveToFirst());
+        int value = cursor.getInt(0);
+        cursor.close();
+        return value;
+    }
+
+    @Test
     public void theMigratedDatabaseCarriesTheNewSessionTables() throws IOException {
         helper.createDatabase(TEST_DATABASE, 1).close();
         helper.runMigrationsAndValidate(
@@ -160,6 +264,9 @@ public class StoryStepMigrationTest {
         assertEquals(0, database.visitDao().countBySession("none"));
         assertEquals(0, database.savedAttractionDao().count());
         assertEquals(0, database.weatherCacheDao().count());
+        // The history queries added at version 5 must run against the migrated schema too.
+        assertEquals(0, database.sessionDao().countFinished());
+        assertTrue(database.sessionDao().findFinished().isEmpty());
         database.close();
     }
 }

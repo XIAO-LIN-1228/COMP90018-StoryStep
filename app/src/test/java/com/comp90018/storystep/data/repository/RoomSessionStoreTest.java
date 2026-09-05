@@ -3,6 +3,7 @@ package com.comp90018.storystep.data.repository;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.data.local.DirectTransactions;
@@ -17,6 +18,11 @@ import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.data.local.SessionEntity;
+import com.comp90018.storystep.domain.model.MovementSnapshot;
+import com.comp90018.storystep.domain.model.MovementState;
+import com.comp90018.storystep.domain.model.WeatherCondition;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
 
@@ -302,6 +308,127 @@ public class RoomSessionStoreTest {
     }
 
     // --- helpers -------------------------------------------------------------------------------
+
+
+    // --- recorded context ----------------------------------------------------------------------
+
+    @Test
+    public void theMovementTotalsAndWeatherAreWrittenOntoTheSession() {
+        SessionSummary created = create();
+
+        saveContext(created.getId(),
+                new MovementSnapshot(MovementState.MOVING, 30_000L, 120_000L),
+                snapshot(WeatherCondition.CLOUDY, 14.5));
+
+        SessionEntity stored = sessionDao.findById(created.getId());
+        assertEquals(MovementState.MOVING.name(), stored.movementState);
+        assertEquals(120_000L, stored.movementMovingMillis);
+        assertEquals(30_000L, stored.movementStationaryMillis);
+        assertEquals("-37.80,144.95", stored.weatherAreaKey);
+        assertEquals(WeatherCondition.CLOUDY.name(), stored.weatherCondition);
+        assertEquals(14.5, stored.weatherTemperatureCelsius, 0.0001);
+    }
+
+    @Test
+    public void aLaterContextWriteWithNoWeatherDoesNotEraseTheObservationAlreadyRecorded() {
+        SessionSummary created = create();
+        saveContext(created.getId(), MovementSnapshot.unavailable(),
+                snapshot(WeatherCondition.RAIN, 11.0));
+
+        // What a session that loses network halfway writes on its next checkpoint.
+        saveContext(created.getId(),
+                new MovementSnapshot(MovementState.MOVING, 0L, 60_000L), null);
+
+        SessionEntity stored = sessionDao.findById(created.getId());
+        assertEquals("a walk that loses network must not lose the weather it already had",
+                WeatherCondition.RAIN.name(), stored.weatherCondition);
+        assertEquals("the movement totals are still updated",
+                60_000L, stored.movementMovingMillis);
+    }
+
+    @Test
+    public void aSessionWithNoRecordedWeatherKeepsANullAreaKey() {
+        SessionSummary created = create();
+
+        saveContext(created.getId(), MovementSnapshot.unavailable(), null);
+
+        assertNull("a null area key is how 'no weather was recorded' is spelled",
+                sessionDao.findById(created.getId()).weatherAreaKey);
+    }
+
+    @Test
+    public void contextForASessionThatWasDiscardedIsSilentlyDropped() {
+        SessionSummary created = create();
+        discard(created.getId());
+
+        Result<Void> result = new Result<>();
+        store.saveSessionContext(created.getId(), MovementSnapshot.unavailable(),
+                snapshot(WeatherCondition.CLEAR, 20.0), result);
+
+        assertTrue("a capture that lands after a discard is not an error", result.succeeded());
+        assertEquals("and must not resurrect the walk the user threw away", 0, sessionDao.size());
+    }
+
+    @Test
+    public void aFailedContextWriteIsReportedRatherThanSwallowed() {
+        SessionSummary created = create();
+        sessionDao.failWrites = new IllegalStateException("disk full");
+
+        Result<Void> result = new Result<>();
+        store.saveSessionContext(created.getId(), MovementSnapshot.unavailable(), null, result);
+
+        assertTrue("the caller decides this is harmless; the store still reports it",
+                result.failed());
+    }
+
+    @Test
+    public void anInterruptedSessionStaysLabelledInterruptedAfterItIsFinished() {
+        SessionSummary created = create();
+
+        checkpoint(new SessionSummary(created.getId(), SessionState.PAUSED,
+                PauseReason.PROCESS_INTERRUPTED, created.getStartWallClockMillis(),
+                created.getActiveDurationMillis(), created.getSegment()));
+        finish(created);
+
+        SessionEntity stored = sessionDao.findById(created.getId());
+        assertNull("finishing clears the pause reason", stored.pauseReason);
+        assertTrue("which is exactly why the label has to be stored separately",
+                stored.interrupted);
+    }
+
+    @Test
+    public void aSessionThatWasNeverInterruptedIsNotLabelled() {
+        SessionSummary created = create();
+
+        checkpoint(created);
+        finish(created);
+
+        assertFalse(sessionDao.findById(created.getId()).interrupted);
+    }
+
+    @Test
+    public void aPauseFromTheAppGoingAwayIsNotAnInterruption() {
+        SessionSummary created = create();
+
+        checkpoint(new SessionSummary(created.getId(), SessionState.PAUSED,
+                PauseReason.APP_NOT_VISIBLE, created.getStartWallClockMillis(),
+                created.getActiveDurationMillis(), created.getSegment()));
+
+        assertFalse("backgrounding the app is not the process dying under the user",
+                sessionDao.findById(created.getId()).interrupted);
+    }
+
+    private void saveContext(String sessionId, MovementSnapshot movement,
+                             WeatherSnapshot weather) {
+        Result<Void> result = new Result<>();
+        store.saveSessionContext(sessionId, movement, weather, result);
+        assertTrue(result.succeeded());
+    }
+
+    private static WeatherSnapshot snapshot(WeatherCondition condition, double celsius) {
+        return new WeatherSnapshot("-37.80,144.95", condition, celsius,
+                1_700_000_000_000L, 1_700_000_001_000L, WeatherSnapshot.Provenance.NETWORK);
+    }
 
     private SessionSummary create() {
         Result<SessionSummary> result = new Result<>();
