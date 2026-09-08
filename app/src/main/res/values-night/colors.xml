@@ -10,11 +10,12 @@
   light on a night ground.
 -->
 <resources>
-    <color name="story_ground">#0B111C</color>
-    <color name="story_surface">#101827</color>
-    <color name="story_surface_sunk">#0E1626</color>
-    <color name="story_hairline">#182335</color>
-    <color name="story_outline">#1E2B3F</color>
+    <color name="story_ground">#0A101A</color>
+    <color name="story_surface">#141E2E</color>
+    <color name="story_surface_sunk">#151F2E</color>
+    <color name="story_hairline">#1B2637</color>
+    <color name="story_outline">#22304A</color>
+    <color name="story_chip">#18222F</color>
 
     <color name="story_ink">#EEF1F6</color>
     <color name="story_ink_pressed">#FFFFFFFF</color>

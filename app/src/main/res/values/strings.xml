@@ -110,6 +110,7 @@
     <!-- Attraction detail and confirmation -->
     <string name="detail_start_exploration">Start exploration</string>
     <string name="detail_save">Save place</string>
+    <string name="detail_pill_locked">Story locked</string>
     <string name="detail_story_locked">This place keeps its story until you get there. Walk over and it unlocks.</string>
     <string name="detail_unsave">Remove from saved</string>
     <string name="detail_save_failed">Could not update your saved places. Try again.</string>

@@ -17,11 +17,13 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Daylight ground -->
-    <color name="story_ground">#FCFBF9</color>
+    <color name="story_ground">#FDFCFA</color>
     <color name="story_surface">#FFFFFFFF</color>
-    <color name="story_surface_sunk">#F5F2EA</color>
-    <color name="story_hairline">#EAE7DF</color>
-    <color name="story_outline">#E3E1DB</color>
+    <color name="story_surface_sunk">#F2EEE5</color>
+    <color name="story_hairline">#EAE6DC</color>
+    <color name="story_outline">#E2DDD2</color>
+    <!-- Filled metadata pills: a category, a distance, a count. -->
+    <color name="story_chip">#F0ECE2</color>
 
     <!-- Ink: headings and every primary action -->
     <color name="story_ink">#14181F</color>

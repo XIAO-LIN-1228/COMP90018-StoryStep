@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    A list row, not a card. The rule above each row separates without claiming the row
-    is a floating object, which is what let one radius and one shadow flatten the whole
-    page. Distance sits on the trailing edge in tabular figures so the column reads down
-    the list.
+    A place, as a row: a large rounded thumbnail, the name in the display face, the
+    facts as filled pills, then the description. No divider - the white sheet under
+    the list already separates it from the page, and rules between rows only added
+    noise once the sheet arrived.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,81 +11,75 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="?attr/selectableItemBackground"
-    android:orientation="vertical">
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/page_horizontal_margin"
+    android:paddingTop="@dimen/space_16"
+    android:paddingEnd="@dimen/space_8"
+    android:paddingBottom="@dimen/space_16">
 
-    <View style="@style/Widget.StoryStep.Divider" />
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/attraction_image"
+        android:layout_width="@dimen/row_thumb_size"
+        android:layout_height="@dimen/row_thumb_size"
+        android:background="@drawable/bg_thumb_placeholder"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:minHeight="@dimen/minimum_touch_target"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/page_horizontal_margin"
-        android:paddingTop="@dimen/row_vertical_padding"
-        android:paddingEnd="@dimen/space_8"
-        android:paddingBottom="@dimen/row_vertical_padding">
+        android:layout_marginStart="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/attraction_image"
-            android:layout_width="@dimen/row_thumb_size"
-            android:layout_height="@dimen/row_thumb_size"
-            android:background="@drawable/bg_thumb_placeholder"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
+        <TextView
+            android:id="@+id/attraction_name"
+            style="@style/TextAppearance.StoryStep.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_12"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_marginTop="@dimen/space_8"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/attraction_name"
-                style="@style/TextAppearance.StoryStep.Title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1" />
+                android:id="@+id/attraction_distance"
+                style="@style/Widget.StoryStep.Pill"
+                android:textColor="@color/story_ink" />
 
             <TextView
                 android:id="@+id/attraction_category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
+                style="@style/Widget.StoryStep.Pill"
+                android:layout_marginStart="6dp"
                 android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="@style/TextAppearance.StoryStep.Label" />
-
-            <!-- Why this place is being suggested; hidden until there is a reason to give. -->
-            <TextView
-                android:id="@+id/attraction_reason"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@color/story_ink_3" />
+                android:maxLines="1" />
         </LinearLayout>
 
+        <!-- Why this place is being suggested; hidden until there is a reason to give. -->
         <TextView
-            android:id="@+id/attraction_distance"
-            style="@style/TextAppearance.StoryStep.Metric"
-            android:layout_width="wrap_content"
+            android:id="@+id/attraction_reason"
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/space_8" />
-
-        <ImageButton
-            android:id="@+id/attraction_save_button"
-            android:layout_width="@dimen/minimum_touch_target"
-            android:layout_height="@dimen/minimum_touch_target"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/detail_save"
-            android:padding="12dp"
-            android:src="@drawable/ic_bookmark_outline"
-            app:tint="@color/story_ink_3" />
+            android:layout_marginTop="@dimen/space_8"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textColor="@color/story_ink_3" />
     </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/attraction_save_button"
+        android:layout_width="@dimen/minimum_touch_target"
+        android:layout_height="@dimen/minimum_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/detail_save"
+        android:padding="12dp"
+        android:src="@drawable/ic_bookmark_outline"
+        app:tint="@color/story_ink_3" />
 </LinearLayout>
