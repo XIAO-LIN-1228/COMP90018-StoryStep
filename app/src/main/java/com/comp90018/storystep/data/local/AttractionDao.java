@@ -36,6 +36,32 @@ public interface AttractionDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     void insertMissing(List<AttractionEntity> attractions);
 
+    /**
+     * Removes every row that came from a provider, leaving the bundled set untouched.
+     *
+     * <p>Bounded twice over, and both bounds matter.
+     *
+     * <p>By provenance, because the seed records are the only content guaranteed to exist offline
+     * and a place the user saved is still resolved through this table by the detail screen — a
+     * refresh that cleared everything would take working content away to make room for new
+     * content.
+     *
+     * <p>By position, because a refresh covers one area and the cache holds several. Deleting
+     * every provider row would empty the areas the user walked through earlier while their
+     * {@code attraction_areas} entries still claimed to be fetched, so those areas would answer
+     * from the seed set alone and call it fresh. The caller passes a box lying entirely inside the
+     * circle it just requested, so everything removed here is certainly re-inserted if it still
+     * exists.
+     */
+    @Query("DELETE FROM attractions WHERE provenance != :seedProvenance "
+            + "AND latitude BETWEEN :minLatitude AND :maxLatitude "
+            + "AND longitude BETWEEN :minLongitude AND :maxLongitude")
+    int deleteProviderRowsWithin(String seedProvenance,
+                                 double minLatitude,
+                                 double maxLatitude,
+                                 double minLongitude,
+                                 double maxLongitude);
+
     @Query("SELECT COUNT(*) FROM attractions")
     int count();
 

@@ -16,6 +16,7 @@ import com.comp90018.storystep.data.repository.TestSavedAttractions;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.repository.HistoryRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
@@ -36,8 +37,8 @@ public class PrivacyDataViewModelTest {
     @Rule
     public InstantTaskExecutorRule instantTaskExecutorRule = new InstantTaskExecutorRule();
 
-    private static final Attraction MUSEUM = new Attraction("museum", "Melbourne Museum",
-            AttractionCategory.MUSEUM, "Natural history and culture.", true,
+    private static final Attraction MUSEUM = Attraction.seeded("museum", "Melbourne Museum",
+            AttractionCategory.MUSEUM, "Natural history and culture.", IndoorClassification.INDOOR,
             new GeoPoint(-37.80320, 144.97170));
 
     private FakeSavedAttractionDao savedDao;

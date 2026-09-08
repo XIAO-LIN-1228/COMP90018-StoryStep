@@ -114,7 +114,9 @@ public class AttractionAdapter
             name.setText(item.getName());
             category.setText(categoryLabel);
             distance.setText(distanceLabel);
-            reason.setText(AttractionArtwork.recommendationFor(item.getId()));
+            String recommendation = AttractionArtwork.recommendationFor(item.getId());
+            reason.setText(recommendation == null ? "" : recommendation);
+            reason.setVisibility(recommendation == null ? View.GONE : View.VISIBLE);
             image.setImageResource(AttractionArtwork.drawableFor(item.getId()));
             itemView.setContentDescription(resources.getString(
                     R.string.attraction_item_description,

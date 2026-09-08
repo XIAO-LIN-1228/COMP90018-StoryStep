@@ -13,6 +13,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,11 +32,13 @@ import java.util.List;
 @RunWith(AndroidJUnit4.class)
 public class SavedAttractionDaoTest {
 
+    private static final long FETCHED_AT = 1_700_000_000_000L;
+
     private StoryStepDatabase database;
     private SavedAttractionDao dao;
 
     private static Attraction attraction(String id, String name) {
-        return new Attraction(id, name, AttractionCategory.MUSEUM, "Description", true,
+        return Attraction.seeded(id, name, AttractionCategory.MUSEUM, "Description", IndoorClassification.INDOOR,
                 new GeoPoint(-37.79750, 144.96400));
     }
 
@@ -115,7 +118,8 @@ public class SavedAttractionDaoTest {
     @Test
     public void clearingTheAttractionCacheDoesNotUnsaveAnything() {
         database.attractionDao().upsertAll(LocalAttractionMapper.toEntities(
-                java.util.Collections.singletonList(attraction("museum", "Melbourne Museum"))));
+                java.util.Collections.singletonList(attraction("museum", "Melbourne Museum")),
+                FETCHED_AT));
         dao.insertIgnoring(LocalSavedAttractionMapper.toEntity(
                 attraction("museum", "Melbourne Museum"), 1_000L));
 

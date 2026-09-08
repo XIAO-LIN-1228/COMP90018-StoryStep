@@ -14,6 +14,7 @@ import com.comp90018.storystep.data.repository.InMemorySessionStore;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -40,12 +41,12 @@ public class ExplorationViewModelArrivalTest {
 
     private static final GeoPoint TARGET_POSITION = new GeoPoint(-37.79810, 144.95910);
 
-    private static final Attraction TARGET = new Attraction(
+    private static final Attraction TARGET = Attraction.seeded(
             "old-arts",
             "Old Arts Building",
             AttractionCategory.UNIVERSITY_LANDMARK,
             "The 1924 clocktower building.",
-            false,
+            IndoorClassification.OUTDOOR,
             TARGET_POSITION);
 
     private FakeClock clock;

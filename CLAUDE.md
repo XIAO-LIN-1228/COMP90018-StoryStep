@@ -12,25 +12,34 @@ journey, saved and profile/recovery screens. Nearby discovery is integrated with
 Android location adapter, permission recovery and quality-aware samples. A process-wide session
 coordinator owns the foreground location, accelerometer and magnetometer subscriptions and
 implements start, pause, resume, finish and discard, with movement-state estimation, true-north
-heading and directional guidance. Room is wired for runtime data: cached attractions, sessions,
+heading and directional guidance. Room is wired for runtime data: cached attractions, the record of which
+areas have been fetched, sessions,
 sampled route points, visits, saved attractions and cached weather live in `storystep.db` at
-schema version 5, and
+schema version 6, and
 an unfinished session is restored as paused on the next launch. Arrival detection works: a
 sustained, credible stay at the selected destination records exactly one visit and offers its story
 on the exploration dashboard. Saved attractions are durable: a place is kept as a self-contained
 copy in a table with no foreign key onto the attraction cache, and one process-scoped repository
-keeps the detail screen, the nearby rows and the saved list in agreement. Weather is real and is the app's
-first and only network traffic: Open-Meteo's current-conditions endpoint behind a local cache,
+keeps the detail screen, the nearby rows and the saved list in agreement. Weather is real: Open-Meteo's current-conditions endpoint behind a local cache,
 keyed by a coarse area grid rather than by position, cache-first with per-area
 request coalescing, served stale-and-labelled when a refresh fails and reported as offline when
-nothing is cached. The weather a session was walked in, its movement totals and whether it was ever
+nothing is cached. Attractions are real too, and follow that same shape: the OpenStreetMap Overpass
+API supplies places by radius, `OverpassAttractionSource` is the only class on a socket and types
+every failure, `RemoteAttractionMapper` validates and deduplicates before anything reaches the
+domain, and `CachedAttractionRepository` fronts it with a 24-hour per-area cache. The request is a
+POST carrying a 0.01-degree grid-cell centre rather than the user's position, and an
+`attraction_areas` table keeps a legitimately empty area distinguishable from one never fetched. The
+indoor classification is tri-state (`IndoorClassification`), because a real provider frequently says
+nothing, and the ODbL attribution is visible wherever fetched places are shown. The weather a session was walked in, its movement totals and whether it was ever
 interrupted are copied onto the session row at schema version 5, which is what lets history describe
 a walk without the network or the attraction cache. Journey history is real: a `HistoryRepository`
 over the same session tables backs the list and detail screens, the route is drawn as a segmented
 sketch that never bridges the gaps between collection spans, and per-session and clear-all deletion
 remove exactly the route points and visits the session owns while leaving saved places untouched.
-The attraction path is still seed data — no remote attraction service is wired, and contextual ranking has not
-started. Instrumented tests have run on an emulator (API 36) but never on a physical device, and
+The five bundled seed places remain alongside the fetched ones: they are the only content
+guaranteed at a cold offline start, and they carry written stories, which OpenStreetMap almost never
+supplies. Contextual ranking (REQ-21) has not started, and neither has automatic retry/backoff
+(REQ-20.2) on either network path. Instrumented tests have run on an emulator (API 36) but never on a physical device, and
 never on API 26 or 31+, so every physical acceptance case is still outstanding.
 `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
@@ -127,10 +136,10 @@ The package layout under `com.comp90018.storystep` realises that:
 | `domain.model` | Attraction, journey and immutable location models | none |
 | `domain.geo` | Distance/bearing maths and location-quality policies | none |
 | `domain.arrival` | Arrival thresholds and the sustained-stay detector | none |
-| `domain.weather` | Area grid, freshness policy and the weather result type | none |
+| `domain.weather` / `domain.attraction` | Area grids, freshness policies and the result types for each cached network path | none |
 | `domain.repository` | Attraction/journey/session contracts and `RepositoryCallback` | none |
 | `data.local` | Room entities, DAOs, database, migrations, mappers, `Transactions` | Room |
-| `data.remote` | Retrofit services, DTOs, mappers, `ApiClientFactory`; only the weather path is called | Retrofit/OkHttp |
+| `data.remote` | Retrofit services, DTOs, mappers, `ApiClientFactory`, and the two narrow `WeatherSource`/`AttractionSource` seams that keep caching policy testable without a socket | Retrofit/OkHttp |
 | `data.repository` | Room attraction and session stores; in-memory equivalents kept as test fakes | none |
 | `platform.location` | Location contracts, access policy and foreground Android adapter | Android in adapter only |
 | `platform.sensor` / `platform.connectivity` | Device-capability interfaces plus their Android adapters | interfaces are framework-free |

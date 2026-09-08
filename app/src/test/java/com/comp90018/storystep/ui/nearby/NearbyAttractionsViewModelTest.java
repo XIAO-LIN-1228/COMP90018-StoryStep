@@ -15,8 +15,10 @@ import com.comp90018.storystep.data.repository.TestSavedAttractions;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
@@ -54,8 +56,8 @@ public class NearbyAttractionsViewModelTest {
     private static final long START_MONOTONIC = 1_000L;
 
     private static Attraction attraction(String id, double latitude, double longitude) {
-        return new Attraction(id, "Name " + id, AttractionCategory.PARK, "Description",
-                false, new GeoPoint(latitude, longitude));
+        return Attraction.seeded(id, "Name " + id, AttractionCategory.PARK, "Description",
+                IndoorClassification.OUTDOOR, new GeoPoint(latitude, longitude));
     }
 
     /** A point the given number of metres due north of {@link #ORIGIN}. */
@@ -452,7 +454,7 @@ public class NearbyAttractionsViewModelTest {
     private static class FailingRepository implements AttractionRepository {
         @Override
         public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
-                                          RepositoryCallback<List<Attraction>> callback) {
+                                          RepositoryCallback<AttractionResult> callback) {
             callback.onError(new IOException("offline"));
         }
 
@@ -477,9 +479,9 @@ public class NearbyAttractionsViewModelTest {
 
         @Override
         public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
-                                          RepositoryCallback<List<Attraction>> callback) {
+                                          RepositoryCallback<AttractionResult> callback) {
             nearbyCallCount++;
-            callback.onSuccess(results);
+            callback.onSuccess(AttractionResult.fresh(results));
         }
 
         @Override
@@ -494,12 +496,12 @@ public class NearbyAttractionsViewModelTest {
 
         @Override
         public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
-                                          RepositoryCallback<List<Attraction>> callback) {
+                                          RepositoryCallback<AttractionResult> callback) {
             if (failing) {
                 callback.onError(new IOException("offline"));
             } else {
-                callback.onSuccess(Collections.singletonList(
-                        attraction("close", -37.79640, 144.96150)));
+                callback.onSuccess(AttractionResult.fresh(Collections.singletonList(
+                        attraction("close", -37.79640, 144.96150))));
             }
         }
 
@@ -512,11 +514,11 @@ public class NearbyAttractionsViewModelTest {
 
     /** Holds every callback so a test can answer requests out of order. */
     private static class DeferredRepository implements AttractionRepository {
-        private final List<RepositoryCallback<List<Attraction>>> pending = new ArrayList<>();
+        private final List<RepositoryCallback<AttractionResult>> pending = new ArrayList<>();
 
         @Override
         public void loadNearbyAttractions(GeoPoint origin, double radiusMeters,
-                                          RepositoryCallback<List<Attraction>> callback) {
+                                          RepositoryCallback<AttractionResult> callback) {
             pending.add(callback);
         }
 
@@ -527,7 +529,7 @@ public class NearbyAttractionsViewModelTest {
         }
 
         void complete(int index, List<Attraction> results) {
-            pending.get(index).onSuccess(results);
+            pending.get(index).onSuccess(AttractionResult.fresh(results));
         }
 
         void fail(int index, Throwable error) {

@@ -16,6 +16,7 @@ import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
@@ -42,9 +43,9 @@ public class ExplorationCoordinatorDurabilityTest {
 
     private static final GeoPoint ORIGIN = new GeoPoint(-37.79630, 144.96140);
 
-    private static final Attraction OLD_ARTS = new Attraction(
+    private static final Attraction OLD_ARTS = Attraction.seeded(
             "old-arts", "Old Arts Building", AttractionCategory.UNIVERSITY_LANDMARK,
-            "The 1924 clocktower building.", false, new GeoPoint(-37.79810, 144.95910));
+            "The 1924 clocktower building.", IndoorClassification.OUTDOOR, new GeoPoint(-37.79810, 144.95910));
 
     private FakeClock clock;
     private FakeSessionDao sessionDao;

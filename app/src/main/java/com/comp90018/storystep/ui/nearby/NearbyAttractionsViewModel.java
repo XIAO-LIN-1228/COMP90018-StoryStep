@@ -5,13 +5,17 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.domain.attraction.AttractionFreshness;
 import com.comp90018.storystep.domain.geo.GeoCalculator;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionProvenance;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
+import com.comp90018.storystep.domain.repository.AttractionUnavailableException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.platform.location.LocationAccess;
@@ -19,6 +23,7 @@ import com.comp90018.storystep.platform.location.LocationSource;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +83,16 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     /** Retained so distances can be recomputed without another query. */
     private List<Attraction> loadedAttractions = Collections.emptyList();
+
+    /**
+     * How current {@link #loadedAttractions} is.
+     *
+     * <p>Held alongside the list because the list is republished without being reloaded — every
+     * time the user moves less than the re-query threshold, distances are recomputed from the same
+     * records. Recomputing a distance does not make stored content current, so the label has to
+     * survive that republish rather than being re-derived as fresh.
+     */
+    private AttractionFreshness loadedFreshness = AttractionFreshness.FRESH;
 
     /**
      * Incremented for every query. A callback carrying an older value is discarded, so a slow
@@ -412,14 +427,15 @@ public class NearbyAttractionsViewModel extends ViewModel
         lastQueryOrigin = origin;
         uiState.setValue(NearbyUiState.loading(originLabel, sessionPhase));
         repository.loadNearbyAttractions(origin, radiusMeters,
-                new RepositoryCallback<List<Attraction>>() {
+                new RepositoryCallback<AttractionResult>() {
                     @Override
-                    public void onSuccess(List<Attraction> attractions) {
+                    public void onSuccess(AttractionResult result) {
                         if (generation != requestGeneration) {
                             return;
                         }
-                        loadedAttractions = attractions;
-                        publishContent(attractions);
+                        loadedAttractions = result.getAttractions();
+                        loadedFreshness = result.getFreshness();
+                        publishContent(loadedAttractions);
                     }
 
                     @Override
@@ -427,14 +443,36 @@ public class NearbyAttractionsViewModel extends ViewModel
                         if (generation != requestGeneration) {
                             return;
                         }
-                        uiState.setValue(NearbyUiState.error(originLabel, sessionPhase));
+                        uiState.setValue(NearbyUiState.error(
+                                originLabel, sessionPhase, reasonOf(error)));
                     }
                 });
     }
 
+    /**
+     * The provider outcome behind a failure, or {@code null} when it was not one.
+     *
+     * <p>An error this app caused — a malformed request built here, say — is deliberately left
+     * without a reason rather than being labelled as a network problem the user could act on.
+     */
+    private static AttractionUnavailableException.Reason reasonOf(Throwable error) {
+        return error instanceof AttractionUnavailableException
+                ? ((AttractionUnavailableException) error).getReason()
+                : null;
+    }
+
     private void publishContent(List<Attraction> attractions) {
-        uiState.setValue(
-                NearbyUiState.content(originLabel, sessionPhase, toItems(attractions)));
+        uiState.setValue(NearbyUiState.content(originLabel, sessionPhase, toItems(attractions),
+                loadedFreshness, provenancesOf(attractions)));
+    }
+
+    /** The sources on screen, so the view can credit each one its licence requires crediting. */
+    private static Set<AttractionProvenance> provenancesOf(List<Attraction> attractions) {
+        Set<AttractionProvenance> sources = EnumSet.noneOf(AttractionProvenance.class);
+        for (Attraction attraction : attractions) {
+            sources.add(attraction.getProvenance());
+        }
+        return sources;
     }
 
     private void publishBlocked(NearbyUiState.Status status) {

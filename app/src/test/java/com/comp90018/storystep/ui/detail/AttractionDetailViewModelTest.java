@@ -20,6 +20,7 @@ import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.platform.location.FakeLocationSource;
 import com.comp90018.storystep.platform.location.LocationAccess;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +52,7 @@ public class AttractionDetailViewModelTest {
         assertEquals(AttractionDetailUiState.Status.CONTENT, state.getStatus());
         assertNotNull(state.getAttraction());
         assertEquals("Melbourne Museum", state.getAttraction().getName());
-        assertEquals(true, state.getAttraction().isIndoor());
+        assertEquals(IndoorClassification.INDOOR, state.getAttraction().getIndoor());
     }
 
     @Test

@@ -241,7 +241,7 @@ public class SessionStorageDaoTest {
         entity.destinationName = "Old Arts Building";
         entity.destinationCategory = "university_landmark";
         entity.destinationDescription = "The 1924 clocktower building.";
-        entity.destinationIndoor = false;
+        entity.destinationIndoor = "outdoor";
         entity.destinationLatitude = -37.79810;
         entity.destinationLongitude = 144.95910;
         return entity;
@@ -282,7 +282,7 @@ public class SessionStorageDaoTest {
         entity.name = "Old Arts Building";
         entity.category = "university_landmark";
         entity.description = "The 1924 clocktower building.";
-        entity.indoor = false;
+        entity.indoor = "outdoor";
         entity.latitude = -37.79810;
         entity.longitude = 144.95910;
         entity.provenance = AttractionEntity.PROVENANCE_SEED;
