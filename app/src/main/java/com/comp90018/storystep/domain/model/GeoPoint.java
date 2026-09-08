@@ -57,6 +57,7 @@ public final class GeoPoint {
 
     @Override
     public String toString() {
+
         return "GeoPoint{" + latitude + ", " + longitude + '}';
     }
 }

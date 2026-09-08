@@ -22,14 +22,36 @@ import retrofit2.converter.gson.GsonConverterFactory;
  * Builds the Retrofit stack for a caller-supplied base URL.
  *
  * <p>The base URL is supplied by the caller rather than fixed here, because the app talks to more
- * than one service and their roots are declared next to their contracts —
- * {@link WeatherApiService#BASE_URL} is the only one wired so far. Any service that needs a
- * credential must take it from {@code local.properties} through {@code BuildConfig}, never from a
- * literal in this file.
+ * than one service and their roots are declared next to their contracts:
+ * {@link WeatherApiService#BASE_URL} and {@link OverpassApiService#BASE_URL}. Neither provider
+ * needs a credential, which is why they were chosen. Any service that ever does must take it from
+ * {@code local.properties} through {@code BuildConfig}, never from a literal in this file.
  */
 public final class ApiClientFactory {
 
-    private static final long TIMEOUT_SECONDS = 15L;
+    /**
+     * Default read and connect timeout.
+     *
+     * <p>Fifteen seconds suits a provider that answers from a precomputed forecast grid. It does
+     * not suit every service this app talks to, which is why the timeout is per-client rather than
+     * a constant applied to all of them; see {@link #createOverpassService(boolean)}.
+     */
+    private static final long DEFAULT_TIMEOUT_SECONDS = 15L;
+
+    /**
+     * Overpass runs the query when it is asked, against a live database, and a busy instance takes
+     * appreciably longer than a lookup. Its own {@code [timeout:25]} setting has to elapse first
+     * so the server can report the overload itself; abandoning the call sooner would turn every
+     * one of those into a client-side timeout and lose the distinction.
+     */
+    private static final long OVERPASS_TIMEOUT_SECONDS = 30L;
+
+    /**
+     * Identifies this client to Overpass, whose usage policy asks for a contactable application
+     * name rather than an anonymous default. It is a constant: no user, device or install
+     * identifier goes into it.
+     */
+    private static final String USER_AGENT = "StoryStep/1.0 (COMP90018 student project)";
 
     private ApiClientFactory() {
         // Utility class.
@@ -40,19 +62,19 @@ public final class ApiClientFactory {
      * @param debug   when true, each call logs its method, host, path and status — never its query
      */
     public static Retrofit createRetrofit(String baseUrl, boolean debug) {
+        return createRetrofit(baseUrl, debug, DEFAULT_TIMEOUT_SECONDS);
+    }
+
+    public static Retrofit createRetrofit(String baseUrl, boolean debug, long timeoutSeconds) {
         if (baseUrl == null || baseUrl.isEmpty()) {
             throw new IllegalArgumentException("baseUrl must be provided by the caller");
         }
         Gson gson = new GsonBuilder().create();
         return new Retrofit.Builder()
                 .baseUrl(baseUrl)
-                .client(createHttpClient(debug))
+                .client(createHttpClient(debug, timeoutSeconds))
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
-    }
-
-    public static AttractionApiService createAttractionService(String baseUrl, boolean debug) {
-        return createRetrofit(baseUrl, debug).create(AttractionApiService.class);
     }
 
     /** The weather client. Its root is fixed by the provider, so callers do not choose one. */
@@ -60,14 +82,39 @@ public final class ApiClientFactory {
         return createRetrofit(WeatherApiService.BASE_URL, debug).create(WeatherApiService.class);
     }
 
-    private static OkHttpClient createHttpClient(boolean debug) {
+    /** The attraction client. Its root is fixed by the provider, so callers do not choose one. */
+    public static OverpassApiService createOverpassService(boolean debug) {
+        return createRetrofit(OverpassApiService.BASE_URL, debug, OVERPASS_TIMEOUT_SECONDS)
+                .create(OverpassApiService.class);
+    }
+
+    private static OkHttpClient createHttpClient(boolean debug, long timeoutSeconds) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
-                .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-                .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+                .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
+                .addInterceptor(new UserAgentInterceptor());
         if (debug) {
             builder.addInterceptor(new QuerylessLoggingInterceptor());
         }
         return builder.build();
+    }
+
+    /**
+     * Names this application on every request.
+     *
+     * <p>Overpass's usage policy asks clients to identify themselves so that a misbehaving one can
+     * be told rather than simply blocked. The value is a compile-time constant with nothing
+     * user-specific in it, so this adds an application name to the request and no more.
+     */
+    private static final class UserAgentInterceptor implements Interceptor {
+
+        @NonNull
+        @Override
+        public Response intercept(@NonNull Chain chain) throws IOException {
+            return chain.proceed(chain.request().newBuilder()
+                    .header("User-Agent", USER_AGENT)
+                    .build());
+        }
     }
 
     /**

@@ -1,6 +1,8 @@
 package com.comp90018.storystep.data.local;
 
 import com.comp90018.storystep.data.AttractionCategoryCodec;
+import com.comp90018.storystep.data.AttractionProvenanceCodec;
+import com.comp90018.storystep.data.IndoorClassificationCodec;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
@@ -31,10 +33,12 @@ public final class LocalSavedAttractionMapper {
         entity.name = attraction.getName();
         entity.category = AttractionCategoryCodec.toCode(attraction.getCategory());
         entity.description = attraction.getDescription();
-        entity.indoor = attraction.isIndoor();
+        entity.indoor = IndoorClassificationCodec.toCode(attraction.getIndoor());
         entity.latitude = attraction.getLocation().getLatitude();
         entity.longitude = attraction.getLocation().getLongitude();
         entity.savedAtMillis = savedAtMillis;
+        entity.provenance = AttractionProvenanceCodec.toCode(attraction.getProvenance());
+        entity.sourceRef = attraction.getSourceRef();
         return entity;
     }
 
@@ -44,8 +48,10 @@ public final class LocalSavedAttractionMapper {
                 entity.name == null ? "" : entity.name,
                 AttractionCategoryCodec.fromCode(entity.category, FALLBACK_CATEGORY),
                 entity.description == null ? "" : entity.description,
-                entity.indoor,
-                new GeoPoint(entity.latitude, entity.longitude));
+                IndoorClassificationCodec.fromCode(entity.indoor),
+                new GeoPoint(entity.latitude, entity.longitude),
+                AttractionProvenanceCodec.fromCode(entity.provenance),
+                entity.sourceRef);
         return new SavedAttraction(attraction, entity.savedAtMillis);
     }
 

@@ -13,6 +13,7 @@ import com.comp90018.storystep.data.local.FakeSessionDao;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.domain.model.RestoredSession;
 import com.comp90018.storystep.domain.model.RoutePoint;
@@ -45,9 +46,9 @@ import java.util.List;
  */
 public class RoomSessionStoreTest {
 
-    private static final Attraction OLD_ARTS = new Attraction(
+    private static final Attraction OLD_ARTS = Attraction.seeded(
             "old-arts", "Old Arts Building", AttractionCategory.UNIVERSITY_LANDMARK,
-            "The 1924 clocktower building.", false, new GeoPoint(-37.79810, 144.95910));
+            "The 1924 clocktower building.", IndoorClassification.OUTDOOR, new GeoPoint(-37.79810, 144.95910));
 
     private FakeClock clock;
     private FakeSessionDao sessionDao;

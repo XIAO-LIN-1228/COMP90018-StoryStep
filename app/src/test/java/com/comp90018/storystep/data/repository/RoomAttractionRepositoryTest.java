@@ -5,10 +5,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.data.local.AttractionEntity;
+import com.comp90018.storystep.data.local.DirectTransactions;
+import com.comp90018.storystep.data.local.FakeAttractionAreaDao;
 import com.comp90018.storystep.data.local.FakeAttractionDao;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.repository.AttractionNotFoundException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -33,21 +37,25 @@ public class RoomAttractionRepositoryTest {
 
     /** Two places about 250 m and 1.2 km from the origin, plus one well outside any test radius. */
     private static final List<Attraction> SEED = Arrays.asList(
-            new Attraction("near", "Near Place", AttractionCategory.PARK, "Close by.", false,
+            Attraction.seeded("near", "Near Place", AttractionCategory.PARK, "Close by.", IndoorClassification.OUTDOOR,
                     new GeoPoint(-37.79630, 144.96425)),
-            new Attraction("far", "Far Place", AttractionCategory.MUSEUM, "Further away.", true,
+            Attraction.seeded("far", "Far Place", AttractionCategory.MUSEUM, "Further away.", IndoorClassification.INDOOR,
                     new GeoPoint(-37.79630, 144.97500)),
-            new Attraction("distant", "Distant Place", AttractionCategory.HISTORICAL_BUILDING,
-                    "Another suburb.", true, new GeoPoint(-37.85000, 145.05000)));
+            Attraction.seeded("distant", "Distant Place", AttractionCategory.HISTORICAL_BUILDING,
+                    "Another suburb.", IndoorClassification.INDOOR, new GeoPoint(-37.85000, 145.05000)));
 
     private FakeAttractionDao dao;
+    private FakeAttractionAreaDao areaDao;
     private RoomAttractionRepository repository;
 
     @Before
     public void setUp() {
         dao = new FakeAttractionDao();
-        repository = new RoomAttractionRepository(dao, FakeClock.startingAt(1_000L),
-                Runnable::run, Runnable::run, SEED);
+        areaDao = new FakeAttractionAreaDao();
+        repository = new RoomAttractionRepository(
+                new AttractionCache(dao, areaDao, new DirectTransactions(),
+                        FakeClock.startingAt(1_000L), SEED),
+                Runnable::run, Runnable::run);
     }
 
     @Test
@@ -75,7 +83,9 @@ public class RoomAttractionRepositoryTest {
         loadNearby(3_000.0);
         // A second repository over the same rows is what the next process start looks like.
         RoomAttractionRepository relaunched = new RoomAttractionRepository(
-                dao, FakeClock.startingAt(99_000L), Runnable::run, Runnable::run, SEED);
+                new AttractionCache(dao, areaDao, new DirectTransactions(),
+                        FakeClock.startingAt(99_000L), SEED),
+                Runnable::run, Runnable::run);
 
         loadNearby(relaunched, 3_000.0);
 
@@ -108,7 +118,7 @@ public class RoomAttractionRepositoryTest {
         assertNotNull(loaded);
         assertEquals("Far Place", loaded.getName());
         assertEquals(AttractionCategory.MUSEUM, loaded.getCategory());
-        assertTrue(loaded.isIndoor());
+        assertEquals(IndoorClassification.INDOOR, loaded.getIndoor());
         assertEquals(144.97500, loaded.getLocation().getLongitude(), 1e-9);
     }
 
@@ -122,7 +132,7 @@ public class RoomAttractionRepositoryTest {
 
     @Test
     public void anInvalidRadiusIsRejectedInsteadOfReturningEverything() {
-        Result<List<Attraction>> result = new Result<>();
+        Result<AttractionResult> result = new Result<>();
         repository.loadNearbyAttractions(ORIGIN, 0.0, result);
 
         assertTrue(result.error instanceof IllegalArgumentException);
@@ -134,10 +144,10 @@ public class RoomAttractionRepositoryTest {
 
     private static List<Attraction> loadNearby(RoomAttractionRepository target,
                                                double radiusMeters) {
-        Result<List<Attraction>> result = new Result<>();
+        Result<AttractionResult> result = new Result<>();
         target.loadNearbyAttractions(ORIGIN, radiusMeters, result);
         assertTrue(result.succeeded());
-        return result.value;
+        return result.value.getAttractions();
     }
 
     private Attraction loadAttraction(String id) {

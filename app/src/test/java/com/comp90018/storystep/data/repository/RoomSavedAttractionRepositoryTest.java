@@ -10,6 +10,7 @@ import com.comp90018.storystep.data.local.SavedAttractionEntity;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.SavedAttraction;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
@@ -32,12 +33,12 @@ import java.util.Set;
  */
 public class RoomSavedAttractionRepositoryTest {
 
-    private static final Attraction MUSEUM = new Attraction("museum", "Melbourne Museum",
-            AttractionCategory.MUSEUM, "Natural history and culture.", true,
+    private static final Attraction MUSEUM = Attraction.seeded("museum", "Melbourne Museum",
+            AttractionCategory.MUSEUM, "Natural history and culture.", IndoorClassification.INDOOR,
             new GeoPoint(-37.80320, 144.97170));
 
-    private static final Attraction GARDENS = new Attraction("gardens", "Carlton Gardens",
-            AttractionCategory.PARK, "Heritage-listed gardens.", false,
+    private static final Attraction GARDENS = Attraction.seeded("gardens", "Carlton Gardens",
+            AttractionCategory.PARK, "Heritage-listed gardens.", IndoorClassification.OUTDOOR,
             new GeoPoint(-37.80500, 144.97100));
 
     private FakeSavedAttractionDao dao;
@@ -58,7 +59,9 @@ public class RoomSavedAttractionRepositoryTest {
         assertEquals("Melbourne Museum", stored.name);
         assertEquals("museum", stored.category);
         assertEquals("Natural history and culture.", stored.description);
-        assertTrue(stored.indoor);
+        assertEquals("indoor", stored.indoor);
+        assertEquals("the saved snapshot records its source for the credit it owes", "seed",
+                stored.provenance);
         assertEquals(-37.80320, stored.latitude, 1e-9);
         assertEquals(144.97170, stored.longitude, 1e-9);
         assertEquals("the clock supplies the saved time", 1_000L, stored.savedAtMillis);

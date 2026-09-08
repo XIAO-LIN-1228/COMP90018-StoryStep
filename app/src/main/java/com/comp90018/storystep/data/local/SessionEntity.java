@@ -85,14 +85,38 @@ public class SessionEntity {
     @ColumnInfo(name = "destination_description")
     public String destinationDescription;
 
+    /**
+     * Stable lower-case indoor code; see
+     * {@link com.comp90018.storystep.data.IndoorClassificationCodec}. Text rather than the boolean
+     * it was until schema 6, so a destination the provider never classified is not recorded as a
+     * claim that it is outdoors.
+     */
+    @Nullable
     @ColumnInfo(name = "destination_indoor")
-    public boolean destinationIndoor;
+    public String destinationIndoor;
 
     @ColumnInfo(name = "destination_latitude")
     public double destinationLatitude;
 
     @ColumnInfo(name = "destination_longitude")
     public double destinationLongitude;
+
+    /**
+     * Where the destination record came from; see
+     * {@link com.comp90018.storystep.data.AttractionProvenanceCodec}.
+     *
+     * <p>Part of the snapshot for the same reason the rest of it is: history has to stay readable
+     * after the attraction cache is refreshed or the place disappears from the provider, and a
+     * source that has to be credited has to still be nameable then.
+     */
+    @Nullable
+    @ColumnInfo(name = "destination_provenance")
+    public String destinationProvenance;
+
+    /** An optional reference into the source's wider data; see {@code AttractionEntity}. */
+    @Nullable
+    @ColumnInfo(name = "destination_source_ref")
+    public String destinationSourceRef;
 
     // ---- Recorded context -------------------------------------------------------------------
     //

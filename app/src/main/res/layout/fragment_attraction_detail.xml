@@ -120,6 +120,16 @@
                     android:lineSpacingExtra="3dp"
                     tools:text="A landmark of Gothic Revival architecture and university history." />
 
+                <TextView
+                    android:id="@+id/detail_attribution"
+                    style="@style/TextAppearance.StoryStep.Body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:alpha="0.7"
+                    android:textSize="12sp"
+                    tools:text="Place data © OpenStreetMap contributors" />
+
                 <com.google.android.material.card.MaterialCardView
                     style="@style/Widget.StoryStep.Card"
                     android:layout_width="match_parent"

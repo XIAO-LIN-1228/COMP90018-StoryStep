@@ -68,7 +68,7 @@ recorded as `FOUNDATION_ONLY` unless it is connected to the required production 
 | Paused-session recovery | I1-I2; REQ-02, REQ-15 | Recovery appears only for a real paused process session; Resume, Finish and Discard command the shared coordinator, and elapsed time/segment come from its session summary | Implement Room-backed restoration after process death and verify the full interruption matrix |
 | Arrival, story and memory | I4; REQ-12, REQ-13 | Complete clickable visual flow exists, including a preview-only arrival action | Replace preview with quality-aware arrival detection and exactly-once persisted visit/story delivery |
 | Journeys, summary and detail | I4; REQ-15, REQ-16 | List and detail read real finished sessions through `HistoryRepository`; segmented route sketch, movement/weather/interrupted labels, per-session and clear-all deletion, and story reopening addressed by session id | Re-run AT-16A/AT-16B on a physical device; `JourneySummaryFragment`'s own body is still prototype content apart from the journey id it now passes |
-| Saved | I3; REQ-17 | Durable `saved_attractions` table and process-scoped repository; detail, nearby rows and the saved list share one saved-id set; per-attraction toggle serialisation; Clear saved places wired, and REQ-16's clear-all is proved not to touch it | Re-run AT-17B once REQ-18 supplies a refreshable remote cache; fall back to the saved copy when the detail screen's cache lookup misses; make the saved search control real |
+| Saved | I3; REQ-17 | Durable `saved_attractions` table and process-scoped repository; detail, nearby rows and the saved list share one saved-id set; per-attraction toggle serialisation; Clear saved places wired, and REQ-16's clear-all is proved not to touch it; the snapshot carries its own indoor classification and provenance at schema 6 | Re-run AT-17B now that REQ-18 supplies a refreshable remote cache; fall back to the saved copy when the detail screen's cache lookup misses; make the saved search control real |
 | Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Real Open-Meteo observations on the nearby card and the exploration dashboard, cached per 0.05-degree area, refreshed after 30 min, served stale-and-labelled when a refresh fails and reported as offline when nothing is cached; the observation is now copied onto the session row at schema version 5 and shown, labelled by observation time, on the journey-detail screen; chips remain fixtures | Implement REQ-20.2 retry/backoff; add ranking/reasons (REQ-21/22) and a visible provider attribution |
 | Profile, capability recovery and privacy/data | NFR-03/04 and lifecycle support | Settings/recovery presentation and a dedicated Privacy & Data page exist; permissions open real system settings and destructive controls are confirmed prototype actions | Bind real permission/provider/session states and implement scoped history/saved deletion with backup-policy verification |
 
@@ -113,7 +113,7 @@ The defaults below make planning concrete. They are proposed product policies, n
 | ID | Decision and proposed default | Owner | Resolve before |
 |---|---|---|---|
 | D-01 | Replace M1-M5 with actual members; confirm dates, capacity and submission artifacts | M1/team | Iteration planning |
-| D-02 | Select attraction and weather services; approve licensing, caching, authentication, quotas and cost | M5 + M1 | REQ-18/19 production integration. **Weather half resolved 2026-09-05: Open-Meteo** — HTTPS, free for non-commercial use, no API key and no account, so no credential has to be kept out of Git and a reviewer can run the app with no setup. Rejected: OpenWeatherMap, which needs a registered key the rest of the team would not hold. Attraction half still open for REQ-18 |
+| D-02 | Select attraction and weather services; approve licensing, caching, authentication, quotas and cost | M5 + M1 | REQ-18/19 production integration. **Weather half resolved 2026-09-05: Open-Meteo** — HTTPS, free for non-commercial use, no API key and no account, so no credential has to be kept out of Git and a reviewer can run the app with no setup. Rejected: OpenWeatherMap, which needs a registered key the rest of the team would not hold. **Attraction half resolved 2026-09-07: OpenStreetMap Overpass API** — HTTPS, no key, no account, and ODbL explicitly permits the caching REQ-20's offline behaviour depends on. Rejected: Google Places and Foursquare, both of which need a key bound to a billing account; Wikipedia GeoSearch as the *primary* source, because its results are articles near a point rather than attractions, with no category or indoor field to map — kept as the intended enrichment follow-up. Full note: [D-02 attraction provider](decisions/D-02-attraction-provider.md) |
 | D-03 | Obtain the official rubric; verify sensor-count interpretation, cloud expectations, report/demo and AI-use disclosure rules | M1/team | Claiming assessment compliance |
 | D-04 | Foreground policy: background/lock pauses collection; returning requires explicit Resume; rotation does not create a new session | M1 + M4 | REQ-02 |
 | D-05 | Track visits for the selected destination; do not unlock every nearby attraction simultaneously | M1 + M2 | REQ-12 |
@@ -524,6 +524,17 @@ Owner M5; reviewer M4; I3; L; depends SET-02, REQ-14, NFR-04 network safeguards.
 - REQ-18.2: Wire real configuration and HTTPS requests through repository I/O; include the normal Internet permission. Do not invent an endpoint matching the scaffold.
 - REQ-18.3: Validate required IDs/coordinates, preserve unknown optional fields, deduplicate records and distinguish malformed responses from a valid empty result.
 - REQ-18.4: Test success, invalid/missing fields, non-finite coordinates, pagination, HTTP errors and cancellation with a local mock service; separately capture sanitized real-service evidence.
+
+Implemented 2026-09-07 against **OpenStreetMap Overpass** (D-02 resolved; see
+[the decision note](decisions/D-02-attraction-provider.md)). `OverpassQueryBuilder` composes the
+Overpass QL, `OverpassAttractionSource` is the only class touching a socket and types every failure,
+and `RemoteAttractionMapper` validates, classifies and deduplicates before anything reaches the
+domain. `CachedAttractionRepository` puts the Room cache in front of it with the same cache-first,
+coalescing, stale-fallback and atomic-replace policies as the weather path, plus an
+`attraction_areas` table so a legitimately empty area is distinguishable from one never fetched.
+Schema 6 makes the indoor classification tri-state wherever a place is stored — the cache, the saved
+snapshot and the session destination — which is REQ-14.3's deferred unknown-classification work.
+REQ-20.2 retry/backoff is deliberately **not** included; it remains open for both network paths.
 
 Code areas: `data.remote`, `data.repository`, `ApiClientFactory`, manifest and safe build configuration.
 

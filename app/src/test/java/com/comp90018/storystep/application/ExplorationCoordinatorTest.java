@@ -11,6 +11,7 @@ import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.PauseReason;
@@ -598,14 +599,14 @@ public class ExplorationCoordinatorTest {
     }
 
     private static Attraction museum() {
-        return new Attraction("melbourne-museum", "Melbourne Museum",
-                AttractionCategory.MUSEUM, "A museum.", true,
+        return Attraction.seeded("melbourne-museum", "Melbourne Museum",
+                AttractionCategory.MUSEUM, "A museum.", IndoorClassification.INDOOR,
                 new GeoPoint(-37.80330, 144.97160));
     }
 
     private static Attraction library() {
-        return new Attraction("state-library", "State Library Victoria",
-                AttractionCategory.MUSEUM, "A library.", true,
+        return Attraction.seeded("state-library", "State Library Victoria",
+                AttractionCategory.MUSEUM, "A library.", IndoorClassification.INDOOR,
                 new GeoPoint(-37.80980, 144.96490));
     }
 

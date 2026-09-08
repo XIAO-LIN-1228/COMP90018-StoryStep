@@ -1,21 +1,19 @@
 package com.comp90018.storystep.data.repository;
 
-import com.comp90018.storystep.data.local.AttractionDao;
-import com.comp90018.storystep.data.local.AttractionEntity;
-import com.comp90018.storystep.data.local.LocalAttractionMapper;
+import com.comp90018.storystep.domain.attraction.AttractionFreshness;
 import com.comp90018.storystep.domain.geo.NearbyAttractions;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionNotFoundException;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
-import com.comp90018.storystep.domain.time.Clock;
 
 import java.util.List;
 import java.util.concurrent.Executor;
 
 /**
- * Durable {@link AttractionRepository} reading the Room cache.
+ * A local-only {@link AttractionRepository}: whatever is stored, and nothing from the network.
  *
  * <p>Queries run on the I/O executor and answer on the main executor, matching the
  * {@code RepositoryCallback} contract. Filtering and ordering are delegated to
@@ -23,59 +21,40 @@ import java.util.concurrent.Executor;
  * distance, which SQLite cannot compute, and approximating it with a bounding box would change
  * which places appear at the boundary the nearby tests pin down.
  *
- * <p>The remote source of REQ-18 sits in front of this cache later; nothing above this interface
- * changes when it does.
+ * <p>Results are always reported {@link AttractionFreshness#FRESH}. That is honest for what this
+ * class is — it makes no claim about a provider, so there is no provider answer for it to be
+ * stale relative to. The production wiring is {@link CachedAttractionRepository}, which does make
+ * that claim and labels it; this one remains for tests and for an assembly that deliberately wants
+ * no network.
  */
 public final class RoomAttractionRepository implements AttractionRepository {
 
-    private final AttractionDao dao;
-    private final Clock clock;
+    private final AttractionCache cache;
     private final Executor ioExecutor;
     private final Executor mainExecutor;
-    private final List<Attraction> seed;
 
-    /** Set once the seed has been confirmed present, so later queries skip the check. */
-    private volatile boolean seeded;
-
-    public RoomAttractionRepository(AttractionDao dao,
-                                    Clock clock,
+    public RoomAttractionRepository(AttractionCache cache,
                                     Executor ioExecutor,
                                     Executor mainExecutor) {
-        this(dao, clock, ioExecutor, mainExecutor, SampleAttractions.get());
-    }
-
-    public RoomAttractionRepository(AttractionDao dao,
-                                    Clock clock,
-                                    Executor ioExecutor,
-                                    Executor mainExecutor,
-                                    List<Attraction> seed) {
-        this.dao = requireNonNull(dao, "dao");
-        this.clock = requireNonNull(clock, "clock");
+        this.cache = requireNonNull(cache, "cache");
         this.ioExecutor = requireNonNull(ioExecutor, "ioExecutor");
         this.mainExecutor = requireNonNull(mainExecutor, "mainExecutor");
-        this.seed = requireNonNull(seed, "seed");
     }
 
     @Override
     public void loadNearbyAttractions(GeoPoint origin,
                                       double radiusMeters,
-                                      RepositoryCallback<List<Attraction>> callback) {
+                                      RepositoryCallback<AttractionResult> callback) {
         if (callback == null) {
             throw new IllegalArgumentException("callback must not be null");
         }
-        ioExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ensureSeeded();
-                    List<Attraction> all =
-                            LocalAttractionMapper.toDomainList(dao.findAll());
-                    List<Attraction> nearby =
-                            NearbyAttractions.within(all, origin, radiusMeters);
-                    succeed(callback, nearby);
-                } catch (RuntimeException error) {
-                    fail(callback, error);
-                }
+        ioExecutor.execute(() -> {
+            try {
+                List<Attraction> nearby =
+                        NearbyAttractions.within(cache.readAll(), origin, radiusMeters);
+                succeed(callback, AttractionResult.fresh(nearby));
+            } catch (RuntimeException error) {
+                fail(callback, error);
             }
         });
     }
@@ -85,69 +64,26 @@ public final class RoomAttractionRepository implements AttractionRepository {
         if (callback == null) {
             throw new IllegalArgumentException("callback must not be null");
         }
-        ioExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ensureSeeded();
-                    AttractionEntity entity = dao.findById(attractionId);
-                    if (entity == null) {
-                        fail(callback, new AttractionNotFoundException(attractionId));
-                        return;
-                    }
-                    succeed(callback, LocalAttractionMapper.toDomain(entity));
-                } catch (RuntimeException error) {
-                    fail(callback, error);
+        ioExecutor.execute(() -> {
+            try {
+                Attraction attraction = cache.findById(attractionId);
+                if (attraction == null) {
+                    fail(callback, new AttractionNotFoundException(attractionId));
+                    return;
                 }
+                succeed(callback, attraction);
+            } catch (RuntimeException error) {
+                fail(callback, error);
             }
         });
-    }
-
-    /**
-     * Writes the bundled demonstration set once, on the I/O thread that is already running a query.
-     *
-     * <p>Idempotent twice over: the {@code seeded} flag skips the work within a process, and the
-     * insert ignores ids that already exist, so a relaunch — or two queries racing on the two I/O
-     * threads — cannot produce duplicate rows. Existing rows are never overwritten, because a row
-     * fetched from a real service must not be replaced by the bundled copy of the same place.
-     */
-    private void ensureSeeded() {
-        if (seeded) {
-            return;
-        }
-        synchronized (this) {
-            if (seeded) {
-                return;
-            }
-            if (dao.count() == 0) {
-                long now = clock.wallClockMillis();
-                List<AttractionEntity> rows = LocalAttractionMapper.toEntities(seed);
-                for (AttractionEntity row : rows) {
-                    row.provenance = AttractionEntity.PROVENANCE_SEED;
-                    row.fetchedAtMillis = now;
-                }
-                dao.insertMissing(rows);
-            }
-            seeded = true;
-        }
     }
 
     private <T> void succeed(RepositoryCallback<T> callback, T result) {
-        mainExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                callback.onSuccess(result);
-            }
-        });
+        mainExecutor.execute(() -> callback.onSuccess(result));
     }
 
     private <T> void fail(RepositoryCallback<T> callback, Throwable error) {
-        mainExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                callback.onError(error);
-            }
-        });
+        mainExecutor.execute(() -> callback.onError(error));
     }
 
     private static <T> T requireNonNull(T value, String name) {

@@ -13,7 +13,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
+import com.comp90018.storystep.domain.model.AttractionProvenance;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 
 import org.junit.After;
 import org.junit.Before;
@@ -28,12 +30,20 @@ import java.util.List;
 @RunWith(AndroidJUnit4.class)
 public class AttractionDaoTest {
 
+    private static final long FETCHED_AT = 1_700_000_000_000L;
+
     private StoryStepDatabase database;
     private AttractionDao dao;
 
     private static Attraction attraction(String id, String name) {
-        return new Attraction(id, name, AttractionCategory.MUSEUM, "Description", true,
-                new GeoPoint(-37.79750, 144.96400));
+        return Attraction.seeded(id, name, AttractionCategory.MUSEUM, "Description",
+                IndoorClassification.INDOOR, new GeoPoint(-37.79750, 144.96400));
+    }
+
+    private static Attraction fetched(String id, double latitude, double longitude) {
+        return new Attraction(id, "Fetched " + id, AttractionCategory.MUSEUM, "",
+                IndoorClassification.UNKNOWN, new GeoPoint(latitude, longitude),
+                AttractionProvenance.OPENSTREETMAP, null);
     }
 
     @Before
@@ -54,7 +64,7 @@ public class AttractionDaoTest {
     public void insertedAttractionsCanBeReadBack() {
         dao.upsertAll(LocalAttractionMapper.toEntities(Arrays.asList(
                 attraction("b-id", "Beta"),
-                attraction("a-id", "Alpha"))));
+                attraction("a-id", "Alpha")), FETCHED_AT));
 
         List<Attraction> stored = LocalAttractionMapper.toDomainList(dao.findAll());
 
@@ -70,9 +80,9 @@ public class AttractionDaoTest {
     @Test
     public void upsertReplacesAnExistingRow() {
         dao.upsertAll(Collections.singletonList(
-                LocalAttractionMapper.toEntity(attraction("a-id", "Original"))));
+                LocalAttractionMapper.toEntity(attraction("a-id", "Original"), FETCHED_AT)));
         dao.upsertAll(Collections.singletonList(
-                LocalAttractionMapper.toEntity(attraction("a-id", "Updated"))));
+                LocalAttractionMapper.toEntity(attraction("a-id", "Updated"), FETCHED_AT)));
 
         AttractionEntity stored = dao.findById("a-id");
 
@@ -84,10 +94,39 @@ public class AttractionDaoTest {
     @Test
     public void deleteAllClearsTheCache() {
         dao.upsertAll(Collections.singletonList(
-                LocalAttractionMapper.toEntity(attraction("a-id", "Alpha"))));
+                LocalAttractionMapper.toEntity(attraction("a-id", "Alpha"), FETCHED_AT)));
 
         dao.deleteAll();
 
         assertTrue(dao.findAll().isEmpty());
+    }
+
+    @Test
+    public void theScopedDeleteRemovesProviderRowsInTheBoxAndNothingElse() {
+        dao.upsertAll(LocalAttractionMapper.toEntities(Arrays.asList(
+                attraction("seeded", "Bundled Place"),
+                fetched("osm:node/inside", -37.79750, 144.96400),
+                fetched("osm:node/outside", -37.85000, 145.05000)), FETCHED_AT));
+
+        int removed = dao.deleteProviderRowsWithin(
+                AttractionEntity.PROVENANCE_SEED, -37.80, -37.79, 144.96, 144.97);
+
+        assertEquals(1, removed);
+        assertNull("a provider row inside the box is replaced", dao.findById("osm:node/inside"));
+        assertNotNull("a provider row in another area must survive",
+                dao.findById("osm:node/outside"));
+        assertNotNull("the bundled set is never removed by a refresh", dao.findById("seeded"));
+    }
+
+    @Test
+    public void theIndoorClassificationRoundTripsThroughStorageIncludingUnknown() {
+        dao.upsertAll(LocalAttractionMapper.toEntities(
+                Collections.singletonList(fetched("osm:node/1", -37.79750, 144.96400)),
+                FETCHED_AT));
+
+        Attraction stored = LocalAttractionMapper.toDomain(dao.findById("osm:node/1"));
+
+        assertEquals(IndoorClassification.UNKNOWN, stored.getIndoor());
+        assertEquals(AttractionProvenance.OPENSTREETMAP, stored.getProvenance());
     }
 }

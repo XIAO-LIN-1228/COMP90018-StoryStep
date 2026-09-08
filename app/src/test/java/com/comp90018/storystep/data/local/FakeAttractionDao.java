@@ -2,6 +2,7 @@ package com.comp90018.storystep.data.local;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,27 @@ public final class FakeAttractionDao implements AttractionDao {
                 rows.put(entity.id, entity);
             }
         }
+    }
+
+    @Override
+    public int deleteProviderRowsWithin(String seedProvenance,
+                                        double minLatitude,
+                                        double maxLatitude,
+                                        double minLongitude,
+                                        double maxLongitude) {
+        int removed = 0;
+        Iterator<AttractionEntity> iterator = rows.values().iterator();
+        while (iterator.hasNext()) {
+            AttractionEntity entity = iterator.next();
+            boolean fromProvider = !seedProvenance.equals(entity.provenance);
+            boolean inBox = entity.latitude >= minLatitude && entity.latitude <= maxLatitude
+                    && entity.longitude >= minLongitude && entity.longitude <= maxLongitude;
+            if (fromProvider && inBox) {
+                iterator.remove();
+                removed++;
+            }
+        }
+        return removed;
     }
 
     @Override

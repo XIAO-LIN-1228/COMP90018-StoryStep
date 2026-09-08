@@ -35,8 +35,14 @@ public class SavedAttractionEntity {
     @ColumnInfo(name = "description")
     public String description;
 
+    /**
+     * Stable lower-case indoor code; see
+     * {@link com.comp90018.storystep.data.IndoorClassificationCodec}. Text rather than the boolean
+     * it was until schema 6, so that saving a place the provider never classified does not turn it
+     * into a claim that it is outdoors.
+     */
     @ColumnInfo(name = "indoor")
-    public boolean indoor;
+    public String indoor;
 
     @ColumnInfo(name = "latitude")
     public double latitude;
@@ -47,4 +53,19 @@ public class SavedAttractionEntity {
     /** When the user saved this place, in epoch milliseconds. Orders the saved list. */
     @ColumnInfo(name = "saved_at_millis")
     public long savedAtMillis;
+
+    /**
+     * Where the saved place came from; see
+     * {@link com.comp90018.storystep.data.AttractionProvenanceCodec}.
+     *
+     * <p>Part of the snapshot because the snapshot is what the saved list renders. A licence that
+     * requires the source to be credited still requires it after the user presses Save, and this
+     * row is the only thing left to ask.
+     */
+    @ColumnInfo(name = "provenance")
+    public String provenance;
+
+    /** An optional reference into the source's wider data; see {@code AttractionEntity}. */
+    @ColumnInfo(name = "source_ref")
+    public String sourceRef;
 }

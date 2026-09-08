@@ -6,8 +6,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.repository.AttractionNotFoundException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 
@@ -22,8 +24,8 @@ public class InMemoryAttractionRepositoryTest {
     private static final GeoPoint ORIGIN = new GeoPoint(-37.79630, 144.96140);
 
     private static Attraction attraction(String id, double latitude, double longitude) {
-        return new Attraction(id, "Name " + id, AttractionCategory.PARK, "Description",
-                false, new GeoPoint(latitude, longitude));
+        return Attraction.seeded(id, "Name " + id, AttractionCategory.PARK, "Description",
+                IndoorClassification.OUTDOOR, new GeoPoint(latitude, longitude));
     }
 
     private static final class Recorder<T> implements RepositoryCallback<T> {
@@ -43,15 +45,15 @@ public class InMemoryAttractionRepositoryTest {
 
     @Test
     public void nearby_returnsSampleDataSortedByDistance() {
-        Recorder<List<Attraction>> recorder = new Recorder<>();
+        Recorder<AttractionResult> recorder = new Recorder<>();
         new InMemoryAttractionRepository()
                 .loadNearbyAttractions(ORIGIN, 3000.0, recorder);
 
         assertNull(recorder.error);
         assertNotNull(recorder.result);
         assertTrue("expected at least three sample attractions",
-                recorder.result.size() >= 3);
-        assertEquals("system-garden", recorder.result.get(0).getId());
+                recorder.result.getAttractions().size() >= 3);
+        assertEquals("system-garden", recorder.result.getAttractions().get(0).getId());
     }
 
     @Test
@@ -60,11 +62,11 @@ public class InMemoryAttractionRepositoryTest {
                 attraction("close", -37.79640, 144.96150),
                 attraction("far", -37.90000, 145.10000)));
 
-        Recorder<List<Attraction>> recorder = new Recorder<>();
+        Recorder<AttractionResult> recorder = new Recorder<>();
         repository.loadNearbyAttractions(ORIGIN, 500.0, recorder);
 
-        assertEquals(1, recorder.result.size());
-        assertEquals("close", recorder.result.get(0).getId());
+        assertEquals(1, recorder.result.getAttractions().size());
+        assertEquals("close", recorder.result.getAttractions().get(0).getId());
     }
 
     @Test
@@ -72,7 +74,7 @@ public class InMemoryAttractionRepositoryTest {
         InMemoryAttractionRepository repository = new InMemoryAttractionRepository(
                 Arrays.asList(attraction("far", -37.90000, 145.10000)));
 
-        Recorder<List<Attraction>> recorder = new Recorder<>();
+        Recorder<AttractionResult> recorder = new Recorder<>();
         repository.loadNearbyAttractions(ORIGIN, 100.0, recorder);
 
         assertNull(recorder.error);
@@ -81,7 +83,7 @@ public class InMemoryAttractionRepositoryTest {
 
     @Test
     public void nearby_reportsErrorForNonPositiveRadius() {
-        Recorder<List<Attraction>> recorder = new Recorder<>();
+        Recorder<AttractionResult> recorder = new Recorder<>();
         new InMemoryAttractionRepository().loadNearbyAttractions(ORIGIN, 0.0, recorder);
 
         assertNull(recorder.result);

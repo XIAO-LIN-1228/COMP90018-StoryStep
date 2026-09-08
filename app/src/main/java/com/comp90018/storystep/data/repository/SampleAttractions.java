@@ -3,17 +3,23 @@ package com.comp90018.storystep.data.repository;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 /**
- * Fixed demonstration data for Stage 1.
+ * The bundled demonstration set.
  *
- * <p>These entries stand in for the attraction service until the remote source is implemented.
- * They are real public places, so the coordinates stay meaningful once real location data is
- * wired up, but nothing here is fetched from a network or a device sensor.
+ * <p>Since REQ-18 these are no longer a stand-in for the attraction service — real places are
+ * fetched from OpenStreetMap alongside them. They stay because they are the only content
+ * guaranteed to be present at a cold offline start, and because they carry written stories, which
+ * the provider almost never supplies.
+ *
+ * <p>Every record here is marked {@link com.comp90018.storystep.domain.model.AttractionProvenance#SEED}
+ * and is never presented as a live result. A refresh replaces provider rows only, so this set
+ * survives one.
  */
 public final class SampleAttractions {
 
@@ -30,46 +36,46 @@ public final class SampleAttractions {
 
     public static List<Attraction> get() {
         return Collections.unmodifiableList(Arrays.asList(
-                new Attraction(
+                Attraction.seeded(
                         "old-arts",
                         "Old Arts Building",
                         AttractionCategory.UNIVERSITY_LANDMARK,
                         "The 1924 clocktower building at the heart of the Parkville campus, and "
                                 + "one of the oldest surviving teaching buildings of the "
                                 + "University of Melbourne.",
-                        false,
+                        IndoorClassification.OUTDOOR,
                         new GeoPoint(-37.79810, 144.95910)),
-                new Attraction(
+                Attraction.seeded(
                         "potter-museum",
                         "Ian Potter Museum of Art",
                         AttractionCategory.MUSEUM,
                         "The university art museum on Swanston Street, holding collections that "
                                 + "range from antiquities to contemporary Australian art.",
-                        true,
+                        IndoorClassification.INDOOR,
                         new GeoPoint(-37.79750, 144.96400)),
-                new Attraction(
+                Attraction.seeded(
                         "system-garden",
                         "System Garden",
                         AttractionCategory.PARK,
                         "A small botanical garden laid out in 1856 for teaching plant "
                                 + "classification, still arranged around its original tower.",
-                        false,
+                        IndoorClassification.OUTDOOR,
                         new GeoPoint(-37.79720, 144.96050)),
-                new Attraction(
+                Attraction.seeded(
                         "royal-exhibition-building",
                         "Royal Exhibition Building",
                         AttractionCategory.HISTORICAL_BUILDING,
                         "Built for the 1880 International Exhibition and the first building in "
                                 + "Australia to receive UNESCO World Heritage listing.",
-                        true,
+                        IndoorClassification.INDOOR,
                         new GeoPoint(-37.80460, 144.97170)),
-                new Attraction(
+                Attraction.seeded(
                         "melbourne-museum",
                         "Melbourne Museum",
                         AttractionCategory.MUSEUM,
                         "A natural and cultural history museum in Carlton Gardens, with galleries "
                                 + "covering science, Victorian history and First Peoples stories.",
-                        true,
+                        IndoorClassification.INDOOR,
                         new GeoPoint(-37.80330, 144.97170))));
     }
 }
