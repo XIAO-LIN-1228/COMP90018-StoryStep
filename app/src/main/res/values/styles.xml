@@ -187,6 +187,6 @@
         <item name="android:background">@drawable/bg_scrim_button</item>
         <item name="android:padding">10dp</item>
         <item name="android:scaleType">fitCenter</item>
-        <item name="tint">@color/story_ink</item>
+        <item name="tint">@color/story_on_photo</item>
     </style>
 </resources>

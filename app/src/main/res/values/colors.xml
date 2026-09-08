@@ -35,6 +35,14 @@
     <color name="story_disabled">#A9A69D</color>
 
     <!-- The one accent: an unread story -->
+    <!--
+      Chrome that sits on a photograph, not on the page. A photograph is dark in both
+      configurations, so this colour deliberately does NOT flip with the theme: tinting
+      it with story_ink turned the back and save controls white-on-white in dark mode.
+      The same applies to the unlock stamp, which is always amber.
+    -->
+    <color name="story_on_photo">#14181F</color>
+
     <color name="story_signal">#E0952B</color>
     <color name="story_signal_ink">#B0741A</color>
     <color name="story_signal_wash">#FBF0DC</color>

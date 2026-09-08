@@ -67,9 +67,9 @@
                     android:paddingBottom="@dimen/space_8"
                     android:text="@string/story_discovered"
                     android:textAppearance="@style/TextAppearance.StoryStep.Label"
-                    android:textColor="@color/story_ink"
+                    android:textColor="@color/story_on_photo"
                     app:drawableStartCompat="@drawable/ic_lock_outline"
-                    app:drawableTint="@color/story_ink" />
+                    app:drawableTint="@color/story_on_photo" />
             </FrameLayout>
 
             <LinearLayout
