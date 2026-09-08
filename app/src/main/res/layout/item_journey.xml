@@ -1,84 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  One recorded journey.
-
-  No map thumbnail: the history query deliberately does not load route points, so any sketch drawn
-  here would be invented rather than recorded. The route belongs on the detail screen, where the
-  points are actually read.
+    A walk, as a row: the name it was given, the date and the figures underneath in
+    tabular type so the column reads down the list. Delete stays a quiet trailing
+    control rather than a red button on every row.
 -->
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    style="@style/Widget.StoryStep.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    android:clickable="true"
-    android:focusable="true">
+    android:background="?attr/selectableItemBackground"
+    android:orientation="vertical">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <View style="@style/Widget.StoryStep.Divider" />
+
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="14dp"
-        android:paddingTop="12dp"
-        android:paddingEnd="4dp"
-        android:paddingBottom="14dp">
+        android:gravity="center_vertical"
+        android:minHeight="@dimen/minimum_touch_target"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/page_horizontal_margin"
+        android:paddingTop="@dimen/row_vertical_padding"
+        android:paddingEnd="@dimen/space_8"
+        android:paddingBottom="@dimen/row_vertical_padding">
 
-        <TextView
-            android:id="@+id/journey_item_title"
-            style="@style/TextAppearance.StoryStep.Title"
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            app:layout_constraintEnd_toStartOf="@id/journey_item_delete"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Towards Old Arts Building" />
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/journey_item_title"
+                style="@style/TextAppearance.StoryStep.Title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="end"
+                android:maxLines="1" />
+
+            <TextView
+                android:id="@+id/journey_item_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textAppearance="@style/TextAppearance.StoryStep.Label" />
+
+            <TextView
+                android:id="@+id/journey_item_stats"
+                style="@style/TextAppearance.StoryStep.Metric"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_8"
+                android:textColor="@color/story_ink_2" />
+
+            <!-- Weather, movement or an interruption: whatever this walk was actually like. -->
+            <TextView
+                android:id="@+id/journey_item_label"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                android:textColor="@color/story_ink_3" />
+        </LinearLayout>
 
         <ImageButton
             android:id="@+id/journey_item_delete"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="@dimen/minimum_touch_target"
+            android:layout_height="@dimen/minimum_touch_target"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/history_delete"
+            android:padding="12dp"
             android:src="@drawable/ic_delete_outline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="@color/story_ink_2" />
-
-        <TextView
-            android:id="@+id/journey_item_date"
-            style="@style/TextAppearance.StoryStep.Supporting"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            app:layout_constraintEnd_toStartOf="@id/journey_item_delete"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/journey_item_title"
-            tools:text="3 days ago" />
-
-        <TextView
-            android:id="@+id/journey_item_stats"
-            style="@style/TextAppearance.StoryStep.Body"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginEnd="14dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/journey_item_date"
-            tools:text="42 min  ·  2.3 km · 4 places visited" />
-
-        <TextView
-            android:id="@+id/journey_item_label"
-            style="@style/TextAppearance.StoryStep.Supporting"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:layout_marginEnd="14dp"
-            android:textColor="@color/story_signal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/journey_item_stats"
-            tools:text="Interrupted" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</com.google.android.material.card.MaterialCardView>
+            app:tint="@color/story_ink_3" />
+    </LinearLayout>
+</LinearLayout>

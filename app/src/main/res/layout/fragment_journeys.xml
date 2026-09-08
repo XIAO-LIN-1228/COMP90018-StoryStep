@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    A list page: eyebrow, display headline, then rows separated by rules. The header
+    band is gone, so the page opens on its own title rather than on a slab of colour.
+-->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -8,24 +12,26 @@
     <LinearLayout
         android:id="@+id/journeys_header"
         android:layout_width="0dp"
-        android:layout_height="72dp"
-        android:background="@drawable/bg_brand_header"
-        android:gravity="center_vertical"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="@dimen/page_horizontal_margin"
+        android:paddingTop="@dimen/space_24"
+        android:paddingEnd="@dimen/page_horizontal_margin"
+        android:paddingBottom="@dimen/space_16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            style="@style/TextAppearance.StoryStep.AppBar"
+            style="@style/Widget.StoryStep.Eyebrow"
+            android:text="@string/app_name" />
+
+        <TextView
+            style="@style/TextAppearance.StoryStep.PageTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/journeys_title"
-            android:textColor="@color/story_on_header"
-            android:textSize="21sp" />
-
+            android:layout_marginTop="@dimen/space_8"
+            android:text="@string/journeys_title" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -33,10 +39,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingStart="16dp"
-        android:paddingTop="16dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="16dp"
+        android:paddingBottom="@dimen/space_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -46,6 +49,7 @@
         android:id="@+id/journeys_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:indeterminateTint="@color/story_ink_3"
         app:layout_constraintBottom_toBottomOf="@id/journey_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,11 +57,12 @@
 
     <TextView
         android:id="@+id/journeys_status"
-        style="@style/TextAppearance.StoryStep.Body"
+        style="@style/TextAppearance.StoryStep.Prose"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/page_horizontal_margin"
+        android:layout_marginEnd="@dimen/page_horizontal_margin"
         android:gravity="center"
-        android:padding="24dp"
         app:layout_constraintBottom_toBottomOf="@id/journey_list"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

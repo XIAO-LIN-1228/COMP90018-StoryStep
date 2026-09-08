@@ -21,7 +21,6 @@ import com.comp90018.storystep.ui.CategoryLabels;
 import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
-import com.google.android.material.chip.Chip;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 /**
@@ -35,7 +34,9 @@ public class AttractionDetailFragment extends Fragment {
     private TextView nameView;
     private TextView categoryView;
     private TextView descriptionView;
-    private Chip venueTypeChip;
+    // Indoor/outdoor reads as an annotation on the name, in the same tracked label
+    // style as the category beside it, rather than as a chip competing with it.
+    private TextView venueTypeChip;
     private ImageView imageView;
     private ImageButton saveButton;
 

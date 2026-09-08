@@ -101,7 +101,7 @@
                 style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:fontFamily="@font/inter_semibold"
+                android:fontFamily="@font/plex_sans_semibold"
                 android:text="@string/not_now"
                 android:textColor="@color/story_ink" />
         </LinearLayout>

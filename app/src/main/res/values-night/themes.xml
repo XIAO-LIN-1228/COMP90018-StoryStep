@@ -45,7 +45,7 @@
         <item name="colorOutlineVariant">@color/story_hairline</item>
 
         <item name="android:colorAccent">@color/story_signal</item>
-        <item name="android:fontFamily">@font/inter</item>
+        <item name="android:fontFamily">@font/plex_sans</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:statusBarColor">@color/story_ground</item>
         <item name="android:navigationBarColor">@color/story_ground</item>

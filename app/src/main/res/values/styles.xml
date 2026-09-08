@@ -7,7 +7,7 @@
       column down a list.
     -->
     <style name="TextAppearance.StoryStep.Display" parent="TextAppearance.Material3.DisplaySmall">
-        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:fontFamily">@font/archivo_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_display</item>
         <item name="android:includeFontPadding">false</item>
@@ -17,7 +17,7 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Headline" parent="TextAppearance.Material3.HeadlineSmall">
-        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:fontFamily">@font/archivo_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_headline</item>
         <item name="android:includeFontPadding">false</item>
@@ -27,7 +27,7 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Title" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:fontFamily">@font/archivo_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_title</item>
         <item name="android:includeFontPadding">false</item>
@@ -36,7 +36,7 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Body" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:fontFamily">@font/inter_variable</item>
+        <item name="android:fontFamily">@font/plex_sans</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:textSize">@dimen/text_body</item>
         <item name="android:includeFontPadding">false</item>
@@ -44,7 +44,7 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Supporting" parent="TextAppearance.Material3.BodySmall">
-        <item name="android:fontFamily">@font/inter_variable</item>
+        <item name="android:fontFamily">@font/plex_sans</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:textSize">@dimen/text_supporting</item>
         <item name="android:includeFontPadding">false</item>
@@ -56,7 +56,7 @@
       annotation rather than as another line of prose competing with the place name.
     -->
     <style name="TextAppearance.StoryStep.Label" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:fontFamily">@font/plex_sans_semibold</item>
         <item name="android:textColor">@color/story_ink_3</item>
         <item name="android:textSize">@dimen/text_label</item>
         <item name="android:textAllCaps">true</item>
@@ -66,7 +66,7 @@
 
     <!-- Distances, durations and counts: aligned figures, ink weight. -->
     <style name="TextAppearance.StoryStep.Metric" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:fontFamily">@font/archivo_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_metric</item>
         <item name="android:includeFontPadding">false</item>
@@ -75,7 +75,7 @@
     </style>
 
     <style name="TextAppearance.StoryStep.AppBar" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:fontFamily">@font/manrope_semibold</item>
+        <item name="android:fontFamily">@font/archivo_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_app_bar</item>
         <item name="android:includeFontPadding">false</item>
@@ -107,7 +107,7 @@
         <item name="backgroundTint">@color/button_primary_background</item>
         <item name="android:textColor">@color/story_on_ink</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:fontFamily">@font/plex_sans_semibold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0.01</item>
     </style>
@@ -118,7 +118,7 @@
         <item name="strokeColor">@color/story_outline</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:fontFamily">@font/inter_semibold</item>
+        <item name="android:fontFamily">@font/plex_sans_semibold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0.01</item>
     </style>
@@ -132,7 +132,7 @@
         <item name="chipCornerRadius">@dimen/button_corner_radius</item>
         <item name="android:minHeight">36dp</item>
         <item name="android:textSize">@dimen/text_supporting</item>
-        <item name="android:fontFamily">@font/inter_medium</item>
+        <item name="android:fontFamily">@font/plex_sans_medium</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.StoryStep.Image" parent="">
@@ -143,5 +143,50 @@
     <style name="Widget.StoryStep.BottomNavigation.ActiveIndicator"
         parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">@color/story_ink_wash</item>
+    </style>
+
+    <!--
+      Page vocabulary. Every screen is built from the same four parts: a tracked
+      eyebrow that names what you are looking at, a display headline set in Archivo,
+      prose at reading measure, and sections closed by a rule rather than boxed into
+      cards. Screens differ in what they hold, not in how they are put together.
+    -->
+    <style name="TextAppearance.StoryStep.PageTitle" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="android:fontFamily">@font/archivo_bold</item>
+        <item name="android:textColor">@color/story_ink</item>
+        <item name="android:textSize">@dimen/text_page_title</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.14</item>
+        <item name="android:letterSpacing">-0.025</item>
+    </style>
+
+    <style name="TextAppearance.StoryStep.Prose" parent="TextAppearance.Material3.BodyLarge">
+        <item name="android:fontFamily">@font/plex_sans</item>
+        <item name="android:textColor">@color/story_ink_2</item>
+        <item name="android:textSize">@dimen/text_prose</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:lineSpacingMultiplier">1.55</item>
+    </style>
+
+    <style name="Widget.StoryStep.Eyebrow" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">@style/TextAppearance.StoryStep.Label</item>
+    </style>
+
+    <style name="Widget.StoryStep.Divider" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">@dimen/hairline</item>
+        <item name="android:background">@color/story_hairline</item>
+    </style>
+
+    <!-- Chrome that sits on a photograph: a square touch target on a light scrim. -->
+    <style name="Widget.StoryStep.ScrimButton" parent="">
+        <item name="android:layout_width">@dimen/scrim_button_size</item>
+        <item name="android:layout_height">@dimen/scrim_button_size</item>
+        <item name="android:background">@drawable/bg_scrim_button</item>
+        <item name="android:padding">10dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">@color/story_ink</item>
     </style>
 </resources>

@@ -34,4 +34,12 @@
     <dimen name="text_label">11sp</dimen>
     <dimen name="text_app_bar">20sp</dimen>
     <dimen name="text_metric">16sp</dimen>
+    <dimen name="text_page_title">28sp</dimen>
+    <dimen name="text_prose">15sp</dimen>
+
+    <!-- Story anatomy: full-bleed media, then a content column at the page margin. -->
+    <dimen name="hero_photo_height">286dp</dimen>
+    <dimen name="scrim_button_size">40dp</dimen>
+    <dimen name="row_thumb_size">46dp</dimen>
+    <dimen name="row_vertical_padding">15dp</dimen>
 </resources>

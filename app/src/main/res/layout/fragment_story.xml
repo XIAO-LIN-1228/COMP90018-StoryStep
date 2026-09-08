@@ -1,117 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    The story screen is the reference for the whole app's page anatomy: full-bleed
+    photograph, its own chrome carried on a scrim, then a content column at the page
+    margin - eyebrow, display headline, prose at reading measure - and one ink action
+    fixed at the foot. No header band, no cards.
+-->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/story_ground">
 
-    <LinearLayout
-        android:id="@+id/story_header"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/app_bar_height"
-        android:background="@drawable/bg_brand_header"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <ImageButton
-            android:id="@+id/story_back"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="@string/detail_back"
-            android:padding="12dp"
-            android:src="@drawable/ic_back"
-            app:tint="@color/story_on_header" />
-
-        <TextView
-            style="@style/TextAppearance.StoryStep.AppBar"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/story_toolbar_title"
-            android:textColor="@color/story_on_header"
-            android:textSize="20sp" />
-    </LinearLayout>
-
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:clipToPadding="false"
         app:layout_constraintBottom_toTopOf="@id/add_memory_button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/story_header">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/story_hero"
+            <FrameLayout
+                android:id="@+id/story_header"
                 android:layout_width="match_parent"
-                android:layout_height="180dp"
-                android:contentDescription="@null"
-                android:scaleType="centerCrop"
-                android:src="@drawable/photo_old_arts" />
+                android:layout_height="@dimen/hero_photo_height">
+
+                <ImageView
+                    android:id="@+id/story_hero"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:contentDescription="@null"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/photo_old_arts" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_hero_scrim" />
+
+                <ImageButton
+                    android:id="@+id/story_back"
+                    style="@style/Widget.StoryStep.ScrimButton"
+                    android:layout_gravity="top|start"
+                    android:layout_marginStart="@dimen/page_horizontal_margin"
+                    android:layout_marginTop="@dimen/space_24"
+                    android:contentDescription="@string/detail_back"
+                    android:src="@drawable/ic_back" />
+
+                <!-- The single place the signal colour is allowed to be loud. -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|start"
+                    android:layout_marginStart="@dimen/page_horizontal_margin"
+                    android:layout_marginBottom="@dimen/space_16"
+                    android:background="@drawable/bg_signal_chip"
+                    android:drawablePadding="@dimen/space_8"
+                    android:paddingStart="12dp"
+                    android:paddingTop="@dimen/space_8"
+                    android:paddingEnd="12dp"
+                    android:paddingBottom="@dimen/space_8"
+                    android:text="@string/story_discovered"
+                    android:textAppearance="@style/TextAppearance.StoryStep.Label"
+                    android:textColor="@color/story_ink"
+                    app:drawableStartCompat="@drawable/ic_lock_outline"
+                    app:drawableTint="@color/story_ink" />
+            </FrameLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:padding="16dp">
-
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_soft_teal"
-                    android:padding="8dp"
-                    android:text="@string/story_discovered"
-                    android:textColor="@color/story_ink_pressed"
-                    android:textStyle="bold" />
+                android:paddingStart="@dimen/page_horizontal_margin"
+                android:paddingTop="@dimen/space_24"
+                android:paddingEnd="@dimen/page_horizontal_margin"
+                android:paddingBottom="@dimen/space_24">
 
                 <TextView
                     android:id="@+id/story_place_name"
-                    style="@style/TextAppearance.StoryStep.Headline"
+                    style="@style/TextAppearance.StoryStep.PageTitle"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="14dp" />
+                    android:layout_height="wrap_content" />
 
                 <TextView
                     android:id="@+id/story_body"
-                    style="@style/TextAppearance.StoryStep.Body"
+                    style="@style/TextAppearance.StoryStep.Prose"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:lineSpacingExtra="4dp" />
+                    android:layout_marginTop="@dimen/space_16" />
+
+                <View
+                    style="@style/Widget.StoryStep.Divider"
+                    android:layout_marginTop="@dimen/space_24" />
 
                 <!--
-                    Where the text came from, stated on the screen that shows it. The seed dataset
-                    is not a live provider, and saying so is what keeps a demo from reading as a
-                    researched fact about the place.
+                    Where the text came from, stated on the screen that shows it. The seed
+                    dataset is not a live provider, and saying so is what keeps a demo from
+                    reading as a researched fact about the place.
                 -->
                 <TextView
                     android:id="@+id/story_attribution"
-                    style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_16"
                     android:text="@string/story_attribution"
-                    android:textColor="@color/story_ink_3" />
-
-                <com.google.android.material.imageview.ShapeableImageView
-                    android:id="@+id/story_thumb"
-                    android:layout_width="match_parent"
-                    android:layout_height="180dp"
-                    android:layout_marginTop="20dp"
-                    android:alpha="0.72"
-                    android:contentDescription="@null"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/photo_old_arts_thumb"
-                    app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
+                    android:textAppearance="@style/TextAppearance.StoryStep.Label" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -121,7 +119,9 @@
         style="@style/Widget.StoryStep.Button.Primary"
         android:layout_width="0dp"
         android:layout_height="@dimen/primary_button_height"
-        android:layout_margin="16dp"
+        android:layout_marginStart="@dimen/page_horizontal_margin"
+        android:layout_marginEnd="@dimen/page_horizontal_margin"
+        android:layout_marginBottom="@dimen/space_24"
         android:text="@string/story_add_memory"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
