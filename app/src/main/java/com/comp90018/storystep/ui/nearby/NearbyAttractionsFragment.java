@@ -535,7 +535,7 @@ public class NearbyAttractionsFragment extends Fragment
         weatherCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
         homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
         homeTitle.setTextColor(ContextCompat.getColor(requireContext(), enabled
-                ? R.color.story_text_primary
+                ? R.color.story_ink
                 : R.color.white));
         homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
         updateContinueJourneyCard();

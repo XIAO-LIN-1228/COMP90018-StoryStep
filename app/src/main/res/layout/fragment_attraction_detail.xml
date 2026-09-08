@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <ScrollView
         android:id="@+id/detail_scroll"
@@ -101,7 +101,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="10dp"
                     android:text="@string/detail_distance_demo"
-                    android:textColor="@color/brand_teal"
+                    android:textColor="@color/story_ink"
                     android:textStyle="bold" />
 
                 <TextView
@@ -125,7 +125,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="24dp"
-                    app:cardBackgroundColor="@color/story_surface_muted">
+                    app:cardBackgroundColor="@color/story_surface_sunk">
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -155,7 +155,7 @@
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:text="@string/detail_locked_story"
-                                android:textColor="@color/story_text_primary"
+                                android:textColor="@color/story_ink"
                                 android:textStyle="bold" />
 
                             <TextView

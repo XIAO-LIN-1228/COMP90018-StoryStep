@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/journeys_header"
@@ -23,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/journeys_title"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="21sp" />
 
     </LinearLayout>

@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory"
+    android:background="@color/story_ground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -25,7 +25,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="64dp"
                 android:layout_height="64dp"
-                app:cardBackgroundColor="@color/brand_teal_soft"
+                app:cardBackgroundColor="@color/story_ink_wash"
                 app:cardCornerRadius="32dp"
                 app:cardElevation="0dp">
 
@@ -35,7 +35,7 @@
                     android:contentDescription="@string/profile_avatar_description"
                     android:padding="15dp"
                     android:src="@drawable/ic_profile"
-                    app:tint="@color/brand_teal" />
+                    app:tint="@color/story_ink" />
             </com.google.android.material.card.MaterialCardView>
 
             <TextView
@@ -46,7 +46,7 @@
                 android:gravity="center"
                 android:includeFontPadding="false"
                 android:text="@string/profile_title"
-                android:textColor="@color/white"
+                android:textColor="@color/story_on_header"
                 android:textSize="22sp" />
 
             <TextView
@@ -56,7 +56,7 @@
                 android:layout_marginTop="3dp"
                 android:gravity="center"
                 android:text="@string/profile_local"
-                android:textColor="#CFFFFFFF" />
+                android:textColor="@color/story_ink_2" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -66,18 +66,18 @@
                 android:orientation="horizontal">
 
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_journeys_count" android:textColor="@color/white" android:textSize="18sp" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_journeys_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_journeys_count" android:textColor="@color/story_on_header" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_journeys_label" android:textColor="@color/story_ink_3" android:textSize="11sp" />
                 </LinearLayout>
-                <View android:layout_width="1dp" android:layout_height="28dp" android:background="#33FFFFFF" />
+                <View android:layout_width="1dp" android:layout_height="28dp" android:background="@color/story_hairline" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_stories_count" android:textColor="@color/white" android:textSize="18sp" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_stories_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_stories_count" android:textColor="@color/story_on_header" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_stories_label" android:textColor="@color/story_ink_3" android:textSize="11sp" />
                 </LinearLayout>
-                <View android:layout_width="1dp" android:layout_height="28dp" android:background="#33FFFFFF" />
+                <View android:layout_width="1dp" android:layout_height="28dp" android:background="@color/story_hairline" />
                 <LinearLayout android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:gravity="center" android:orientation="vertical">
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_memories_count" android:textColor="@color/white" android:textSize="18sp" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_memories_label" android:textColor="#BFFFFFFF" android:textSize="11sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:fontFamily="@font/manrope_semibold" android:includeFontPadding="false" android:text="@string/profile_memories_count" android:textColor="@color/story_on_header" android:textSize="18sp" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:includeFontPadding="false" android:text="@string/profile_memories_label" android:textColor="@color/story_ink_3" android:textSize="11sp" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -101,47 +101,47 @@
                     <LinearLayout android:id="@+id/location_settings_row" android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="10dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_location_outline" />
                         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
-                            <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_location" android:textColor="@color/story_text_primary" />
+                            <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_location" android:textColor="@color/story_ink" />
                             <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/settings_location_value" />
                         </LinearLayout>
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@null" android:src="@drawable/ic_chevron_right" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_divider" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_hairline" />
 
                     <LinearLayout android:id="@+id/sensor_settings_row" android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="10dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_sensor_outline" />
                         <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
-                            <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_sensor" android:textColor="@color/story_text_primary" />
+                            <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/settings_sensor" android:textColor="@color/story_ink" />
                             <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:text="@string/settings_sensor_value" />
                         </LinearLayout>
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@null" android:src="@drawable/ic_chevron_right" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_divider" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_hairline" />
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="14dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_ruler_outline" />
-                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_units" android:textColor="@color/story_text_primary" />
+                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_units" android:textColor="@color/story_ink" />
                         <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_units_value" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_divider" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_hairline" />
 
                     <LinearLayout android:id="@+id/privacy_data_row" android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="10dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_lock_outline" />
-                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_privacy" android:textColor="@color/story_text_primary" />
+                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_privacy" android:textColor="@color/story_ink" />
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@null" android:src="@drawable/ic_chevron_right" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_divider" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_hairline" />
 
                     <LinearLayout android:id="@+id/clear_history_row" android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="10dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_error_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_delete_outline" />
                         <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_clear" android:textColor="@color/story_error" />
                         <ImageView android:layout_width="24dp" android:layout_height="24dp" android:contentDescription="@null" android:src="@drawable/ic_chevron_right" />
                     </LinearLayout>
-                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_divider" />
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginStart="66dp" android:background="@color/story_hairline" />
 
                     <LinearLayout android:layout_width="match_parent" android:layout_height="@dimen/settings_row_height" android:gravity="center_vertical" android:orientation="horizontal" android:paddingStart="14dp" android:paddingEnd="14dp">
                         <ImageView android:layout_width="40dp" android:layout_height="40dp" android:background="@drawable/bg_icon_surface" android:contentDescription="@null" android:padding="9dp" android:src="@drawable/ic_info_outline" />
-                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_about" android:textColor="@color/story_text_primary" />
+                        <TextView style="@style/TextAppearance.StoryStep.Body" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:text="@string/settings_about" android:textColor="@color/story_ink" />
                         <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_version" />
                     </LinearLayout>
                 </LinearLayout>

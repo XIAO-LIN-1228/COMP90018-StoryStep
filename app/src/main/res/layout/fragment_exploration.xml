@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/exploration_header"
@@ -26,7 +26,7 @@
             android:contentDescription="@string/detail_back"
             android:padding="12dp"
             android:src="@drawable/ic_back"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
 
         <TextView
             android:id="@+id/exploration_destination_name"
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/exploration_no_destination"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="20sp" />
 
         <TextView
@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/exploration_duration_zero"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="16sp" />
     </LinearLayout>
 
@@ -84,7 +84,7 @@
                 android:paddingEnd="10dp"
                 android:paddingBottom="6dp"
                 android:text="@string/exploration_state_starting"
-                android:textColor="@color/brand_teal_dark"
+                android:textColor="@color/story_ink_pressed"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -127,7 +127,7 @@
                         android:id="@+id/exploration_remaining"
                         android:layout_marginTop="2dp"
                         android:text="@string/exploration_remaining_unavailable"
-                        android:textColor="@color/brand_teal" />
+                        android:textColor="@color/story_ink" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -135,7 +135,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:layout_marginTop="12dp"
-                android:background="@color/story_surface_muted"
+                android:background="@color/story_surface_sunk"
                 android:gravity="center_vertical"
                 android:orientation="horizontal"
                 android:paddingStart="12dp"
@@ -197,7 +197,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@color/brand_teal_soft"
+                android:background="@color/story_ink_wash"
                 android:orientation="vertical"
                 android:padding="12dp"
                 android:visibility="gone">

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The dark counterpart of the daylight palette. Every token in values/colors.xml is
+  restated here so no screen can fall back to a light surface it was never designed
+  against; the night ground tokens (story_night*) are deliberately identical in both
+  configurations, because the journey surfaces are a dark room by design rather than
+  by system setting.
+
+  The accent is lifted to the glow value: the daylight signal is too dark to read as
+  light on a night ground.
+-->
+<resources>
+    <color name="story_ground">#0B111C</color>
+    <color name="story_surface">#101827</color>
+    <color name="story_surface_sunk">#0E1626</color>
+    <color name="story_hairline">#182335</color>
+    <color name="story_outline">#1E2B3F</color>
+
+    <color name="story_ink">#EEF1F6</color>
+    <color name="story_ink_pressed">#FFFFFFFF</color>
+    <!-- Title chrome sitting on the page header, which is now the ground itself. -->
+    <color name="story_on_header">#EEF1F6</color>
+    <color name="story_on_ink">#0B111C</color>
+    <color name="story_ink_wash">#1B2434</color>
+    <color name="story_ink_2">#A6B3C6</color>
+    <color name="story_ink_3">#7C8899</color>
+    <color name="story_disabled">#3E4A5E</color>
+
+    <color name="story_signal">#F0B44E</color>
+    <color name="story_signal_ink">#F5C878</color>
+    <color name="story_signal_wash">#33270D</color>
+
+    <color name="story_success">#4FB48D</color>
+    <color name="story_error_wash">#3A1D16</color>
+    <color name="story_error">#E58B7B</color>
+
+    <color name="map_land">#131C2B</color>
+    <color name="map_park">#16241F</color>
+    <color name="map_water">#12202B</color>
+    <color name="map_road">#1B2434</color>
+    <color name="map_location">#EEF1F6</color>
+</resources>

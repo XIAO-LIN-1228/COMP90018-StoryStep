@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/home_header"
@@ -37,14 +37,16 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/app_name"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="21sp" />
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/weather_card"
             android:layout_width="wrap_content"
             android:layout_height="40dp"
-            app:cardBackgroundColor="#26FFFFFF"
+            app:cardBackgroundColor="@color/story_surface"
+            app:strokeColor="@color/story_outline"
+            app:strokeWidth="@dimen/hairline"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
@@ -56,10 +58,10 @@
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:text="@string/weather_loading"
-                android:textColor="@color/white"
+                android:textColor="@color/story_on_header"
                 android:textSize="12sp"
                 app:drawableStartCompat="@drawable/ic_location_outline"
-                app:drawableTint="@color/white"
+                app:drawableTint="@color/story_on_header"
                 android:drawablePadding="6dp" />
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
@@ -108,7 +110,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:text="@string/home_continue_title"
-                android:textColor="@color/brand_teal"
+                android:textColor="@color/story_ink"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/journey_image"
@@ -176,9 +178,9 @@
         app:boxCornerRadiusTopEnd="16dp"
         app:boxCornerRadiusTopStart="16dp"
         app:boxBackgroundColor="@color/story_surface"
-        app:boxStrokeColor="@color/brand_teal"
+        app:boxStrokeColor="@color/story_ink"
         app:startIconDrawable="@drawable/ic_search"
-        app:startIconTint="@color/story_text_secondary"
+        app:startIconTint="@color/story_ink_2"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/home_header">
@@ -238,7 +240,7 @@
             android:paddingStart="12dp"
             android:paddingEnd="4dp"
             android:text="@string/home_see_all"
-            android:textColor="@color/brand_teal"
+            android:textColor="@color/story_ink"
             android:textSize="14sp"
             android:fontFamily="@font/inter_semibold" />
     </LinearLayout>

@@ -40,7 +40,7 @@ public class StoryMapView extends View {
         roadPaint.setColor(ContextCompat.getColor(context, R.color.map_road));
         roadPaint.setStrokeWidth(dp(5));
         roadPaint.setStyle(Paint.Style.STROKE);
-        directionPaint.setColor(ContextCompat.getColor(context, R.color.brand_teal));
+        directionPaint.setColor(ContextCompat.getColor(context, R.color.story_ink));
         directionPaint.setStrokeWidth(dp(4));
         directionPaint.setStrokeCap(Paint.Cap.ROUND);
         directionPaint.setStyle(Paint.Style.STROKE);
@@ -136,7 +136,7 @@ public class StoryMapView extends View {
     }
 
     private void drawPin(Canvas canvas, float x, float y, String label, boolean destination) {
-        paint.setColor(ContextCompat.getColor(getContext(), R.color.brand_teal));
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.story_ink));
         paint.setStyle(Paint.Style.FILL);
         float radius = dp(destination ? 18 : 17);
         canvas.drawCircle(x, y, radius, paint);

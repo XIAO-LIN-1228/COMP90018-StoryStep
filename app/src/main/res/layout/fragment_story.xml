@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/story_header"
@@ -24,7 +24,7 @@
             android:contentDescription="@string/detail_back"
             android:padding="12dp"
             android:src="@drawable/ic_back"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
 
         <TextView
             style="@style/TextAppearance.StoryStep.AppBar"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/story_toolbar_title"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="20sp" />
     </LinearLayout>
 
@@ -70,7 +70,7 @@
                     android:background="@drawable/bg_soft_teal"
                     android:padding="8dp"
                     android:text="@string/story_discovered"
-                    android:textColor="@color/brand_teal_dark"
+                    android:textColor="@color/story_ink_pressed"
                     android:textStyle="bold" />
 
                 <TextView
@@ -100,7 +100,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
                     android:text="@string/story_attribution"
-                    android:textColor="@color/story_text_tertiary" />
+                    android:textColor="@color/story_ink_3" />
 
                 <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/story_thumb"

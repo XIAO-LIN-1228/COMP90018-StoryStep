@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/saved_header"
@@ -24,7 +24,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/saved_title"
-            android:textColor="@color/white" />
+            android:textColor="@color/story_on_header" />
 
         <ImageButton
             android:layout_width="48dp"
@@ -34,7 +34,7 @@
             android:contentDescription="@string/saved_search"
             android:padding="12dp"
             android:src="@drawable/ic_search"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView

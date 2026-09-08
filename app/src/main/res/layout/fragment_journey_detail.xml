@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/journey_detail_header"
@@ -25,7 +25,7 @@
             android:contentDescription="@string/detail_back"
             android:padding="12dp"
             android:src="@drawable/ic_back"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
 
         <TextView
             android:id="@+id/journey_detail_title"
@@ -36,7 +36,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="@string/home_journey_name"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="19sp" />
     </LinearLayout>
 
@@ -98,7 +98,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
-                android:textColor="@color/brand_coral"
+                android:textColor="@color/story_signal"
                 tools:text="Interrupted" />
 
             <TextView

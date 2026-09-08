@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/memory_header"
@@ -24,7 +24,7 @@
             android:contentDescription="@string/detail_back"
             android:padding="12dp"
             android:src="@drawable/ic_back"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
 
         <TextView
             style="@style/TextAppearance.StoryStep.AppBar"
@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/memory_title"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="20sp" />
     </LinearLayout>
 
@@ -55,12 +55,12 @@
                 style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
-                android:background="@color/story_surface_muted"
+                android:background="@color/story_surface_sunk"
                 android:gravity="center_vertical"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:text="@string/memory_place_time"
-                android:textColor="@color/story_text_primary" />
+                android:textColor="@color/story_ink" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/add_photo_card"
@@ -70,8 +70,8 @@
                 android:layout_marginTop="14dp"
                 android:clickable="true"
                 android:focusable="true"
-                app:cardBackgroundColor="@color/story_surface_muted"
-                app:strokeColor="@color/brand_teal">
+                app:cardBackgroundColor="@color/story_surface_sunk"
+                app:strokeColor="@color/story_ink">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -93,7 +93,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="10dp"
                         android:text="@string/memory_add_photos"
-                        android:textColor="@color/brand_teal" />
+                        android:textColor="@color/story_ink" />
 
                     <TextView
                         style="@style/TextAppearance.StoryStep.Supporting"
@@ -146,7 +146,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/memory_private"
-                    android:textColor="@color/story_text_primary"
+                    android:textColor="@color/story_ink"
                     android:textStyle="bold" />
 
                 <TextView
@@ -170,7 +170,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="48dp"
                 android:text="@string/skip"
-                android:textColor="@color/brand_teal" />
+                android:textColor="@color/story_ink" />
         </LinearLayout>
     </ScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>

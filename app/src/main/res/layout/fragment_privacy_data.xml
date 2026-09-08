@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory"
+    android:background="@color/story_ground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -27,7 +27,7 @@
                 android:contentDescription="@string/detail_back"
                 android:padding="12dp"
                 android:src="@drawable/ic_back"
-                app:tint="@color/white" />
+                app:tint="@color/story_on_header" />
 
             <TextView
                 style="@style/TextAppearance.StoryStep.AppBar"
@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/privacy_data_title"
-                android:textColor="@color/white"
+                android:textColor="@color/story_on_header"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -104,7 +104,7 @@
                         android:paddingEnd="12dp"
                         android:paddingBottom="6dp"
                         android:text="@string/privacy_foreground_badge"
-                        android:textColor="@color/brand_teal_dark"
+                        android:textColor="@color/story_ink_pressed"
                         android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

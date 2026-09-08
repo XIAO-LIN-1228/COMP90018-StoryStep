@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory"
+    android:background="@color/story_ground"
     android:fillViewport="true">
 
     <LinearLayout
@@ -27,7 +27,7 @@
                 android:contentDescription="@string/detail_back"
                 android:padding="12dp"
                 android:src="@drawable/ic_back"
-                app:tint="@color/white" />
+                app:tint="@color/story_on_header" />
 
             <TextView
                 style="@style/TextAppearance.StoryStep.AppBar"
@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/session_recovery_title"
-                android:textColor="@color/white"
+                android:textColor="@color/story_on_header"
                 android:textSize="20sp" />
         </LinearLayout>
 
@@ -56,7 +56,7 @@
                 android:paddingEnd="12dp"
                 android:paddingBottom="6dp"
                 android:text="@string/session_recovery_paused"
-                android:textColor="@color/story_text_primary"
+                android:textColor="@color/story_ink"
                 android:textStyle="bold" />
 
             <TextView
@@ -119,7 +119,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="4dp"
                                 android:text="@string/session_recovery_checkpoint_pending"
-                                android:textColor="@color/brand_teal"
+                                android:textColor="@color/story_ink"
                                 android:textStyle="bold" />
                         </LinearLayout>
                     </LinearLayout>
@@ -134,7 +134,7 @@
                 android:background="@drawable/bg_soft_teal"
                 android:padding="@dimen/space_16"
                 android:text="@string/session_recovery_privacy_note"
-                android:textColor="@color/brand_teal_dark" />
+                android:textColor="@color/story_ink_pressed" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/session_recovery_resume"
