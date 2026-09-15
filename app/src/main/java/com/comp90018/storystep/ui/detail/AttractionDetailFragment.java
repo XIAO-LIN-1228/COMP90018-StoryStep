@@ -103,7 +103,16 @@ public class AttractionDetailFragment extends Fragment {
             descriptionView.setText(R.string.attraction_no_description);
         }
         attributionView.setText(AttributionText.attributionFor(attraction.getProvenance()));
-        imageView.setImageResource(AttractionArtwork.heroDrawableFor(attraction.getId()));
+        // Only three photographs ship with the app, and a fetched place almost never has
+        // one. A 248dp placeholder for "no photo" is dead space on most real screens, so the
+        // hero simply collapses; the pills and prose above and below it already carry the page.
+        int hero = AttractionArtwork.heroDrawableFor(attraction.getId());
+        if (hero == R.drawable.bg_photo_placeholder) {
+            imageView.setVisibility(View.GONE);
+        } else {
+            imageView.setVisibility(View.VISIBLE);
+            imageView.setImageResource(hero);
+        }
         venueTypeChip.setVisibility(View.VISIBLE);
         venueTypeChip.setText(venueTypeLabel(attraction.getIndoor()));
     }
