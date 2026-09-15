@@ -101,6 +101,15 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_12" />
 
+            <!-- Where the place data came from. OpenStreetMap's licence requires it on screen. -->
+            <TextView
+                android:id="@+id/detail_attribution"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_12"
+                android:textColor="@color/story_ink_3" />
+
             <!--
                 The story is deliberately withheld until arrival: saying so is what makes
                 the walk the point rather than a delay before the same paragraph.

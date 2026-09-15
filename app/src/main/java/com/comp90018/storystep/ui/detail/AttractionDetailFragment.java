@@ -17,6 +17,8 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.IndoorClassification;
+import com.comp90018.storystep.ui.AttributionText;
 import com.comp90018.storystep.ui.CategoryLabels;
 import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.ViewModelFactory;
@@ -34,9 +36,10 @@ public class AttractionDetailFragment extends Fragment {
     private TextView nameView;
     private TextView categoryView;
     private TextView descriptionView;
-    // Indoor/outdoor reads as an annotation on the name, in the same tracked label
-    // style as the category beside it, rather than as a chip competing with it.
+    // Indoor/outdoor reads as a filled pill beside the category rather than as a
+    // Material chip competing with the name; a TextView carries the same text API.
     private TextView venueTypeChip;
+    private TextView attributionView;
     private ImageView imageView;
     private ImageButton saveButton;
 
@@ -55,6 +58,7 @@ public class AttractionDetailFragment extends Fragment {
         categoryView = view.findViewById(R.id.detail_category);
         descriptionView = view.findViewById(R.id.detail_description);
         venueTypeChip = view.findViewById(R.id.detail_venue_type);
+        attributionView = view.findViewById(R.id.detail_attribution);
         imageView = view.findViewById(R.id.detail_image);
         saveButton = view.findViewById(R.id.detail_save_button);
 
@@ -85,16 +89,41 @@ public class AttractionDetailFragment extends Fragment {
             categoryView.setText("");
             descriptionView.setText("");
             venueTypeChip.setVisibility(View.GONE);
+            attributionView.setText("");
             return;
         }
         nameView.setText(attraction.getName());
         categoryView.setText(CategoryLabels.labelOf(attraction.getCategory()));
-        descriptionView.setText(attraction.getDescription());
+        // A fetched place usually has no description in OpenStreetMap. Saying so is the honest
+        // rendering; leaving the field blank reads as a loading failure, and writing a sentence
+        // here would be this app inventing a fact about a real place.
+        if (attraction.hasDescription()) {
+            descriptionView.setText(attraction.getDescription());
+        } else {
+            descriptionView.setText(R.string.attraction_no_description);
+        }
+        attributionView.setText(AttributionText.attributionFor(attraction.getProvenance()));
         imageView.setImageResource(AttractionArtwork.heroDrawableFor(attraction.getId()));
         venueTypeChip.setVisibility(View.VISIBLE);
-        venueTypeChip.setText(attraction.isIndoor()
-                ? R.string.attraction_indoor
-                : R.string.attraction_outdoor);
+        venueTypeChip.setText(venueTypeLabel(attraction.getIndoor()));
+    }
+
+    /**
+     * The chip label, including the case where nothing is known.
+     *
+     * <p>An unknown classification gets its own label rather than borrowing "Outdoor". A place the
+     * provider never described is not a place that was described as outdoors, and the chip is read
+     * as a statement about the place.
+     */
+    private static int venueTypeLabel(IndoorClassification classification) {
+        switch (classification) {
+            case INDOOR:
+                return R.string.attraction_indoor;
+            case OUTDOOR:
+                return R.string.attraction_outdoor;
+            default:
+                return R.string.attraction_indoor_unknown;
+        }
     }
 
     /**

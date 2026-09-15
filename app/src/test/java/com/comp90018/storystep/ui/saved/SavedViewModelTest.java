@@ -12,6 +12,7 @@ import com.comp90018.storystep.data.repository.TestSavedAttractions;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 
 import org.junit.Rule;
@@ -30,8 +31,8 @@ public class SavedViewModelTest {
 
     private static final GeoPoint ORIGIN = new GeoPoint(-37.79630, 144.96140);
 
-    private static final Attraction MUSEUM = new Attraction("museum", "Melbourne Museum",
-            AttractionCategory.MUSEUM, "Natural history and culture.", true,
+    private static final Attraction MUSEUM = Attraction.seeded("museum", "Melbourne Museum",
+            AttractionCategory.MUSEUM, "Natural history and culture.", IndoorClassification.INDOOR,
             new GeoPoint(-37.80320, 144.97170));
 
     @Test

@@ -103,6 +103,8 @@ public final class FakeSavedAttractionDao implements SavedAttractionDao {
         copy.latitude = source.latitude;
         copy.longitude = source.longitude;
         copy.savedAtMillis = source.savedAtMillis;
+        copy.provenance = source.provenance;
+        copy.sourceRef = source.sourceRef;
         return copy;
     }
 }

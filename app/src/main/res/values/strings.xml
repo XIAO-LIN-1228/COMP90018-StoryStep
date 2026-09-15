@@ -39,6 +39,21 @@
     <!-- Shared attraction labels -->
     <string name="attraction_indoor">Indoor</string>
     <string name="attraction_outdoor">Outdoor</string>
+    <string name="attraction_indoor_unknown">Indoor/outdoor unknown</string>
+    <string name="attraction_no_description">No description is available for this place from OpenStreetMap.</string>
+
+    <!-- Attribution. The OpenStreetMap credit is a licence obligation under ODbL, not a courtesy:
+         it must stay visible wherever fetched attraction data is shown. -->
+    <string name="attribution_openstreetmap">Place data \u00a9 OpenStreetMap contributors</string>
+    <string name="attribution_openstreetmap_and_seed">Place data \u00a9 OpenStreetMap contributors, plus bundled sample places</string>
+    <string name="attribution_seed">Bundled sample places</string>
+
+    <!-- Nearby content freshness and failure reasons. -->
+    <string name="nearby_cached_notice">Showing saved places. Could not reach the map service.</string>
+    <string name="nearby_error_offline">You are offline and no places are saved yet.</string>
+    <string name="nearby_error_rate_limited">The map service is busy right now. Try again shortly.</string>
+    <string name="nearby_error_timeout">The map service did not respond in time.</string>
+    <string name="nearby_error_service">The map service could not be reached.</string>
     <string name="distance_meters_format">%1$d m</string>
     <string name="distance_kilometers_format">%1$.1f km</string>
     <string name="attraction_item_description">%1$s, %2$s, %3$s away</string>

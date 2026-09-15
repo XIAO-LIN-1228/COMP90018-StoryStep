@@ -9,6 +9,7 @@ import com.comp90018.storystep.domain.arrival.ArrivalDetector.Decision;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 
@@ -33,20 +34,20 @@ public class ArrivalDetectorTest {
 
     private static final GeoPoint TARGET_POSITION = new GeoPoint(-37.79810, 144.95910);
 
-    private static final Attraction TARGET = new Attraction(
+    private static final Attraction TARGET = Attraction.seeded(
             "old-arts",
             "Old Arts Building",
             AttractionCategory.UNIVERSITY_LANDMARK,
             "The 1924 clocktower building.",
-            false,
+            IndoorClassification.OUTDOOR,
             TARGET_POSITION);
 
-    private static final Attraction OTHER_TARGET = new Attraction(
+    private static final Attraction OTHER_TARGET = Attraction.seeded(
             "system-garden",
             "System Garden",
             AttractionCategory.PARK,
             "A small botanical garden.",
-            false,
+            IndoorClassification.OUTDOOR,
             new GeoPoint(-37.79720, 144.96050));
 
     private ArrivalDetector detector;

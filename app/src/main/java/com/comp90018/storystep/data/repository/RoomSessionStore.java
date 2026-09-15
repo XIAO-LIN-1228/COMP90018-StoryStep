@@ -3,6 +3,8 @@ package com.comp90018.storystep.data.repository;
 import android.database.sqlite.SQLiteConstraintException;
 
 import com.comp90018.storystep.data.AttractionCategoryCodec;
+import com.comp90018.storystep.data.AttractionProvenanceCodec;
+import com.comp90018.storystep.data.IndoorClassificationCodec;
 import com.comp90018.storystep.data.local.RoutePointDao;
 import com.comp90018.storystep.data.local.RoutePointEntity;
 import com.comp90018.storystep.data.local.SessionDao;
@@ -467,18 +469,23 @@ public final class RoomSessionStore implements SessionStore {
             entity.destinationName = null;
             entity.destinationCategory = null;
             entity.destinationDescription = null;
-            entity.destinationIndoor = false;
+            entity.destinationIndoor = null;
             entity.destinationLatitude = 0.0;
             entity.destinationLongitude = 0.0;
+            entity.destinationProvenance = null;
+            entity.destinationSourceRef = null;
             return;
         }
         entity.destinationId = destination.getId();
         entity.destinationName = destination.getName();
         entity.destinationCategory = AttractionCategoryCodec.toCode(destination.getCategory());
         entity.destinationDescription = destination.getDescription();
-        entity.destinationIndoor = destination.isIndoor();
+        entity.destinationIndoor = IndoorClassificationCodec.toCode(destination.getIndoor());
         entity.destinationLatitude = destination.getLocation().getLatitude();
         entity.destinationLongitude = destination.getLocation().getLongitude();
+        entity.destinationProvenance =
+                AttractionProvenanceCodec.toCode(destination.getProvenance());
+        entity.destinationSourceRef = destination.getSourceRef();
     }
 
     private static Attraction toDestination(SessionEntity entity) {
@@ -491,8 +498,10 @@ public final class RoomSessionStore implements SessionStore {
                 AttractionCategoryCodec.fromCode(
                         entity.destinationCategory, AttractionCategory.CULTURAL_SITE),
                 entity.destinationDescription == null ? "" : entity.destinationDescription,
-                entity.destinationIndoor,
-                new GeoPoint(entity.destinationLatitude, entity.destinationLongitude));
+                IndoorClassificationCodec.fromCode(entity.destinationIndoor),
+                new GeoPoint(entity.destinationLatitude, entity.destinationLongitude),
+                AttractionProvenanceCodec.fromCode(entity.destinationProvenance),
+                entity.destinationSourceRef);
     }
 
     private static SessionSummary toSummary(SessionEntity entity) {

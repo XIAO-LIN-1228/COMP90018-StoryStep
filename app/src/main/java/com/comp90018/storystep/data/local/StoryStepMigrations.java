@@ -177,8 +177,147 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 5 to 6: makes the indoor classification tri-state everywhere a place is stored, and
+     * records which areas have been fetched.
+     *
+     * <p>{@code attractions.indoor} was an {@code INTEGER NOT NULL} boolean. SQLite cannot change a
+     * column's type in place, so the table is rebuilt in the documented way — create, copy, drop,
+     * rename — inside the transaction Room already wraps a migration in. Existing rows are all
+     * hand-written seed content whose classification was deliberate, so {@code 1} becomes
+     * {@code 'indoor'} and {@code 0} becomes {@code 'outdoor'}: no row is downgraded to unknown for
+     * something it did in fact record.
+     *
+     * <p>The new {@code source_ref} column is left null for those rows, which is accurate — the
+     * seed set has no provider reference to keep.
+     *
+     * <p>{@code attraction_areas} starts empty. That is the correct state and not a loss: it says
+     * no area has been fetched yet, which was true of version 5 in any case, and the first query
+     * after the upgrade fetches one.
+     */
+    public static final Migration MIGRATION_5_6 = new Migration(5, 6) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `attractions_new` ("
+                    + "`id` TEXT NOT NULL, "
+                    + "`name` TEXT, "
+                    + "`category` TEXT, "
+                    + "`description` TEXT, "
+                    + "`indoor` TEXT, "
+                    + "`latitude` REAL NOT NULL, "
+                    + "`longitude` REAL NOT NULL, "
+                    + "`provenance` TEXT, "
+                    + "`fetched_at_millis` INTEGER NOT NULL, "
+                    + "`source_ref` TEXT, "
+                    + "PRIMARY KEY(`id`))");
+            database.execSQL("INSERT INTO `attractions_new` ("
+                    + "`id`, `name`, `category`, `description`, `indoor`, "
+                    + "`latitude`, `longitude`, `provenance`, `fetched_at_millis`, `source_ref`) "
+                    + "SELECT `id`, `name`, `category`, `description`, "
+                    + "CASE `indoor` WHEN 1 THEN 'indoor' ELSE 'outdoor' END, "
+                    + "`latitude`, `longitude`, `provenance`, `fetched_at_millis`, NULL "
+                    + "FROM `attractions`");
+            database.execSQL("DROP TABLE `attractions`");
+            database.execSQL("ALTER TABLE `attractions_new` RENAME TO `attractions`");
+
+            // The saved copy of a place is a self-contained snapshot, so it carries its own
+            // classification and needs the same tri-state. Leaving it a boolean would mean saving
+            // an unclassified place and finding it outdoors when it came back.
+            database.execSQL("CREATE TABLE IF NOT EXISTS `saved_attractions_new` ("
+                    + "`attraction_id` TEXT NOT NULL, "
+                    + "`name` TEXT, "
+                    + "`category` TEXT, "
+                    + "`description` TEXT, "
+                    + "`indoor` TEXT, "
+                    + "`latitude` REAL NOT NULL, "
+                    + "`longitude` REAL NOT NULL, "
+                    + "`saved_at_millis` INTEGER NOT NULL, "
+                    + "`provenance` TEXT, "
+                    + "`source_ref` TEXT, "
+                    + "PRIMARY KEY(`attraction_id`))");
+            // Provenance joins the snapshot too. A saved place is shown from this row alone, and
+            // a licence that requires its source to be credited does not stop requiring it because
+            // the user pressed Save. Existing rows are back-filled to the seed marker, which is
+            // what every one of them in fact is: there was no provider to save from before this.
+            database.execSQL("INSERT INTO `saved_attractions_new` ("
+                    + "`attraction_id`, `name`, `category`, `description`, `indoor`, "
+                    + "`latitude`, `longitude`, `saved_at_millis`, `provenance`, `source_ref`) "
+                    + "SELECT `attraction_id`, `name`, `category`, `description`, "
+                    + "CASE `indoor` WHEN 1 THEN 'indoor' ELSE 'outdoor' END, "
+                    + "`latitude`, `longitude`, `saved_at_millis`, 'seed', NULL "
+                    + "FROM `saved_attractions`");
+            database.execSQL("DROP TABLE `saved_attractions`");
+            database.execSQL("ALTER TABLE `saved_attractions_new` RENAME TO `saved_attractions`");
+
+            // And so does a session's destination snapshot, for the same reason: history has to
+            // stay readable without the attraction cache, so it keeps its own copy of the place.
+            database.execSQL("CREATE TABLE IF NOT EXISTS `sessions_new` ("
+                    + "`id` TEXT NOT NULL, "
+                    + "`state` TEXT, "
+                    + "`pause_reason` TEXT, "
+                    + "`start_wall_clock_millis` INTEGER NOT NULL, "
+                    + "`end_wall_clock_millis` INTEGER NOT NULL, "
+                    + "`active_duration_millis` INTEGER NOT NULL, "
+                    + "`distance_meters` REAL NOT NULL, "
+                    + "`segment` INTEGER NOT NULL, "
+                    + "`segment_count` INTEGER NOT NULL, "
+                    + "`finished` INTEGER NOT NULL, "
+                    + "`last_checkpoint_wall_clock_millis` INTEGER NOT NULL, "
+                    + "`destination_id` TEXT, "
+                    + "`destination_name` TEXT, "
+                    + "`destination_category` TEXT, "
+                    + "`destination_description` TEXT, "
+                    + "`destination_indoor` TEXT, "
+                    + "`destination_latitude` REAL NOT NULL, "
+                    + "`destination_longitude` REAL NOT NULL, "
+                    + "`weather_area_key` TEXT, "
+                    + "`weather_condition` TEXT, "
+                    + "`weather_temperature_celsius` REAL NOT NULL, "
+                    + "`weather_observed_at_millis` INTEGER NOT NULL, "
+                    + "`weather_fetched_at_millis` INTEGER NOT NULL, "
+                    + "`movement_state` TEXT, "
+                    + "`movement_stationary_millis` INTEGER NOT NULL, "
+                    + "`movement_moving_millis` INTEGER NOT NULL, "
+                    + "`interrupted` INTEGER NOT NULL, "
+                    + "`destination_provenance` TEXT, "
+                    + "`destination_source_ref` TEXT, "
+                    + "PRIMARY KEY(`id`))");
+            database.execSQL("INSERT INTO `sessions_new` SELECT "
+                    + "`id`, `state`, `pause_reason`, `start_wall_clock_millis`, "
+                    + "`end_wall_clock_millis`, `active_duration_millis`, `distance_meters`, "
+                    + "`segment`, `segment_count`, `finished`, "
+                    + "`last_checkpoint_wall_clock_millis`, `destination_id`, `destination_name`, "
+                    + "`destination_category`, `destination_description`, "
+                    + "CASE `destination_indoor` WHEN 1 THEN 'indoor' ELSE 'outdoor' END, "
+                    + "`destination_latitude`, `destination_longitude`, `weather_area_key`, "
+                    + "`weather_condition`, `weather_temperature_celsius`, "
+                    + "`weather_observed_at_millis`, `weather_fetched_at_millis`, "
+                    + "`movement_state`, `movement_stationary_millis`, "
+                    + "`movement_moving_millis`, `interrupted`, "
+                    + "CASE WHEN `destination_id` IS NULL OR `destination_id` = '' "
+                    + "THEN NULL ELSE 'seed' END, NULL FROM `sessions`");
+            // Route points and visits reference sessions by a cascading foreign key. Room runs a
+            // migration with foreign keys deferred, so dropping the old table here does not take
+            // them with it, and the rename restores the target before the constraint is rechecked.
+            database.execSQL("DROP TABLE `sessions`");
+            database.execSQL("ALTER TABLE `sessions_new` RENAME TO `sessions`");
+            database.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_finished` "
+                    + "ON `sessions` (`finished`)");
+            database.execSQL("CREATE INDEX IF NOT EXISTS "
+                    + "`index_sessions_finished_end_wall_clock_millis` "
+                    + "ON `sessions` (`finished`, `end_wall_clock_millis`)");
+
+            database.execSQL("CREATE TABLE IF NOT EXISTS `attraction_areas` ("
+                    + "`area_key` TEXT NOT NULL, "
+                    + "`fetched_at_millis` INTEGER NOT NULL, "
+                    + "`record_count` INTEGER NOT NULL, "
+                    + "PRIMARY KEY(`area_key`))");
+        }
+    };
+
     /** Every migration, in order, for the builder and the migration test. */
     public static Migration[] all() {
-        return new Migration[]{MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5};
+        return new Migration[]{
+                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6};
     }
 }

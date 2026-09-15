@@ -217,6 +217,123 @@ public class StoryStepMigrationTest {
         version5.close();
     }
 
+    @Test
+    public void migratingToSixMakesTheIndoorClassificationTriStateWithoutLosingRows()
+            throws IOException {
+        SupportSQLiteDatabase version5 = helper.createDatabase(TEST_DATABASE, 5);
+
+        ContentValues seeded = new ContentValues();
+        seeded.put("id", "old-arts");
+        seeded.put("name", "Old Arts Building");
+        seeded.put("category", "university_landmark");
+        seeded.put("description", "The 1924 clocktower building.");
+        seeded.put("indoor", 0);
+        seeded.put("latitude", -37.79810);
+        seeded.put("longitude", 144.95910);
+        seeded.put("provenance", "seed");
+        seeded.put("fetched_at_millis", 1_700_000_000_000L);
+        version5.insert("attractions",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, seeded);
+
+        ContentValues museum = new ContentValues(seeded);
+        museum.put("id", "melbourne-museum");
+        museum.put("name", "Melbourne Museum");
+        museum.put("category", "museum");
+        museum.put("indoor", 1);
+        version5.insert("attractions",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, museum);
+
+        ContentValues saved = new ContentValues();
+        saved.put("attraction_id", "melbourne-museum");
+        saved.put("name", "Melbourne Museum");
+        saved.put("category", "museum");
+        saved.put("description", "Natural history and culture.");
+        saved.put("indoor", 1);
+        saved.put("latitude", -37.80320);
+        saved.put("longitude", 144.97170);
+        saved.put("saved_at_millis", 1_700_000_000_000L);
+        version5.insert("saved_attractions",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, saved);
+
+        ContentValues session = sessionValues("finished-walk", null);
+        session.put("weather_temperature_celsius", 0.0);
+        session.put("weather_observed_at_millis", 0L);
+        session.put("weather_fetched_at_millis", 0L);
+        session.put("movement_stationary_millis", 0L);
+        session.put("movement_moving_millis", 0L);
+        session.put("interrupted", 0);
+        session.put("destination_id", "old-arts");
+        session.put("destination_name", "Old Arts Building");
+        session.put("destination_category", "university_landmark");
+        session.put("destination_description", "The 1924 clocktower building.");
+        version5.insert("sessions",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
+
+        ContentValues point = new ContentValues();
+        point.put("session_id", "finished-walk");
+        point.put("sequence", 0);
+        point.put("segment", 1);
+        point.put("latitude", -37.79630);
+        point.put("longitude", 144.96140);
+        point.put("accuracy_meters", 8.0);
+        point.put("wall_clock_millis", 1_700_000_000_000L);
+        version5.insert("route_points",
+                android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, point);
+
+        ContentValues visit = new ContentValues();
+        visit.put("session_id", "finished-walk");
+        visit.put("attraction_id", "old-arts");
+        visit.put("arrival_wall_clock_millis", 1_700_000_000_000L);
+        visit.put("attraction_name", "Old Arts Building");
+        visit.put("story", "A recorded story.");
+        visit.put("unread", 1);
+        version5.insert("visits", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, visit);
+        version5.close();
+
+        SupportSQLiteDatabase version6 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 6, true, StoryStepMigrations.MIGRATION_5_6);
+
+        // The attractions table is rebuilt rather than altered, so proving nothing was lost in the
+        // copy is the point of this case.
+        assertEquals(2, count(version6, "SELECT COUNT(*) FROM attractions"));
+        assertEquals("a classification that was recorded is carried across, not reset to unknown",
+                1, count(version6,
+                        "SELECT COUNT(*) FROM attractions "
+                                + "WHERE id = 'melbourne-museum' AND indoor = 'indoor'"));
+        assertEquals(1, count(version6,
+                "SELECT COUNT(*) FROM attractions WHERE id = 'old-arts' AND indoor = 'outdoor'"));
+        assertEquals("provenance survives the rebuild", 2,
+                count(version6, "SELECT COUNT(*) FROM attractions WHERE provenance = 'seed'"));
+
+        assertEquals(1, count(version6, "SELECT COUNT(*) FROM saved_attractions"));
+        assertEquals("the saved snapshot keeps its own classification", 1,
+                count(version6,
+                        "SELECT COUNT(*) FROM saved_attractions WHERE indoor = 'indoor'"));
+        assertEquals("every pre-existing save came from the bundled set", 1,
+                count(version6,
+                        "SELECT COUNT(*) FROM saved_attractions WHERE provenance = 'seed'"));
+
+        // sessions is rebuilt too, and route points and visits reference it by a cascading foreign
+        // key — so this asserts the drop and rename did not take the records with them.
+        assertEquals(1, count(version6, "SELECT COUNT(*) FROM sessions"));
+        assertEquals(1, count(version6, "SELECT COUNT(*) FROM route_points"));
+        assertEquals(1, count(version6, "SELECT COUNT(*) FROM visits"));
+        assertEquals(1, count(version6,
+                "SELECT COUNT(*) FROM sessions WHERE destination_indoor = 'outdoor'"));
+        assertEquals(1, count(version6,
+                "SELECT COUNT(*) FROM sessions WHERE destination_provenance = 'seed'"));
+
+        // A session with no destination must not acquire one.
+        assertEquals(0, count(version6,
+                "SELECT COUNT(*) FROM sessions WHERE destination_id IS NULL "
+                        + "AND destination_provenance IS NOT NULL"));
+
+        assertEquals("no area has been fetched yet, which was also true at version 5",
+                0, count(version6, "SELECT COUNT(*) FROM attraction_areas"));
+
+        version6.close();
+    }
+
     private static ContentValues sessionValues(String id, String pauseReason) {
         ContentValues session = new ContentValues();
         session.put("id", id);
@@ -264,6 +381,7 @@ public class StoryStepMigrationTest {
         assertEquals(0, database.visitDao().countBySession("none"));
         assertEquals(0, database.savedAttractionDao().count());
         assertEquals(0, database.weatherCacheDao().count());
+        assertEquals(0, database.attractionAreaDao().count());
         // The history queries added at version 5 must run against the migrated schema too.
         assertEquals(0, database.sessionDao().countFinished());
         assertTrue(database.sessionDao().findFinished().isEmpty());

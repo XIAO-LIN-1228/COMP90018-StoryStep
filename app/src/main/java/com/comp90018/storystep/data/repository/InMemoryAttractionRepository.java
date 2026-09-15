@@ -1,7 +1,9 @@
 package com.comp90018.storystep.data.repository;
 
+import com.comp90018.storystep.domain.attraction.AttractionFreshness;
 import com.comp90018.storystep.domain.geo.NearbyAttractions;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionResult;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.AttractionNotFoundException;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
@@ -14,9 +16,12 @@ import java.util.List;
 /**
  * Deterministic {@link AttractionRepository} backed by a fixed list.
  *
- * <p>It answers synchronously and performs no I/O, which makes it the runtime source for
- * Stage 1 and a usable fake in tests. The Room and Retrofit sources replace it behind the same
- * interface; nothing in the UI layer changes when they do.
+ * <p>It answers synchronously and performs no I/O, which makes it a usable fake in tests and in
+ * any assembly that wants a fixed set of places. {@link CachedAttractionRepository} is the runtime
+ * source; nothing in the UI layer distinguishes them.
+ *
+ * <p>Results are reported {@link AttractionFreshness#FRESH}: a fixed list makes no claim about a
+ * provider, so there is no provider answer for it to be stale relative to.
  */
 public final class InMemoryAttractionRepository implements AttractionRepository {
 
@@ -33,9 +38,10 @@ public final class InMemoryAttractionRepository implements AttractionRepository 
     @Override
     public void loadNearbyAttractions(GeoPoint origin,
                                       double radiusMeters,
-                                      RepositoryCallback<List<Attraction>> callback) {
+                                      RepositoryCallback<AttractionResult> callback) {
         try {
-            callback.onSuccess(NearbyAttractions.within(attractions, origin, radiusMeters));
+            callback.onSuccess(AttractionResult.fresh(
+                    NearbyAttractions.within(attractions, origin, radiusMeters)));
         } catch (RuntimeException error) {
             callback.onError(error);
         }

@@ -11,13 +11,16 @@ import com.comp90018.storystep.application.SensingSources;
 import com.comp90018.storystep.data.local.RoomTransactions;
 import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.remote.ApiClientFactory;
+import com.comp90018.storystep.data.remote.OverpassAttractionSource;
 import com.comp90018.storystep.data.remote.RetrofitWeatherSource;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
-import com.comp90018.storystep.data.repository.RoomAttractionRepository;
+import com.comp90018.storystep.data.repository.AttractionCache;
+import com.comp90018.storystep.data.repository.CachedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomHistoryRepository;
 import com.comp90018.storystep.data.repository.RoomSessionStore;
 import com.comp90018.storystep.data.repository.SampleAttractions;
+import com.comp90018.storystep.domain.attraction.AttractionFreshnessPolicy;
 import com.comp90018.storystep.domain.geo.LocationQualityPolicy;
 import com.comp90018.storystep.domain.geo.LocationSampleFilter;
 import com.comp90018.storystep.domain.model.GeoPoint;
@@ -56,6 +59,7 @@ public class AppContainer {
 
     private final Context applicationContext;
     private final StoryStepDatabase database;
+    private final AttractionCache attractionCache;
     private final AttractionRepository attractionRepository;
     private final HistoryRepository historyRepository;
     private final LocationQualityPolicy locationQualityPolicy;
@@ -83,7 +87,7 @@ public class AppContainer {
     }
 
     /**
-     * @param attractionRepository an override, or null to read the Room cache
+     * @param attractionRepository an override, or null for the cached provider-backed source
      * @param historyRepository    an override, or null to read the Room session tables
      */
     public AppContainer(Context applicationContext,
@@ -97,10 +101,26 @@ public class AppContainer {
         // Opened here, once, because the database is process-scoped: a second instance would mean
         // a second connection pool and two views of the same file.
         this.database = StoryStepDatabase.create(this.applicationContext);
+        // One cache object behind whichever repository is wired, so the seeding rule and the
+        // write policy exist once rather than once per repository.
+        this.attractionCache = new AttractionCache(
+                database.attractionDao(),
+                database.attractionAreaDao(),
+                new RoomTransactions(database),
+                clock,
+                SampleAttractions.get());
         this.attractionRepository = attractionRepository != null
                 ? attractionRepository
-                : new RoomAttractionRepository(
-                        database.attractionDao(), clock, ioExecutor, mainExecutor);
+                : new CachedAttractionRepository(
+                        attractionCache,
+                        new OverpassAttractionSource(
+                                ApiClientFactory.createOverpassService(
+                                        isDebuggable(this.applicationContext))),
+                        new AndroidConnectivityMonitor(this.applicationContext),
+                        AttractionFreshnessPolicy.defaultPolicy(),
+                        clock,
+                        ioExecutor,
+                        mainExecutor);
         // Process-scoped rather than per-screen: the detail screen, the nearby list and the saved
         // list all observe the same set of saved identifiers, and a second instance would mean a
         // second cache that no write ever reaches.

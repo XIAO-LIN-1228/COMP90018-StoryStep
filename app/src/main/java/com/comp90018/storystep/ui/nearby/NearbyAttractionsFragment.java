@@ -31,6 +31,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationAccessPolicy;
+import com.comp90018.storystep.ui.AttributionText;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.weather.WeatherUiState;
@@ -338,9 +339,9 @@ public class NearbyAttractionsFragment extends Fragment
         // should reduce what the screen claims, not empty it.
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
-        originLabel.setText(originLabelText(state.getOriginLabel()));
+        originLabel.setText(provenanceLine(state));
 
-        Integer message = statusMessageFor(status);
+        Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
         statusMessage.setVisibility(showMessage ? View.VISIBLE : View.GONE);
         if (showMessage) {
@@ -354,10 +355,12 @@ public class NearbyAttractionsFragment extends Fragment
     }
 
     @Nullable
-    private Integer statusMessageFor(NearbyUiState.Status status) {
-        switch (status) {
+    private Integer statusMessageFor(NearbyUiState state) {
+        switch (state.getStatus()) {
             case ERROR:
-                return R.string.nearby_error;
+                // Worded from the typed reason: being offline, a busy service and a service that
+                // answered with nothing usable are three different things to be told.
+                return AttributionText.errorMessageFor(state.getErrorReason());
             case EMPTY:
                 return R.string.nearby_empty;
             case WAITING_FOR_FIX:
@@ -365,6 +368,28 @@ public class NearbyAttractionsFragment extends Fragment
             default:
                 return null;
         }
+    }
+
+    /**
+     * The line under the section header saying where the listed places came from.
+     *
+     * <p>Three facts stack here, and all three are about provenance rather than about the list:
+     * whose position the distances are measured from, whether this is a current answer or stored
+     * content shown in its absence, and which sources are on screen. The source credit is a
+     * licence obligation and has to be visible wherever the data is, so it lives on the screen
+     * itself rather than behind an about page.
+     */
+    private CharSequence provenanceLine(NearbyUiState state) {
+        StringBuilder line = new StringBuilder(getString(originLabelText(state.getOriginLabel())));
+        int notice = AttributionText.freshnessNoticeFor(state.getFreshness());
+        if (notice != 0) {
+            line.append('\n').append(getString(notice));
+        }
+        int attribution = AttributionText.attributionFor(state.getProvenances());
+        if (attribution != 0) {
+            line.append('\n').append(getString(attribution));
+        }
+        return line;
     }
 
     /**
