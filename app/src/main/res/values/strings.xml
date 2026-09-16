@@ -163,6 +163,7 @@
     <string name="exploration_direction_unavailable">Direction unavailable</string>
     <string name="exploration_remaining_unavailable">Distance unavailable — waiting for a fix</string>
     <string name="exploration_remaining_format">%1$s remaining</string>
+    <string name="exploration_remaining_none">—</string>
     <string name="exploration_travelled_zero">0 m travelled</string>
     <string name="exploration_travelled_format">%1$s travelled</string>
     <string name="exploration_accuracy_unavailable">No usable fix yet</string>

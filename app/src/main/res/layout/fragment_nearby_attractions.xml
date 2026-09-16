@@ -257,15 +257,6 @@
             android:layout_weight="1"
             android:text="@string/home_nearby" />
 
-        <!-- How many of the loaded places have had their story read: the collection count. -->
-        <TextView
-            android:id="@+id/unlock_progress"
-            style="@style/Widget.StoryStep.Pill"
-            android:layout_marginEnd="@dimen/space_8"
-            android:textColor="@color/story_signal_ink"
-            android:visibility="gone"
-            app:drawableStartCompat="@drawable/ic_lock_outline"
-            app:drawableTint="@color/story_signal_ink" />
 
         <TextView
             android:id="@+id/see_all_button"
@@ -279,6 +270,18 @@
             android:textSize="14sp"
             android:fontFamily="@font/jakarta_semibold" />
     </LinearLayout>
+
+    <!-- How many of the loaded places have had their story read: the collection count. -->
+    <TextView
+        android:id="@+id/unlock_progress"
+        style="@style/Widget.StoryStep.Pill"
+        android:layout_marginStart="@dimen/page_horizontal_margin"
+        android:textColor="@color/story_signal_ink"
+        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_lock_outline"
+        app:drawableTint="@color/story_signal_ink"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nearby_section_header" />
 
     <!-- Offline / stale: shown only when the list is stored content rather than a current answer. -->
     <TextView
@@ -304,7 +307,8 @@
         app:drawableTint="@color/story_on_ink"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/nearby_section_header" />
+        app:layout_constraintTop_toBottomOf="@id/unlock_progress"
+        app:layout_goneMarginTop="@dimen/space_8" />
 
     <!--
         States which position the listed distances are measured from. This must always be visible:

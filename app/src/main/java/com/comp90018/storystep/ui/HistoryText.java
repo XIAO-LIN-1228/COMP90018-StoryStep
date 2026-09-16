@@ -31,16 +31,24 @@ public final class HistoryText {
                 DateUtils.FORMAT_ABBREV_RELATIVE).toString();
     }
 
-    /** A date and a time of day, for a single recorded moment such as an arrival. */
+    /**
+     * A date and a time of day, for a single recorded moment such as an arrival.
+     *
+     * <p>Formatted with {@link java.text.DateFormat} rather than {@code DateUtils}: the latter
+     * needs a {@link android.content.Context}, and passing {@code null} - which this used to do -
+     * throws on API 36 the moment a journey detail renders its date.
+     */
     public static String formatDateTime(Resources resources, long wallClockMillis) {
-        return DateUtils.formatDateTime(null, wallClockMillis,
-                DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_SHOW_TIME
-                        | DateUtils.FORMAT_ABBREV_MONTH);
+        java.text.DateFormat format = java.text.DateFormat.getDateTimeInstance(
+                java.text.DateFormat.MEDIUM, java.text.DateFormat.SHORT,
+                resources.getConfiguration().getLocales().get(0));
+        return format.format(new java.util.Date(wallClockMillis));
     }
 
-    /** Time of day only. */
+    /** Time of day only. Context-free for the same reason as {@link #formatDateTime}. */
     public static String formatTime(long wallClockMillis) {
-        return DateUtils.formatDateTime(null, wallClockMillis, DateUtils.FORMAT_SHOW_TIME);
+        return java.text.DateFormat.getTimeInstance(java.text.DateFormat.SHORT)
+                .format(new java.util.Date(wallClockMillis));
     }
 
     /**

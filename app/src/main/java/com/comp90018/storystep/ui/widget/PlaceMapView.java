@@ -93,6 +93,19 @@ public class PlaceMapView extends FrameLayout {
         setContentDescription(context.getString(R.string.home_map_description));
     }
 
+    /**
+     * Where to look before any position exists. Moves the camera only - no marker - so a
+     * screen with no fix yet opens on the area it will describe rather than on the whole
+     * world at zoom zero. A later {@link #setOrigin} still frames on the real position.
+     */
+    public void centerOn(GeoPoint point) {
+        if (point == null || framed) {
+            return;
+        }
+        map.getController().setZoom(DEFAULT_ZOOM);
+        map.getController().setCenter(toOsm(point));
+    }
+
     /** The user's position. Centres the map the first time a position arrives. */
     public void setOrigin(@Nullable GeoPoint origin) {
         if (origin == null) {

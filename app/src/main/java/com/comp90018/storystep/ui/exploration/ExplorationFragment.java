@@ -38,6 +38,7 @@ import java.util.concurrent.TimeUnit;
 public class ExplorationFragment extends Fragment {
 
     private PlaceMapView map;
+    private boolean remainingUnavailable;
 
     private ExplorationViewModel viewModel;
 
@@ -84,6 +85,8 @@ public class ExplorationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         map = view.findViewById(R.id.exploration_map);
+        map.centerOn(((com.comp90018.storystep.StoryStepApplication) requireActivity()
+                .getApplication()).getAppContainer().getReferenceOrigin());
 
         destinationNameView = view.findViewById(R.id.exploration_destination_name);
         durationView = view.findViewById(R.id.exploration_duration);
@@ -150,10 +153,13 @@ public class ExplorationFragment extends Fragment {
         durationView.setText(formatDuration(state.getActiveDurationMillis()));
         stateChip.setText(stateLabel(state));
 
+        // The big figure is a figure. With no fix there is no figure, so it shows a dash and
+        // the explanation moves to the label above it, where a sentence has room.
         remainingView.setText(state.hasRemainingDistance()
                 ? getString(R.string.exploration_remaining_format,
                         DistanceText.format(getResources(), state.getRemainingDistanceMeters()))
-                : getString(R.string.exploration_remaining_unavailable));
+                : getString(R.string.exploration_remaining_none));
+        remainingUnavailable = !state.hasRemainingDistance();
         travelledView.setText(getString(R.string.exploration_travelled_format,
                 DistanceText.format(getResources(), state.getTravelledDistanceMeters())));
         accuracyView.setText(state.hasAccuracy()
@@ -240,7 +246,9 @@ public class ExplorationFragment extends Fragment {
     private void renderDirection(ExplorationUiState state) {
         if (!state.hasCardinal()) {
             directionArrow.setVisibility(View.GONE);
-            directionView.setText(R.string.exploration_direction_unavailable);
+            directionView.setText(remainingUnavailable
+                    ? R.string.exploration_remaining_unavailable
+                    : R.string.exploration_direction_unavailable);
             return;
         }
         String cardinal = getString(DirectionLabels.cardinalOf(state.getCardinal()));
