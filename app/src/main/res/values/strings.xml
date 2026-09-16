@@ -244,7 +244,7 @@
     <string name="history_has_gaps">Recorded in %1$d parts</string>
     <string name="history_duration_minutes">%1$d min</string>
     <string name="history_duration_hours">%1$dh %2$dm</string>
-    <string name="history_duration_under_a_minute">Under a minute</string>
+    <string name="history_duration_under_a_minute">&lt;1 min</string>
     <plurals name="history_visit_count">
         <item quantity="one">%d place visited</item>
         <item quantity="other">%d places visited</item>

@@ -73,6 +73,9 @@ public final class JourneyAdapter
         private final TextView title;
         private final TextView date;
         private final TextView stats;
+        private final TextView statDuration;
+        private final TextView statDistance;
+        private final TextView statStories;
         private final TextView label;
         private final ImageButton delete;
 
@@ -81,6 +84,9 @@ public final class JourneyAdapter
             title = itemView.findViewById(R.id.journey_item_title);
             date = itemView.findViewById(R.id.journey_item_date);
             stats = itemView.findViewById(R.id.journey_item_stats);
+            statDuration = itemView.findViewById(R.id.stat_duration);
+            statDistance = itemView.findViewById(R.id.stat_distance);
+            statStories = itemView.findViewById(R.id.stat_stories);
             label = itemView.findViewById(R.id.journey_item_label);
             delete = itemView.findViewById(R.id.journey_item_delete);
         }
@@ -91,19 +97,34 @@ public final class JourneyAdapter
             Resources resources = itemView.getResources();
 
             // A session with no chosen destination is still a real walk; it just has no name.
-            title.setText(journey.getDestinationName() == null
-                    ? resources.getString(R.string.history_untitled)
-                    : resources.getString(R.string.history_walk_towards,
-                            journey.getDestinationName()));
+            if (journey.getDestinationName() == null) {
+                title.setText(R.string.history_untitled);
+            } else {
+                String name = journey.getDestinationName();
+                String full = resources.getString(R.string.history_walk_towards, name);
+                android.text.SpannableString styled = new android.text.SpannableString(full);
+                int start = full.indexOf(name);
+                if (start >= 0) {
+                    styled.setSpan(new android.text.style.ForegroundColorSpan(
+                                    androidx.core.content.ContextCompat.getColor(
+                                            itemView.getContext(), R.color.story_signal_ink)),
+                            start, start + name.length(),
+                            android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
+                title.setText(styled);
+            }
 
             // Started, not ended: it is when the user set out that they remember.
             date.setText(HistoryText.formatDate(resources, journey.getStartWallClockMillis()));
 
+            String duration = HistoryText.formatDuration(resources, journey.getActiveDurationMillis());
+            String distance = DistanceText.format(resources, journey.getDistanceMeters());
             stats.setText(resources.getString(R.string.history_stats_format,
-                    HistoryText.formatDuration(resources, journey.getActiveDurationMillis())
-                            + "  ·  "
-                            + DistanceText.format(resources, journey.getDistanceMeters()),
+                    duration + "  ·  " + distance,
                     HistoryText.formatVisitCount(resources, journey.getVisitCount())));
+            statDuration.setText(duration);
+            statDistance.setText(distance);
+            statStories.setText(String.valueOf(journey.getVisitCount()));
 
             // The two honesty labels. Interrupted is the more serious of the two, so it wins the
             // one line available rather than both being crammed in.

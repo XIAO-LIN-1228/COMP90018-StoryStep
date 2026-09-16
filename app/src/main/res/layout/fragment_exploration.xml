@@ -114,35 +114,31 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Headline"
+                        style="@style/Widget.StoryStep.StatLabel"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:id="@+id/exploration_direction"
                         android:text="@string/exploration_direction_unavailable" />
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Title"
+                        style="@style/TextAppearance.StoryStep.Display"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:id="@+id/exploration_remaining"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="4dp"
                         android:text="@string/exploration_remaining_unavailable"
-                        android:textColor="@color/story_ink" />
+                        android:textSize="@dimen/text_display" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@color/story_surface_sunk"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
                 <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    style="@style/TextAppearance.StoryStep.Title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:id="@+id/exploration_travelled"
@@ -150,19 +146,21 @@
                     android:text="@string/exploration_travelled_zero" />
 
                 <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    style="@style/TextAppearance.StoryStep.Title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:id="@+id/exploration_movement"
                     android:layout_weight="1"
-                    android:gravity="center"
                     android:text="@string/movement_unknown" />
 
                 <TextView
                     style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="wrap_content"
-                    android:id="@+id/exploration_accuracy"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:id="@+id/exploration_accuracy"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:textColor="@color/story_ink_3"
                     android:text="@string/exploration_accuracy_unavailable" />
             </LinearLayout>
 
