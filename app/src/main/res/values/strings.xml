@@ -116,6 +116,8 @@
     <string name="home_resume">Resume</string>
     <string name="home_nearby">Nearby stories</string>
     <string name="home_see_all">See all</string>
+    <string name="home_search_hint">Search places</string>
+    <string name="home_unlock_progress">%1$d of %2$d unlocked</string>
     <string name="home_filter_all">All</string>
     <string name="home_filter_indoor">Indoor</string>
     <string name="home_filter_outdoor">Outdoor</string>
@@ -216,20 +218,9 @@
     <string name="memory_photo_picker_demo">Photo picker will be connected in the next implementation stage.</string>
 
     <!-- Journey summary and history -->
-    <string name="summary_title">Journey complete</string>
-    <string name="summary_supporting">Great work exploring the stories around you.</string>
-    <string name="summary_date">31 Aug 2026</string>
-    <string name="summary_time">42 min</string>
-    <string name="summary_distance">2.3 km</string>
-    <string name="summary_stories">4 stories</string>
     <string name="summary_time_label">Time</string>
     <string name="summary_distance_label">Distance</string>
     <string name="summary_discovered_label">Discovered</string>
-    <string name="summary_memories">Memories</string>
-    <string name="summary_memory_one">Loved the details in the grand hall.</string>
-    <string name="summary_memory_two">A quiet moment in the garden.</string>
-    <string name="summary_view_journey">View journey</string>
-    <string name="done">Done</string>
     <string name="journeys_title">Your journeys</string>
     <string name="journey_detail_places">Places discovered</string>
     <string name="journey_explore_again">Explore again</string>
@@ -263,7 +254,6 @@
     <string name="history_weather_label">Weather</string>
     <string name="history_weather_none">Not recorded during this walk.</string>
     <string name="weather_recorded_at">recorded %1$s</string>
-    <string name="history_route_label">Route</string>
     <string name="history_route_none">No route was recorded for this journey.</string>
     <string name="history_route_caption">Approximate route from sampled points. Gaps are time that was not recorded. This is not a navigation route.</string>
     <string name="history_no_story">No story was recorded here.</string>

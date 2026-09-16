@@ -2,6 +2,7 @@ package com.comp90018.storystep.ui.nearby;
 
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
 
 import androidx.annotation.Nullable;
 
@@ -23,6 +24,8 @@ public final class AttractionListItem {
     private final double distanceMeters;
     private final boolean saved;
     @Nullable private final GeoPoint location;
+    private final IndoorClassification indoor;
+    private final boolean visited;
 
     public AttractionListItem(String id,
                               String name,
@@ -38,12 +41,35 @@ public final class AttractionListItem {
                               double distanceMeters,
                               boolean saved,
                               @Nullable GeoPoint location) {
+        this(id, name, category, distanceMeters, saved, location,
+                IndoorClassification.UNKNOWN, false);
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location,
+                              IndoorClassification indoor,
+                              boolean visited) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.distanceMeters = distanceMeters;
         this.saved = saved;
         this.location = location;
+        this.indoor = indoor;
+        this.visited = visited;
+    }
+
+    public IndoorClassification getIndoor() {
+        return indoor;
+    }
+
+    /** Whether a visit has ever been recorded here: a story already read. */
+    public boolean isVisited() {
+        return visited;
     }
 
     /** Where the place is, for pinning it on the map; absent for rows built without one. */

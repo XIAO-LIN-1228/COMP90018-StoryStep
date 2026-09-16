@@ -196,7 +196,10 @@
         app:boxCornerRadiusTopEnd="@dimen/button_corner_radius"
         app:boxCornerRadiusTopStart="@dimen/button_corner_radius"
         app:boxBackgroundColor="@color/story_surface"
-        app:boxStrokeColor="@color/story_ink"
+        app:boxStrokeColor="@color/story_outline"
+        app:boxStrokeWidth="@dimen/hairline"
+        app:boxStrokeWidthFocused="@dimen/hairline"
+        app:hintEnabled="false"
         app:startIconDrawable="@drawable/ic_search"
         app:startIconTint="@color/story_ink_2"
         app:layout_constraintEnd_toEndOf="parent"
@@ -204,8 +207,11 @@
         app:layout_constraintTop_toBottomOf="@id/home_header">
 
         <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/search_input"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:hint="@string/home_search_hint"
+            android:imeOptions="actionSearch"
             android:inputType="text"
             android:minHeight="54dp"
             android:singleLine="true" />
@@ -221,13 +227,12 @@
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/search_container"
-        app:singleSelection="true">
+        app:layout_constraintTop_toBottomOf="@id/search_container">
 
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/home_filter_all" />
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_indoor" />
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_outdoor" />
-        <com.google.android.material.chip.Chip style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_unvisited" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_all" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/home_filter_all" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_indoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_indoor" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_outdoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_outdoor" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_unvisited" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_unvisited" />
     </com.google.android.material.chip.ChipGroup>
 
     <LinearLayout
@@ -252,6 +257,16 @@
             android:layout_weight="1"
             android:text="@string/home_nearby" />
 
+        <!-- How many of the loaded places have had their story read: the collection count. -->
+        <TextView
+            android:id="@+id/unlock_progress"
+            style="@style/Widget.StoryStep.Pill"
+            android:layout_marginEnd="@dimen/space_8"
+            android:textColor="@color/story_signal_ink"
+            android:visibility="gone"
+            app:drawableStartCompat="@drawable/ic_lock_outline"
+            app:drawableTint="@color/story_signal_ink" />
+
         <TextView
             android:id="@+id/see_all_button"
             android:layout_width="wrap_content"
@@ -264,6 +279,32 @@
             android:textSize="14sp"
             android:fontFamily="@font/jakarta_semibold" />
     </LinearLayout>
+
+    <!-- Offline / stale: shown only when the list is stored content rather than a current answer. -->
+    <TextView
+        android:id="@+id/stale_banner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/page_horizontal_margin"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginEnd="@dimen/page_horizontal_margin"
+        android:background="@drawable/bg_stale_banner"
+        android:drawablePadding="@dimen/space_8"
+        android:fontFamily="@font/jakarta_medium"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/space_12"
+        android:paddingTop="10dp"
+        android:paddingEnd="@dimen/space_12"
+        android:paddingBottom="10dp"
+        android:text="@string/nearby_cached_notice"
+        android:textColor="@color/story_on_ink"
+        android:textSize="@dimen/text_supporting"
+        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_info_outline"
+        app:drawableTint="@color/story_on_ink"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/nearby_section_header" />
 
     <!--
         States which position the listed distances are measured from. This must always be visible:
@@ -280,7 +321,8 @@
         android:layout_marginEnd="@dimen/page_horizontal_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/nearby_section_header"
+        app:layout_constraintTop_toBottomOf="@id/stale_banner"
+        app:layout_goneMarginTop="0dp"
         tools:text="@string/nearby_origin_reference_area" />
 
     <!--

@@ -48,7 +48,8 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getSavedAttractionRepository(),
                     appContainer.getReferenceOrigin(),
                     appContainer.getNearbySearchRadiusMeters(),
-                    appContainer.getExplorationCoordinator());
+                    appContainer.getExplorationCoordinator(),
+                    appContainer.getHistoryRepository());
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(

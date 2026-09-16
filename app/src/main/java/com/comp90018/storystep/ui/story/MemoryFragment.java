@@ -32,8 +32,10 @@ public class MemoryFragment extends Fragment {
         view.findViewById(R.id.add_photo_card).setOnClickListener(v ->
                 Toast.makeText(requireContext(), R.string.memory_photo_picker_demo,
                         Toast.LENGTH_SHORT).show());
-        View.OnClickListener finish = v -> NavHostFragment.findNavController(this)
-                .navigate(R.id.action_memory_to_summary);
+        View.OnClickListener finish = v -> NavHostFragment.findNavController(this).navigate(
+                R.id.action_memory_to_journey_detail,
+                com.comp90018.storystep.ui.journey.JourneysFragment
+                        .finishedSessionArguments(this));
         view.findViewById(R.id.save_memory_button).setOnClickListener(finish);
         view.findViewById(R.id.skip_memory_button).setOnClickListener(finish);
     }

@@ -183,8 +183,12 @@ public class ExplorationFragment extends Fragment {
         }
         navigatedAway = true;
         if (state.isFinished()) {
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.action_exploration_to_summary);
+            // Straight to the finished walk. The prototype summary page that used to sit
+            // between here and the real detail screen is gone.
+            NavHostFragment.findNavController(this).navigate(
+                    R.id.action_exploration_to_journey_detail,
+                    com.comp90018.storystep.ui.journey.JourneysFragment
+                            .finishedSessionArguments(this));
         } else {
             // Discarded: there is nothing left to show, and no journey to open.
             NavHostFragment.findNavController(this).popBackStack();

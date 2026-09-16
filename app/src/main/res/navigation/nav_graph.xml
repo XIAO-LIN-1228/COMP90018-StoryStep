@@ -80,7 +80,11 @@
         android:label="@string/exploration_no_destination"
         tools:layout="@layout/fragment_exploration">
         <action android:id="@+id/action_exploration_to_story" app:destination="@id/storyFragment" />
-        <action android:id="@+id/action_exploration_to_summary" app:destination="@id/journeySummaryFragment" />
+        <action
+            android:id="@+id/action_exploration_to_journey_detail"
+            app:destination="@id/journeyDetailFragment"
+            app:popUpTo="@id/nearbyAttractionsFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
     <fragment
@@ -99,16 +103,13 @@
         android:name="com.comp90018.storystep.ui.story.MemoryFragment"
         android:label="@string/memory_title"
         tools:layout="@layout/fragment_memory">
-        <action android:id="@+id/action_memory_to_summary" app:destination="@id/journeySummaryFragment" />
+        <action
+            android:id="@+id/action_memory_to_journey_detail"
+            app:destination="@id/journeyDetailFragment"
+            app:popUpTo="@id/nearbyAttractionsFragment"
+            app:popUpToInclusive="false" />
     </fragment>
 
-    <fragment
-        android:id="@+id/journeySummaryFragment"
-        android:name="com.comp90018.storystep.ui.journey.JourneySummaryFragment"
-        android:label="@string/summary_title"
-        tools:layout="@layout/fragment_journey_summary">
-        <action android:id="@+id/action_summary_to_journey_detail" app:destination="@id/journeyDetailFragment" />
-    </fragment>
 
     <fragment
         android:id="@+id/journeyDetailFragment"
@@ -132,7 +133,11 @@
         android:label="@string/session_recovery_title"
         tools:layout="@layout/fragment_session_recovery">
         <action android:id="@+id/action_session_recovery_to_exploration" app:destination="@id/explorationFragment" />
-        <action android:id="@+id/action_session_recovery_to_summary" app:destination="@id/journeySummaryFragment" />
+        <action
+            android:id="@+id/action_session_recovery_to_journey_detail"
+            app:destination="@id/journeyDetailFragment"
+            app:popUpTo="@id/nearbyAttractionsFragment"
+            app:popUpToInclusive="false" />
         <action
             android:id="@+id/action_session_recovery_to_nearby"
             app:destination="@id/nearbyAttractionsFragment"

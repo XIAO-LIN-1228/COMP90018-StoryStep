@@ -58,6 +58,15 @@ public final class FakeVisitDao implements VisitDao {
     }
 
     @Override
+    public List<String> visitedAttractionIds() {
+        java.util.LinkedHashSet<String> ids = new java.util.LinkedHashSet<>();
+        for (VisitEntity row : rows) {
+            ids.add(row.attractionId);
+        }
+        return new ArrayList<>(ids);
+    }
+
+    @Override
     public VisitEntity findFirstUnread(String sessionId) {
         for (VisitEntity row : findBySession(sessionId)) {
             if (row.unread) {

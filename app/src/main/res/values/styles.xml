@@ -64,15 +64,6 @@
         <item name="android:letterSpacing">0.13</item>
     </style>
 
-    <!-- Distances, durations and counts: aligned figures, ink weight. -->
-    <style name="TextAppearance.StoryStep.Metric" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">@font/jakarta_semibold</item>
-        <item name="android:textColor">@color/story_ink</item>
-        <item name="android:textSize">@dimen/text_metric</item>
-        <item name="android:includeFontPadding">false</item>
-        <item name="android:letterSpacing">-0.015</item>
-        <item name="android:fontFeatureSettings">tnum</item>
-    </style>
 
     <style name="TextAppearance.StoryStep.AppBar" parent="TextAppearance.Material3.TitleLarge">
         <item name="android:fontFamily">@font/jakarta_semibold</item>

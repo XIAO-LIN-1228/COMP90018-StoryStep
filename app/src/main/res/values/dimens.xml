@@ -36,7 +36,6 @@
     <dimen name="text_supporting">14sp</dimen>
     <dimen name="text_label">12sp</dimen>
     <dimen name="text_app_bar">20sp</dimen>
-    <dimen name="text_metric">16sp</dimen>
     <dimen name="text_chip">13sp</dimen>
     <dimen name="text_stat">22sp</dimen>
     <dimen name="text_page_title">32sp</dimen>
@@ -46,7 +45,6 @@
     <dimen name="hero_photo_height">248dp</dimen>
     <dimen name="scrim_button_size">40dp</dimen>
     <dimen name="row_thumb_size">64dp</dimen>
-    <dimen name="row_vertical_padding">14dp</dimen>
     <dimen name="chip_height">30dp</dimen>
     <dimen name="floating_bar_height">62dp</dimen>
 </resources>

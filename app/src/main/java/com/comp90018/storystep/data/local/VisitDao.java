@@ -27,6 +27,10 @@ public interface VisitDao {
     @Query("SELECT COUNT(*) FROM visits WHERE session_id = :sessionId")
     int countBySession(String sessionId);
 
+    /** Every place that has ever recorded a visit, across all sessions. */
+    @Query("SELECT DISTINCT attraction_id FROM visits")
+    List<String> visitedAttractionIds();
+
     /**
      * The session's oldest visit whose story has not been opened, or null when there is none.
      *

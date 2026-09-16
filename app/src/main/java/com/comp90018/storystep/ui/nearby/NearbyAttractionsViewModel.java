@@ -14,7 +14,9 @@ import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.model.SessionSummary;
+import com.comp90018.storystep.domain.attraction.AttractionFilter;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
+import com.comp90018.storystep.domain.repository.HistoryRepository;
 import com.comp90018.storystep.domain.repository.AttractionUnavailableException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
@@ -63,6 +65,15 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     /** Identifiers the saved store last reported. Drives each row's bookmark. */
     private Set<String> savedIds = Collections.emptySet();
+    // Places a visit has ever been recorded at. Read by the Unvisited filter and the unlock count.
+    private Set<String> visitedIds = Collections.emptySet();
+    @androidx.annotation.Nullable private final HistoryRepository history;
+    private final HistoryRepository.Observer historyObserver = this::reloadVisited;
+    private AttractionFilter filter = AttractionFilter.NONE;
+    private final MutableLiveData<AttractionFilter> filterState =
+            new MutableLiveData<>(AttractionFilter.NONE);
+    // {visited, total} among the loaded places, before the filter is applied.
+    private final MutableLiveData<int[]> unlockProgress = new MutableLiveData<>(new int[] {0, 0});
 
     /** Rows whose save is still being written; a further tap on one of them is ignored. */
     private final Set<String> pendingSaveIds = new HashSet<>();
@@ -108,15 +119,72 @@ public class NearbyAttractionsViewModel extends ViewModel
                                       GeoPoint referenceOrigin,
                                       double radiusMeters,
                                       ExplorationCoordinator coordinator) {
+        this(repository, savedAttractions, referenceOrigin, radiusMeters, coordinator, null);
+    }
+
+    public NearbyAttractionsViewModel(AttractionRepository repository,
+                                      SavedAttractionRepository savedAttractions,
+                                      GeoPoint referenceOrigin,
+                                      double radiusMeters,
+                                      ExplorationCoordinator coordinator,
+                                      @androidx.annotation.Nullable HistoryRepository history) {
         this.repository = repository;
         this.savedAttractions = savedAttractions;
         this.referenceOrigin = referenceOrigin;
         this.radiusMeters = radiusMeters;
         this.coordinator = coordinator;
+        this.history = history;
         this.currentOrigin = referenceOrigin;
         mapOrigin.setValue(referenceOrigin);
         coordinator.addObserver(this);
         savedAttractions.addObserver(this);
+        if (history != null) {
+            history.addObserver(historyObserver);
+            reloadVisited();
+        }
+    }
+
+    public LiveData<AttractionFilter> getFilter() {
+        return filterState;
+    }
+
+    /** {visited, total} among the places currently loaded, independent of the filter. */
+    public LiveData<int[]> getUnlockProgress() {
+        return unlockProgress;
+    }
+
+    /** Applies a new filter to what is already loaded; nothing is asked of the repository. */
+    public void setFilter(AttractionFilter newFilter) {
+        if (newFilter.equals(filter)) {
+            return;
+        }
+        filter = newFilter;
+        filterState.setValue(newFilter);
+        NearbyUiState current = uiState.getValue();
+        if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
+            publishContent(loadedAttractions);
+        }
+    }
+
+    private void reloadVisited() {
+        if (history == null) {
+            return;
+        }
+        history.loadVisitedAttractionIds(new RepositoryCallback<Set<String>>() {
+            @Override
+            public void onSuccess(Set<String> ids) {
+                visitedIds = ids;
+                NearbyUiState current = uiState.getValue();
+                if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
+                    publishContent(loadedAttractions);
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                // Visits are a refinement of the list, not the list: keep what we have.
+            }
+        });
     }
 
     @Override
@@ -125,6 +193,9 @@ public class NearbyAttractionsViewModel extends ViewModel
         // destroyed screen's state alive and publishing.
         coordinator.removeObserver(this);
         savedAttractions.removeObserver(this);
+        if (history != null) {
+            history.removeObserver(historyObserver);
+        }
         super.onCleared();
     }
 
@@ -472,6 +543,13 @@ public class NearbyAttractionsViewModel extends ViewModel
     }
 
     private void publishContent(List<Attraction> attractions) {
+        int visited = 0;
+        for (Attraction attraction : attractions) {
+            if (visitedIds.contains(attraction.getId())) {
+                visited++;
+            }
+        }
+        unlockProgress.setValue(new int[] {visited, attractions.size()});
         uiState.setValue(NearbyUiState.content(originLabel, sessionPhase, toItems(attractions),
                 loadedFreshness, provenancesOf(attractions)));
     }
@@ -495,13 +573,19 @@ public class NearbyAttractionsViewModel extends ViewModel
     private List<AttractionListItem> toItems(List<Attraction> attractions) {
         List<AttractionListItem> items = new ArrayList<>(attractions.size());
         for (Attraction attraction : attractions) {
+            boolean visited = visitedIds.contains(attraction.getId());
+            if (!filter.matches(attraction.getName(), attraction.getIndoor(), visited)) {
+                continue;
+            }
             items.add(new AttractionListItem(
                     attraction.getId(),
                     attraction.getName(),
                     attraction.getCategory(),
                     GeoCalculator.distanceMeters(currentOrigin, attraction.getLocation()),
                     savedIds.contains(attraction.getId()),
-                    attraction.getLocation()));
+                    attraction.getLocation(),
+                    attraction.getIndoor(),
+                    visited));
         }
         // The repository sorts by distance from the origin it was queried with. After the user
         // moves without triggering a re-query, that order is stale, so sort by the distances just

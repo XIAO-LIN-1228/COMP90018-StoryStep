@@ -88,6 +88,28 @@ public final class RoomHistoryRepository implements HistoryRepository {
     }
 
     @Override
+    public void loadVisitedAttractionIds(RepositoryCallback<java.util.Set<String>> callback) {
+        requireNonNull(callback, "callback");
+        ioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final java.util.Set<String> ids =
+                            new java.util.HashSet<>(visitDao.visitedAttractionIds());
+                    mainExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            callback.onSuccess(ids);
+                        }
+                    });
+                } catch (RuntimeException error) {
+                    fail(callback, error);
+                }
+            }
+        });
+    }
+
+    @Override
     public void loadDetail(String sessionId, RepositoryCallback<SessionHistoryDetail> callback) {
         requireNonNull(callback, "callback");
         if (sessionId == null) {

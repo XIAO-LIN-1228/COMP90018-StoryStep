@@ -106,6 +106,15 @@ public class NearbyAttractionsFragment extends Fragment
     private TextView homeTitle;
     private TextInputLayout searchContainer;
     private ChipGroup filterGroup;
+    private com.google.android.material.chip.Chip chipAll;
+    private com.google.android.material.chip.Chip chipIndoor;
+    private com.google.android.material.chip.Chip chipOutdoor;
+    private com.google.android.material.chip.Chip chipUnvisited;
+    private com.google.android.material.textfield.TextInputEditText searchInput;
+    private TextView unlockProgress;
+    private TextView staleBanner;
+    // Guards against the chip listeners re-entering while the state is being mirrored back.
+    private boolean syncingChips;
     private TextView sectionTitle;
     private TextView seeAllButton;
     private boolean listMode;
@@ -164,6 +173,14 @@ public class NearbyAttractionsFragment extends Fragment
         homeTitle = view.findViewById(R.id.home_title);
         searchContainer = view.findViewById(R.id.search_container);
         filterGroup = view.findViewById(R.id.filter_group);
+        chipAll = view.findViewById(R.id.chip_all);
+        chipIndoor = view.findViewById(R.id.chip_indoor);
+        chipOutdoor = view.findViewById(R.id.chip_outdoor);
+        chipUnvisited = view.findViewById(R.id.chip_unvisited);
+        searchInput = view.findViewById(R.id.search_input);
+        unlockProgress = view.findViewById(R.id.unlock_progress);
+        staleBanner = view.findViewById(R.id.stale_banner);
+        bindFilterControls();
         sectionTitle = view.findViewById(R.id.nearby_title);
         seeAllButton = view.findViewById(R.id.see_all_button);
         sessionButton = view.findViewById(R.id.session_button);
@@ -180,6 +197,13 @@ public class NearbyAttractionsFragment extends Fragment
                 .get(NearbyAttractionsViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
         viewModel.getMapOrigin().observe(getViewLifecycleOwner(), homeMap::setOrigin);
+        viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
+        viewModel.getUnlockProgress().observe(getViewLifecycleOwner(), progress -> {
+            boolean any = progress[1] > 0;
+            unlockProgress.setVisibility(any ? View.VISIBLE : View.GONE);
+            unlockProgress.setText(getString(R.string.home_unlock_progress,
+                    progress[0], progress[1]));
+        });
         viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
 
         // Its own ViewModel rather than a field on the nearby one: weather has a different source,
@@ -401,8 +425,9 @@ public class NearbyAttractionsFragment extends Fragment
     private CharSequence provenanceLine(NearbyUiState state) {
         StringBuilder line = new StringBuilder(getString(originLabelText(state.getOriginLabel())));
         int notice = AttributionText.freshnessNoticeFor(state.getFreshness());
+        staleBanner.setVisibility(notice != 0 ? View.VISIBLE : View.GONE);
         if (notice != 0) {
-            line.append('\n').append(getString(notice));
+            staleBanner.setText(notice);
         }
         int attribution = AttributionText.attributionFor(state.getProvenances());
         if (attribution != 0) {
@@ -592,7 +617,7 @@ public class NearbyAttractionsFragment extends Fragment
         homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
         homeTitle.setTextColor(ContextCompat.getColor(requireContext(), enabled
                 ? R.color.story_ink
-                : R.color.white));
+                : R.color.story_ink_3));
         homeMapCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
@@ -619,5 +644,68 @@ public class NearbyAttractionsFragment extends Fragment
     private void updateContinueJourneyCard() {
         boolean resumable = currentSessionPhase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND;
         continueJourneyCard.setVisibility(!listMode && resumable ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * The chips and the search field drive one filter on the ViewModel. Venue is a
+     * three-way choice (All / Indoor / Outdoor); Unvisited is independent of it, so the group
+     * is not single-selection and the three venue chips are kept exclusive by hand.
+     */
+    private void bindFilterControls() {
+        View.OnClickListener venue = v -> {
+            if (syncingChips) {
+                return;
+            }
+            com.comp90018.storystep.domain.attraction.AttractionFilter.Venue choice;
+            if (v == chipIndoor && chipIndoor.isChecked()) {
+                choice = com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.INDOOR;
+            } else if (v == chipOutdoor && chipOutdoor.isChecked()) {
+                choice = com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.OUTDOOR;
+            } else {
+                choice = com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.ALL;
+            }
+            viewModel.setFilter(currentFilter().withVenue(choice));
+        };
+        chipAll.setOnClickListener(venue);
+        chipIndoor.setOnClickListener(venue);
+        chipOutdoor.setOnClickListener(venue);
+        chipUnvisited.setOnClickListener(v -> {
+            if (!syncingChips) {
+                viewModel.setFilter(currentFilter().withUnvisitedOnly(chipUnvisited.isChecked()));
+            }
+        });
+        searchInput.addTextChangedListener(new android.text.TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int a, int b, int c) { }
+
+            @Override
+            public void onTextChanged(CharSequence s, int a, int b, int c) { }
+
+            @Override
+            public void afterTextChanged(android.text.Editable text) {
+                viewModel.setFilter(currentFilter().withQuery(text.toString()));
+            }
+        });
+    }
+
+    private com.comp90018.storystep.domain.attraction.AttractionFilter currentFilter() {
+        com.comp90018.storystep.domain.attraction.AttractionFilter filter =
+                viewModel.getFilter().getValue();
+        return filter == null
+                ? com.comp90018.storystep.domain.attraction.AttractionFilter.NONE
+                : filter;
+    }
+
+    private void mirrorFilter(com.comp90018.storystep.domain.attraction.AttractionFilter filter) {
+        syncingChips = true;
+        try {
+            com.comp90018.storystep.domain.attraction.AttractionFilter.Venue venue = filter.getVenue();
+            chipAll.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.ALL);
+            chipIndoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.INDOOR);
+            chipOutdoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.OUTDOOR);
+            chipUnvisited.setChecked(filter.isUnvisitedOnly());
+        } finally {
+            syncingChips = false;
+        }
     }
 }
