@@ -65,13 +65,27 @@
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
-    <com.comp90018.storystep.ui.widget.StoryMapView
-        android:id="@+id/home_map"
+    <!--
+        The real map. It shows where the user is and where the places are, and nothing else -
+        no drawn route to a destination, which would read as navigation. Inset and rounded so
+        it sits on the page as a card rather than as a full-bleed slab.
+    -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/home_map_card"
+        style="@style/Widget.StoryStep.Card"
         android:layout_width="0dp"
-        android:layout_height="190dp"
+        android:layout_height="280dp"
+        android:layout_marginStart="@dimen/page_horizontal_margin"
+        android:layout_marginEnd="@dimen/page_horizontal_margin"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/home_header" />
+        app:layout_constraintTop_toBottomOf="@id/home_header">
+
+        <com.comp90018.storystep.ui.widget.PlaceMapView
+            android:id="@+id/home_map"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </com.google.android.material.card.MaterialCardView>
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/continue_journey_card"
@@ -84,7 +98,7 @@
         app:cardBackgroundColor="@color/story_ground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/home_map">
+        app:layout_constraintTop_toBottomOf="@id/home_map_card">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"

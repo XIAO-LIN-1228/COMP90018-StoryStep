@@ -57,6 +57,9 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     private final MutableLiveData<NearbyUiState> uiState = new MutableLiveData<>();
     private final MutableLiveData<Boolean> saveFailed = new MutableLiveData<>(false);
+    // The origin the map centres on: the reference area until a real fix arrives, then the
+    // accepted position. Separate from the list state so the map can move without a re-query.
+    private final MutableLiveData<GeoPoint> mapOrigin = new MutableLiveData<>();
 
     /** Identifiers the saved store last reported. Drives each row's bookmark. */
     private Set<String> savedIds = Collections.emptySet();
@@ -111,6 +114,7 @@ public class NearbyAttractionsViewModel extends ViewModel
         this.radiusMeters = radiusMeters;
         this.coordinator = coordinator;
         this.currentOrigin = referenceOrigin;
+        mapOrigin.setValue(referenceOrigin);
         coordinator.addObserver(this);
         savedAttractions.addObserver(this);
     }
@@ -129,6 +133,10 @@ public class NearbyAttractionsViewModel extends ViewModel
     }
 
     /** True once a save or unsave has failed; the screen consumes it and reports it once. */
+    public LiveData<GeoPoint> getMapOrigin() {
+        return mapOrigin;
+    }
+
     public LiveData<Boolean> getSaveFailed() {
         return saveFailed;
     }
@@ -334,6 +342,7 @@ public class NearbyAttractionsViewModel extends ViewModel
         GeoPoint acceptedOrigin = sample.getPosition();
         boolean firstFix = lastQueryOrigin == null;
         currentOrigin = acceptedOrigin;
+        mapOrigin.setValue(acceptedOrigin);
         originLabel = liveLabel;
 
         if (firstFix
@@ -402,6 +411,7 @@ public class NearbyAttractionsViewModel extends ViewModel
     private void returnToReferenceArea() {
         originLabel = NearbyUiState.OriginLabel.REFERENCE_AREA;
         currentOrigin = referenceOrigin;
+        mapOrigin.setValue(referenceOrigin);
         lastQueryOrigin = null;
         query(referenceOrigin);
     }
@@ -490,7 +500,8 @@ public class NearbyAttractionsViewModel extends ViewModel
                     attraction.getName(),
                     attraction.getCategory(),
                     GeoCalculator.distanceMeters(currentOrigin, attraction.getLocation()),
-                    savedIds.contains(attraction.getId())));
+                    savedIds.contains(attraction.getId()),
+                    attraction.getLocation()));
         }
         // The repository sorts by distance from the origin it was queried with. After the user
         // moves without triggering a re-query, that order is stale, so sort by the distances just

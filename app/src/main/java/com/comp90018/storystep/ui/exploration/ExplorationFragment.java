@@ -23,7 +23,7 @@ import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.weather.WeatherUiState;
 import com.comp90018.storystep.ui.weather.WeatherViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
-import com.comp90018.storystep.ui.widget.StoryMapView;
+import com.comp90018.storystep.ui.widget.PlaceMapView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -36,6 +36,8 @@ import java.util.concurrent.TimeUnit;
  * that showed "0 m remaining" because no fix had arrived would be claiming the user had arrived.
  */
 public class ExplorationFragment extends Fragment {
+
+    private PlaceMapView map;
 
     private ExplorationViewModel viewModel;
 
@@ -81,8 +83,7 @@ public class ExplorationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        StoryMapView map = view.findViewById(R.id.exploration_map);
-        map.setExplorationMode(true);
+        map = view.findViewById(R.id.exploration_map);
 
         destinationNameView = view.findViewById(R.id.exploration_destination_name);
         durationView = view.findViewById(R.id.exploration_duration);
@@ -117,6 +118,8 @@ public class ExplorationFragment extends Fragment {
         retryVisitButton.setOnClickListener(v -> viewModel.onRetryVisitRequested());
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+
+        viewModel.getMapState().observe(getViewLifecycleOwner(), this::renderMap);
 
         // The same ViewModel the nearby screen uses. Both instances read one process-scoped
         // repository, so arriving here from the list does not issue a second request for an
@@ -312,5 +315,30 @@ public class ExplorationFragment extends Fragment {
                 .setPositiveButton(R.string.exploration_finish, (dialog, which) ->
                         viewModel.onStopRequested())
                 .show();
+    }
+
+    private boolean framedWalk;
+
+    private void renderMap(ExplorationMapState state) {
+        map.setOrigin(state.getPosition());
+        map.setDestination(state.getDestination());
+        map.setRoute(state.getSegments());
+        // Frame the walk once, when both ends are known; after that the user owns the viewport.
+        if (!framedWalk && state.getPosition() != null && state.getDestination() != null) {
+            map.frameWalk(state.getPosition(), state.getDestination());
+            framedWalk = true;
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        map.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        map.onPause();
+        super.onPause();
     }
 }

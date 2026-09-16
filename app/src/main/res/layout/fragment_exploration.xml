@@ -48,7 +48,7 @@
             android:textSize="16sp" />
     </LinearLayout>
 
-    <com.comp90018.storystep.ui.widget.StoryMapView
+    <com.comp90018.storystep.ui.widget.PlaceMapView
         android:id="@+id/exploration_map"
         android:layout_width="0dp"
         android:layout_height="0dp"

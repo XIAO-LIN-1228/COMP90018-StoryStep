@@ -1,6 +1,9 @@
 package com.comp90018.storystep.ui.nearby;
 
 import com.comp90018.storystep.domain.model.AttractionCategory;
+import com.comp90018.storystep.domain.model.GeoPoint;
+
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -19,17 +22,34 @@ public final class AttractionListItem {
     private final AttractionCategory category;
     private final double distanceMeters;
     private final boolean saved;
+    @Nullable private final GeoPoint location;
 
     public AttractionListItem(String id,
                               String name,
                               AttractionCategory category,
                               double distanceMeters,
                               boolean saved) {
+        this(id, name, category, distanceMeters, saved, null);
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location) {
         this.id = id;
         this.name = name;
         this.category = category;
         this.distanceMeters = distanceMeters;
         this.saved = saved;
+        this.location = location;
+    }
+
+    /** Where the place is, for pinning it on the map; absent for rows built without one. */
+    @Nullable
+    public GeoPoint getLocation() {
+        return location;
     }
 
     public String getId() {

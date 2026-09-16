@@ -41,6 +41,7 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     private final ExplorationCoordinator coordinator;
     private final Ticker ticker;
     private final MutableLiveData<ExplorationUiState> uiState = new MutableLiveData<>();
+    private final MutableLiveData<ExplorationMapState> mapState = new MutableLiveData<>();
 
     private Attraction destination;
     private RouteSnapshot route = RouteSnapshot.empty();
@@ -60,6 +61,10 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         this.ticker = ticker;
         coordinator.addObserver(this);
         ticker.start(this::publish, TICK_INTERVAL_MILLIS);
+    }
+
+    public LiveData<ExplorationMapState> getMapState() {
+        return mapState;
     }
 
     public LiveData<ExplorationUiState> getUiState() {
@@ -177,6 +182,8 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         uiState.setValue(ExplorationUiState.from(coordinator.summary(), destination, route,
                 unavailableReason, coordinator.hasStopSaveFailed(), checkpointFailed, movement,
                 guidance, pendingStory, visitSaveFailed));
+        mapState.setValue(ExplorationMapState.from(
+                destination == null ? null : destination.getLocation(), route));
     }
 
     @Override

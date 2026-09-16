@@ -40,6 +40,8 @@ import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputLayout;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Start destination: the list of nearby attractions.
@@ -93,7 +95,8 @@ public class NearbyAttractionsFragment extends Fragment
     private TextView statusMessage;
     private TextView originLabel;
     private MaterialButton retryButton;
-    private View homeMap;
+    private com.comp90018.storystep.ui.widget.PlaceMapView homeMap;
+    private View homeMapCard;
     private MaterialCardView continueJourneyCard;
     private View homeHeader;
     private View nearbyBackButton;
@@ -146,6 +149,13 @@ public class NearbyAttractionsFragment extends Fragment
         originLabel = view.findViewById(R.id.origin_label);
         retryButton = view.findViewById(R.id.retry_button);
         homeMap = view.findViewById(R.id.home_map);
+        homeMapCard = view.findViewById(R.id.home_map_card);
+        homeMap.setOnPlaceClickListener(attractionId -> {
+            Bundle arguments = new Bundle();
+            arguments.putString(ARG_ATTRACTION_ID, attractionId);
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_nearby_to_detail, arguments);
+        });
         continueJourneyCard = view.findViewById(R.id.continue_journey_card);
         homeHeader = view.findViewById(R.id.home_header);
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
@@ -169,6 +179,7 @@ public class NearbyAttractionsFragment extends Fragment
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(NearbyAttractionsViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getMapOrigin().observe(getViewLifecycleOwner(), homeMap::setOrigin);
         viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
 
         // Its own ViewModel rather than a field on the nearby one: weather has a different source,
@@ -352,6 +363,14 @@ public class NearbyAttractionsFragment extends Fragment
         renderPermissionNotice(status, state.getSessionPhase());
         renderSessionControls(state.getSessionPhase());
         adapter.submitList(state.getItems());
+        List<com.comp90018.storystep.ui.widget.PlaceMapView.Place> pins = new ArrayList<>();
+        for (AttractionListItem item : state.getItems()) {
+            if (item.getLocation() != null) {
+                pins.add(new com.comp90018.storystep.ui.widget.PlaceMapView.Place(
+                        item.getId(), item.getName(), item.getLocation()));
+            }
+        }
+        homeMap.setPlaces(pins);
     }
 
     @Nullable
@@ -518,6 +537,18 @@ public class NearbyAttractionsFragment extends Fragment
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        homeMap.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        homeMap.onPause();
+        super.onPause();
+    }
+
+    @Override
     public void onAttractionSelected(AttractionListItem item) {
         Bundle arguments = new Bundle();
         arguments.putString(ARG_ATTRACTION_ID, item.getId());
@@ -562,7 +593,7 @@ public class NearbyAttractionsFragment extends Fragment
         homeTitle.setTextColor(ContextCompat.getColor(requireContext(), enabled
                 ? R.color.story_ink
                 : R.color.white));
-        homeMap.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        homeMapCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
