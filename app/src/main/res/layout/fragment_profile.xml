@@ -54,16 +54,19 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Display"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/profile_journeys_count"
-                        android:textSize="@dimen/text_headline" />
 
-                    <TextView
-                        style="@style/Widget.StoryStep.Eyebrow"
-                        android:layout_marginTop="2dp"
+                        style="@style/Widget.StoryStep.StatLabel"
+
                         android:text="@string/profile_journeys_label" />
+
+
+                    <TextView
+
+                        style="@style/Widget.StoryStep.StatValue"
+
+                        android:layout_marginTop="4dp"
+
+                        android:text="@string/profile_journeys_count" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -73,16 +76,19 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Display"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/profile_stories_count"
-                        android:textSize="@dimen/text_headline" />
 
-                    <TextView
-                        style="@style/Widget.StoryStep.Eyebrow"
-                        android:layout_marginTop="2dp"
+                        style="@style/Widget.StoryStep.StatLabel"
+
                         android:text="@string/profile_stories_label" />
+
+
+                    <TextView
+
+                        style="@style/Widget.StoryStep.StatValue"
+
+                        android:layout_marginTop="4dp"
+
+                        android:text="@string/profile_stories_count" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -92,16 +98,19 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Display"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/profile_memories_count"
-                        android:textSize="@dimen/text_headline" />
+
+                        style="@style/Widget.StoryStep.StatLabel"
+
+                        android:text="@string/profile_memories_label" />
+
 
                     <TextView
-                        style="@style/Widget.StoryStep.Eyebrow"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/profile_memories_label" />
+
+                        style="@style/Widget.StoryStep.StatValue"
+
+                        android:layout_marginTop="4dp"
+
+                        android:text="@string/profile_memories_count" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -112,10 +121,12 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <FrameLayout
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.StoryStep.Card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_hairline_top">
+                android:layout_marginStart="@dimen/page_horizontal_margin"
+                android:layout_marginEnd="@dimen/page_horizontal_margin">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -169,7 +180,7 @@
                         <TextView style="@style/TextAppearance.StoryStep.Supporting" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/settings_version" />
                     </LinearLayout>
                 </LinearLayout>
-            </FrameLayout>
+            </com.google.android.material.card.MaterialCardView>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

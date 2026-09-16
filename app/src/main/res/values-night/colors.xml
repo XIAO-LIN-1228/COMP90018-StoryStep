@@ -10,22 +10,22 @@
   light on a night ground.
 -->
 <resources>
-    <color name="story_ground">#0A101A</color>
-    <color name="story_surface">#141E2E</color>
-    <color name="story_surface_sunk">#151F2E</color>
-    <color name="story_hairline">#1B2637</color>
-    <color name="story_outline">#22304A</color>
-    <color name="story_chip">#18222F</color>
+    <color name="story_ground">#14120E</color>
+    <color name="story_surface">#1E1B15</color>
+    <color name="story_surface_sunk">#221E17</color>
+    <color name="story_hairline">#2B2720</color>
+    <color name="story_outline">#352F26</color>
+    <color name="story_chip">#2A261E</color>
 
-    <color name="story_ink">#EEF1F6</color>
+    <color name="story_ink">#F1EDE4</color>
     <color name="story_ink_pressed">#FFFFFFFF</color>
     <!-- Title chrome sitting on the page header, which is now the ground itself. -->
-    <color name="story_on_header">#EEF1F6</color>
-    <color name="story_on_ink">#0B111C</color>
-    <color name="story_ink_wash">#1B2434</color>
-    <color name="story_ink_2">#A6B3C6</color>
-    <color name="story_ink_3">#7C8899</color>
-    <color name="story_disabled">#3E4A5E</color>
+    <color name="story_on_header">#F1EDE4</color>
+    <color name="story_on_ink">#14120E</color>
+    <color name="story_ink_wash">#2A261E</color>
+    <color name="story_ink_2">#B3AC9F</color>
+    <color name="story_ink_3">#857E71</color>
+    <color name="story_disabled">#4A443A</color>
 
     <!--
       Chrome that sits on a photograph, not on the page. A photograph is dark in both
@@ -37,15 +37,15 @@
 
     <color name="story_signal">#F0B44E</color>
     <color name="story_signal_ink">#F5C878</color>
-    <color name="story_signal_wash">#33270D</color>
+    <color name="story_signal_wash">#3A2C12</color>
 
     <color name="story_success">#4FB48D</color>
     <color name="story_error_wash">#3A1D16</color>
     <color name="story_error">#E58B7B</color>
 
-    <color name="map_land">#131C2B</color>
-    <color name="map_park">#16241F</color>
-    <color name="map_water">#12202B</color>
-    <color name="map_road">#1B2434</color>
-    <color name="map_location">#EEF1F6</color>
+    <color name="map_land">#1C1913</color>
+    <color name="map_park">#1E211A</color>
+    <color name="map_water">#1A1F23</color>
+    <color name="map_road">#2A261E</color>
+    <color name="map_location">#F1EDE4</color>
 </resources>

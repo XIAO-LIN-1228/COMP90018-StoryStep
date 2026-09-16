@@ -248,7 +248,7 @@
             android:text="@string/home_see_all"
             android:textColor="@color/story_ink"
             android:textSize="14sp"
-            android:fontFamily="@font/plex_sans_semibold" />
+            android:fontFamily="@font/jakarta_semibold" />
     </LinearLayout>
 
     <!--
@@ -258,12 +258,12 @@
     -->
     <TextView
         android:id="@+id/origin_label"
-        style="@style/TextAppearance.Material3.LabelMedium"
+        style="@style/TextAppearance.StoryStep.Supporting"
+        android:textColor="@color/story_ink_3"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/page_horizontal_margin"
         android:layout_marginEnd="@dimen/page_horizontal_margin"
-        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/nearby_section_header"
@@ -299,7 +299,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/permission_notice_action"
-            style="@style/Widget.StoryStep.Button.Outlined"
+            style="@style/Widget.StoryStep.Button.Secondary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -350,7 +350,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/retry_button"
-        style="@style/Widget.StoryStep.Button.Outlined"
+        style="@style/Widget.StoryStep.Button.Secondary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
@@ -366,8 +366,9 @@
     -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/session_button"
+        android:elevation="@dimen/floating_elevation"
         style="@style/Widget.StoryStep.Button.Primary"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/page_horizontal_margin"
         android:layout_marginEnd="@dimen/page_horizontal_margin"

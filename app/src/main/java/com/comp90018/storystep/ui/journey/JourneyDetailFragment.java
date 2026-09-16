@@ -37,6 +37,9 @@ public class JourneyDetailFragment extends Fragment {
     private TextView title;
     private TextView date;
     private TextView stats;
+    private TextView statDuration;
+    private TextView statDistance;
+    private TextView statStories;
     private TextView label;
     private TextView movement;
     private TextView weather;
@@ -62,6 +65,9 @@ public class JourneyDetailFragment extends Fragment {
         title = view.findViewById(R.id.journey_detail_title);
         date = view.findViewById(R.id.journey_detail_date);
         stats = view.findViewById(R.id.journey_detail_stats);
+        statDuration = view.findViewById(R.id.stat_duration);
+        statDistance = view.findViewById(R.id.stat_distance);
+        statStories = view.findViewById(R.id.stat_stories);
         label = view.findViewById(R.id.journey_detail_label);
         movement = view.findViewById(R.id.journey_detail_movement);
         weather = view.findViewById(R.id.journey_detail_weather);
@@ -117,11 +123,16 @@ public class JourneyDetailFragment extends Fragment {
                 : summary.getDestinationName());
         date.setText(HistoryText.formatDateTime(
                 getResources(), summary.getStartWallClockMillis()));
+        // The figures are the content of this screen: each gets its own column with the
+        // label above it, rather than one line of text with separators.
+        String duration = HistoryText.formatDuration(getResources(), summary.getActiveDurationMillis());
+        String distance = DistanceText.format(getResources(), summary.getDistanceMeters());
         stats.setText(getString(R.string.history_stats_format,
-                HistoryText.formatDuration(getResources(), summary.getActiveDurationMillis())
-                        + "  ·  "
-                        + DistanceText.format(getResources(), summary.getDistanceMeters()),
+                duration + "  ·  " + distance,
                 HistoryText.formatVisitCount(getResources(), summary.getVisitCount())));
+        statDuration.setText(duration);
+        statDistance.setText(distance);
+        statStories.setText(String.valueOf(summary.getVisitCount()));
 
         if (summary.isInterrupted()) {
             label.setVisibility(View.VISIBLE);

@@ -146,7 +146,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/session_recovery_finish"
-                style="@style/Widget.StoryStep.Button.Outlined"
+                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
                 android:layout_marginTop="@dimen/space_12"

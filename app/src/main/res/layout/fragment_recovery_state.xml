@@ -69,7 +69,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/recovery_secondary"
-        style="@style/Widget.StoryStep.Button.Outlined"
+        style="@style/Widget.StoryStep.Button.Secondary"
         android:layout_width="0dp"
         android:layout_height="@dimen/primary_button_height"
         android:layout_marginTop="10dp"

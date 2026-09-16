@@ -17,24 +17,24 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Daylight ground -->
-    <color name="story_ground">#FDFCFA</color>
+    <color name="story_ground">#F4F2EC</color>
     <color name="story_surface">#FFFFFFFF</color>
-    <color name="story_surface_sunk">#F2EEE5</color>
-    <color name="story_hairline">#EAE6DC</color>
-    <color name="story_outline">#E2DDD2</color>
+    <color name="story_surface_sunk">#ECE9E0</color>
+    <color name="story_hairline">#E4E1D7</color>
+    <color name="story_outline">#DCD8CD</color>
     <!-- Filled metadata pills: a category, a distance, a count. -->
-    <color name="story_chip">#F0ECE2</color>
+    <color name="story_chip">#E9E6DC</color>
 
     <!-- Ink: headings and every primary action -->
-    <color name="story_ink">#14181F</color>
-    <color name="story_ink_pressed">#000509</color>
+    <color name="story_ink">#211D16</color>
+    <color name="story_ink_pressed">#0B0906</color>
     <!-- Title chrome sitting on the page header, which is now the ground itself. -->
-    <color name="story_on_header">#14181F</color>
+    <color name="story_on_header">#211D16</color>
     <color name="story_on_ink">#FFFFFFFF</color>
-    <color name="story_ink_wash">#F1EFE9</color>
-    <color name="story_ink_2">#5A6270</color>
-    <color name="story_ink_3">#8B929D</color>
-    <color name="story_disabled">#A9A69D</color>
+    <color name="story_ink_wash">#E9E6DC</color>
+    <color name="story_ink_2">#6B655A</color>
+    <color name="story_ink_3">#948D80</color>
+    <color name="story_disabled">#B5AFA3</color>
 
     <!-- The one accent: an unread story -->
     <!--
@@ -43,11 +43,11 @@
       it with story_ink turned the back and save controls white-on-white in dark mode.
       The same applies to the unlock stamp, which is always amber.
     -->
-    <color name="story_on_photo">#14181F</color>
+    <color name="story_on_photo">#211D16</color>
 
-    <color name="story_signal">#E0952B</color>
-    <color name="story_signal_ink">#B0741A</color>
-    <color name="story_signal_wash">#FBF0DC</color>
+    <color name="story_signal">#E9A63A</color>
+    <color name="story_signal_ink">#9A6410</color>
+    <color name="story_signal_wash">#F6E8CF</color>
 
     <!-- Night ground, used by the journey surfaces -->
     <color name="story_night">#0B111C</color>
@@ -60,9 +60,9 @@
     <color name="story_error">#B23A2B</color>
 
     <!-- Route sketch and the prototype map surface, retuned to the daylight neutrals -->
-    <color name="map_land">#EFEDE6</color>
+    <color name="map_land">#EBE8DF</color>
     <color name="map_park">#E2E7DA</color>
     <color name="map_water">#DDE6EC</color>
-    <color name="map_road">#FCFBF9</color>
-    <color name="map_location">#14181F</color>
+    <color name="map_road">#F4F2EC</color>
+    <color name="map_location">#211D16</color>
 </resources>

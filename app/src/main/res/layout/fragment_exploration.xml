@@ -231,7 +231,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/arrival_later_button"
-                        style="@style/Widget.StoryStep.Button.Outlined"
+                        style="@style/Widget.StoryStep.Button.Secondary"
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/primary_button_height"
                         android:layout_marginStart="8dp"
@@ -251,7 +251,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/retry_visit_button"
-                style="@style/Widget.StoryStep.Button.Outlined"
+                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
                 android:layout_marginTop="8dp"
@@ -278,7 +278,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/stop_exploration_button"
-                style="@style/Widget.StoryStep.Button.Outlined"
+                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
                 android:layout_marginTop="8dp"
