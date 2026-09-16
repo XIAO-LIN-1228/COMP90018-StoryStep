@@ -1,33 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--
+      Every TextAppearance below sets the face twice: android:fontFamily and the app-namespaced
+      fontFamily. AppCompat reads the latter first, and the Material parents set it to the
+      system face - so a style that set only the android attribute was silently rendering in
+      Roboto while the buttons, which use widget styles, showed the real face.
+
       Type. The display ramp is set tight and slightly negative-tracked so a place name
       reads as a name printed on a map rather than a product heading. Every style that
       can carry a figure asks for tabular numerals, so distances and durations stay in
       column down a list.
     -->
     <style name="TextAppearance.StoryStep.Display" parent="TextAppearance.Material3.DisplaySmall">
-        <item name="android:fontFamily">@font/jakarta_extrabold</item>
+        <item name="android:fontFamily">@font/bricolage_extrabold</item>
+        <item name="fontFamily">@font/bricolage_extrabold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_display</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingMultiplier">1.04</item>
-        <item name="android:letterSpacing">-0.035</item>
+        <item name="android:letterSpacing">-0.02</item>
         <item name="android:fontFeatureSettings">tnum</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Headline" parent="TextAppearance.Material3.HeadlineSmall">
-        <item name="android:fontFamily">@font/jakarta_semibold</item>
+        <item name="android:fontFamily">@font/bricolage_semibold</item>
+        <item name="fontFamily">@font/bricolage_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_headline</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingMultiplier">1.12</item>
-        <item name="android:letterSpacing">-0.03</item>
+        <item name="android:letterSpacing">-0.015</item>
         <item name="android:fontFeatureSettings">tnum</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Title" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="android:fontFamily">@font/bricolage_bold</item>
+        <item name="fontFamily">@font/bricolage_bold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_title</item>
         <item name="android:includeFontPadding">false</item>
@@ -36,7 +44,8 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Body" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:fontFamily">@font/bricolage</item>
+        <item name="fontFamily">@font/bricolage</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:textSize">@dimen/text_body</item>
         <item name="android:includeFontPadding">false</item>
@@ -44,7 +53,8 @@
     </style>
 
     <style name="TextAppearance.StoryStep.Supporting" parent="TextAppearance.Material3.BodySmall">
-        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:fontFamily">@font/bricolage</item>
+        <item name="fontFamily">@font/bricolage</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:textSize">@dimen/text_supporting</item>
         <item name="android:includeFontPadding">false</item>
@@ -56,7 +66,8 @@
       annotation rather than as another line of prose competing with the place name.
     -->
     <style name="TextAppearance.StoryStep.Label" parent="TextAppearance.Material3.LabelSmall">
-        <item name="android:fontFamily">@font/jakarta_semibold</item>
+        <item name="android:fontFamily">@font/bricolage_semibold</item>
+        <item name="fontFamily">@font/bricolage_semibold</item>
         <item name="android:textColor">@color/story_ink_3</item>
         <item name="android:textSize">@dimen/text_label</item>
         <item name="android:textAllCaps">true</item>
@@ -66,7 +77,8 @@
 
 
     <style name="TextAppearance.StoryStep.AppBar" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:fontFamily">@font/jakarta_semibold</item>
+        <item name="android:fontFamily">@font/bricolage_semibold</item>
+        <item name="fontFamily">@font/bricolage_semibold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_app_bar</item>
         <item name="android:includeFontPadding">false</item>
@@ -96,7 +108,7 @@
         <item name="backgroundTint">@color/button_primary_background</item>
         <item name="android:textColor">@color/story_on_photo</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="android:fontFamily">@font/bricolage_bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:paddingStart">@dimen/space_24</item>
@@ -109,7 +121,7 @@
         <item name="backgroundTint">@color/story_surface</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_body</item>
-        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="android:fontFamily">@font/bricolage_bold</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:paddingStart">@dimen/space_24</item>
@@ -126,7 +138,7 @@
         <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
         <item name="android:minHeight">36dp</item>
         <item name="android:textSize">@dimen/text_supporting</item>
-        <item name="android:fontFamily">@font/jakarta_medium</item>
+        <item name="android:fontFamily">@font/bricolage_medium</item>
     </style>
 
     <style name="ShapeAppearanceOverlay.StoryStep.Image" parent="">
@@ -146,16 +158,18 @@
       cards. Screens differ in what they hold, not in how they are put together.
     -->
     <style name="TextAppearance.StoryStep.PageTitle" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:fontFamily">@font/jakarta_extrabold</item>
+        <item name="android:fontFamily">@font/bricolage_extrabold</item>
+        <item name="fontFamily">@font/bricolage_extrabold</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:textSize">@dimen/text_page_title</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:lineSpacingMultiplier">1.08</item>
-        <item name="android:letterSpacing">-0.035</item>
+        <item name="android:letterSpacing">-0.02</item>
     </style>
 
     <style name="TextAppearance.StoryStep.Prose" parent="TextAppearance.Material3.BodyLarge">
-        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:fontFamily">@font/bricolage</item>
+        <item name="fontFamily">@font/bricolage</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:textSize">@dimen/text_prose</item>
         <item name="android:includeFontPadding">false</item>
@@ -196,7 +210,7 @@
         <item name="android:gravity">center</item>
         <item name="android:paddingStart">12dp</item>
         <item name="android:paddingEnd">12dp</item>
-        <item name="android:fontFamily">@font/jakarta_medium</item>
+        <item name="android:fontFamily">@font/bricolage_medium</item>
         <item name="android:textSize">@dimen/text_chip</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:includeFontPadding">false</item>
@@ -211,7 +225,7 @@
     <style name="Widget.StoryStep.StatLabel" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/jakarta_medium</item>
+        <item name="android:fontFamily">@font/bricolage_medium</item>
         <item name="android:textSize">@dimen/text_supporting</item>
         <item name="android:textColor">@color/story_ink_2</item>
         <item name="android:includeFontPadding">false</item>
@@ -220,7 +234,7 @@
     <style name="Widget.StoryStep.StatValue" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/jakarta_bold</item>
+        <item name="android:fontFamily">@font/bricolage_bold</item>
         <item name="android:textSize">@dimen/text_stat</item>
         <item name="android:textColor">@color/story_ink</item>
         <item name="android:includeFontPadding">false</item>

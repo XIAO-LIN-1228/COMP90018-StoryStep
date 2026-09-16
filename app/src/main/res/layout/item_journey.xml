@@ -41,7 +41,7 @@
                     android:id="@+id/journey_item_date"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:fontFamily="@font/jakarta_medium"
+                    android:fontFamily="@font/bricolage_medium"
                     android:textColor="@color/story_ink_3"
                     android:textSize="@dimen/text_supporting" />
 

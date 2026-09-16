@@ -44,7 +44,7 @@
         <item name="colorOutlineVariant">@color/story_hairline</item>
 
         <item name="android:colorAccent">@color/story_ink</item>
-        <item name="android:fontFamily">@font/jakarta</item>
+        <item name="android:fontFamily">@font/bricolage</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:statusBarColor">@color/story_ground</item>
         <item name="android:navigationBarColor">@color/story_ground</item>

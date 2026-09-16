@@ -65,7 +65,7 @@
         android:layout_marginEnd="@dimen/space_12"
         android:background="@drawable/bg_stale_banner"
         android:drawablePadding="6dp"
-        android:fontFamily="@font/jakarta_semibold"
+        android:fontFamily="@font/bricolage_semibold"
         android:paddingStart="12dp"
         android:paddingTop="6dp"
         android:paddingEnd="12dp"

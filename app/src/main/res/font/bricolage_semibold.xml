@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bricolage Grotesque at weight 600, optical size 24: row titles and buttons -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font android:font="@font/bricolage_variable" android:fontStyle="normal" android:fontWeight="600" android:fontVariationSettings="'opsz' 24, 'wdth' 100, 'wght' 600" />
+</font-family>
