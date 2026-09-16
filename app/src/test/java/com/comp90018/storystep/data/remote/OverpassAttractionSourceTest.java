@@ -3,6 +3,7 @@ package com.comp90018.storystep.data.remote;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -221,5 +222,36 @@ public class OverpassAttractionSourceTest {
         } catch (AttractionUnavailableException failure) {
             assertEquals(expected, failure.getReason());
         }
+    }
+
+    @Test
+    public void placesWithAWikidataTagGetWikidatasPhotograph() throws Exception {
+        // Both services point at the same mock server; the Overpass reply comes first, then the
+        // single batched Wikidata call the enrichment makes.
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class),
+                retrofit.create(WikidataApiService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.7981,\"lon\":144.9591,"
+                + "\"tags\":{\"name\":\"Old Arts\",\"tourism\":\"attraction\","
+                + "\"wikidata\":\"Q1747074\"}},"
+                + "{\"type\":\"node\",\"id\":2,\"lat\":-37.7975,\"lon\":144.9640,"
+                + "\"tags\":{\"name\":\"No entity\",\"tourism\":\"attraction\"}}]}"));
+        // As the real service answers: other properties carry object values beside P18's string.
+        server.enqueue(new MockResponse().setBody("{\"entities\":{\"Q1747074\":{\"claims\":{"
+                + "\"P31\":[{\"mainsnak\":{\"datavalue\":{\"value\":{\"id\":\"Q41176\"}}}}],"
+                + "\"P18\":[{\"mainsnak\":{\"datavalue\":{\"value\":\"Old Arts.jpg\"}}}]}}}}"));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertEquals(2, places.size());
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts.jpg?width=800",
+                places.get(0).getImageUrl());
+        assertNull(places.get(1).getImageUrl());
+        assertEquals(2, server.getRequestCount());
+        server.takeRequest();
+        assertTrue(server.takeRequest().getPath().contains("ids=Q1747074"));
     }
 }

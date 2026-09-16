@@ -42,9 +42,10 @@
     <dimen name="text_prose">15sp</dimen>
 
     <!-- Story anatomy: full-bleed media, then a content column at the page margin. -->
-    <dimen name="hero_photo_height">248dp</dimen>
+    <dimen name="hero_photo_height">280dp</dimen>
+    <dimen name="hero_collapsed_height">72dp</dimen>
     <dimen name="scrim_button_size">40dp</dimen>
-    <dimen name="row_thumb_size">64dp</dimen>
+    <dimen name="row_thumb_size">84dp</dimen>
     <dimen name="chip_height">30dp</dimen>
     <dimen name="floating_bar_height">62dp</dimen>
 </resources>

@@ -387,4 +387,30 @@ public class StoryStepMigrationTest {
         assertTrue(database.sessionDao().findFinished().isEmpty());
         database.close();
     }
+
+    @Test
+    public void migratingToSevenAddsANullablePhotoColumnWithoutTouchingRows() throws IOException {
+        SupportSQLiteDatabase version6 = helper.createDatabase(TEST_DATABASE, 6);
+        ContentValues place = new ContentValues();
+        place.put("id", "old-arts");
+        place.put("name", "Old Arts Building");
+        place.put("category", "university_landmark");
+        place.put("description", "A clocktower.");
+        place.put("indoor", "outdoor");
+        place.put("latitude", -37.79810);
+        place.put("longitude", 144.95910);
+        place.put("provenance", "seed");
+        place.put("fetched_at_millis", 0L);
+        version6.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
+        version6.close();
+
+        SupportSQLiteDatabase version7 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 7, true, StoryStepMigrations.MIGRATION_6_7);
+
+        assertEquals(1, count(version7, "SELECT COUNT(*) FROM attractions"));
+        // Additive: the existing row survives with no photograph, rather than being rebuilt.
+        assertEquals(1, count(version7,
+                "SELECT COUNT(*) FROM attractions WHERE image_url IS NULL"));
+        version7.close();
+    }
 }

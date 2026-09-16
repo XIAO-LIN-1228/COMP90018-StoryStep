@@ -144,7 +144,11 @@ public class SavedViewModel extends ViewModel implements SavedAttractionReposito
                     attraction.getName(),
                     attraction.getCategory(),
                     GeoCalculator.distanceMeters(referenceOrigin, attraction.getLocation()),
-                    true));
+                    true,
+                    attraction.getLocation(),
+                    attraction.getIndoor(),
+                    false,
+                    attraction.getImageUrl()));
         }
         shownIds = ids;
         uiState.setValue(SavedUiState.content(items));

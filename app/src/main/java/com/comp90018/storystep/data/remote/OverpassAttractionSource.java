@@ -43,9 +43,20 @@ public final class OverpassAttractionSource implements AttractionSource {
     private static final int HTTP_GATEWAY_TIMEOUT = 504;
 
     private final OverpassApiService service;
+    @androidx.annotation.Nullable private final WikidataApiService wikidata;
 
     public OverpassAttractionSource(OverpassApiService service) {
+        this(service, null);
+    }
+
+    /**
+     * @param wikidata optional; when present, places that carry a {@code wikidata} tag are given
+     *                 the photograph Wikidata records for them (property P18)
+     */
+    public OverpassAttractionSource(OverpassApiService service,
+                                    @androidx.annotation.Nullable WikidataApiService wikidata) {
         this.service = Objects.requireNonNull(service, "service");
+        this.wikidata = wikidata;
     }
 
     @Override
@@ -97,6 +108,64 @@ public final class OverpassAttractionSource implements AttractionSource {
             throw new AttractionUnavailableException(
                     AttractionUnavailableException.Reason.MALFORMED);
         }
-        return mapped.getAttractions();
+        return withPhotographs(mapped.getAttractions());
+    }
+
+    /**
+     * Attaches Wikidata's photograph to every place that names an entity and has no picture yet.
+     *
+     * <p>OpenStreetMap itself almost never carries an {@code image} tag, but a place with a
+     * {@code wikidata} tag usually has a picture on the other end. Batched fifty ids at a time.
+     * This is enrichment, not the fetch: on any failure the places come back exactly as mapped,
+     * because a missing photograph must never turn a successful fetch into a failed one.
+     */
+    private List<Attraction> withPhotographs(List<Attraction> attractions) {
+        if (wikidata == null) {
+            return attractions;
+        }
+        java.util.Map<String, Integer> idToIndex = new java.util.LinkedHashMap<>();
+        for (int i = 0; i < attractions.size(); i++) {
+            Attraction attraction = attractions.get(i);
+            String id = WikidataImages.wikidataId(attraction.getSourceRef());
+            if (id != null && attraction.getImageUrl() == null && !idToIndex.containsKey(id)) {
+                idToIndex.put(id, i);
+            }
+        }
+        if (idToIndex.isEmpty()) {
+            return attractions;
+        }
+        List<Attraction> enriched = new java.util.ArrayList<>(attractions);
+        List<String> wanted = new java.util.ArrayList<>(idToIndex.keySet());
+        for (int start = 0; start < wanted.size(); start += WikidataApiService.MAX_IDS_PER_REQUEST) {
+            List<String> batch = wanted.subList(start,
+                    Math.min(wanted.size(), start + WikidataApiService.MAX_IDS_PER_REQUEST));
+            java.util.Map<String, String> urls;
+            try {
+                // Joined by hand: this layer stays free of Android types, and the JVM tests that
+                // prove the contract would see a stub instead of TextUtils.
+                StringBuilder ids = new StringBuilder();
+                for (String id : batch) {
+                    if (ids.length() > 0) {
+                        ids.append('|');
+                    }
+                    ids.append(id);
+                }
+                retrofit2.Response<WikidataEntitiesDto> response =
+                        wikidata.entities(ids.toString()).execute();
+                if (!response.isSuccessful()) {
+                    continue;
+                }
+                urls = WikidataImages.imageUrls(response.body());
+            } catch (java.io.IOException | RuntimeException ignored) {
+                continue;
+            }
+            for (java.util.Map.Entry<String, String> found : urls.entrySet()) {
+                Integer index = idToIndex.get(found.getKey());
+                if (index != null) {
+                    enriched.set(index, enriched.get(index).withImageUrl(found.getValue()));
+                }
+            }
+        }
+        return enriched;
     }
 }

@@ -15,7 +15,6 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
-import com.comp90018.storystep.domain.geo.RouteProjection;
 import com.comp90018.storystep.domain.model.SessionHistoryDetail;
 import com.comp90018.storystep.domain.model.SessionHistoryEntry;
 import com.comp90018.storystep.domain.model.Visit;
@@ -24,7 +23,7 @@ import com.comp90018.storystep.ui.HistoryText;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
-import com.comp90018.storystep.ui.widget.RouteSketchView;
+import com.comp90018.storystep.ui.widget.PlaceMapView;
 
 /** One recorded journey: its totals, its route, and the places it visited. */
 public class JourneyDetailFragment extends Fragment {
@@ -45,7 +44,7 @@ public class JourneyDetailFragment extends Fragment {
     private TextView weather;
     private TextView routeCaption;
     private TextView placesHeading;
-    private RouteSketchView route;
+    private PlaceMapView route;
     private LinearLayout stops;
 
     @Nullable
@@ -161,7 +160,21 @@ public class JourneyDetailFragment extends Fragment {
             return;
         }
         route.setVisibility(View.VISIBLE);
-        route.setRoute(RouteProjection.project(detail.getSegments()));
+        // The recorded route on the real map, one line per segment, framed to fit. The map is
+        // looked at here, not driven, so it does not steal the page's scroll.
+        java.util.List<java.util.List<com.comp90018.storystep.domain.model.GeoPoint>> segments =
+                new java.util.ArrayList<>();
+        for (com.comp90018.storystep.domain.model.RouteSegment segment : detail.getSegments()) {
+            java.util.List<com.comp90018.storystep.domain.model.GeoPoint> points =
+                    new java.util.ArrayList<>();
+            for (com.comp90018.storystep.domain.model.RoutePoint point : segment.getPoints()) {
+                points.add(point.getPosition());
+            }
+            segments.add(points);
+        }
+        route.setStatic(true);
+        route.setRoute(segments);
+        route.frameRoute(segments);
         route.setContentDescription(
                 HistoryText.describeRoute(getResources(), detail.getSegments().size()));
         routeCaption.setText(R.string.history_route_caption);
@@ -209,5 +222,17 @@ public class JourneyDetailFragment extends Fragment {
         arguments.putString(JourneysFragment.ARG_SESSION_ID, visit.getSessionId());
         NavHostFragment.findNavController(this)
                 .navigate(R.id.action_journey_detail_to_story, arguments);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        route.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        route.onPause();
+        super.onPause();
     }
 }

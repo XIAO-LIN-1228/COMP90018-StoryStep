@@ -39,6 +39,7 @@ public final class LocalSavedAttractionMapper {
         entity.savedAtMillis = savedAtMillis;
         entity.provenance = AttractionProvenanceCodec.toCode(attraction.getProvenance());
         entity.sourceRef = attraction.getSourceRef();
+        entity.imageUrl = attraction.getImageUrl();
         return entity;
     }
 
@@ -51,7 +52,8 @@ public final class LocalSavedAttractionMapper {
                 IndoorClassificationCodec.fromCode(entity.indoor),
                 new GeoPoint(entity.latitude, entity.longitude),
                 AttractionProvenanceCodec.fromCode(entity.provenance),
-                entity.sourceRef);
+                entity.sourceRef,
+                entity.imageUrl);
         return new SavedAttraction(attraction, entity.savedAtMillis);
     }
 

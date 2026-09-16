@@ -57,6 +57,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/exploration_header" />
 
+    <TextView
+        android:id="@+id/exploration_offline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginEnd="@dimen/space_12"
+        android:background="@drawable/bg_stale_banner"
+        android:drawablePadding="6dp"
+        android:fontFamily="@font/jakarta_semibold"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/exploration_offline"
+        android:textColor="@color/story_on_ink"
+        android:textSize="@dimen/text_chip"
+        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_info_outline"
+        app:drawableTint="@color/story_on_ink"
+        app:layout_constraintEnd_toEndOf="@id/exploration_map"
+        app:layout_constraintTop_toTopOf="@id/exploration_map" />
+
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/exploration_guidance_card"
         style="@style/Widget.StoryStep.Card"
@@ -137,31 +159,56 @@
                 android:baselineAligned="false"
                 android:orientation="horizontal">
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Title"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:id="@+id/exploration_travelled"
                     android:layout_weight="1"
-                    android:text="@string/exploration_travelled_zero" />
+                    android:orientation="vertical">
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Title"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/exploration_movement"
-                    android:layout_weight="1"
-                    android:text="@string/movement_unknown" />
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_travelled" />
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    <TextView
+                        android:id="@+id/exploration_travelled"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/exploration_travelled_zero" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:id="@+id/exploration_accuracy"
                     android:layout_weight="1"
-                    android:gravity="end"
-                    android:textColor="@color/story_ink_3"
-                    android:text="@string/exploration_accuracy_unavailable" />
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_movement" />
+
+                    <TextView
+                        android:id="@+id/exploration_movement"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/movement_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_accuracy" />
+
+                    <TextView
+                        android:id="@+id/exploration_accuracy"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/exploration_accuracy_unavailable" />
+                </LinearLayout>
             </LinearLayout>
 
             <!--

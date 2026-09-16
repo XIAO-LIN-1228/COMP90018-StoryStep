@@ -217,6 +217,35 @@ public class PlaceMapView extends FrameLayout {
         map.invalidate();
     }
 
+    /** Frames a finished route so every recorded point is in view. Static: no user marker. */
+    public void frameRoute(List<List<GeoPoint>> segments) {
+        List<org.osmdroid.util.GeoPoint> points = new ArrayList<>();
+        for (List<GeoPoint> segment : segments) {
+            for (GeoPoint p : segment) {
+                points.add(toOsm(p));
+            }
+        }
+        if (points.isEmpty()) {
+            return;
+        }
+        if (points.size() == 1) {
+            map.getController().setZoom(WALK_ZOOM);
+            map.getController().setCenter(points.get(0));
+        } else {
+            BoundingBox box = BoundingBox.fromGeoPoints(points);
+            map.post(() -> map.zoomToBoundingBox(box.increaseByScale(1.5f), false));
+        }
+        framed = true;
+    }
+
+    /** A map that is looked at, not driven: no pan, no zoom, no pins to tap. */
+    public void setStatic(boolean isStatic) {
+        map.setMultiTouchControls(!isStatic);
+        map.setClickable(!isStatic);
+        map.setFocusable(!isStatic);
+        setOnTouchListener(isStatic ? (v, e) -> true : null);
+    }
+
     /** Frames the user and the destination together for the walking screen. */
     public void frameWalk(@Nullable GeoPoint user, @Nullable GeoPoint destination) {
         if (user != null && destination != null) {

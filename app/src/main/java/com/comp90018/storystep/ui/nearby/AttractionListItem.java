@@ -26,6 +26,7 @@ public final class AttractionListItem {
     @Nullable private final GeoPoint location;
     private final IndoorClassification indoor;
     private final boolean visited;
+    @Nullable private final String imageUrl;
 
     public AttractionListItem(String id,
                               String name,
@@ -42,7 +43,7 @@ public final class AttractionListItem {
                               boolean saved,
                               @Nullable GeoPoint location) {
         this(id, name, category, distanceMeters, saved, location,
-                IndoorClassification.UNKNOWN, false);
+                IndoorClassification.UNKNOWN, false, null);
     }
 
     public AttractionListItem(String id,
@@ -52,7 +53,9 @@ public final class AttractionListItem {
                               boolean saved,
                               @Nullable GeoPoint location,
                               IndoorClassification indoor,
-                              boolean visited) {
+                              boolean visited,
+                              @Nullable String imageUrl) {
+        this.imageUrl = imageUrl;
         this.id = id;
         this.name = name;
         this.category = category;
@@ -61,6 +64,12 @@ public final class AttractionListItem {
         this.location = location;
         this.indoor = indoor;
         this.visited = visited;
+    }
+
+    /** A photograph to load, or null: the bundled artwork or the placeholder stands in. */
+    @Nullable
+    public String getImageUrl() {
+        return imageUrl;
     }
 
     public IndoorClassification getIndoor() {

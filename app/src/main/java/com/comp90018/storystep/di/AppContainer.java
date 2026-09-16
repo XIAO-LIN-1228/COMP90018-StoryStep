@@ -115,6 +115,8 @@ public class AppContainer {
                         attractionCache,
                         new OverpassAttractionSource(
                                 ApiClientFactory.createOverpassService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createWikidataService(
                                         isDebuggable(this.applicationContext))),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),

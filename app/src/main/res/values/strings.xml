@@ -129,6 +129,7 @@
     <string name="detail_start_exploration">Start exploration</string>
     <string name="detail_save">Save place</string>
     <string name="detail_pill_locked">Story locked</string>
+    <string name="detail_photo_credit">Photo via OpenStreetMap · Wikimedia Commons</string>
     <string name="detail_story_locked">This place keeps its story until you get there. Walk over and it unlocks.</string>
     <string name="detail_unsave">Remove from saved</string>
     <string name="detail_save_failed">Could not update your saved places. Try again.</string>
@@ -164,10 +165,14 @@
     <string name="exploration_remaining_unavailable">Distance unavailable — waiting for a fix</string>
     <string name="exploration_remaining_format">%1$s remaining</string>
     <string name="exploration_remaining_none">—</string>
-    <string name="exploration_travelled_zero">0 m travelled</string>
-    <string name="exploration_travelled_format">%1$s travelled</string>
-    <string name="exploration_accuracy_unavailable">No usable fix yet</string>
-    <string name="exploration_accuracy_format">GPS accuracy %1$d m</string>
+    <string name="exploration_travelled_zero">0 m</string>
+    <string name="exploration_travelled_format">%1$s</string>
+    <string name="exploration_accuracy_unavailable">No fix</string>
+    <string name="exploration_label_travelled">Travelled</string>
+    <string name="exploration_label_movement">Movement</string>
+    <string name="exploration_label_accuracy">GPS</string>
+    <string name="exploration_offline">Offline · map from cache</string>
+    <string name="exploration_accuracy_format">±%1$d m</string>
     <string name="exploration_unavailable_permission">Location permission is not granted</string>
     <string name="exploration_unavailable_approximate">Approximate location only</string>
     <string name="exploration_unavailable_provider">Location services are off</string>
@@ -179,9 +184,9 @@
     <string name="exploration_paused_interrupted">Paused — the app closed while this journey was running</string>
     <string name="exploration_unsaved_progress">Progress could not be saved. Exploring continues, but recent distance may be lost if the app closes.</string>
     <string name="movement_moving">Walking</string>
-    <string name="movement_stationary">Standing still</string>
+    <string name="movement_stationary">Still</string>
     <string name="movement_unknown">Sensing…</string>
-    <string name="movement_unavailable">No motion sensor</string>
+    <string name="movement_unavailable">No sensor</string>
 
     <string name="direction_north">north</string>
     <string name="direction_north_east">north-east</string>

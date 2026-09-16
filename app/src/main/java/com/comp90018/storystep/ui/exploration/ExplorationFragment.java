@@ -38,6 +38,8 @@ import java.util.concurrent.TimeUnit;
 public class ExplorationFragment extends Fragment {
 
     private PlaceMapView map;
+    private TextView offlinePill;
+    private com.comp90018.storystep.platform.connectivity.ConnectivityMonitor connectivity;
     private boolean remainingUnavailable;
 
     private ExplorationViewModel viewModel;
@@ -85,6 +87,9 @@ public class ExplorationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         map = view.findViewById(R.id.exploration_map);
+        offlinePill = view.findViewById(R.id.exploration_offline);
+        connectivity = new com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor(
+                requireContext().getApplicationContext());
         map.centerOn(((com.comp90018.storystep.StoryStepApplication) requireActivity()
                 .getApplication()).getAppContainer().getReferenceOrigin());
 
@@ -160,6 +165,9 @@ public class ExplorationFragment extends Fragment {
                         DistanceText.format(getResources(), state.getRemainingDistanceMeters()))
                 : getString(R.string.exploration_remaining_none));
         remainingUnavailable = !state.hasRemainingDistance();
+        // Tiles come from the network; say so when there is none. A hint, not a gate: the walk
+        // itself needs no connection, and cached tiles still draw.
+        offlinePill.setVisibility(connectivity.isOnline() ? View.GONE : View.VISIBLE);
         travelledView.setText(getString(R.string.exploration_travelled_format,
                 DistanceText.format(getResources(), state.getTravelledDistanceMeters())));
         accuracyView.setText(state.hasAccuracy()

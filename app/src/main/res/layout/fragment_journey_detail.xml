@@ -121,10 +121,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_24">
 
-                <com.comp90018.storystep.ui.widget.RouteSketchView
+                <com.comp90018.storystep.ui.widget.PlaceMapView
                     android:id="@+id/journey_detail_route"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp" />
+                    android:layout_height="220dp" />
             </com.google.android.material.card.MaterialCardView>
 
             <TextView

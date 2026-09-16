@@ -585,7 +585,8 @@ public class NearbyAttractionsViewModel extends ViewModel
                     savedIds.contains(attraction.getId()),
                     attraction.getLocation(),
                     attraction.getIndoor(),
-                    visited));
+                    visited,
+                    attraction.getImageUrl()));
         }
         // The repository sorts by distance from the origin it was queried with. After the user
         // moves without triggering a re-query, that order is stale, so sort by the distances just

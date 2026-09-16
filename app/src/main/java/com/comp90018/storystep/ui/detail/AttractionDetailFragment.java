@@ -41,6 +41,7 @@ public class AttractionDetailFragment extends Fragment {
     private TextView venueTypeChip;
     private TextView attributionView;
     private ImageView imageView;
+    private TextView photoCredit;
     private ImageButton saveButton;
 
     @Nullable
@@ -60,6 +61,7 @@ public class AttractionDetailFragment extends Fragment {
         venueTypeChip = view.findViewById(R.id.detail_venue_type);
         attributionView = view.findViewById(R.id.detail_attribution);
         imageView = view.findViewById(R.id.detail_image);
+        photoCredit = view.findViewById(R.id.detail_photo_credit);
         saveButton = view.findViewById(R.id.detail_save_button);
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
@@ -107,10 +109,31 @@ public class AttractionDetailFragment extends Fragment {
         // one. A 248dp placeholder for "no photo" is dead space on most real screens, so the
         // hero simply collapses; the pills and prose above and below it already carry the page.
         int hero = AttractionArtwork.heroDrawableFor(attraction.getId());
-        if (hero == R.drawable.bg_photo_placeholder) {
-            imageView.setVisibility(View.GONE);
-        } else {
+        int heroHeight = getResources().getDimensionPixelSize(R.dimen.hero_photo_height);
+        if (attraction.getImageUrl() != null) {
+            imageView.getLayoutParams().height = heroHeight;
+            imageView.requestLayout();
             imageView.setVisibility(View.VISIBLE);
+            photoCredit.setVisibility(View.VISIBLE);
+            com.bumptech.glide.Glide.with(imageView)
+                    .load(attraction.getImageUrl())
+                    .placeholder(R.drawable.bg_photo_placeholder)
+                    .error(R.drawable.bg_photo_placeholder)
+                    .centerCrop()
+                    .into(imageView);
+        } else if (hero == R.drawable.bg_photo_placeholder) {
+            // No photograph at all: the hero collapses to a short band that still carries the
+            // back control, and the page opens on the name.
+            imageView.setVisibility(View.INVISIBLE);
+            imageView.getLayoutParams().height = getResources()
+                    .getDimensionPixelSize(R.dimen.hero_collapsed_height);
+            imageView.requestLayout();
+            photoCredit.setVisibility(View.GONE);
+        } else {
+            imageView.getLayoutParams().height = heroHeight;
+            imageView.requestLayout();
+            imageView.setVisibility(View.VISIBLE);
+            photoCredit.setVisibility(View.GONE);
             imageView.setImageResource(hero);
         }
         venueTypeChip.setVisibility(View.VISIBLE);
