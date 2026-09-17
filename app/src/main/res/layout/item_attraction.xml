@@ -14,9 +14,9 @@
     android:baselineAligned="false"
     android:orientation="horizontal"
     android:paddingStart="@dimen/page_horizontal_margin"
-    android:paddingTop="@dimen/space_12"
+    android:paddingTop="10dp"
     android:paddingEnd="@dimen/space_8"
-    android:paddingBottom="@dimen/space_12">
+    android:paddingBottom="10dp">
 
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/attraction_image"
@@ -40,7 +40,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
-            android:maxLines="1" />
+            android:maxLines="1"
+            android:textSize="15sp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -51,14 +52,18 @@
             <TextView
                 android:id="@+id/attraction_distance"
                 style="@style/Widget.StoryStep.Pill"
-                android:textColor="@color/story_ink" />
+                android:layout_height="24dp"
+                android:textColor="@color/story_ink"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/attraction_category"
                 style="@style/Widget.StoryStep.Pill"
+                android:layout_height="24dp"
                 android:layout_marginStart="6dp"
                 android:ellipsize="end"
-                android:maxLines="1" />
+                android:maxLines="1"
+                android:textSize="12sp" />
         </LinearLayout>
 
         <!-- Why this place is being suggested; hidden until there is a reason to give. -->
@@ -67,10 +72,11 @@
             style="@style/TextAppearance.StoryStep.Supporting"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="5dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:textColor="@color/story_ink_3" />
+            android:textColor="@color/story_ink_3"
+            android:textSize="12.5sp" />
     </LinearLayout>
 
     <ImageButton
