@@ -1,20 +1,54 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+      Daylight theme. Every Material 3 colour role is stated explicitly: any role left
+      unset falls back to Material's default purple tonal palette, which is how an
+      unstyled surface such as the nearby permission notice ended up lavender on an
+      otherwise ink-and-paper screen.
+    -->
     <style name="Base.Theme.StoryStep" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">@color/brand_teal</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorPrimaryContainer">@color/brand_teal_soft</item>
-        <item name="colorOnPrimaryContainer">@color/brand_teal_dark</item>
-        <item name="colorSecondary">@color/brand_coral</item>
-        <item name="colorSurface">@color/brand_ivory</item>
-        <item name="colorOnSurface">@color/story_text_primary</item>
-        <item name="colorOnSurfaceVariant">@color/story_text_secondary</item>
+        <item name="colorPrimary">@color/story_ink</item>
+        <item name="colorOnPrimary">@color/story_on_ink</item>
+        <item name="colorPrimaryContainer">@color/story_ink_wash</item>
+        <item name="colorOnPrimaryContainer">@color/story_ink</item>
+
+        <item name="colorSecondary">@color/story_ink_2</item>
+        <item name="colorOnSecondary">@color/story_on_ink</item>
+        <item name="colorSecondaryContainer">@color/story_ink_wash</item>
+        <item name="colorOnSecondaryContainer">@color/story_ink</item>
+
+        <item name="colorTertiary">@color/story_ink_2</item>
+        <item name="colorOnTertiary">@color/story_on_ink</item>
+        <item name="colorTertiaryContainer">@color/story_surface_sunk</item>
+        <item name="colorOnTertiaryContainer">@color/story_ink</item>
+
+        <item name="colorError">@color/story_error</item>
+        <item name="colorOnError">@color/story_on_ink</item>
+        <item name="colorErrorContainer">@color/story_error_wash</item>
+        <item name="colorOnErrorContainer">@color/story_error</item>
+
+        <item name="android:colorBackground">@color/story_ground</item>
+        <item name="colorOnBackground">@color/story_ink</item>
+        <item name="colorSurface">@color/story_ground</item>
+        <item name="colorOnSurface">@color/story_ink</item>
+        <item name="colorSurfaceVariant">@color/story_surface_sunk</item>
+        <item name="colorOnSurfaceVariant">@color/story_ink_2</item>
+        <item name="colorSurfaceContainerLowest">@color/story_surface</item>
+        <item name="colorSurfaceContainerLow">@color/story_ground</item>
+        <item name="colorSurfaceContainer">@color/story_surface_sunk</item>
+        <item name="colorSurfaceContainerHigh">@color/story_ink_wash</item>
+        <item name="colorSurfaceContainerHighest">@color/story_hairline</item>
+        <item name="colorSurfaceInverse">@color/story_ink</item>
+        <item name="colorOnSurfaceInverse">@color/story_on_ink</item>
+
         <item name="colorOutline">@color/story_outline</item>
-        <item name="android:colorAccent">@color/brand_teal</item>
-        <item name="android:fontFamily">@font/inter</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">@color/brand_navy</item>
-        <item name="android:navigationBarColor">@color/brand_ivory</item>
-        <item name="android:windowBackground">@color/brand_ivory</item>
+        <item name="colorOutlineVariant">@color/story_hairline</item>
+
+        <item name="android:colorAccent">@color/story_ink</item>
+        <item name="android:fontFamily">@font/bricolage</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:statusBarColor">@color/story_ground</item>
+        <item name="android:navigationBarColor">@color/story_ground</item>
+        <item name="android:windowBackground">@color/story_ground</item>
         <item name="android:windowActionModeOverlay">true</item>
     </style>
 

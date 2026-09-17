@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The quiet inset that carries a detail only worth reading where you are standing. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/story_surface_sunk" />
+    <corners android:radius="@dimen/card_corner_radius" />
+</shape>

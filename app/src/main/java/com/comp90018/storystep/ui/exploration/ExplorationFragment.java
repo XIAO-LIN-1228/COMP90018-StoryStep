@@ -23,7 +23,7 @@ import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.weather.WeatherUiState;
 import com.comp90018.storystep.ui.weather.WeatherViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
-import com.comp90018.storystep.ui.widget.StoryMapView;
+import com.comp90018.storystep.ui.widget.PlaceMapView;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
@@ -36,6 +36,11 @@ import java.util.concurrent.TimeUnit;
  * that showed "0 m remaining" because no fix had arrived would be claiming the user had arrived.
  */
 public class ExplorationFragment extends Fragment {
+
+    private PlaceMapView map;
+    private TextView offlinePill;
+    private com.comp90018.storystep.platform.connectivity.ConnectivityMonitor connectivity;
+    private boolean remainingUnavailable;
 
     private ExplorationViewModel viewModel;
 
@@ -81,8 +86,12 @@ public class ExplorationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        StoryMapView map = view.findViewById(R.id.exploration_map);
-        map.setExplorationMode(true);
+        map = view.findViewById(R.id.exploration_map);
+        offlinePill = view.findViewById(R.id.exploration_offline);
+        connectivity = new com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor(
+                requireContext().getApplicationContext());
+        map.centerOn(((com.comp90018.storystep.StoryStepApplication) requireActivity()
+                .getApplication()).getAppContainer().getReferenceOrigin());
 
         destinationNameView = view.findViewById(R.id.exploration_destination_name);
         durationView = view.findViewById(R.id.exploration_duration);
@@ -118,6 +127,8 @@ public class ExplorationFragment extends Fragment {
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
 
+        viewModel.getMapState().observe(getViewLifecycleOwner(), this::renderMap);
+
         // The same ViewModel the nearby screen uses. Both instances read one process-scoped
         // repository, so arriving here from the list does not issue a second request for an
         // observation that was fetched a moment ago.
@@ -147,10 +158,16 @@ public class ExplorationFragment extends Fragment {
         durationView.setText(formatDuration(state.getActiveDurationMillis()));
         stateChip.setText(stateLabel(state));
 
+        // The big figure is a figure. With no fix there is no figure, so it shows a dash and
+        // the explanation moves to the label above it, where a sentence has room.
         remainingView.setText(state.hasRemainingDistance()
                 ? getString(R.string.exploration_remaining_format,
                         DistanceText.format(getResources(), state.getRemainingDistanceMeters()))
-                : getString(R.string.exploration_remaining_unavailable));
+                : getString(R.string.exploration_remaining_none));
+        remainingUnavailable = !state.hasRemainingDistance();
+        // Tiles come from the network; say so when there is none. A hint, not a gate: the walk
+        // itself needs no connection, and cached tiles still draw.
+        offlinePill.setVisibility(connectivity.isOnline() ? View.GONE : View.VISIBLE);
         travelledView.setText(getString(R.string.exploration_travelled_format,
                 DistanceText.format(getResources(), state.getTravelledDistanceMeters())));
         accuracyView.setText(state.hasAccuracy()
@@ -180,8 +197,12 @@ public class ExplorationFragment extends Fragment {
         }
         navigatedAway = true;
         if (state.isFinished()) {
-            NavHostFragment.findNavController(this)
-                    .navigate(R.id.action_exploration_to_summary);
+            // Straight to the finished walk. The prototype summary page that used to sit
+            // between here and the real detail screen is gone.
+            NavHostFragment.findNavController(this).navigate(
+                    R.id.action_exploration_to_journey_detail,
+                    com.comp90018.storystep.ui.journey.JourneysFragment
+                            .finishedSessionArguments(this));
         } else {
             // Discarded: there is nothing left to show, and no journey to open.
             NavHostFragment.findNavController(this).popBackStack();
@@ -233,7 +254,9 @@ public class ExplorationFragment extends Fragment {
     private void renderDirection(ExplorationUiState state) {
         if (!state.hasCardinal()) {
             directionArrow.setVisibility(View.GONE);
-            directionView.setText(R.string.exploration_direction_unavailable);
+            directionView.setText(remainingUnavailable
+                    ? R.string.exploration_remaining_unavailable
+                    : R.string.exploration_direction_unavailable);
             return;
         }
         String cardinal = getString(DirectionLabels.cardinalOf(state.getCardinal()));
@@ -312,5 +335,30 @@ public class ExplorationFragment extends Fragment {
                 .setPositiveButton(R.string.exploration_finish, (dialog, which) ->
                         viewModel.onStopRequested())
                 .show();
+    }
+
+    private boolean framedWalk;
+
+    private void renderMap(ExplorationMapState state) {
+        map.setOrigin(state.getPosition());
+        map.setDestination(state.getDestination());
+        map.setRoute(state.getSegments());
+        // Frame the walk once, when both ends are known; after that the user owns the viewport.
+        if (!framedWalk && state.getPosition() != null && state.getDestination() != null) {
+            map.frameWalk(state.getPosition(), state.getDestination());
+            framedWalk = true;
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        map.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        map.onPause();
+        super.onPause();
     }
 }

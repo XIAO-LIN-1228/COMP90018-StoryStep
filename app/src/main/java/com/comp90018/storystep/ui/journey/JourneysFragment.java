@@ -108,4 +108,18 @@ public class JourneysFragment extends Fragment
         list.setAdapter(null);
         super.onDestroyView();
     }
+
+    /**
+     * Arguments that open the journey the coordinator has just finished. The session is
+     * complete, so its summary still carries the id the history screens key on.
+     */
+    public static Bundle finishedSessionArguments(androidx.fragment.app.Fragment host) {
+        com.comp90018.storystep.di.AppContainer container =
+                ((com.comp90018.storystep.StoryStepApplication)
+                        host.requireActivity().getApplication()).getAppContainer();
+        Bundle arguments = new Bundle();
+        arguments.putString(ARG_SESSION_ID,
+                container.getExplorationCoordinator().summary().getId());
+        return arguments;
+    }
 }

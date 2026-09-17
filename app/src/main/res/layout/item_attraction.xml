@@ -1,100 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+    A place, as a row: a large rounded thumbnail, the name in the display face, the
+    facts as filled pills, then the description. No divider - the white sheet under
+    the list already separates it from the page, and rules between rows only added
+    noise once the sheet arrived.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/attraction_card"
-    style="@style/Widget.StoryStep.Card"
     android:layout_width="match_parent"
-    android:layout_height="126dp"
-    android:layout_marginBottom="@dimen/space_12"
-    android:clickable="true"
-    android:focusable="true">
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:baselineAligned="false"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/page_horizontal_margin"
+    android:paddingTop="@dimen/space_16"
+    android:paddingEnd="@dimen/space_8"
+    android:paddingBottom="@dimen/space_16">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp">
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/attraction_image"
+        android:layout_width="@dimen/row_thumb_size"
+        android:layout_height="@dimen/row_thumb_size"
+        android:background="@drawable/bg_thumb_placeholder"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
 
-        <com.google.android.material.imageview.ShapeableImageView
-            android:id="@+id/attraction_image"
-            android:layout_width="116dp"
-            android:layout_height="0dp"
-            android:contentDescription="@null"
-            android:scaleType="centerCrop"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image"
-            tools:src="@drawable/photo_old_arts_thumb" />
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
         <TextView
             android:id="@+id/attraction_name"
             style="@style/TextAppearance.StoryStep.Title"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_marginTop="4dp"
             android:ellipsize="end"
-            android:maxLines="1"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toStartOf="@id/attraction_save_button"
-            app:layout_constraintStart_toEndOf="@id/attraction_image"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="Old Arts Building" />
+            android:maxLines="1" />
 
-        <TextView
-            android:id="@+id/attraction_category"
-            style="@style/TextAppearance.StoryStep.Supporting"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_marginTop="3dp"
-            app:layout_constraintEnd_toStartOf="@id/attraction_save_button"
-            app:layout_constraintStart_toEndOf="@id/attraction_image"
-            app:layout_constraintTop_toBottomOf="@id/attraction_name"
-            tools:text="University landmark" />
+            android:layout_marginTop="@dimen/space_8"
+            android:orientation="horizontal">
 
+            <TextView
+                android:id="@+id/attraction_distance"
+                style="@style/Widget.StoryStep.Pill"
+                android:textColor="@color/story_ink" />
+
+            <TextView
+                android:id="@+id/attraction_category"
+                style="@style/Widget.StoryStep.Pill"
+                android:layout_marginStart="6dp"
+                android:ellipsize="end"
+                android:maxLines="1" />
+        </LinearLayout>
+
+        <!-- Why this place is being suggested; hidden until there is a reason to give. -->
         <TextView
             android:id="@+id/attraction_reason"
             style="@style/TextAppearance.StoryStep.Supporting"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginStart="14dp"
-            android:layout_marginTop="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
             android:ellipsize="end"
             android:maxLines="2"
-            app:layout_constraintBottom_toTopOf="@id/attraction_distance"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/attraction_image"
-            app:layout_constraintTop_toBottomOf="@id/attraction_category"
-            tools:text="Heritage architecture and university history." />
+            android:textColor="@color/story_ink_3" />
+    </LinearLayout>
 
-        <TextView
-            android:id="@+id/attraction_distance"
-            style="@style/TextAppearance.Material3.LabelLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
-            android:layout_marginBottom="4dp"
-            android:textColor="@color/brand_teal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@id/attraction_image"
-            tools:text="280 m" />
-
-        <!--
-            A real toggle rather than the decorative pin this slot used to hold: the saved state
-            has to be both visible and changeable from the list. 48dp so the touch target meets the
-            accessibility minimum; the icon inside keeps the original visual weight.
-        -->
-        <ImageButton
-            android:id="@+id/attraction_save_button"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:background="@drawable/bg_icon_surface"
-            android:contentDescription="@string/attraction_save"
-            android:padding="14dp"
-            android:src="@drawable/ic_bookmark_outline"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
-</com.google.android.material.card.MaterialCardView>
+    <ImageButton
+        android:id="@+id/attraction_save_button"
+        android:layout_width="@dimen/minimum_touch_target"
+        android:layout_height="@dimen/minimum_touch_target"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/detail_save"
+        android:padding="12dp"
+        android:src="@drawable/ic_bookmark_outline"
+        app:tint="@color/story_ink_3" />
+</LinearLayout>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The unlock stamp. The one place the signal colour is allowed to be loud. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/story_signal" />
+    <corners android:radius="@dimen/image_corner_radius" />
+</shape>

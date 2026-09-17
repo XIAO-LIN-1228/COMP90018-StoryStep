@@ -20,9 +20,26 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
  */
 public class MainActivity extends AppCompatActivity {
 
+    /**
+     * osmdroid's global configuration, set once before any map inflates.
+     *
+     * <p>The OpenStreetMap tile policy requires an identifying user agent, and the default
+     * cache location is external storage, which this app has no permission for and no wish to
+     * use. Tiles go to the app's own cache directory, where the system can reclaim them.
+     */
+    private void configureMapTiles() {
+        org.osmdroid.config.IConfigurationProvider config =
+                org.osmdroid.config.Configuration.getInstance();
+        config.setUserAgentValue(getPackageName());
+        java.io.File tileCache = new java.io.File(getCacheDir(), "osmdroid");
+        config.setOsmdroidBasePath(tileCache);
+        config.setOsmdroidTileCache(new java.io.File(tileCache, "tiles"));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        configureMapTiles();
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {

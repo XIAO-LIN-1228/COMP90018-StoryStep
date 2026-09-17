@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bricolage Grotesque at weight 400, optical size 14: body and figures; the small optical size keeps it neutral and readable -->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android">
+    <font android:font="@font/bricolage_variable" android:fontStyle="normal" android:fontWeight="400" android:fontVariationSettings="'opsz' 14, 'wdth' 100, 'wght' 400" />
+</font-family>

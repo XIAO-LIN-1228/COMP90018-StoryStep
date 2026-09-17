@@ -64,6 +64,8 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.okhttp)
+    implementation(libs.osmdroid)
+    implementation(libs.glide)
 
     testImplementation(libs.junit)
     testImplementation(libs.arch.core.testing)

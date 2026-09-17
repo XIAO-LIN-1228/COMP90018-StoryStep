@@ -42,6 +42,7 @@ public final class LocalAttractionMapper {
         entity.provenance = AttractionProvenanceCodec.toCode(attraction.getProvenance());
         entity.fetchedAtMillis = fetchedAtMillis;
         entity.sourceRef = attraction.getSourceRef();
+        entity.imageUrl = attraction.getImageUrl();
         return entity;
     }
 
@@ -54,7 +55,8 @@ public final class LocalAttractionMapper {
                 IndoorClassificationCodec.fromCode(entity.indoor),
                 new GeoPoint(entity.latitude, entity.longitude),
                 AttractionProvenanceCodec.fromCode(entity.provenance),
-                entity.sourceRef);
+                entity.sourceRef,
+                entity.imageUrl);
     }
 
     public static List<AttractionEntity> toEntities(List<Attraction> attractions,

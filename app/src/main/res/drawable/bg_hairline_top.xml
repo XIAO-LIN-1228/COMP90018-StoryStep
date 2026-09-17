@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A section boundary drawn as a rule, not as another floating card. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/story_hairline" />
+        </shape>
+    </item>
+    <item android:top="@dimen/hairline">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/story_ground" />
+        </shape>
+    </item>
+</layer-list>

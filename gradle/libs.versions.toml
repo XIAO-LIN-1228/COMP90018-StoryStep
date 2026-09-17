@@ -14,6 +14,8 @@ recyclerview = "1.4.0"
 room = "2.6.1"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
+osmdroid = "6.1.20"
+glide = "4.16.0"
 archCoreTesting = "2.2.0"
 testRunner = "1.5.2"
 testCore = "1.5.0"
@@ -39,6 +41,12 @@ room-testing = { group = "androidx.room", name = "room-testing", version.ref = "
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhttp" }
+# Real map tiles. OpenStreetMap, the same source D-02 chose for the places themselves, so the
+# map and the pins on it share one licence and one attribution line. Apache-2.0, no API key.
+osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "osmdroid" }
+# Photographs of fetched places, from the URLs OpenStreetMap records for them. Java-first,
+# caches to disk, and degrades to the placeholder on any failure.
+glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 # Local HTTP server for the weather contract tests: proves the Retrofit stack parses a real
 # response off a real socket without depending on the provider being reachable from CI.
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }

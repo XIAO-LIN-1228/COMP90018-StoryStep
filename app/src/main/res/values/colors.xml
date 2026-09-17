@@ -1,31 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Daylight & Starmap.
+
+  StoryStep is used outdoors, one-handed, in sunlight, so the walking screens are a
+  high-contrast daylight surface: ink on paper. Reviewing a finished walk happens
+  indoors and afterwards, so the journey surfaces use the night ground, where every
+  recorded visit is a point of light.
+
+  One accent only. story_signal means exactly one thing: "there is a story here and
+  it has not been read yet" - locked places, arrival, footprint points. It is never a
+  button and never a heading; primary actions are story_ink. If signal appears in a
+  second role on a screen, that screen needs re-checking.
+-->
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="brand_navy">#071B42</color>
-    <color name="brand_navy_dark">#03132F</color>
-    <color name="brand_teal">#00847F</color>
-    <color name="brand_teal_dark">#006B67</color>
-    <color name="brand_teal_pressed">#005854</color>
-    <color name="brand_teal_soft">#E5F3F1</color>
-    <color name="brand_ivory">#FBF9F5</color>
-    <color name="brand_coral">#DF7B5B</color>
-    <color name="brand_coral_soft">#FBE9E2</color>
-    <color name="brand_amber">#F1B84B</color>
-    <color name="brand_amber_soft">#FFF3D5</color>
+
+    <!-- Daylight ground -->
+    <color name="story_ground">#F4F2EC</color>
     <color name="story_surface">#FFFFFFFF</color>
-    <color name="story_surface_muted">#F4F3F0</color>
-    <color name="story_outline">#E0E2DE</color>
-    <color name="story_divider">#ECEDEA</color>
-    <color name="story_text_primary">#0A1F44</color>
-    <color name="story_text_secondary">#5C6879</color>
-    <color name="story_text_tertiary">#7A8492</color>
-    <color name="story_disabled">#A8AFB8</color>
-    <color name="story_success">#187B68</color>
-    <color name="story_error">#C53B2C</color>
-    <color name="map_land">#E7E9E2</color>
-    <color name="map_park">#CFE4C2</color>
-    <color name="map_water">#A9D2E8</color>
-    <color name="map_road">#FFFFFF</color>
-    <color name="map_location">#2389F5</color>
+    <color name="story_surface_sunk">#ECE9E0</color>
+    <color name="story_hairline">#E4E1D7</color>
+    <color name="story_outline">#DCD8CD</color>
+    <!-- Filled metadata pills: a category, a distance, a count. -->
+    <color name="story_chip">#E9E6DC</color>
+
+    <!-- Ink: headings and every primary action -->
+    <color name="story_ink">#211D16</color>
+    <color name="story_ink_pressed">#0B0906</color>
+    <!-- Title chrome sitting on the page header, which is now the ground itself. -->
+    <color name="story_on_header">#211D16</color>
+    <color name="story_on_ink">#FFFFFFFF</color>
+    <color name="story_ink_wash">#E9E6DC</color>
+    <color name="story_ink_2">#6B655A</color>
+    <color name="story_ink_3">#948D80</color>
+    <color name="story_disabled">#B5AFA3</color>
+
+    <!-- The one accent: an unread story -->
+    <!--
+      Chrome that sits on a photograph, not on the page. A photograph is dark in both
+      configurations, so this colour deliberately does NOT flip with the theme: tinting
+      it with story_ink turned the back and save controls white-on-white in dark mode.
+      The same applies to the unlock stamp, which is always amber.
+    -->
+    <color name="story_on_photo">#211D16</color>
+
+    <color name="story_signal">#E9A63A</color>
+    <color name="story_signal_ink">#9A6410</color>
+    <color name="story_signal_wash">#F6E8CF</color>
+
+    <!-- Night ground, used by the journey surfaces -->
+    <color name="story_night">#0B111C</color>
+    <color name="story_night_surface">#101827</color>
+    <color name="story_night_line">#182335</color>
+    <color name="story_glow">#F0B44E</color>
+
+    <color name="story_success">#1F6F52</color>
+    <color name="story_error_wash">#F7E4E0</color>
+    <color name="story_error">#B23A2B</color>
+
+    <!-- Route sketch and the prototype map surface, retuned to the daylight neutrals -->
+    <color name="map_land">#EBE8DF</color>
+    <color name="map_park">#E2E7DA</color>
+    <color name="map_water">#DDE6EC</color>
+    <color name="map_road">#F4F2EC</color>
+    <color name="map_location">#211D16</color>
 </resources>

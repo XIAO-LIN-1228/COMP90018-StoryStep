@@ -1,6 +1,10 @@
 package com.comp90018.storystep.ui.nearby;
 
 import com.comp90018.storystep.domain.model.AttractionCategory;
+import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.model.IndoorClassification;
+
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -19,17 +23,68 @@ public final class AttractionListItem {
     private final AttractionCategory category;
     private final double distanceMeters;
     private final boolean saved;
+    @Nullable private final GeoPoint location;
+    private final IndoorClassification indoor;
+    private final boolean visited;
+    @Nullable private final String imageUrl;
 
     public AttractionListItem(String id,
                               String name,
                               AttractionCategory category,
                               double distanceMeters,
                               boolean saved) {
+        this(id, name, category, distanceMeters, saved, null);
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location) {
+        this(id, name, category, distanceMeters, saved, location,
+                IndoorClassification.UNKNOWN, false, null);
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location,
+                              IndoorClassification indoor,
+                              boolean visited,
+                              @Nullable String imageUrl) {
+        this.imageUrl = imageUrl;
         this.id = id;
         this.name = name;
         this.category = category;
         this.distanceMeters = distanceMeters;
         this.saved = saved;
+        this.location = location;
+        this.indoor = indoor;
+        this.visited = visited;
+    }
+
+    /** A photograph to load, or null: the bundled artwork or the placeholder stands in. */
+    @Nullable
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public IndoorClassification getIndoor() {
+        return indoor;
+    }
+
+    /** Whether a visit has ever been recorded here: a story already read. */
+    public boolean isVisited() {
+        return visited;
+    }
+
+    /** Where the place is, for pinning it on the map; absent for rows built without one. */
+    @Nullable
+    public GeoPoint getLocation() {
+        return location;
     }
 
     public String getId() {

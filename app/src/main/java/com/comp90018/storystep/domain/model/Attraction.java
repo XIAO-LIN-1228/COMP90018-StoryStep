@@ -16,6 +16,8 @@ public final class Attraction {
     private final GeoPoint location;
     private final AttractionProvenance provenance;
     private final String sourceRef;
+    /** A photograph of the place, as an absolute https URL, or null when the source has none. */
+    private final String imageUrl;
 
     public Attraction(String id,
                       String name,
@@ -25,6 +27,18 @@ public final class Attraction {
                       GeoPoint location,
                       AttractionProvenance provenance,
                       String sourceRef) {
+        this(id, name, category, description, indoor, location, provenance, sourceRef, null);
+    }
+
+    public Attraction(String id,
+                      String name,
+                      AttractionCategory category,
+                      String description,
+                      IndoorClassification indoor,
+                      GeoPoint location,
+                      AttractionProvenance provenance,
+                      String sourceRef,
+                      String imageUrl) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.category = Objects.requireNonNull(category, "category");
@@ -33,6 +47,18 @@ public final class Attraction {
         this.location = Objects.requireNonNull(location, "location");
         this.provenance = Objects.requireNonNull(provenance, "provenance");
         this.sourceRef = sourceRef;
+        this.imageUrl = imageUrl;
+    }
+
+    /** The photograph's URL, or null. Sources that carry one are credited where it is shown. */
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    /** The same place with a photograph attached; the record is otherwise unchanged. */
+    public Attraction withImageUrl(String url) {
+        return new Attraction(id, name, category, description, indoor, location, provenance,
+                sourceRef, url);
     }
 
     /**
@@ -116,13 +142,14 @@ public final class Attraction {
                 && description.equals(that.description)
                 && location.equals(that.location)
                 && provenance == that.provenance
-                && Objects.equals(sourceRef, that.sourceRef);
+                && Objects.equals(sourceRef, that.sourceRef)
+                && Objects.equals(imageUrl, that.imageUrl);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, name, category, description, indoor, location, provenance,
-                sourceRef);
+                sourceRef, imageUrl);
     }
 
     @Override

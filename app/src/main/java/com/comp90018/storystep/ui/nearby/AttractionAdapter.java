@@ -117,7 +117,20 @@ public class AttractionAdapter
             String recommendation = AttractionArtwork.recommendationFor(item.getId());
             reason.setText(recommendation == null ? "" : recommendation);
             reason.setVisibility(recommendation == null ? View.GONE : View.VISIBLE);
-            image.setImageResource(AttractionArtwork.drawableFor(item.getId()));
+            // A fetched photograph when the source has one; the bundled artwork or the placeholder
+            // otherwise. Glide caches to disk, so a row scrolled back into view costs nothing.
+            int fallback = AttractionArtwork.drawableFor(item.getId());
+            if (item.getImageUrl() != null) {
+                com.bumptech.glide.Glide.with(image)
+                        .load(item.getImageUrl())
+                        .placeholder(fallback)
+                        .error(fallback)
+                        .centerCrop()
+                        .into(image);
+            } else {
+                com.bumptech.glide.Glide.with(image).clear(image);
+                image.setImageResource(fallback);
+            }
             itemView.setContentDescription(resources.getString(
                     R.string.attraction_item_description,
                     item.getName(),

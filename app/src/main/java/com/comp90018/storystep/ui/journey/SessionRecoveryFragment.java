@@ -108,7 +108,9 @@ public final class SessionRecoveryFragment extends Fragment {
             navigate(R.id.action_session_recovery_to_exploration);
         } else if (pendingAction == PendingAction.FINISH && state == SessionState.COMPLETED) {
             pendingAction = PendingAction.NONE;
-            navigate(R.id.action_session_recovery_to_summary);
+            NavHostFragment.findNavController(this).navigate(
+                    R.id.action_session_recovery_to_journey_detail,
+                    JourneysFragment.finishedSessionArguments(this));
         } else if (pendingAction == PendingAction.DISCARD && state == SessionState.IDLE) {
             pendingAction = PendingAction.NONE;
             navigate(R.id.action_session_recovery_to_nearby);

@@ -132,7 +132,8 @@ public final class RemoteAttractionMapper {
                 indoor(element.tags),
                 location,
                 AttractionProvenance.OPENSTREETMAP,
-                sourceRef(element.tags));
+                sourceRef(element.tags),
+                OsmImageUrls.fromTags(element.tags));
     }
 
     /**

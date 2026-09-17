@@ -88,6 +88,10 @@ public final class ApiClientFactory {
                 .create(OverpassApiService.class);
     }
 
+    public static WikidataApiService createWikidataService(boolean debug) {
+        return createRetrofit(WikidataApiService.BASE_URL, debug).create(WikidataApiService.class);
+    }
+
     private static OkHttpClient createHttpClient(boolean debug, long timeoutSeconds) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)

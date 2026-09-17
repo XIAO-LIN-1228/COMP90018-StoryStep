@@ -55,13 +55,13 @@ public final class RouteSketchView extends View {
 
     public RouteSketchView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        routePaint.setColor(ContextCompat.getColor(context, R.color.brand_teal));
+        routePaint.setColor(ContextCompat.getColor(context, R.color.story_ink));
         routePaint.setStyle(Paint.Style.STROKE);
         routePaint.setStrokeWidth(dp(3));
         routePaint.setStrokeCap(Paint.Cap.ROUND);
         routePaint.setStrokeJoin(Paint.Join.ROUND);
 
-        endpointPaint.setColor(ContextCompat.getColor(context, R.color.brand_teal));
+        endpointPaint.setColor(ContextCompat.getColor(context, R.color.story_ink));
         endpointPaint.setStyle(Paint.Style.STROKE);
         endpointPaint.setStrokeWidth(dp(2));
     }

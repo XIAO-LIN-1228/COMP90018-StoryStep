@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@color/story_outline" />
-        </shape>
-    </item>
-    <item android:top="1dp">
-        <shape android:shape="rectangle">
-            <solid android:color="@color/brand_ivory" />
-        </shape>
-    </item>
-</layer-list>
+<!--
+  The tab bar is a capsule floating clear of the page, not a slab welded to the bottom
+  edge. It is the single most visible piece of chrome in the app, and a full-width bar
+  with a hairline was what made every screen stop dead at the bottom.
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
+    <solid android:color="@color/story_surface" />
+    <corners android:radius="@dimen/pill_corner_radius" />
+</shape>

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Five items, with the one creative act - starting a walk - in the centre, where Komoot
+  keeps Record. It is the app's reason to exist and was previously five taps deep.
+-->
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/nearbyAttractionsFragment" android:icon="@drawable/ic_explore" android:title="@string/nav_explore" />
-    <item android:id="@+id/journeysFragment" android:icon="@drawable/ic_journeys" android:title="@string/nav_journeys" />
-    <item android:id="@+id/savedFragment" android:icon="@drawable/ic_saved" android:title="@string/nav_saved" />
-    <item android:id="@+id/profileFragment" android:icon="@drawable/ic_profile" android:title="@string/nav_profile" />
+    <item android:id="@+id/nearbyAttractionsFragment" android:icon="@drawable/nav_explore" android:title="@string/nav_explore" />
+    <item android:id="@+id/journeysFragment" android:icon="@drawable/nav_journeys" android:title="@string/nav_journeys" />
+    <item android:id="@+id/explorationFragment" android:icon="@drawable/nav_start" android:title="@string/nav_start" />
+    <item android:id="@+id/savedFragment" android:icon="@drawable/nav_saved" android:title="@string/nav_saved" />
+    <item android:id="@+id/profileFragment" android:icon="@drawable/nav_profile" android:title="@string/nav_profile" />
 </menu>

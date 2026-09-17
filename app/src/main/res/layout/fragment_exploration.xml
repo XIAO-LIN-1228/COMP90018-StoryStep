@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/brand_ivory">
+    android:background="@color/story_ground">
 
     <LinearLayout
         android:id="@+id/exploration_header"
@@ -26,7 +26,7 @@
             android:contentDescription="@string/detail_back"
             android:padding="12dp"
             android:src="@drawable/ic_back"
-            app:tint="@color/white" />
+            app:tint="@color/story_on_header" />
 
         <TextView
             android:id="@+id/exploration_destination_name"
@@ -35,7 +35,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="@string/exploration_no_destination"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="20sp" />
 
         <TextView
@@ -44,11 +44,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/exploration_duration_zero"
-            android:textColor="@color/white"
+            android:textColor="@color/story_on_header"
             android:textSize="16sp" />
     </LinearLayout>
 
-    <com.comp90018.storystep.ui.widget.StoryMapView
+    <com.comp90018.storystep.ui.widget.PlaceMapView
         android:id="@+id/exploration_map"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -56,6 +56,28 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/exploration_header" />
+
+    <TextView
+        android:id="@+id/exploration_offline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginEnd="@dimen/space_12"
+        android:background="@drawable/bg_stale_banner"
+        android:drawablePadding="6dp"
+        android:fontFamily="@font/bricolage_semibold"
+        android:paddingStart="12dp"
+        android:paddingTop="6dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="6dp"
+        android:text="@string/exploration_offline"
+        android:textColor="@color/story_on_ink"
+        android:textSize="@dimen/text_chip"
+        android:visibility="gone"
+        app:drawableStartCompat="@drawable/ic_info_outline"
+        app:drawableTint="@color/story_on_ink"
+        app:layout_constraintEnd_toEndOf="@id/exploration_map"
+        app:layout_constraintTop_toTopOf="@id/exploration_map" />
 
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/exploration_guidance_card"
@@ -84,7 +106,7 @@
                 android:paddingEnd="10dp"
                 android:paddingBottom="6dp"
                 android:text="@string/exploration_state_starting"
-                android:textColor="@color/brand_teal_dark"
+                android:textColor="@color/story_ink_pressed"
                 android:textStyle="bold" />
 
             <LinearLayout
@@ -114,56 +136,79 @@
                     android:orientation="vertical">
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Headline"
+                        style="@style/Widget.StoryStep.StatLabel"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:id="@+id/exploration_direction"
                         android:text="@string/exploration_direction_unavailable" />
 
                     <TextView
-                        style="@style/TextAppearance.StoryStep.Title"
+                        style="@style/TextAppearance.StoryStep.Display"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:id="@+id/exploration_remaining"
-                        android:layout_marginTop="2dp"
+                        android:layout_marginTop="4dp"
                         android:text="@string/exploration_remaining_unavailable"
-                        android:textColor="@color/brand_teal" />
+                        android:textSize="@dimen/text_display" />
                 </LinearLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:background="@color/story_surface_muted"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp">
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:baselineAligned="false"
+                android:orientation="horizontal">
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:id="@+id/exploration_travelled"
                     android:layout_weight="1"
-                    android:text="@string/exploration_travelled_zero" />
+                    android:orientation="vertical">
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_travelled" />
+
+                    <TextView
+                        android:id="@+id/exploration_travelled"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/exploration_travelled_zero" />
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:id="@+id/exploration_movement"
                     android:layout_weight="1"
-                    android:gravity="center"
-                    android:text="@string/movement_unknown" />
+                    android:orientation="vertical">
 
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="wrap_content"
-                    android:id="@+id/exploration_accuracy"
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_movement" />
+
+                    <TextView
+                        android:id="@+id/exploration_movement"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/movement_unknown" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="@string/exploration_accuracy_unavailable" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/exploration_label_accuracy" />
+
+                    <TextView
+                        android:id="@+id/exploration_accuracy"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/exploration_accuracy_unavailable" />
+                </LinearLayout>
             </LinearLayout>
 
             <!--
@@ -197,7 +242,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="12dp"
-                android:background="@color/brand_teal_soft"
+                android:background="@color/story_ink_wash"
                 android:orientation="vertical"
                 android:padding="12dp"
                 android:visibility="gone">
@@ -231,7 +276,7 @@
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/arrival_later_button"
-                        style="@style/Widget.StoryStep.Button.Outlined"
+                        style="@style/Widget.StoryStep.Button.Secondary"
                         android:layout_width="wrap_content"
                         android:layout_height="@dimen/primary_button_height"
                         android:layout_marginStart="8dp"
@@ -251,7 +296,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/retry_visit_button"
-                style="@style/Widget.StoryStep.Button.Outlined"
+                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
                 android:layout_marginTop="8dp"
@@ -278,7 +323,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/stop_exploration_button"
-                style="@style/Widget.StoryStep.Button.Outlined"
+                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
                 android:layout_marginTop="8dp"

@@ -76,4 +76,8 @@ public class AttractionEntity {
 
     /** The bundled demonstration data set; not fetched from any service. */
     public static final String PROVENANCE_SEED = AttractionProvenanceCodec.CODE_SEED;
+
+    /** A photograph's URL from the source, or null. Added at schema version 7. */
+    @ColumnInfo(name = "image_url")
+    public String imageUrl;
 }

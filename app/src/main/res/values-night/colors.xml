@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The dark counterpart of the daylight palette. Every token in values/colors.xml is
+  restated here so no screen can fall back to a light surface it was never designed
+  against; the night ground tokens (story_night*) are deliberately identical in both
+  configurations, because the journey surfaces are a dark room by design rather than
+  by system setting.
+
+  The accent is lifted to the glow value: the daylight signal is too dark to read as
+  light on a night ground.
+-->
+<resources>
+    <color name="story_ground">#14120E</color>
+    <color name="story_surface">#1E1B15</color>
+    <color name="story_surface_sunk">#221E17</color>
+    <color name="story_hairline">#2B2720</color>
+    <color name="story_outline">#352F26</color>
+    <color name="story_chip">#2A261E</color>
+
+    <color name="story_ink">#F1EDE4</color>
+    <color name="story_ink_pressed">#FFFFFFFF</color>
+    <!-- Title chrome sitting on the page header, which is now the ground itself. -->
+    <color name="story_on_header">#F1EDE4</color>
+    <color name="story_on_ink">#14120E</color>
+    <color name="story_ink_wash">#2A261E</color>
+    <color name="story_ink_2">#B3AC9F</color>
+    <color name="story_ink_3">#857E71</color>
+    <color name="story_disabled">#4A443A</color>
+
+    <!--
+      Chrome that sits on a photograph, not on the page. A photograph is dark in both
+      configurations, so this colour deliberately does NOT flip with the theme: tinting
+      it with story_ink turned the back and save controls white-on-white in dark mode.
+      The same applies to the unlock stamp, which is always amber.
+    -->
+    <color name="story_on_photo">#14181F</color>
+
+    <color name="story_signal">#F0B44E</color>
+    <color name="story_signal_ink">#F5C878</color>
+    <color name="story_signal_wash">#3A2C12</color>
+
+    <color name="story_success">#4FB48D</color>
+    <color name="story_error_wash">#3A1D16</color>
+    <color name="story_error">#E58B7B</color>
+
+    <color name="map_land">#1C1913</color>
+    <color name="map_park">#1E211A</color>
+    <color name="map_water">#1A1F23</color>
+    <color name="map_road">#2A261E</color>
+    <color name="map_location">#F1EDE4</color>
+</resources>

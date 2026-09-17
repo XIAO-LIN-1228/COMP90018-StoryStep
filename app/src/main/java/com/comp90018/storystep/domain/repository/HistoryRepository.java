@@ -77,6 +77,16 @@ public interface HistoryRepository {
      */
     void clearAll(RepositoryCallback<Integer> callback);
 
+    /**
+     * The ids of every place that has ever recorded a visit, across all sessions.
+     *
+     * <p>What the nearby list's "Unvisited" filter and its unlock count read. A default of
+     * "none" keeps in-memory fakes honest without forcing them to model visits.
+     */
+    default void loadVisitedAttractionIds(RepositoryCallback<java.util.Set<String>> callback) {
+        callback.onSuccess(java.util.Collections.<String>emptySet());
+    }
+
     void addObserver(Observer observer);
 
     void removeObserver(Observer observer);

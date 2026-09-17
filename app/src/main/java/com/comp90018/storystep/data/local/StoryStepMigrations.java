@@ -316,8 +316,24 @@ public final class StoryStepMigrations {
     };
 
     /** Every migration, in order, for the builder and the migration test. */
+    /**
+     * Version 7 adds a photograph URL to the attraction cache.
+     *
+     * <p>Nullable and additive on both the cache and the saved snapshot, so no row is rewritten:
+     * fetched places gain a picture the next time their area is refreshed, the seed set keeps its
+     * bundled artwork, and an already-saved place simply has none until it is saved again.
+     */
+    public static final Migration MIGRATION_6_7 = new Migration(6, 7) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `attractions` ADD COLUMN `image_url` TEXT");
+            database.execSQL("ALTER TABLE `saved_attractions` ADD COLUMN `image_url` TEXT");
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
-                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6};
+                MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
+                MIGRATION_6_7};
     }
 }

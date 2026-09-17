@@ -68,4 +68,8 @@ public class SavedAttractionEntity {
     /** An optional reference into the source's wider data; see {@code AttractionEntity}. */
     @ColumnInfo(name = "source_ref")
     public String sourceRef;
+
+    /** The photograph's URL at the time it was saved, or null. Added at schema version 7. */
+    @ColumnInfo(name = "image_url")
+    public String imageUrl;
 }
