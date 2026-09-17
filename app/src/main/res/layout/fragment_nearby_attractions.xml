@@ -177,6 +177,7 @@
         android:layout_marginStart="@dimen/space_16"
         android:layout_marginTop="@dimen/space_8"
         android:layout_marginEnd="@dimen/space_16"
+        android:layout_marginBottom="@dimen/space_8"
         android:hint="@string/search_places"
         android:visibility="gone"
         app:boxCornerRadiusBottomEnd="@dimen/button_corner_radius"
