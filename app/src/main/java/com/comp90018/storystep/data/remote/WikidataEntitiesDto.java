@@ -14,6 +14,10 @@ public class WikidataEntitiesDto {
     public static class Entity {
         @SerializedName("claims")
         public Map<String, List<Claim>> claims;
+
+        /** Keyed by site (enwiki, dewiki, ...); only the count is read. */
+        @SerializedName("sitelinks")
+        public Map<String, com.google.gson.JsonElement> sitelinks;
     }
 
     public static class Claim {

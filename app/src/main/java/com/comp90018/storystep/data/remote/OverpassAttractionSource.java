@@ -112,7 +112,8 @@ public final class OverpassAttractionSource implements AttractionSource {
     }
 
     /**
-     * Attaches Wikidata's photograph to every place that names an entity and has no picture yet.
+     * Attaches what Wikidata knows - the photograph and the sitelink count - to every place
+     * that names an entity.
      *
      * <p>OpenStreetMap itself almost never carries an {@code image} tag, but a place with a
      * {@code wikidata} tag usually has a picture on the other end. Batched fifty ids at a time.
@@ -127,7 +128,7 @@ public final class OverpassAttractionSource implements AttractionSource {
         for (int i = 0; i < attractions.size(); i++) {
             Attraction attraction = attractions.get(i);
             String id = WikidataImages.wikidataId(attraction.getSourceRef());
-            if (id != null && attraction.getImageUrl() == null && !idToIndex.containsKey(id)) {
+            if (id != null && !idToIndex.containsKey(id)) {
                 idToIndex.put(id, i);
             }
         }
@@ -140,6 +141,7 @@ public final class OverpassAttractionSource implements AttractionSource {
             List<String> batch = wanted.subList(start,
                     Math.min(wanted.size(), start + WikidataApiService.MAX_IDS_PER_REQUEST));
             java.util.Map<String, String> urls;
+            java.util.Map<String, Integer> popularity;
             try {
                 // Joined by hand: this layer stays free of Android types, and the JVM tests that
                 // prove the contract would see a stub instead of TextUtils.
@@ -156,13 +158,16 @@ public final class OverpassAttractionSource implements AttractionSource {
                     continue;
                 }
                 urls = WikidataImages.imageUrls(response.body());
+                popularity = WikidataImages.popularity(response.body());
             } catch (java.io.IOException | RuntimeException ignored) {
                 continue;
             }
-            for (java.util.Map.Entry<String, String> found : urls.entrySet()) {
-                Integer index = idToIndex.get(found.getKey());
-                if (index != null) {
-                    enriched.set(index, enriched.get(index).withImageUrl(found.getValue()));
+            for (String id : batch) {
+                Integer index = idToIndex.get(id);
+                Integer links = popularity.get(id);
+                if (index != null && (urls.containsKey(id) || links != null)) {
+                    enriched.set(index, enriched.get(index).withWikidata(
+                            urls.get(id), links == null ? 0 : links));
                 }
             }
         }

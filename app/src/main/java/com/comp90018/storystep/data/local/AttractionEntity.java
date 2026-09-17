@@ -80,4 +80,8 @@ public class AttractionEntity {
     /** A photograph's URL from the source, or null. Added at schema version 7. */
     @ColumnInfo(name = "image_url")
     public String imageUrl;
+
+    /** Sitelink count from Wikidata; zero when unknown. Added at schema version 8. */
+    @ColumnInfo(name = "popularity", defaultValue = "0")
+    public int popularity;
 }

@@ -172,6 +172,14 @@ public class PlaceMapView extends FrameLayout {
         map.invalidate();
     }
 
+    /** Animates back to the user, at the default zoom. */
+    public void recenter() {
+        if (userMarker == null) {
+            return;
+        }
+        map.getController().animateTo(userMarker.getPosition(), DEFAULT_ZOOM, 350L);
+    }
+
     public void setOnPlaceClickListener(@Nullable OnPlaceClickListener listener) {
         placeClickListener = listener;
     }

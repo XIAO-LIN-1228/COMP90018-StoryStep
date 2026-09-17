@@ -114,6 +114,7 @@ public class NearbyAttractionsFragment extends Fragment
     private com.google.android.material.textfield.TextInputEditText searchInput;
     private TextView unlockProgress;
     private TextView staleBanner;
+    private TextView listCredit;
     // Guards against the chip listeners re-entering while the state is being mirrored back.
     private boolean syncingChips;
     private TextView sectionTitle;
@@ -160,6 +161,9 @@ public class NearbyAttractionsFragment extends Fragment
         retryButton = view.findViewById(R.id.retry_button);
         homeMap = view.findViewById(R.id.home_map);
         homeMapCard = view.findViewById(R.id.home_map_card);
+        View recenter = view.findViewById(R.id.recenter_button);
+        recenter.setOnClickListener(v -> homeMap.recenter());
+        listCredit = view.findViewById(R.id.list_credit);
         View placesSheet = view.findViewById(R.id.places_sheet);
         sheet = com.google.android.material.bottomsheet.BottomSheetBehavior.from(placesSheet);
         sheet.setSkipCollapsed(false);
@@ -182,7 +186,12 @@ public class NearbyAttractionsFragment extends Fragment
             }
 
             @Override
-            public void onSlide(@NonNull View bottomSheet, float slideOffset) { }
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // The recentre button rides on the sheet's edge and fades as the map goes.
+                recenter.setTranslationY(-slideOffset * (bottomSheet.getHeight()
+                        - getResources().getDimensionPixelSize(R.dimen.sheet_peek_height)));
+                recenter.setAlpha(1f - Math.min(1f, slideOffset * 2f));
+            }
         });
         homeMap.setOnPlaceClickListener(attractionId -> {
             Bundle arguments = new Bundle();
@@ -400,7 +409,7 @@ public class NearbyAttractionsFragment extends Fragment
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         originLabel.setText(provenanceLine(state));
-        originLabel.setVisibility(listMode ? View.VISIBLE : View.GONE);
+        originLabel.setVisibility(View.GONE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -647,13 +656,14 @@ public class NearbyAttractionsFragment extends Fragment
         }
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        originLabel.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        originLabel.setVisibility(View.GONE);
+        listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
         if (!enabled) {
             unlockProgress.setVisibility(View.GONE);
         }
         sectionTitle.setText(enabled ? R.string.nearby_results : R.string.home_nearby);
         seeAllButton.setText(R.string.home_see_all);
-        seeAllButton.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        seeAllButton.setVisibility(View.GONE);
 
         View fragmentView = getView();
         if (fragmentView == null) {

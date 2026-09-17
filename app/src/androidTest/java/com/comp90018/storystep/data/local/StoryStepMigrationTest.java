@@ -413,4 +413,26 @@ public class StoryStepMigrationTest {
                 "SELECT COUNT(*) FROM attractions WHERE image_url IS NULL"));
         version7.close();
     }
+
+    @Test
+    public void migratingToEightAddsPopularityDefaultingToZero() throws IOException {
+        SupportSQLiteDatabase version7 = helper.createDatabase(TEST_DATABASE, 7);
+        ContentValues place = new ContentValues();
+        place.put("id", "old-arts");
+        place.put("name", "Old Arts Building");
+        place.put("category", "university_landmark");
+        place.put("description", "A clocktower.");
+        place.put("indoor", "outdoor");
+        place.put("latitude", -37.79810);
+        place.put("longitude", 144.95910);
+        place.put("provenance", "seed");
+        place.put("fetched_at_millis", 0L);
+        version7.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
+        version7.close();
+
+        SupportSQLiteDatabase version8 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 8, true, StoryStepMigrations.MIGRATION_7_8);
+        assertEquals(1, count(version8, "SELECT COUNT(*) FROM attractions WHERE popularity = 0"));
+        version8.close();
+    }
 }

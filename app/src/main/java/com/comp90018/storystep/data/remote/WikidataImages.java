@@ -58,6 +58,24 @@ public final class WikidataImages {
         return null;
     }
 
+    /**
+     * Wikidata id to sitelink count, for every entity in the response. The count of Wikipedia
+     * editions that carry an article on a place is the closest free measure of how widely it
+     * is known; an entity without sitelinks counts as zero rather than being left out.
+     */
+    public static Map<String, Integer> popularity(@Nullable WikidataEntitiesDto response) {
+        Map<String, Integer> counts = new HashMap<>();
+        if (response == null || response.entities == null) {
+            return counts;
+        }
+        for (Map.Entry<String, WikidataEntitiesDto.Entity> entry : response.entities.entrySet()) {
+            WikidataEntitiesDto.Entity entity = entry.getValue();
+            counts.put(entry.getKey(),
+                    entity == null || entity.sitelinks == null ? 0 : entity.sitelinks.size());
+        }
+        return counts;
+    }
+
     /** The {@code Q...} id inside a {@code wikidata:Q...} source reference, or null. */
     @Nullable
     public static String wikidataId(@Nullable String sourceRef) {

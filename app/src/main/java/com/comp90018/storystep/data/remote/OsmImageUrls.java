@@ -24,7 +24,7 @@ public final class OsmImageUrls {
 
     private static final String COMMONS_FILE_PATH =
             "https://commons.wikimedia.org/wiki/Special:FilePath/";
-    private static final int THUMBNAIL_WIDTH = 800;
+    private static final int THUMBNAIL_WIDTH = 1280;
 
     private OsmImageUrls() {
     }

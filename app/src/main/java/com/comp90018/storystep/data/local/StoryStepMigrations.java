@@ -331,9 +331,22 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 8 adds a popularity figure - Wikidata's sitelink count - to the attraction cache
+     * and the saved snapshot. Additive with a default of zero, so existing rows read as
+     * "nothing known yet" until their area is next refreshed.
+     */
+    public static final Migration MIGRATION_7_8 = new Migration(7, 8) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `attractions` ADD COLUMN `popularity` INTEGER NOT NULL DEFAULT 0");
+            database.execSQL("ALTER TABLE `saved_attractions` ADD COLUMN `popularity` INTEGER NOT NULL DEFAULT 0");
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                MIGRATION_6_7};
+                MIGRATION_6_7, MIGRATION_7_8};
     }
 }

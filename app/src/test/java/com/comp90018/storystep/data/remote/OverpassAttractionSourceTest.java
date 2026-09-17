@@ -247,7 +247,7 @@ public class OverpassAttractionSourceTest {
                 new GeoPoint(-37.7963, 144.9614), 1000, 50);
 
         assertEquals(2, places.size());
-        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts.jpg?width=800",
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts.jpg?width=1280",
                 places.get(0).getImageUrl());
         assertNull(places.get(1).getImageUrl());
         assertEquals(2, server.getRequestCount());

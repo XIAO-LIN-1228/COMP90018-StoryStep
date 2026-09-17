@@ -40,6 +40,7 @@ public final class LocalSavedAttractionMapper {
         entity.provenance = AttractionProvenanceCodec.toCode(attraction.getProvenance());
         entity.sourceRef = attraction.getSourceRef();
         entity.imageUrl = attraction.getImageUrl();
+        entity.popularity = attraction.getPopularity();
         return entity;
     }
 
@@ -53,7 +54,8 @@ public final class LocalSavedAttractionMapper {
                 new GeoPoint(entity.latitude, entity.longitude),
                 AttractionProvenanceCodec.fromCode(entity.provenance),
                 entity.sourceRef,
-                entity.imageUrl);
+                entity.imageUrl,
+                entity.popularity);
         return new SavedAttraction(attraction, entity.savedAtMillis);
     }
 

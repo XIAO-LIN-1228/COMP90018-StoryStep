@@ -28,7 +28,7 @@ public class WikidataImagesTest {
         Map<String, String> urls = WikidataImages.imageUrls(dto);
         assertEquals(1, urls.size());
         assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/"
-                + "Old_Arts_Building%2C_Melbourne.jpg?width=800", urls.get("Q1747074"));
+                + "Old_Arts_Building%2C_Melbourne.jpg?width=1280", urls.get("Q1747074"));
     }
 
     @Test
