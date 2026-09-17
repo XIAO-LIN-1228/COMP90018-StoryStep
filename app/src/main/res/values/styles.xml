@@ -146,9 +146,12 @@
         <item name="cornerSize">@dimen/image_corner_radius</item>
     </style>
 
-    <style name="Widget.StoryStep.BottomNavigation.ActiveIndicator"
-        parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
-        <item name="android:color">@color/story_signal_wash</item>
+    <style name="TextAppearance.StoryStep.TabLabel" parent="TextAppearance.Material3.LabelSmall">
+        <item name="android:fontFamily">@font/bricolage_medium</item>
+        <item name="fontFamily">@font/bricolage_medium</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:letterSpacing">0.01</item>
     </style>
 
     <!--
