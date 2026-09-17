@@ -295,6 +295,9 @@
                 android:contentDescription="@string/home_journey_name"
                 android:scaleType="centerCrop"
                 android:src="@drawable/photo_old_arts_thumb"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
                 app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
 
             <TextView
@@ -305,7 +308,10 @@
                 android:layout_marginStart="12dp"
                 android:text="@string/home_continue_title"
                 android:textColor="@color/story_ink"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/journey_image"
+                app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                 android:id="@+id/journey_name"
@@ -315,7 +321,10 @@
                 android:layout_marginStart="12dp"
                 android:layout_marginTop="2dp"
                 android:text="@string/home_journey_name"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/journey_image"
+                app:layout_constraintTop_toBottomOf="@id/journey_label" />
 
             <TextView
                 android:id="@+id/journey_progress"
@@ -324,14 +333,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:layout_marginTop="2dp"
-                android:text="@string/home_journey_progress" />
+                android:text="@string/home_journey_progress"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/journey_image"
+                app:layout_constraintTop_toBottomOf="@id/journey_name" />
 
             <TextView
                 style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
-                android:text="@string/home_journey_meta" />
+                android:text="@string/home_journey_meta"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/journey_image" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/resume_journey_button"
@@ -340,7 +354,9 @@
                 android:layout_height="42dp"
                 android:minHeight="42dp"
                 android:text="@string/home_resume"
-                android:textSize="14sp" />
+                android:textSize="14sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
 
