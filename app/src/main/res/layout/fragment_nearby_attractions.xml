@@ -198,7 +198,10 @@
             android:hint="@string/home_search_hint"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:minHeight="46dp"
+            android:minHeight="40dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
+            android:textSize="14sp"
             android:singleLine="true" />
     </com.google.android.material.textfield.TextInputLayout>
 
