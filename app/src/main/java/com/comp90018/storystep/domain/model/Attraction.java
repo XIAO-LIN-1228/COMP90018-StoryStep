@@ -79,6 +79,12 @@ public final class Attraction {
                 sourceRef, url == null ? imageUrl : url, sitelinks);
     }
 
+    /** The same place with a line of introduction attached; the record is otherwise unchanged. */
+    public Attraction withDescription(String text) {
+        return new Attraction(id, name, category, text == null ? description : text, indoor,
+                location, provenance, sourceRef, imageUrl, popularity);
+    }
+
     /** The photograph's URL, or null. Sources that carry one are credited where it is shown. */
     public String getImageUrl() {
         return imageUrl;

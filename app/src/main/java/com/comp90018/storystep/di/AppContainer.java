@@ -117,6 +117,8 @@ public class AppContainer {
                                 ApiClientFactory.createOverpassService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikidataService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createWikipediaService(
                                         isDebuggable(this.applicationContext))),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),

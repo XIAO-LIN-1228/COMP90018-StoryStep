@@ -176,6 +176,11 @@ public class NearbyAttractionsFragment extends Fragment
                 new com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback() {
             @Override
             public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                // Two resting states only: a slow drag must not park the sheet half-way.
+                if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HALF_EXPANDED) {
+                    sheet.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                    return;
+                }
                 if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
                         && !listMode) {
                     setListMode(true);

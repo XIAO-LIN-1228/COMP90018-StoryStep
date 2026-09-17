@@ -18,7 +18,7 @@
 
     <!-- Exploration control and location access -->
     <string name="nearby_recenter">Back to my location</string>
-    <string name="nearby_list_credit">Place data © OpenStreetMap contributors · Photos via Wikimedia Commons</string>
+    <string name="nearby_list_credit">© OpenStreetMap contributors · Wikimedia Commons · Wikipedia</string>
     <string name="nearby_start_exploring">Start exploring</string>
     <string name="nearby_stop_exploring">Stop exploring</string>
     <string name="nearby_resume_exploring">Resume exploring</string>

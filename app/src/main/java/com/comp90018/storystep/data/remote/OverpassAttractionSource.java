@@ -44,6 +44,10 @@ public final class OverpassAttractionSource implements AttractionSource {
 
     private final OverpassApiService service;
     @androidx.annotation.Nullable private final WikidataApiService wikidata;
+    @androidx.annotation.Nullable private final WikipediaApiService wikipedia;
+
+    /** Summaries are fetched one article at a time, so a few go out together. */
+    private static final int SUMMARY_PARALLELISM = 6;
 
     public OverpassAttractionSource(OverpassApiService service) {
         this(service, null);
@@ -55,8 +59,20 @@ public final class OverpassAttractionSource implements AttractionSource {
      */
     public OverpassAttractionSource(OverpassApiService service,
                                     @androidx.annotation.Nullable WikidataApiService wikidata) {
+        this(service, wikidata, null);
+    }
+
+    /**
+     * With Wikipedia as well, a place that OpenStreetMap only names gets the opening sentences
+     * of its English article as its description. Same rule as the photographs: enrichment only,
+     * never a reason for the fetch to fail.
+     */
+    public OverpassAttractionSource(OverpassApiService service,
+                                    @androidx.annotation.Nullable WikidataApiService wikidata,
+                                    @androidx.annotation.Nullable WikipediaApiService wikipedia) {
         this.service = Objects.requireNonNull(service, "service");
         this.wikidata = wikidata;
+        this.wikipedia = wikipedia;
     }
 
     @Override
@@ -142,6 +158,8 @@ public final class OverpassAttractionSource implements AttractionSource {
                     Math.min(wanted.size(), start + WikidataApiService.MAX_IDS_PER_REQUEST));
             java.util.Map<String, String> urls;
             java.util.Map<String, Integer> popularity;
+            java.util.Map<String, String> titles;
+            java.util.Map<String, String> descriptions;
             try {
                 // Joined by hand: this layer stays free of Android types, and the JVM tests that
                 // prove the contract would see a stub instead of TextUtils.
@@ -159,18 +177,82 @@ public final class OverpassAttractionSource implements AttractionSource {
                 }
                 urls = WikidataImages.imageUrls(response.body());
                 popularity = WikidataImages.popularity(response.body());
+                titles = WikidataImages.wikipediaTitles(response.body());
+                descriptions = WikidataImages.descriptions(response.body());
             } catch (java.io.IOException | RuntimeException ignored) {
                 continue;
             }
+            java.util.Map<String, String> summaries = summaries(batch, idToIndex, enriched, titles);
             for (String id : batch) {
                 Integer index = idToIndex.get(id);
                 Integer links = popularity.get(id);
-                if (index != null && (urls.containsKey(id) || links != null)) {
-                    enriched.set(index, enriched.get(index).withWikidata(
-                            urls.get(id), links == null ? 0 : links));
+                if (index == null) {
+                    continue;
                 }
+                Attraction place = enriched.get(index);
+                if (urls.containsKey(id) || links != null) {
+                    place = place.withWikidata(urls.get(id), links == null ? 0 : links);
+                }
+                if (place.getDescription().isEmpty()) {
+                    String intro = summaries.containsKey(id) ? summaries.get(id) : descriptions.get(id);
+                    if (intro != null) {
+                        place = place.withDescription(intro);
+                    }
+                }
+                enriched.set(index, place);
             }
         }
         return enriched;
+    }
+
+    /**
+     * The opening paragraph of the English article for each place in the batch that has one and
+     * still lacks a description. Fetched a few at a time; a summary that fails or times out is
+     * simply absent, and the Wikidata description stands in for it.
+     */
+    private java.util.Map<String, String> summaries(List<String> batch,
+                                                    java.util.Map<String, Integer> idToIndex,
+                                                    List<Attraction> places,
+                                                    java.util.Map<String, String> titles) {
+        java.util.Map<String, String> summaries = new java.util.concurrent.ConcurrentHashMap<>();
+        if (wikipedia == null || titles.isEmpty()) {
+            return summaries;
+        }
+        List<java.util.concurrent.Callable<Void>> tasks = new java.util.ArrayList<>();
+        for (String id : batch) {
+            Integer index = idToIndex.get(id);
+            String title = titles.get(id);
+            if (index == null || title == null || !places.get(index).getDescription().isEmpty()) {
+                continue;
+            }
+            tasks.add(() -> {
+                try {
+                    retrofit2.Response<WikipediaSummaryDto> response =
+                            wikipedia.summary(title.replace(' ', '_')).execute();
+                    WikipediaSummaryDto body = response.body();
+                    if (response.isSuccessful() && body != null && body.extract != null
+                            && !body.extract.trim().isEmpty()) {
+                        summaries.put(id, body.extract.trim());
+                    }
+                } catch (java.io.IOException | RuntimeException ignored) {
+                    // Absent, and the Wikidata description stands in.
+                }
+                return null;
+            });
+        }
+        if (tasks.isEmpty()) {
+            return summaries;
+        }
+        java.util.concurrent.ExecutorService pool =
+                java.util.concurrent.Executors.newFixedThreadPool(
+                        Math.min(SUMMARY_PARALLELISM, tasks.size()));
+        try {
+            pool.invokeAll(tasks);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } finally {
+            pool.shutdownNow();
+        }
+        return summaries;
     }
 }

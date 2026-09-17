@@ -11,7 +11,9 @@ import retrofit2.http.Query;
  * place - is the best free proxy for how prominent it is.
  *
  * <p>One request carries up to fifty ids, so enriching an area's worth of places costs a single
- * round trip. Only claims and sitelinks are requested; labels and descriptions would be wasted bytes.
+ * round trip. Claims, sitelinks and the short descriptions are requested; the English description is the
+ * last-resort line of introduction, and the {@code enwiki} sitelink names the article whose
+ * summary is the first choice.
  */
 public interface WikidataApiService {
 
@@ -19,6 +21,6 @@ public interface WikidataApiService {
 
     int MAX_IDS_PER_REQUEST = 50;
 
-    @GET("w/api.php?action=wbgetentities&props=claims|sitelinks&format=json")
+    @GET("w/api.php?action=wbgetentities&props=claims|sitelinks|descriptions&format=json")
     Call<WikidataEntitiesDto> entities(@Query("ids") String pipeSeparatedIds);
 }

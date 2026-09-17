@@ -15,9 +15,18 @@ public class WikidataEntitiesDto {
         @SerializedName("claims")
         public Map<String, List<Claim>> claims;
 
-        /** Keyed by site (enwiki, dewiki, ...); only the count is read. */
+        /** Keyed by site (enwiki, dewiki, ...); the count is read, and enwiki's title. */
         @SerializedName("sitelinks")
         public Map<String, com.google.gson.JsonElement> sitelinks;
+
+        /** Keyed by language code; a few words such as "theatre in Melbourne, Australia". */
+        @SerializedName("descriptions")
+        public Map<String, LanguageValue> descriptions;
+    }
+
+    public static class LanguageValue {
+        @SerializedName("value")
+        public String value;
     }
 
     public static class Claim {
