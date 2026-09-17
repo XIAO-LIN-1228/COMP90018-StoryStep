@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The user's avatar until there is a real one: a warm disc with the profile figure. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="oval">
+            <solid android:color="@color/story_signal_wash" />
+        </shape>
+    </item>
+    <item
+        android:drawable="@drawable/ic_profile_filled"
+        android:inset="9dp" />
+</layer-list>

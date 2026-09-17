@@ -45,7 +45,7 @@ public class OsmImageUrlsTest {
     @Test
     public void commonsFileResolvesThroughFilePathWithAWidth() {
         assertEquals(
-                "https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts_Building.jpg?width=800",
+                "https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts_Building.jpg?width=1280",
                 OsmImageUrls.fromTags(tags("wikimedia_commons", "File:Old Arts Building.jpg")));
     }
 
@@ -57,7 +57,7 @@ public class OsmImageUrlsTest {
     @Test
     public void imageTagMayItselfBeACommonsFile() {
         assertEquals(
-                "https://commons.wikimedia.org/wiki/Special:FilePath/Garden.jpg?width=800",
+                "https://commons.wikimedia.org/wiki/Special:FilePath/Garden.jpg?width=1280",
                 OsmImageUrls.fromTags(tags("image", "File:Garden.jpg")));
     }
 
@@ -75,14 +75,14 @@ public class OsmImageUrlsTest {
         tags.put("image", "ftp://old.example.org/a.jpg");
         tags.put("wikimedia_commons", "File:Other.jpg");
         assertEquals(
-                "https://commons.wikimedia.org/wiki/Special:FilePath/Other.jpg?width=800",
+                "https://commons.wikimedia.org/wiki/Special:FilePath/Other.jpg?width=1280",
                 OsmImageUrls.fromTags(tags));
     }
 
     @Test
     public void specialCharactersInFileNamesAreEncoded() {
         assertEquals(
-                "https://commons.wikimedia.org/wiki/Special:FilePath/Caf%C3%A9_%26_Bar.jpg?width=800",
+                "https://commons.wikimedia.org/wiki/Special:FilePath/Caf%C3%A9_%26_Bar.jpg?width=1280",
                 OsmImageUrls.fromTags(tags("wikimedia_commons", "File:Café & Bar.jpg")));
     }
 }

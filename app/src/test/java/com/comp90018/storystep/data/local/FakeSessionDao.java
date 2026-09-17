@@ -129,11 +129,26 @@ public final class FakeSessionDao implements SessionDao {
             historyRow.segmentCount = row.segmentCount;
             historyRow.interrupted = row.interrupted;
             historyRow.destinationName = row.destinationName;
+            historyRow.title = row.title;
+            historyRow.placeName = row.placeName;
+            historyRow.photoFiles = row.photoFiles;
             historyRow.visitCount = visitCounts.containsKey(row.id)
                     ? visitCounts.get(row.id) : 0;
             projected.add(historyRow);
         }
         return projected;
+    }
+
+    @Override
+    public int publish(String sessionId, String title, String placeName, String photoFiles) {
+        SessionEntity row = rows.get(sessionId);
+        if (row == null || !row.finished) {
+            return 0;
+        }
+        row.title = title;
+        row.placeName = placeName;
+        row.photoFiles = photoFiles;
+        return 1;
     }
 
     @Override

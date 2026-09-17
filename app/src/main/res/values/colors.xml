@@ -19,6 +19,9 @@
     <!-- Daylight ground -->
     <color name="story_ground">#F4F2EC</color>
     <color name="story_surface">#FFFFFFFF</color>
+    <!-- Frosted chrome: the surface at four fifths, with a bright hairline edge. -->
+    <color name="story_glass">#B8FFFFFF</color>
+    <color name="story_glass_edge">#B3FFFFFF</color>
     <color name="story_surface_sunk">#ECE9E0</color>
     <color name="story_hairline">#E4E1D7</color>
     <color name="story_outline">#DCD8CD</color>

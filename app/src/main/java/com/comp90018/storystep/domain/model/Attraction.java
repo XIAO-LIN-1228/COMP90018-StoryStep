@@ -18,6 +18,11 @@ public final class Attraction {
     private final String sourceRef;
     /** A photograph of the place, as an absolute https URL, or null when the source has none. */
     private final String imageUrl;
+    /**
+     * How widely the place is known, as the number of Wikipedia editions with an article on it.
+     * Zero when nothing is known, which is what every place starts with.
+     */
+    private final int popularity;
 
     public Attraction(String id,
                       String name,
@@ -39,6 +44,19 @@ public final class Attraction {
                       AttractionProvenance provenance,
                       String sourceRef,
                       String imageUrl) {
+        this(id, name, category, description, indoor, location, provenance, sourceRef, imageUrl, 0);
+    }
+
+    public Attraction(String id,
+                      String name,
+                      AttractionCategory category,
+                      String description,
+                      IndoorClassification indoor,
+                      GeoPoint location,
+                      AttractionProvenance provenance,
+                      String sourceRef,
+                      String imageUrl,
+                      int popularity) {
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.category = Objects.requireNonNull(category, "category");
@@ -48,6 +66,23 @@ public final class Attraction {
         this.provenance = Objects.requireNonNull(provenance, "provenance");
         this.sourceRef = sourceRef;
         this.imageUrl = imageUrl;
+        this.popularity = Math.max(0, popularity);
+    }
+
+    public int getPopularity() {
+        return popularity;
+    }
+
+    /** The same place with what Wikidata knows about it attached. */
+    public Attraction withWikidata(String url, int sitelinks) {
+        return new Attraction(id, name, category, description, indoor, location, provenance,
+                sourceRef, url == null ? imageUrl : url, sitelinks);
+    }
+
+    /** The same place with a line of introduction attached; the record is otherwise unchanged. */
+    public Attraction withDescription(String text) {
+        return new Attraction(id, name, category, text == null ? description : text, indoor,
+                location, provenance, sourceRef, imageUrl, popularity);
     }
 
     /** The photograph's URL, or null. Sources that carry one are credited where it is shown. */
@@ -58,7 +93,7 @@ public final class Attraction {
     /** The same place with a photograph attached; the record is otherwise unchanged. */
     public Attraction withImageUrl(String url) {
         return new Attraction(id, name, category, description, indoor, location, provenance,
-                sourceRef, url);
+                sourceRef, url, popularity);
     }
 
     /**
@@ -143,13 +178,14 @@ public final class Attraction {
                 && location.equals(that.location)
                 && provenance == that.provenance
                 && Objects.equals(sourceRef, that.sourceRef)
-                && Objects.equals(imageUrl, that.imageUrl);
+                && Objects.equals(imageUrl, that.imageUrl)
+                && popularity == that.popularity;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, name, category, description, indoor, location, provenance,
-                sourceRef, imageUrl);
+                sourceRef, imageUrl, popularity);
     }
 
     @Override

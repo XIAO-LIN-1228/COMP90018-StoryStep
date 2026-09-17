@@ -114,9 +114,15 @@ public class AttractionAdapter
             name.setText(item.getName());
             category.setText(categoryLabel);
             distance.setText(distanceLabel);
-            String recommendation = AttractionArtwork.recommendationFor(item.getId());
-            reason.setText(recommendation == null ? "" : recommendation);
-            reason.setVisibility(recommendation == null ? View.GONE : View.VISIBLE);
+            // A sentence or two: the place's own description first, the bundled recommendation
+            // line for a seed place without one, nothing when there is neither.
+            String intro = item.getDescription();
+            if (intro.isEmpty()) {
+                String recommendation = AttractionArtwork.recommendationFor(item.getId());
+                intro = recommendation == null ? "" : recommendation;
+            }
+            reason.setText(intro);
+            reason.setVisibility(intro.isEmpty() ? View.GONE : View.VISIBLE);
             // A fetched photograph when the source has one; the bundled artwork or the placeholder
             // otherwise. Glide caches to disk, so a row scrolled back into view costs nothing.
             int fallback = AttractionArtwork.drawableFor(item.getId());
@@ -125,6 +131,7 @@ public class AttractionAdapter
                         .load(item.getImageUrl())
                         .placeholder(fallback)
                         .error(fallback)
+                        .override(400, 400)
                         .centerCrop()
                         .into(image);
             } else {

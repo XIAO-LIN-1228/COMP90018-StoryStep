@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    A walk as a tour card, the feed unit of the reference: the identity line with the place
-    name in the brand colour, the title, then the three figures in stat columns. A white card
-    on the paper; delete stays a quiet trailing control.
+    A walk as a feed post, the unit of the reference: who walked and when, the name the user
+    gave it, the three figures, then the photographs they attached, swiped one at a time. A
+    white card on the paper; delete stays a quiet trailing control on the identity line.
 -->
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -10,7 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/page_horizontal_margin"
-    android:layout_marginTop="@dimen/space_12"
+    android:layout_marginTop="@dimen/space_8"
     android:layout_marginEnd="@dimen/page_horizontal_margin"
     android:clickable="true"
     android:focusable="true"
@@ -21,8 +21,8 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingStart="@dimen/space_16"
-        android:paddingTop="@dimen/space_16"
-        android:paddingEnd="@dimen/space_8"
+        android:paddingTop="@dimen/space_12"
+        android:paddingEnd="@dimen/space_16"
         android:paddingBottom="@dimen/space_16">
 
         <LinearLayout
@@ -31,40 +31,41 @@
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
-            <LinearLayout
+            <include
+                android:id="@+id/journey_item_header"
+                layout="@layout/view_journey_header"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/journey_item_date"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="@font/bricolage_medium"
-                    android:textColor="@color/story_ink_3"
-                    android:textSize="@dimen/text_supporting" />
-
-                <TextView
-                    android:id="@+id/journey_item_title"
-                    style="@style/TextAppearance.StoryStep.Headline"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:ellipsize="end"
-                    android:maxLines="2" />
-            </LinearLayout>
+                android:layout_weight="1" />
 
             <ImageButton
                 android:id="@+id/journey_item_delete"
-                android:layout_width="@dimen/minimum_touch_target"
-                android:layout_height="@dimen/minimum_touch_target"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginStart="@dimen/space_8"
+                android:layout_marginEnd="-8dp"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/history_delete"
-                android:padding="12dp"
+                android:padding="10dp"
                 android:src="@drawable/ic_delete_outline"
                 app:tint="@color/story_ink_3" />
         </LinearLayout>
+
+        <!-- Kept for the adapter contract; the date renders in the identity line. -->
+        <TextView
+            android:id="@+id/journey_item_date"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/journey_item_title"
+            style="@style/TextAppearance.StoryStep.Headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:ellipsize="end"
+            android:maxLines="2" />
 
         <!-- Kept for the adapter contract; the figures render in the columns below. -->
         <TextView
@@ -77,8 +78,14 @@
             layout="@layout/view_stat_row"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_16"
-            android:layout_marginEnd="@dimen/space_8" />
+            android:layout_marginTop="@dimen/space_12" />
+
+        <com.comp90018.storystep.ui.journey.JourneyPhotoPager
+            android:id="@+id/journey_item_photos"
+            android:layout_width="match_parent"
+            android:layout_height="230dp"
+            android:layout_marginTop="@dimen/space_12"
+            android:visibility="gone" />
 
         <!-- Interrupted, or with gaps: the honesty label, as a brand-coloured pill. -->
         <TextView

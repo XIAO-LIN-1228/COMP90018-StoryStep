@@ -27,6 +27,8 @@ public final class AttractionListItem {
     private final IndoorClassification indoor;
     private final boolean visited;
     @Nullable private final String imageUrl;
+    private final int popularity;
+    private final String description;
 
     public AttractionListItem(String id,
                               String name,
@@ -43,7 +45,7 @@ public final class AttractionListItem {
                               boolean saved,
                               @Nullable GeoPoint location) {
         this(id, name, category, distanceMeters, saved, location,
-                IndoorClassification.UNKNOWN, false, null);
+                IndoorClassification.UNKNOWN, false, null, 0);
     }
 
     public AttractionListItem(String id,
@@ -55,6 +57,36 @@ public final class AttractionListItem {
                               IndoorClassification indoor,
                               boolean visited,
                               @Nullable String imageUrl) {
+        this(id, name, category, distanceMeters, saved, location, indoor, visited, imageUrl, 0);
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location,
+                              IndoorClassification indoor,
+                              boolean visited,
+                              @Nullable String imageUrl,
+                              int popularity) {
+        this(id, name, category, distanceMeters, saved, location, indoor, visited, imageUrl,
+                popularity, "");
+    }
+
+    public AttractionListItem(String id,
+                              String name,
+                              AttractionCategory category,
+                              double distanceMeters,
+                              boolean saved,
+                              @Nullable GeoPoint location,
+                              IndoorClassification indoor,
+                              boolean visited,
+                              @Nullable String imageUrl,
+                              int popularity,
+                              String description) {
+        this.description = Objects.requireNonNull(description, "description");
+        this.popularity = popularity;
         this.imageUrl = imageUrl;
         this.id = id;
         this.name = name;
@@ -64,6 +96,16 @@ public final class AttractionListItem {
         this.location = location;
         this.indoor = indoor;
         this.visited = visited;
+    }
+
+    /** A sentence or two about the place; empty when nothing is known. */
+    public String getDescription() {
+        return description;
+    }
+
+    /** How widely known the place is: Wikidata sitelinks, zero when nothing is known. */
+    public int getPopularity() {
+        return popularity;
     }
 
     /** A photograph to load, or null: the bundled artwork or the placeholder stands in. */
@@ -121,11 +163,13 @@ public final class AttractionListItem {
                 && saved == that.saved
                 && id.equals(that.id)
                 && name.equals(that.name)
-                && category == that.category;
+                && category == that.category
+                && Objects.equals(imageUrl, that.imageUrl)
+                && description.equals(that.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, category, distanceMeters, saved);
+        return Objects.hash(id, name, category, distanceMeters, saved, imageUrl, description);
     }
 }

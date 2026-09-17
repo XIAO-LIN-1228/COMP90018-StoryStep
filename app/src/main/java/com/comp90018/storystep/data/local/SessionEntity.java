@@ -178,4 +178,27 @@ public class SessionEntity {
      */
     @ColumnInfo(name = "interrupted")
     public boolean interrupted;
+
+    // ---- Published record -------------------------------------------------------------------
+    //
+    // What the user added after the walk ended: a name, a few photographs and where it was.
+    // All nullable, because a walk is history the moment it finishes and publishing is optional;
+    // a null title is what "not yet published" means.
+
+    @Nullable
+    @ColumnInfo(name = "title")
+    public String title;
+
+    /** The suburb and country the walk started in, named after the fact; null when unknown. */
+    @Nullable
+    @ColumnInfo(name = "place_name")
+    public String placeName;
+
+    /**
+     * File names under the session's photo directory, one per line. Stored as one column rather
+     * than a table because the list is short, ordered and only ever read or replaced whole.
+     */
+    @Nullable
+    @ColumnInfo(name = "photo_files")
+    public String photoFiles;
 }

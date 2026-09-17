@@ -12,7 +12,7 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.comp90018.storystep.R;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.comp90018.storystep.ui.widget.StoryTabBar;
 
 /**
  * The single Activity of the application. It hosts the navigation graph and applies system-bar
@@ -54,22 +54,20 @@ public class MainActivity extends AppCompatActivity {
             throw new IllegalStateException("Navigation host is missing");
         }
         NavController navController = navHost.getNavController();
-        BottomNavigationView bottomNavigation = findViewById(R.id.main_bottom_navigation);
-        // The root already reserves the system navigation-bar inset. BottomNavigationView also
-        // applies that inset by default, which would squeeze its icons and labels into the top of
-        // a fixed-height bar. Consume no additional inset here so the 68 dp component keeps the
-        // proportions defined by the design system.
-        ViewCompat.setOnApplyWindowInsetsListener(bottomNavigation, (v, insets) -> {
-            v.setPadding(v.getPaddingLeft(), 0, v.getPaddingRight(), 0);
-            return insets;
-        });
-        NavigationUI.setupWithNavController(bottomNavigation, navController);
+        StoryTabBar bottomNavigation = findViewById(R.id.main_bottom_navigation);
+        bottomNavigation.setMenu(R.menu.main_bottom_navigation);
+        bottomNavigation.setBackdrop(findViewById(R.id.nav_host_fragment));
+        // The bar reports taps; NavigationUI does the same destination handling it would for a
+        // BottomNavigationView, so top-level back-stack behaviour is unchanged.
+        bottomNavigation.setOnItemSelectedListener(item ->
+                NavigationUI.onNavDestinationSelected(item, navController));
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
             int destinationId = destination.getId();
             boolean topLevel = destinationId == R.id.nearbyAttractionsFragment
                     || destinationId == R.id.journeysFragment
                     || destinationId == R.id.savedFragment
                     || destinationId == R.id.profileFragment;
+            bottomNavigation.setSelectedId(destinationId);
             bottomNavigation.setVisibility(topLevel ? android.view.View.VISIBLE
                     : android.view.View.GONE);
         });

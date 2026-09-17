@@ -92,6 +92,10 @@ public final class ApiClientFactory {
         return createRetrofit(WikidataApiService.BASE_URL, debug).create(WikidataApiService.class);
     }
 
+    public static WikipediaApiService createWikipediaService(boolean debug) {
+        return createRetrofit(WikipediaApiService.BASE_URL, debug).create(WikipediaApiService.class);
+    }
+
     private static OkHttpClient createHttpClient(boolean debug, long timeoutSeconds) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)

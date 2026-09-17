@@ -43,6 +43,7 @@ public final class LocalAttractionMapper {
         entity.fetchedAtMillis = fetchedAtMillis;
         entity.sourceRef = attraction.getSourceRef();
         entity.imageUrl = attraction.getImageUrl();
+        entity.popularity = attraction.getPopularity();
         return entity;
     }
 
@@ -56,7 +57,8 @@ public final class LocalAttractionMapper {
                 new GeoPoint(entity.latitude, entity.longitude),
                 AttractionProvenanceCodec.fromCode(entity.provenance),
                 entity.sourceRef,
-                entity.imageUrl);
+                entity.imageUrl,
+                entity.popularity);
     }
 
     public static List<AttractionEntity> toEntities(List<Attraction> attractions,

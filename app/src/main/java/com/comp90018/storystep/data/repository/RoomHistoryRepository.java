@@ -46,6 +46,7 @@ public final class RoomHistoryRepository implements HistoryRepository {
     private final VisitDao visitDao;
     private final Executor ioExecutor;
     private final Executor mainExecutor;
+    private final com.comp90018.storystep.domain.repository.SessionArtifacts artifacts;
 
     /** Main-thread only. */
     private final List<Observer> observers = new ArrayList<>(2);
@@ -56,6 +57,19 @@ public final class RoomHistoryRepository implements HistoryRepository {
                                  VisitDao visitDao,
                                  Executor ioExecutor,
                                  Executor mainExecutor) {
+        this(transactions, sessionDao, routePointDao, visitDao, ioExecutor, mainExecutor,
+                com.comp90018.storystep.domain.repository.SessionArtifacts.NONE);
+    }
+
+    /** With the artifacts a session owns outside the database, discarded when it is deleted. */
+    public RoomHistoryRepository(Transactions transactions,
+                                 SessionDao sessionDao,
+                                 RoutePointDao routePointDao,
+                                 VisitDao visitDao,
+                                 Executor ioExecutor,
+                                 Executor mainExecutor,
+                                 com.comp90018.storystep.domain.repository.SessionArtifacts artifacts) {
+        this.artifacts = requireNonNull(artifacts, "artifacts");
         this.transactions = requireNonNull(transactions, "transactions");
         this.sessionDao = requireNonNull(sessionDao, "sessionDao");
         this.routePointDao = requireNonNull(routePointDao, "routePointDao");
@@ -186,6 +200,9 @@ public final class RoomHistoryRepository implements HistoryRepository {
                             removed[0] = sessionDao.deleteById(sessionId) > 0;
                         }
                     });
+                    if (removed[0]) {
+                        artifacts.discard(sessionId);
+                    }
                     mainExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -219,6 +236,7 @@ public final class RoomHistoryRepository implements HistoryRepository {
                             removed[0] = sessionDao.deleteAllFinished();
                         }
                     });
+                    artifacts.discardAll();
                     mainExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
@@ -226,6 +244,42 @@ public final class RoomHistoryRepository implements HistoryRepository {
                                 publishChanged();
                             }
                             callback.onSuccess(removed[0]);
+                        }
+                    });
+                } catch (RuntimeException error) {
+                    fail(callback, error);
+                }
+            }
+        });
+    }
+
+    @Override
+    public void publish(String sessionId,
+                        String title,
+                        String placeName,
+                        List<String> photoFiles,
+                        RepositoryCallback<Boolean> callback) {
+        requireNonNull(callback, "callback");
+        if (sessionId == null || title == null || title.trim().isEmpty()) {
+            fail(callback, new IllegalArgumentException("a published walk needs an id and a title"));
+            return;
+        }
+        String column = com.comp90018.storystep.data.local.LocalSessionHistoryMapper
+                .joinPhotoFiles(photoFiles);
+        ioExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int written = sessionDao.publish(sessionId, title.trim(), placeName, column);
+                    if (written == 0) {
+                        fail(callback, new SessionNotFoundException(sessionId));
+                        return;
+                    }
+                    mainExecutor.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            publishChanged();
+                            callback.onSuccess(true);
                         }
                     });
                 } catch (RuntimeException error) {

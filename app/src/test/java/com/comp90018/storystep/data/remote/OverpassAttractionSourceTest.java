@@ -247,11 +247,67 @@ public class OverpassAttractionSourceTest {
                 new GeoPoint(-37.7963, 144.9614), 1000, 50);
 
         assertEquals(2, places.size());
-        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts.jpg?width=800",
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts.jpg?width=1280",
                 places.get(0).getImageUrl());
         assertNull(places.get(1).getImageUrl());
         assertEquals(2, server.getRequestCount());
         server.takeRequest();
         assertTrue(server.takeRequest().getPath().contains("ids=Q1747074"));
+    }
+
+    @Test
+    public void aPlaceWithoutADescriptionGetsItsWikipediaSummary() throws Exception {
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class),
+                retrofit.create(WikidataApiService.class),
+                retrofit.create(WikipediaApiService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.7981,\"lon\":144.9591,"
+                + "\"tags\":{\"name\":\"Old Arts\",\"tourism\":\"attraction\","
+                + "\"wikidata\":\"Q1747074\"}},"
+                + "{\"type\":\"node\",\"id\":2,\"lat\":-37.7975,\"lon\":144.9640,"
+                + "\"tags\":{\"name\":\"Described\",\"tourism\":\"attraction\","
+                + "\"description\":\"Its own words.\",\"wikidata\":\"Q2\"}}]}"));
+        server.enqueue(new MockResponse().setBody("{\"entities\":{"
+                + "\"Q1747074\":{\"descriptions\":{\"en\":{\"value\":\"building in Parkville\"}},"
+                + "\"sitelinks\":{\"enwiki\":{\"site\":\"enwiki\",\"title\":\"Old Arts Building\"}}},"
+                + "\"Q2\":{\"sitelinks\":{\"enwiki\":{\"site\":\"enwiki\",\"title\":\"Described\"}}}}}"));
+        // Only the place without a description asks Wikipedia.
+        server.enqueue(new MockResponse().setBody(
+                "{\"extract\":\"The Old Arts Building is a lecture hall. It opened in 1924.\"}"));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertEquals("The Old Arts Building is a lecture hall. It opened in 1924.",
+                places.get(0).getDescription());
+        assertEquals("Its own words.", places.get(1).getDescription());
+        assertEquals(3, server.getRequestCount());
+        server.takeRequest();
+        server.takeRequest();
+        assertEquals("/api/rest_v1/page/summary/Old_Arts_Building", server.takeRequest().getPath());
+    }
+
+    @Test
+    public void theWikidataDescriptionStandsInWhenTheSummaryFails() throws Exception {
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class),
+                retrofit.create(WikidataApiService.class),
+                retrofit.create(WikipediaApiService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.7981,\"lon\":144.9591,"
+                + "\"tags\":{\"name\":\"Old Arts\",\"tourism\":\"attraction\","
+                + "\"wikidata\":\"Q1747074\"}}]}"));
+        server.enqueue(new MockResponse().setBody("{\"entities\":{"
+                + "\"Q1747074\":{\"descriptions\":{\"en\":{\"value\":\"building in Parkville\"}},"
+                + "\"sitelinks\":{\"enwiki\":{\"site\":\"enwiki\",\"title\":\"Old Arts Building\"}}}}}"));
+        server.enqueue(new MockResponse().setResponseCode(404));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertEquals("Building in Parkville.", places.get(0).getDescription());
     }
 }

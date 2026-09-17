@@ -96,6 +96,7 @@ public class NearbyAttractionsFragment extends Fragment
     private TextView originLabel;
     private MaterialButton retryButton;
     private com.comp90018.storystep.ui.widget.PlaceMapView homeMap;
+    @Nullable private com.google.android.material.bottomsheet.BottomSheetBehavior<View> sheet;
     private View homeMapCard;
     private MaterialCardView continueJourneyCard;
     private View homeHeader;
@@ -113,10 +114,13 @@ public class NearbyAttractionsFragment extends Fragment
     private com.google.android.material.textfield.TextInputEditText searchInput;
     private TextView unlockProgress;
     private TextView staleBanner;
+    private TextView listCredit;
     // Guards against the chip listeners re-entering while the state is being mirrored back.
     private boolean syncingChips;
     private TextView sectionTitle;
     private TextView seeAllButton;
+    /** The resting sheet's height, a third of the screen once the screen is measured. */
+    private int peekHeight;
     private boolean listMode;
     private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
     private MaterialButton sessionButton;
@@ -159,6 +163,54 @@ public class NearbyAttractionsFragment extends Fragment
         retryButton = view.findViewById(R.id.retry_button);
         homeMap = view.findViewById(R.id.home_map);
         homeMapCard = view.findViewById(R.id.home_map_card);
+        View recenter = view.findViewById(R.id.recenter_button);
+        recenter.setOnClickListener(v -> homeMap.recenter());
+        listCredit = view.findViewById(R.id.list_credit);
+        View placesSheet = view.findViewById(R.id.places_sheet);
+        sheet = com.google.android.material.bottomsheet.BottomSheetBehavior.from(placesSheet);
+        sheet.setSkipCollapsed(false);
+        sheet.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED);
+        // At rest the sheet takes the bottom third of the screen, whatever the screen: the map
+        // is centred in the two thirds above it and the recentre button rides on its edge.
+        view.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            int peek = (b - t) / 3;
+            if (peek > 0 && peek != peekHeight) {
+                peekHeight = peek;
+                sheet.setPeekHeight(peek, true);
+                homeMap.setCoveredBottom(peek);
+                ViewGroup.MarginLayoutParams params =
+                        (ViewGroup.MarginLayoutParams) recenter.getLayoutParams();
+                params.bottomMargin = peek + getResources().getDimensionPixelSize(R.dimen.space_12);
+                recenter.setLayoutParams(params);
+            }
+        });
+        // Pulling the sheet to the top is the same intent as See all; mirror it so the search
+        // and the provenance line appear with the full list, and vanish when it settles back.
+        sheet.addBottomSheetCallback(
+                new com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback() {
+            @Override
+            public void onStateChanged(@NonNull View bottomSheet, int newState) {
+                // Two resting states only: a slow drag must not park the sheet half-way.
+                if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HALF_EXPANDED) {
+                    sheet.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED);
+                    return;
+                }
+                if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+                        && !listMode) {
+                    setListMode(true);
+                } else if (newState == com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
+                        && listMode) {
+                    setListMode(false);
+                }
+            }
+
+            @Override
+            public void onSlide(@NonNull View bottomSheet, float slideOffset) {
+                // The recentre button rides on the sheet's edge and fades as the map goes.
+                recenter.setTranslationY(-slideOffset * (bottomSheet.getHeight() - peekHeight));
+                recenter.setAlpha(1f - Math.min(1f, slideOffset * 2f));
+            }
+        });
         homeMap.setOnPlaceClickListener(attractionId -> {
             Bundle arguments = new Bundle();
             arguments.putString(ARG_ATTRACTION_ID, attractionId);
@@ -200,7 +252,7 @@ public class NearbyAttractionsFragment extends Fragment
         viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
         viewModel.getUnlockProgress().observe(getViewLifecycleOwner(), progress -> {
             boolean any = progress[1] > 0;
-            unlockProgress.setVisibility(any ? View.VISIBLE : View.GONE);
+            unlockProgress.setVisibility(any && listMode ? View.VISIBLE : View.GONE);
             unlockProgress.setText(getString(R.string.home_unlock_progress,
                     progress[0], progress[1]));
         });
@@ -375,6 +427,7 @@ public class NearbyAttractionsFragment extends Fragment
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         originLabel.setText(provenanceLine(state));
+        originLabel.setVisibility(View.GONE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -609,22 +662,32 @@ public class NearbyAttractionsFragment extends Fragment
 
     private void setListMode(boolean enabled) {
         listMode = enabled;
-        homeHeader.setBackgroundResource(enabled
-                ? android.R.color.transparent
-                : R.drawable.bg_brand_header);
         nearbyBackButton.setVisibility(enabled ? View.VISIBLE : View.GONE);
         weatherCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
         homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
-        homeTitle.setTextColor(ContextCompat.getColor(requireContext(), enabled
-                ? R.color.story_ink
-                : R.color.story_ink_3));
-        homeMapCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        // The map stays; the sheet rises to fill the screen for the full list and rests again
+        // for browsing. Either state is one drag from the other.
+        if (sheet != null) {
+            sheet.setState(enabled
+                    ? com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+                    : com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED);
+        }
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        originLabel.setVisibility(View.GONE);
+        listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
+        // bar as well as the floating action; expanded, the credit line already does that.
+        int clearance = getResources().getDimensionPixelSize(
+                enabled ? R.dimen.list_foot_action_only : R.dimen.list_foot_under_tab_bar);
+        list.setPadding(list.getPaddingLeft(), list.getPaddingTop(),
+                list.getPaddingRight(), clearance);
+        if (!enabled) {
+            unlockProgress.setVisibility(View.GONE);
+        }
         sectionTitle.setText(enabled ? R.string.nearby_results : R.string.home_nearby);
         seeAllButton.setText(R.string.home_see_all);
-        seeAllButton.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        seeAllButton.setVisibility(View.GONE);
 
         View fragmentView = getView();
         if (fragmentView == null) {

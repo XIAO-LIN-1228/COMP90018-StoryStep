@@ -1,8 +1,6 @@
 package com.comp90018.storystep.ui.widget;
 
 import android.content.Context;
-import android.graphics.ColorMatrix;
-import android.graphics.ColorMatrixColorFilter;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.widget.FrameLayout;
@@ -13,7 +11,6 @@ import androidx.core.content.ContextCompat;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.GeoPoint;
 
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.BoundingBox;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
@@ -56,13 +53,27 @@ public class PlaceMapView extends FrameLayout {
         void onPlaceClick(String attractionId);
     }
 
-    private static final double DEFAULT_ZOOM = 16.0;
+    /**
+     * OpenStreetMap's Humanitarian style: lighter and far less cluttered than the default
+     * Mapnik rendering, served by OSM France without a key. Lifted further toward the page's
+     * paper by {@link #paperFilter()} so the map recedes and the pins carry the colour.
+     * (CARTO's Positron, the obvious choice, now stamps "API KEY REQUIRED" across anonymous
+     * tiles.)
+     */
+    private static final org.osmdroid.tileprovider.tilesource.XYTileSource HUMANITARIAN =
+            new org.osmdroid.tileprovider.tilesource.XYTileSource(
+                    "OsmHumanitarian", 0, 19, 256, ".png",
+                    new String[] {
+                            "https://a.tile.openstreetmap.fr/hot/",
+                            "https://b.tile.openstreetmap.fr/hot/"},
+                    "© OpenStreetMap contributors · Humanitarian style");
+
+    private static final double DEFAULT_ZOOM = 15.6;
     private static final double WALK_ZOOM = 16.5;
 
     private final MapView map;
-    private final List<Marker> placeMarkers = new ArrayList<>();
+    private final PinOverlay pinOverlay = new PinOverlay();
     private final List<Polyline> routeLines = new ArrayList<>();
-    private final Drawable placeIcon;
     private final Drawable destinationIcon;
     private final Drawable userIcon;
 
@@ -78,16 +89,21 @@ public class PlaceMapView extends FrameLayout {
     public PlaceMapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         map = new MapView(context);
-        map.setTileSource(TileSourceFactory.MAPNIK);
+        map.setTileSource(HUMANITARIAN);
+        map.getOverlayManager().getTilesOverlay().setColorFilter(paperFilter());
         map.setMultiTouchControls(true);
         map.getZoomController().setVisibility(
                 org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER);
         map.setTilesScaledToDpi(true);
-        map.getOverlayManager().getTilesOverlay().setColorFilter(paperFilter());
         map.getOverlays().add(new CopyrightOverlay(context));
+        pinOverlay.setOnPinClickListener(id -> {
+            if (placeClickListener != null) {
+                placeClickListener.onPlaceClick(id);
+            }
+        });
+        map.getOverlays().add(pinOverlay);
         addView(map, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
 
-        placeIcon = ContextCompat.getDrawable(context, R.drawable.ic_map_pin_place);
         destinationIcon = ContextCompat.getDrawable(context, R.drawable.ic_map_pin_destination);
         userIcon = ContextCompat.getDrawable(context, R.drawable.ic_map_user);
         setContentDescription(context.getString(R.string.home_map_description));
@@ -138,27 +154,30 @@ public class PlaceMapView extends FrameLayout {
      * you, and fitting every returned place would zoom out to the whole city.
      */
     public void setPlaces(List<Place> places) {
-        for (Marker marker : placeMarkers) {
-            map.getOverlays().remove(marker);
-        }
-        placeMarkers.clear();
+        List<PinOverlay.Pin> pins = new ArrayList<>(places.size());
         for (Place place : places) {
-            Marker marker = new Marker(map);
-            marker.setPosition(toOsm(place.location));
-            marker.setIcon(placeIcon);
-            marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-            marker.setTitle(place.name);
-            marker.setInfoWindow(null);
-            marker.setOnMarkerClickListener((m, mapView) -> {
-                if (placeClickListener != null) {
-                    placeClickListener.onPlaceClick(place.id);
-                }
-                return true;
-            });
-            placeMarkers.add(marker);
-            map.getOverlays().add(marker);
+            pins.add(new PinOverlay.Pin(place.id, toOsm(place.location), labelledPin(place.name)));
         }
+        pinOverlay.setPins(pins);
         map.invalidate();
+    }
+
+    /**
+     * How much of the map's bottom is covered by something else - the places sheet at rest.
+     * The map's logical centre moves up by half of it, so "centred on the user" means centred
+     * in the part of the map that can be seen, and the pins around the user are not hidden.
+     */
+    public void setCoveredBottom(int pixels) {
+        map.setMapCenterOffset(0, -pixels / 2);
+        map.invalidate();
+    }
+
+    /** Animates back to the user, at the default zoom. */
+    public void recenter() {
+        if (userMarker == null) {
+            return;
+        }
+        map.getController().animateTo(userMarker.getPosition(), DEFAULT_ZOOM, 350L);
     }
 
     public void setOnPlaceClickListener(@Nullable OnPlaceClickListener listener) {
@@ -269,23 +288,66 @@ public class PlaceMapView extends FrameLayout {
     }
 
 
+    /** The disc with the story dot, and the name in ink with a paper halo beneath it. */
+    private android.graphics.Bitmap labelledPin(String name) {
+        float density = getResources().getDisplayMetrics().density;
+        int disc = Math.round(30 * density);
+        PinOverlay.discPx = disc;
+        android.text.TextPaint text = new android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        text.setTextSize(11.5f * density);
+        text.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(
+                getContext(), R.font.bricolage_semibold));
+        text.setColor(ContextCompat.getColor(getContext(), R.color.story_ink));
+        String label = name.length() > 22 ? name.substring(0, 21) + "…" : name;
+        float textWidth = text.measureText(label);
+        int width = (int) Math.ceil(Math.max(disc, textWidth + 8 * density));
+        int gap = Math.round(3 * density);
+        int textHeight = Math.round(text.getFontMetrics().descent - text.getFontMetrics().ascent);
+        int height = disc + gap + textHeight;
+
+        android.graphics.Bitmap bitmap = android.graphics.Bitmap.createBitmap(
+                width, height, android.graphics.Bitmap.Config.ARGB_8888);
+        android.graphics.Canvas canvas = new android.graphics.Canvas(bitmap);
+        float cx = width / 2f;
+        float cy = disc / 2f;
+
+        android.graphics.Paint paint = new android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG);
+        paint.setColor(0x22000000);
+        canvas.drawCircle(cx, cy + density, disc / 2f, paint);
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.story_surface));
+        canvas.drawCircle(cx, cy, disc / 2f, paint);
+        paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
+        canvas.drawCircle(cx, cy, 5.5f * density, paint);
+
+        // Halo first, then the ink, so the name reads over roads and labels.
+        float baseline = disc + gap - text.getFontMetrics().ascent;
+        android.text.TextPaint halo = new android.text.TextPaint(text);
+        halo.setStyle(android.graphics.Paint.Style.STROKE);
+        halo.setStrokeWidth(3 * density);
+        halo.setColor(ContextCompat.getColor(getContext(), R.color.story_surface));
+        canvas.drawText(label, cx - textWidth / 2f, baseline, halo);
+        canvas.drawText(label, cx - textWidth / 2f, baseline, text);
+        return bitmap;
+    }
+
+    /** Most colour out, a little light in: the map becomes a light grey ground. */
+    private static android.graphics.ColorMatrixColorFilter paperFilter() {
+        android.graphics.ColorMatrix desaturate = new android.graphics.ColorMatrix();
+        desaturate.setSaturation(0.18f);
+        android.graphics.ColorMatrix lift = new android.graphics.ColorMatrix(new float[] {
+                0.86f, 0, 0, 0, 34,
+                0, 0.86f, 0, 0, 33,
+                0, 0, 0.86f, 0, 30,
+                0, 0, 0, 1, 0
+        });
+        desaturate.postConcat(lift);
+        return new android.graphics.ColorMatrixColorFilter(desaturate);
+    }
+
     private static org.osmdroid.util.GeoPoint toOsm(GeoPoint p) {
         return new org.osmdroid.util.GeoPoint(p.getLatitude(), p.getLongitude());
     }
 
-    /** Desaturated and lifted so the tiles read as the page's paper, not as a poster. */
-    private static ColorMatrixColorFilter paperFilter() {
-        ColorMatrix desaturate = new ColorMatrix();
-        desaturate.setSaturation(0.35f);
-        ColorMatrix lift = new ColorMatrix(new float[] {
-                0.88f, 0, 0, 0, 26,
-                0, 0.88f, 0, 0, 24,
-                0, 0, 0.88f, 0, 20,
-                0, 0, 0, 1, 0
-        });
-        desaturate.postConcat(lift);
-        return new ColorMatrixColorFilter(desaturate);
-    }
 
     private float dp(float value) {
         return value * getResources().getDisplayMetrics().density;

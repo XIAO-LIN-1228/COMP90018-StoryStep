@@ -1,5 +1,8 @@
 package com.comp90018.storystep.domain.model;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -24,6 +27,9 @@ public final class SessionHistoryEntry {
     private final int segmentCount;
     private final boolean interrupted;
     private final String destinationName;
+    private final String title;
+    private final String placeName;
+    private final List<String> photoFiles;
 
     /**
      * @param destinationName the place the user was heading towards, or null when none was chosen
@@ -37,6 +43,32 @@ public final class SessionHistoryEntry {
                                int segmentCount,
                                boolean interrupted,
                                String destinationName) {
+        this(id, startWallClockMillis, endWallClockMillis, activeDurationMillis, distanceMeters,
+                visitCount, segmentCount, interrupted, destinationName, null, null,
+                Collections.<String>emptyList());
+    }
+
+    /**
+     * @param title      the name the user gave the walk, or null when it has not been published
+     * @param placeName  where the walk was, named after the fact, or null when unknown
+     * @param photoFiles the photographs attached on publishing, in order; never null
+     */
+    public SessionHistoryEntry(String id,
+                               long startWallClockMillis,
+                               long endWallClockMillis,
+                               long activeDurationMillis,
+                               double distanceMeters,
+                               int visitCount,
+                               int segmentCount,
+                               boolean interrupted,
+                               String destinationName,
+                               String title,
+                               String placeName,
+                               List<String> photoFiles) {
+        this.title = title;
+        this.placeName = placeName;
+        this.photoFiles = Collections.unmodifiableList(
+                new ArrayList<>(Objects.requireNonNull(photoFiles, "photoFiles")));
         this.id = Objects.requireNonNull(id, "id");
         if (startWallClockMillis <= 0L) {
             throw new IllegalArgumentException(
@@ -112,6 +144,26 @@ public final class SessionHistoryEntry {
         return destinationName;
     }
 
+    /** The name the user gave the walk, or null when it has not been published. */
+    public String getTitle() {
+        return title;
+    }
+
+    /** Where the walk was, named after the fact, or null when unknown. */
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    /** The photographs attached on publishing, in order; empty when none. */
+    public List<String> getPhotoFiles() {
+        return photoFiles;
+    }
+
+    /** True once the user has named the walk. Photographs are optional; the name is the act. */
+    public boolean isPublished() {
+        return title != null && !title.trim().isEmpty();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -129,13 +181,17 @@ public final class SessionHistoryEntry {
                 && segmentCount == that.segmentCount
                 && interrupted == that.interrupted
                 && id.equals(that.id)
-                && Objects.equals(destinationName, that.destinationName);
+                && Objects.equals(destinationName, that.destinationName)
+                && Objects.equals(title, that.title)
+                && Objects.equals(placeName, that.placeName)
+                && photoFiles.equals(that.photoFiles);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, startWallClockMillis, endWallClockMillis, activeDurationMillis,
-                distanceMeters, visitCount, segmentCount, interrupted, destinationName);
+                distanceMeters, visitCount, segmentCount, interrupted, destinationName, title,
+                placeName, photoFiles);
     }
 
     @Override

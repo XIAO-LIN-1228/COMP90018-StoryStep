@@ -36,7 +36,40 @@ public final class LocalSessionHistoryMapper {
                 row.visitCount,
                 row.segmentCount,
                 row.interrupted,
-                row.destinationName);
+                row.destinationName,
+                row.title,
+                row.placeName,
+                splitPhotoFiles(row.photoFiles));
+    }
+
+    /** One file name per line; blank lines and a null column both read as no photographs. */
+    public static List<String> splitPhotoFiles(String column) {
+        List<String> files = new ArrayList<>();
+        if (column == null) {
+            return files;
+        }
+        for (String line : column.split("\n")) {
+            String name = line.trim();
+            if (!name.isEmpty()) {
+                files.add(name);
+            }
+        }
+        return files;
+    }
+
+    /** The inverse of {@link #splitPhotoFiles}: null for none, so the column stays honest. */
+    public static String joinPhotoFiles(List<String> files) {
+        if (files == null || files.isEmpty()) {
+            return null;
+        }
+        StringBuilder joined = new StringBuilder();
+        for (String file : files) {
+            if (joined.length() > 0) {
+                joined.append('\n');
+            }
+            joined.append(file);
+        }
+        return joined.toString();
     }
 
     public static List<SessionHistoryEntry> toEntries(List<SessionHistoryRow> rows) {
@@ -58,7 +91,10 @@ public final class LocalSessionHistoryMapper {
                 visitCount,
                 session.segmentCount,
                 session.interrupted,
-                session.destinationName);
+                session.destinationName,
+                session.title,
+                session.placeName,
+                splitPhotoFiles(session.photoFiles));
     }
 
     /**

@@ -586,16 +586,29 @@ public class NearbyAttractionsViewModel extends ViewModel
                     attraction.getLocation(),
                     attraction.getIndoor(),
                     visited,
-                    attraction.getImageUrl()));
+                    attraction.getImageUrl(),
+                    attraction.getPopularity(),
+                    attraction.getDescription()));
         }
         // The repository sorts by distance from the origin it was queried with. After the user
         // moves without triggering a re-query, that order is stale, so sort by the distances just
         // computed. Ties break on id to keep the order reproducible.
+        // The best-known places first - Wikidata's sitelink count - with distance deciding
+        // among places nobody has written about, and the id keeping the order reproducible.
+        // Then the top thirty: a list of everything within a kilometre is a directory, not a
+        // recommendation.
         Collections.sort(items, (first, second) -> {
+            int byPopularity = Integer.compare(second.getPopularity(), first.getPopularity());
+            if (byPopularity != 0) {
+                return byPopularity;
+            }
             int byDistance = Double.compare(
                     first.getDistanceMeters(), second.getDistanceMeters());
             return byDistance != 0 ? byDistance : first.getId().compareTo(second.getId());
         });
-        return items;
+        return items.size() > TOP_PLACES ? new ArrayList<>(items.subList(0, TOP_PLACES)) : items;
     }
+
+    /** How many places the nearby list shows. */
+    static final int TOP_PLACES = 30;
 }

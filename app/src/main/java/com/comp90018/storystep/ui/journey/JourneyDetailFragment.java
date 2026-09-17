@@ -46,6 +46,25 @@ public class JourneyDetailFragment extends Fragment {
     private TextView placesHeading;
     private PlaceMapView route;
     private LinearLayout stops;
+    private TextView who;
+    private TextView whenWhere;
+    private View publishCard;
+    private android.widget.EditText titleInput;
+    private LinearLayout photoStrip;
+    private View addPhotos;
+    private com.google.android.material.button.MaterialButton publishButton;
+    private JourneyPhotoPager photos;
+
+    private final androidx.activity.result.ActivityResultLauncher<
+            androidx.activity.result.PickVisualMediaRequest> pickPhotos =
+            registerForActivityResult(
+                    new androidx.activity.result.contract.ActivityResultContracts
+                            .PickMultipleVisualMedia(8),
+                    uris -> {
+                        if (uris != null && !uris.isEmpty()) {
+                            viewModel.addPhotos(uris);
+                        }
+                    });
 
     @Nullable
     @Override
@@ -74,6 +93,27 @@ public class JourneyDetailFragment extends Fragment {
         routeCaption = view.findViewById(R.id.journey_detail_route_caption);
         placesHeading = view.findViewById(R.id.journey_detail_places_heading);
         stops = view.findViewById(R.id.journey_detail_stops);
+        who = view.findViewById(R.id.journey_who);
+        whenWhere = view.findViewById(R.id.journey_when_where);
+        publishCard = view.findViewById(R.id.journey_publish_card);
+        titleInput = view.findViewById(R.id.journey_title_input);
+        photoStrip = view.findViewById(R.id.journey_photo_strip);
+        addPhotos = view.findViewById(R.id.journey_add_photos);
+        publishButton = view.findViewById(R.id.journey_publish_button);
+        photos = view.findViewById(R.id.journey_detail_photos);
+        addPhotos.setOnClickListener(v -> pickPhotos.launch(
+                new androidx.activity.result.PickVisualMediaRequest.Builder()
+                        .setMediaType(androidx.activity.result.contract
+                                .ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
+                        .build()));
+        publishButton.setOnClickListener(v -> {
+            com.comp90018.storystep.di.AppContainer container =
+                    ((com.comp90018.storystep.StoryStepApplication)
+                            requireActivity().getApplication()).getAppContainer();
+            viewModel.publish(container.getApplicationContext(), container.getIoExecutor(),
+                    container.getMainExecutor(), sessionId(),
+                    titleInput.getText() == null ? "" : titleInput.getText().toString());
+        });
 
         view.findViewById(R.id.journey_detail_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
@@ -84,6 +124,11 @@ public class JourneyDetailFragment extends Fragment {
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(JourneyDetailViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        viewModel.getChosenPhotos().observe(getViewLifecycleOwner(), this::renderChosenPhotos);
+        viewModel.isPublishing().observe(getViewLifecycleOwner(), busy -> {
+            publishButton.setEnabled(!busy);
+            publishButton.setText(busy ? R.string.journey_publishing : R.string.journey_publish);
+        });
         viewModel.loadIfNeeded(sessionId());
     }
 
@@ -117,11 +162,21 @@ public class JourneyDetailFragment extends Fragment {
     private void bind(SessionHistoryDetail detail) {
         SessionHistoryEntry summary = detail.getSummary();
 
-        title.setText(summary.getDestinationName() == null
+        title.setText(summary.isPublished() ? summary.getTitle()
+                : summary.getDestinationName() == null
                 ? getString(R.string.history_untitled)
                 : summary.getDestinationName());
-        date.setText(HistoryText.formatDateTime(
-                getResources(), summary.getStartWallClockMillis()));
+        String when = HistoryText.formatDateTime(getResources(), summary.getStartWallClockMillis());
+        date.setText(when);
+        bindIdentity(summary, when);
+        publishCard.setVisibility(summary.isPublished() ? View.GONE : View.VISIBLE);
+        java.util.List<java.io.File> files = new java.util.ArrayList<>();
+        for (String name : summary.getPhotoFiles()) {
+            files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+                    requireContext(), summary.getId(), name));
+        }
+        photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);
+        photos.setPhotos(files);
         // The figures are the content of this screen: each gets its own column with the
         // label above it, rather than one line of text with separators.
         String duration = HistoryText.formatDuration(getResources(), summary.getActiveDurationMillis());
@@ -151,6 +206,48 @@ public class JourneyDetailFragment extends Fragment {
                 : getString(R.string.history_weather_none));
 
         bindStops(detail);
+    }
+
+    /** The identity line: who, then when and where, matching the card in the list. */
+    private void bindIdentity(SessionHistoryEntry summary, String when) {
+        String you = getString(R.string.journey_you);
+        String went = getString(R.string.journey_went_for_a_walk, you);
+        android.text.SpannableString styled = new android.text.SpannableString(went);
+        styled.setSpan(new android.text.style.ForegroundColorSpan(
+                        androidx.core.content.ContextCompat.getColor(
+                                requireContext(), R.color.story_signal_ink)),
+                0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        who.setText(styled);
+        String where = summary.getPlaceName() != null ? summary.getPlaceName()
+                : summary.getDestinationName();
+        whenWhere.setText(where == null ? when
+                : getString(R.string.journey_when_where, when, where));
+    }
+
+    /** The thumbnails of the photographs chosen so far, each removable, before the add tile. */
+    private void renderChosenPhotos(java.util.List<android.net.Uri> chosen) {
+        for (int i = photoStrip.getChildCount() - 1; i >= 0; i--) {
+            if (photoStrip.getChildAt(i) != addPhotos) {
+                photoStrip.removeViewAt(i);
+            }
+        }
+        int size = Math.round(76 * getResources().getDisplayMetrics().density);
+        int gap = Math.round(8 * getResources().getDisplayMetrics().density);
+        for (int i = 0; i < chosen.size(); i++) {
+            android.net.Uri uri = chosen.get(i);
+            com.google.android.material.imageview.ShapeableImageView thumb =
+                    new com.google.android.material.imageview.ShapeableImageView(requireContext());
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(size, size);
+            params.setMarginEnd(gap);
+            thumb.setLayoutParams(params);
+            thumb.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
+            thumb.setShapeAppearanceModel(thumb.getShapeAppearanceModel().toBuilder()
+                    .setAllCornerSizes(12 * getResources().getDisplayMetrics().density).build());
+            thumb.setContentDescription(getString(R.string.journey_remove_photo));
+            com.bumptech.glide.Glide.with(thumb).load(uri).centerCrop().into(thumb);
+            thumb.setOnClickListener(v -> viewModel.removePhoto(uri));
+            photoStrip.addView(thumb, i);
+        }
     }
 
     private void bindRoute(SessionHistoryDetail detail) {
