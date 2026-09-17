@@ -175,7 +175,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/space_16"
-        android:layout_marginTop="@dimen/space_12"
+        android:layout_marginTop="@dimen/space_8"
         android:layout_marginEnd="@dimen/space_16"
         android:hint="@string/search_places"
         android:visibility="gone"
@@ -198,7 +198,7 @@
             android:hint="@string/home_search_hint"
             android:imeOptions="actionSearch"
             android:inputType="text"
-            android:minHeight="54dp"
+            android:minHeight="46dp"
             android:singleLine="true" />
     </com.google.android.material.textfield.TextInputLayout>
 

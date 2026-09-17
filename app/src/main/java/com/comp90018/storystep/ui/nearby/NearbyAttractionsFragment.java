@@ -119,6 +119,8 @@ public class NearbyAttractionsFragment extends Fragment
     private boolean syncingChips;
     private TextView sectionTitle;
     private TextView seeAllButton;
+    /** The resting sheet's height, a third of the screen once the screen is measured. */
+    private int peekHeight;
     private boolean listMode;
     private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
     private MaterialButton sessionButton;
@@ -168,8 +170,20 @@ public class NearbyAttractionsFragment extends Fragment
         sheet = com.google.android.material.bottomsheet.BottomSheetBehavior.from(placesSheet);
         sheet.setSkipCollapsed(false);
         sheet.setState(com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED);
-        // The resting sheet covers the bottom of the map; centre the map in what remains.
-        homeMap.setCoveredBottom(getResources().getDimensionPixelSize(R.dimen.sheet_peek_height));
+        // At rest the sheet takes the bottom third of the screen, whatever the screen: the map
+        // is centred in the two thirds above it and the recentre button rides on its edge.
+        view.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            int peek = (b - t) / 3;
+            if (peek > 0 && peek != peekHeight) {
+                peekHeight = peek;
+                sheet.setPeekHeight(peek, true);
+                homeMap.setCoveredBottom(peek);
+                ViewGroup.MarginLayoutParams params =
+                        (ViewGroup.MarginLayoutParams) recenter.getLayoutParams();
+                params.bottomMargin = peek + getResources().getDimensionPixelSize(R.dimen.space_12);
+                recenter.setLayoutParams(params);
+            }
+        });
         // Pulling the sheet to the top is the same intent as See all; mirror it so the search
         // and the provenance line appear with the full list, and vanish when it settles back.
         sheet.addBottomSheetCallback(
@@ -193,8 +207,7 @@ public class NearbyAttractionsFragment extends Fragment
             @Override
             public void onSlide(@NonNull View bottomSheet, float slideOffset) {
                 // The recentre button rides on the sheet's edge and fades as the map goes.
-                recenter.setTranslationY(-slideOffset * (bottomSheet.getHeight()
-                        - getResources().getDimensionPixelSize(R.dimen.sheet_peek_height)));
+                recenter.setTranslationY(-slideOffset * (bottomSheet.getHeight() - peekHeight));
                 recenter.setAlpha(1f - Math.min(1f, slideOffset * 2f));
             }
         });
