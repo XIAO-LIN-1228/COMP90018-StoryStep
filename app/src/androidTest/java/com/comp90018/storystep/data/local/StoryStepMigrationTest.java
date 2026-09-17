@@ -435,4 +435,25 @@ public class StoryStepMigrationTest {
         assertEquals(1, count(version8, "SELECT COUNT(*) FROM attractions WHERE popularity = 0"));
         version8.close();
     }
+
+    @Test
+    public void migratingToNineLeavesEveryWalkUnpublished() throws IOException {
+        SupportSQLiteDatabase version8 = helper.createDatabase(TEST_DATABASE, 8);
+        ContentValues session = sessionValues("finished-walk", null);
+        session.put("weather_temperature_celsius", 0.0);
+        session.put("weather_observed_at_millis", 0L);
+        session.put("weather_fetched_at_millis", 0L);
+        session.put("movement_stationary_millis", 0L);
+        session.put("movement_moving_millis", 0L);
+        session.put("interrupted", 0);
+        session.put("destination_indoor", "outdoor");
+        version8.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
+        version8.close();
+
+        SupportSQLiteDatabase version9 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 9, true, StoryStepMigrations.MIGRATION_8_9);
+        assertEquals(1, count(version9, "SELECT COUNT(*) FROM sessions WHERE title IS NULL "
+                + "AND place_name IS NULL AND photo_files IS NULL"));
+        version9.close();
+    }
 }

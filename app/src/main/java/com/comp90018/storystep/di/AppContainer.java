@@ -149,7 +149,20 @@ public class AppContainer {
                 ? historyRepository
                 : new RoomHistoryRepository(
                         new RoomTransactions(database), database.sessionDao(),
-                        database.routePointDao(), database.visitDao(), ioExecutor, mainExecutor);
+                        database.routePointDao(), database.visitDao(), ioExecutor, mainExecutor,
+                        new com.comp90018.storystep.domain.repository.SessionArtifacts() {
+                            @Override
+                            public void discard(String sessionId) {
+                                com.comp90018.storystep.platform.media.JourneyPhotoStore
+                                        .deleteAll(applicationContext, sessionId);
+                            }
+
+                            @Override
+                            public void discardAll() {
+                                com.comp90018.storystep.platform.media.JourneyPhotoStore
+                                        .deleteEverything(applicationContext);
+                            }
+                        });
         // One hub for both sensors: the accelerometer is needed by motion estimation and by the
         // compass, and registering it twice would double the callback rate and the power cost for
         // readings that are identical.

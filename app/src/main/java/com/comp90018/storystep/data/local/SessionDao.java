@@ -62,6 +62,9 @@ public interface SessionDao {
             + "s.segment_count AS segmentCount, "
             + "s.interrupted AS interrupted, "
             + "s.destination_name AS destinationName, "
+            + "s.title AS title, "
+            + "s.place_name AS placeName, "
+            + "s.photo_files AS photoFiles, "
             + "(SELECT COUNT(*) FROM visits v WHERE v.session_id = s.id) AS visitCount "
             + "FROM sessions s WHERE s.finished != 0 "
             + "ORDER BY s.end_wall_clock_millis DESC, s.start_wall_clock_millis DESC, s.id ASC")
@@ -69,6 +72,14 @@ public interface SessionDao {
 
     @Query("SELECT COUNT(*) FROM sessions WHERE finished != 0")
     int countFinished();
+
+    /**
+     * Writes the published record onto a finished session. Finished only: a walk still in
+     * progress has nothing to publish yet, and the row count says whether anything was written.
+     */
+    @Query("UPDATE sessions SET title = :title, place_name = :placeName, photo_files = :photoFiles "
+            + "WHERE id = :sessionId AND finished != 0")
+    int publish(String sessionId, String title, String placeName, String photoFiles);
 
     /**
      * Removes every finished session; their route points and visits cascade with them.

@@ -87,6 +87,24 @@ public interface HistoryRepository {
         callback.onSuccess(java.util.Collections.<String>emptySet());
     }
 
+    /**
+     * Names a finished walk and attaches its photographs and place, making it a published
+     * journey. Replaces any earlier record whole; the photographs are file names under the
+     * session's own photo directory, which the caller has already filled.
+     *
+     * <p>Fails with {@link SessionNotFoundException} for an unknown or unfinished session.
+     * The default exists for in-memory fakes that never publish.
+     *
+     * @param callback receives true when the record was written
+     */
+    default void publish(String sessionId,
+                         String title,
+                         String placeName,
+                         List<String> photoFiles,
+                         RepositoryCallback<Boolean> callback) {
+        callback.onError(new UnsupportedOperationException("publish"));
+    }
+
     void addObserver(Observer observer);
 
     void removeObserver(Observer observer);

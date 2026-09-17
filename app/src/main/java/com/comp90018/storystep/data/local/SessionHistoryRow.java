@@ -40,4 +40,16 @@ public class SessionHistoryRow {
 
     @ColumnInfo(name = "visitCount")
     public int visitCount;
+
+    @Nullable
+    @ColumnInfo(name = "title")
+    public String title;
+
+    @Nullable
+    @ColumnInfo(name = "placeName")
+    public String placeName;
+
+    @Nullable
+    @ColumnInfo(name = "photoFiles")
+    public String photoFiles;
 }

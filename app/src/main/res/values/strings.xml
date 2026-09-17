@@ -367,4 +367,16 @@
     <string name="privacy_clear_saved_title">Clear saved places?</string>
     <string name="privacy_clear_saved_body">This will remove all saved places. Journey history remains available.</string>
     <string name="privacy_clear_action">Clear</string>
+    <!-- Published walks -->
+    <string name="journey_you">You</string>
+    <string name="journey_went_for_a_walk">%1$s went for a walk</string>
+    <string name="journey_when_where">%1$s · %2$s</string>
+    <string name="journey_photo">Photograph from this walk</string>
+    <string name="journey_publish_heading">Name this walk</string>
+    <string name="journey_title_hint">e.g. Carlton laneways at dusk</string>
+    <string name="journey_add_photos">Add photos</string>
+    <string name="journey_remove_photo">Remove photo</string>
+    <string name="journey_publish">Publish</string>
+    <string name="journey_publishing">Publishing…</string>
+    <string name="journey_photos_count">%1$d photos</string>
 </resources>

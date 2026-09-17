@@ -78,6 +78,9 @@ public final class JourneyAdapter
         private final TextView statStories;
         private final TextView label;
         private final ImageButton delete;
+        private final TextView who;
+        private final TextView whenWhere;
+        private final JourneyPhotoPager photos;
 
         JourneyViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -89,6 +92,9 @@ public final class JourneyAdapter
             statStories = itemView.findViewById(R.id.stat_stories);
             label = itemView.findViewById(R.id.journey_item_label);
             delete = itemView.findViewById(R.id.journey_item_delete);
+            who = itemView.findViewById(R.id.journey_who);
+            whenWhere = itemView.findViewById(R.id.journey_when_where);
+            photos = itemView.findViewById(R.id.journey_item_photos);
         }
 
         void bind(SessionHistoryEntry journey,
@@ -96,8 +102,36 @@ public final class JourneyAdapter
                   OnJourneyDeleteRequested deleteListener) {
             Resources resources = itemView.getResources();
 
-            // A session with no chosen destination is still a real walk; it just has no name.
-            if (journey.getDestinationName() == null) {
+            // The identity line: who, then when and where. The place is only known once the
+            // walk is published; until then the destination, if any, stands in.
+            String you = resources.getString(R.string.journey_you);
+            String went = resources.getString(R.string.journey_went_for_a_walk, you);
+            android.text.SpannableString styledWho = new android.text.SpannableString(went);
+            styledWho.setSpan(new android.text.style.ForegroundColorSpan(
+                            androidx.core.content.ContextCompat.getColor(
+                                    itemView.getContext(), R.color.story_signal_ink)),
+                    0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            who.setText(styledWho);
+            String when = HistoryText.formatDateTime(resources, journey.getStartWallClockMillis());
+            String where = journey.getPlaceName() != null ? journey.getPlaceName()
+                    : journey.getDestinationName();
+            whenWhere.setText(where == null ? when
+                    : resources.getString(R.string.journey_when_where, when, where));
+
+            // The photographs the user attached, if any; the card stays compact without them.
+            java.util.List<java.io.File> files = new java.util.ArrayList<>();
+            for (String name : journey.getPhotoFiles()) {
+                files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+                        itemView.getContext(), journey.getId(), name));
+            }
+            photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);
+            photos.setPhotos(files);
+
+            // The user's own name for the walk wins; before publishing, the destination stands
+            // in, and a session with no chosen destination is still a real walk without a name.
+            if (journey.isPublished()) {
+                title.setText(journey.getTitle());
+            } else if (journey.getDestinationName() == null) {
                 title.setText(R.string.history_untitled);
             } else {
                 String name = journey.getDestinationName();
