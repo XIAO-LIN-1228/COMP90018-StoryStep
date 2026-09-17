@@ -200,7 +200,7 @@ public class NearbyAttractionsFragment extends Fragment
         viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
         viewModel.getUnlockProgress().observe(getViewLifecycleOwner(), progress -> {
             boolean any = progress[1] > 0;
-            unlockProgress.setVisibility(any ? View.VISIBLE : View.GONE);
+            unlockProgress.setVisibility(any && listMode ? View.VISIBLE : View.GONE);
             unlockProgress.setText(getString(R.string.home_unlock_progress,
                     progress[0], progress[1]));
         });
@@ -375,6 +375,7 @@ public class NearbyAttractionsFragment extends Fragment
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         originLabel.setText(provenanceLine(state));
+        originLabel.setVisibility(listMode ? View.VISIBLE : View.GONE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -622,6 +623,10 @@ public class NearbyAttractionsFragment extends Fragment
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        originLabel.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        if (!enabled) {
+            unlockProgress.setVisibility(View.GONE);
+        }
         sectionTitle.setText(enabled ? R.string.nearby_results : R.string.home_nearby);
         seeAllButton.setText(R.string.home_see_all);
         seeAllButton.setVisibility(enabled ? View.GONE : View.VISIBLE);
