@@ -2,12 +2,18 @@ package com.comp90018.storystep.ui.widget;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -33,6 +39,12 @@ import java.util.List;
  * view builds the five items itself from the same menu resource and leaves navigation to the
  * host: it reports taps through {@link OnItemSelectedListener} and is told which destination is
  * current through {@link #setSelectedId(int)}.
+ *
+ * <p>The bar is frosted glass. Android has no backdrop blur for an ordinary view, so the bar
+ * makes its own: given the page it floats over ({@link #setBackdrop(View)}), it draws the strip
+ * beneath itself into a small bitmap, softens that with two passes of a box blur, and paints it
+ * under the translucent surface before the items. The capture is refreshed only on frames the
+ * page itself redraws, so a still page costs nothing.
  */
 public class StoryTabBar extends LinearLayout {
 
@@ -44,6 +56,28 @@ public class StoryTabBar extends LinearLayout {
     private final List<MenuItem> menuItems = new ArrayList<>();
     @Nullable private OnItemSelectedListener listener;
     @IdRes private int selectedId = View.NO_ID;
+
+    /** One capture pixel per this many screen pixels; the blur radius is in capture pixels. */
+    private static final int FROST_SCALE = 12;
+    private static final int FROST_RADIUS = 2;
+    @Nullable private View backdrop;
+    @Nullable private Bitmap frost;
+    @Nullable private int[] frostPixels;
+    private final Paint frostPaint = new Paint(Paint.FILTER_BITMAP_FLAG);
+    private final Path frostClip = new Path();
+    private final RectF frostBounds = new RectF();
+    private boolean frameIsOurs;
+    private final ViewTreeObserver.OnPreDrawListener backdropWatcher = () -> {
+        // The page is about to draw; take a fresh capture on the next frame. Our own
+        // invalidate would otherwise trigger this again and keep the display awake forever.
+        if (frameIsOurs) {
+            frameIsOurs = false;
+        } else if (getVisibility() == VISIBLE) {
+            frameIsOurs = true;
+            invalidate();
+        }
+        return true;
+    };
 
     public StoryTabBar(Context context) {
         this(context, null);
@@ -78,6 +112,95 @@ public class StoryTabBar extends LinearLayout {
 
     public void setOnItemSelectedListener(@Nullable OnItemSelectedListener listener) {
         this.listener = listener;
+    }
+
+    /** The view the bar floats over, whose foot shows through the glass. */
+    public void setBackdrop(@Nullable View backdrop) {
+        if (this.backdrop != null) {
+            this.backdrop.getViewTreeObserver().removeOnPreDrawListener(backdropWatcher);
+        }
+        this.backdrop = backdrop;
+        if (backdrop != null) {
+            backdrop.getViewTreeObserver().addOnPreDrawListener(backdropWatcher);
+        }
+        invalidate();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (backdrop != null) {
+            backdrop.getViewTreeObserver().removeOnPreDrawListener(backdropWatcher);
+        }
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    public void draw(Canvas canvas) {
+        drawFrost(canvas);
+        super.draw(canvas);
+    }
+
+    private void drawFrost(Canvas canvas) {
+        int w = getWidth();
+        int h = getHeight();
+        if (backdrop == null || w == 0 || h == 0 || backdrop.getWidth() == 0) {
+            return;
+        }
+        int cw = Math.max(1, w / FROST_SCALE);
+        int ch = Math.max(1, h / FROST_SCALE);
+        if (frost == null || frost.getWidth() != cw || frost.getHeight() != ch) {
+            frost = Bitmap.createBitmap(cw, ch, Bitmap.Config.ARGB_8888);
+            frostPixels = new int[cw * ch];
+        }
+        // The page, drawn small and shifted so the strip under the bar lands on the bitmap.
+        Canvas capture = new Canvas(frost);
+        capture.drawColor(0xFFFFFFFF);
+        capture.scale(1f / FROST_SCALE, 1f / FROST_SCALE);
+        capture.translate(backdrop.getLeft() - getLeft(), backdrop.getTop() - getTop());
+        backdrop.draw(capture);
+        blur(frost, frostPixels, cw, ch);
+        float radius = getResources().getDisplayMetrics().density * 20f;
+        frostBounds.set(0, 0, w, h);
+        frostClip.rewind();
+        frostClip.addRoundRect(frostBounds, radius, radius, Path.Direction.CW);
+        int saved = canvas.save();
+        canvas.clipPath(frostClip);
+        canvas.drawBitmap(frost, null, frostBounds, frostPaint);
+        canvas.restoreToCount(saved);
+    }
+
+    /** Two passes of a box blur, horizontal then vertical, in place. */
+    private static void blur(Bitmap bitmap, int[] px, int w, int h) {
+        bitmap.getPixels(px, 0, w, 0, 0, w, h);
+        int[] tmp = new int[px.length];
+        for (int pass = 0; pass < 2; pass++) {
+            boxBlur(px, tmp, w, h, true);
+            boxBlur(tmp, px, w, h, false);
+        }
+        bitmap.setPixels(px, 0, w, 0, 0, w, h);
+    }
+
+    private static void boxBlur(int[] in, int[] out, int w, int h, boolean horizontal) {
+        int outer = horizontal ? h : w;
+        int inner = horizontal ? w : h;
+        for (int o = 0; o < outer; o++) {
+            for (int i = 0; i < inner; i++) {
+                int r = 0, g = 0, b = 0, n = 0;
+                for (int k = -FROST_RADIUS; k <= FROST_RADIUS; k++) {
+                    int j = i + k;
+                    if (j < 0 || j >= inner) {
+                        continue;
+                    }
+                    int c = horizontal ? in[o * w + j] : in[j * w + o];
+                    r += (c >> 16) & 0xFF;
+                    g += (c >> 8) & 0xFF;
+                    b += c & 0xFF;
+                    n++;
+                }
+                int index = horizontal ? o * w + i : i * w + o;
+                out[index] = 0xFF000000 | ((r / n) << 16) | ((g / n) << 8) | (b / n);
+            }
+        }
     }
 
     /** Marks the item whose id matches; any other id clears the selection. */

@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = navHost.getNavController();
         StoryTabBar bottomNavigation = findViewById(R.id.main_bottom_navigation);
         bottomNavigation.setMenu(R.menu.main_bottom_navigation);
+        bottomNavigation.setBackdrop(findViewById(R.id.nav_host_fragment));
         // The bar reports taps; NavigationUI does the same destination handling it would for a
         // BottomNavigationView, so top-level back-stack behaviour is unchanged.
         bottomNavigation.setOnItemSelectedListener(item ->

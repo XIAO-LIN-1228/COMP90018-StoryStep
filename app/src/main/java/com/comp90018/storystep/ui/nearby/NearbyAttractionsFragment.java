@@ -676,6 +676,12 @@ public class NearbyAttractionsFragment extends Fragment
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         originLabel.setVisibility(View.GONE);
         listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
+        // bar as well as the floating action; expanded, the credit line already does that.
+        int clearance = getResources().getDimensionPixelSize(
+                enabled ? R.dimen.list_foot_action_only : R.dimen.list_foot_under_tab_bar);
+        list.setPadding(list.getPaddingLeft(), list.getPaddingTop(),
+                list.getPaddingRight(), clearance);
         if (!enabled) {
             unlockProgress.setVisibility(View.GONE);
         }

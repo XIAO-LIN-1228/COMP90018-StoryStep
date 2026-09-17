@@ -26,6 +26,10 @@
     <dimen name="minimum_touch_target">48dp</dimen>
     <dimen name="app_bar_height">56dp</dimen>
     <dimen name="bottom_navigation_height">62dp</dimen>
+    <!-- Bar height plus its margin: what a top-level page keeps clear at the foot. -->
+    <dimen name="tab_bar_clearance">74dp</dimen>
+    <dimen name="list_foot_under_tab_bar">146dp</dimen>
+    <dimen name="list_foot_action_only">72dp</dimen>
     <dimen name="settings_row_height">68dp</dimen>
 
     <!-- Type scale. Sizes live here so the ramp can be audited in one place. -->

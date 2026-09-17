@@ -367,7 +367,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:paddingBottom="72dp" />
+                android:paddingBottom="146dp" />
 
             <ProgressBar
                 android:id="@+id/loading_indicator"
@@ -403,7 +403,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="@dimen/space_12"
+                android:layout_marginBottom="86dp"
                 android:orientation="horizontal">
 
                 <com.google.android.material.button.MaterialButton
@@ -435,7 +435,7 @@
             android:fontFamily="@font/bricolage"
             android:gravity="center"
             android:paddingTop="4dp"
-            android:paddingBottom="6dp"
+            android:paddingBottom="80dp"
             android:text="@string/nearby_list_credit"
             android:textColor="@color/story_ink_3"
             android:textSize="10.5sp"
