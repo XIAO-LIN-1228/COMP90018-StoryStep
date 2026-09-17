@@ -131,7 +131,7 @@ public class AttractionAdapter
                         .load(item.getImageUrl())
                         .placeholder(fallback)
                         .error(fallback)
-                        .override(320, 320)
+                        .override(400, 400)
                         .centerCrop()
                         .into(image);
             } else {

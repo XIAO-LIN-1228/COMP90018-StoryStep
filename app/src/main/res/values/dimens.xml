@@ -45,7 +45,7 @@
     <dimen name="hero_photo_height">240dp</dimen>
     <dimen name="hero_collapsed_height">72dp</dimen>
     <dimen name="scrim_button_size">40dp</dimen>
-    <dimen name="row_thumb_size">72dp</dimen>
+    <dimen name="row_thumb_size">92dp</dimen>
     <dimen name="chip_height">28dp</dimen>
     <dimen name="floating_bar_height">56dp</dimen>
     <!-- The places sheet at rest: enough for the title and two places, the map above. -->

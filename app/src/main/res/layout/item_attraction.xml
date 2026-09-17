@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    A place, as a row: a rounded thumbnail, the name in the display face, the facts as filled
+    A place, as a row: a rounded thumbnail that stands as tall as the text beside it, the name in the display face, the facts as filled
     pills, then a sentence or two about it. The bookmark sits at the top corner so the
     introduction can run the full width beneath it. No divider - the white sheet under the list
     already separates it from the page, and rules between rows only added noise once the sheet
@@ -20,10 +20,12 @@
     <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/attraction_image"
         android:layout_width="@dimen/row_thumb_size"
-        android:layout_height="@dimen/row_thumb_size"
+        android:layout_height="0dp"
+        android:minHeight="@dimen/row_thumb_size"
         android:background="@drawable/bg_thumb_placeholder"
         android:contentDescription="@null"
         android:scaleType="centerCrop"
+        app:layout_constraintBottom_toBottomOf="@id/attraction_reason"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
@@ -39,7 +41,7 @@
         android:textSize="16sp"
         app:layout_constraintEnd_toStartOf="@id/attraction_save_button"
         app:layout_constraintStart_toEndOf="@id/attraction_image"
-        app:layout_constraintTop_toTopOf="@id/attraction_image" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
         android:id="@+id/attraction_facts"
