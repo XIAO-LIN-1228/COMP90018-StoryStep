@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat;
 import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.domain.arrival.ArrivalPolicy;
 import com.comp90018.storystep.application.SensingSources;
+import com.comp90018.storystep.data.local.CacheRetentionSweeper;
 import com.comp90018.storystep.data.local.RoomTransactions;
 import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.remote.ApiClientFactory;
@@ -32,6 +33,7 @@ import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
 import com.comp90018.storystep.domain.repository.WeatherRepository;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
+import com.comp90018.storystep.domain.privacy.RetentionPolicy;
 import com.comp90018.storystep.domain.time.Clock;
 import com.comp90018.storystep.domain.weather.WeatherFreshnessPolicy;
 import com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor;
@@ -70,6 +72,7 @@ public class AppContainer {
     private final SavedAttractionRepository savedAttractionRepository;
     private final WeatherRepository weatherRepository;
     private final ExplorationCoordinator explorationCoordinator;
+    private final CacheRetentionSweeper cacheRetentionSweeper;
 
     private final Executor mainExecutor;
     private final ExecutorService ioExecutor;
@@ -147,6 +150,15 @@ public class AppContainer {
                 clock,
                 ioExecutor,
                 mainExecutor);
+        // Retention is a database concern rather than a repository one: it spans three caches
+        // that no single repository owns, and it must leave the user's own record alone.
+        this.cacheRetentionSweeper = new CacheRetentionSweeper(
+                new RoomTransactions(database),
+                database.attractionDao(),
+                database.attractionAreaDao(),
+                database.weatherCacheDao(),
+                RetentionPolicy.defaultPolicy(),
+                clock);
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
                 database.visitDao(), clock, ioExecutor, mainExecutor);
@@ -256,6 +268,11 @@ public class AppContainer {
      * <p>Independent of {@link #getAttractionRepository()} on purpose: refreshing or replacing the
      * attraction cache must never remove a place the user chose to keep.
      */
+    /** Removes provider copies past the D-06 retention window; see {@link CacheRetentionSweeper}. */
+    public CacheRetentionSweeper getCacheRetentionSweeper() {
+        return cacheRetentionSweeper;
+    }
+
     public SavedAttractionRepository getSavedAttractionRepository() {
         return savedAttractionRepository;
     }

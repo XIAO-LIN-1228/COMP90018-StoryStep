@@ -15,6 +15,7 @@ import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.ui.AttractionArtwork;
+import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.journey.JourneysFragment;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
@@ -51,6 +52,7 @@ public class StoryFragment extends Fragment {
         heroView = view.findViewById(R.id.story_hero);
         attributionView = view.findViewById(R.id.story_attribution);
 
+        TouchTargets.expand(view.findViewById(R.id.story_back));
         view.findViewById(R.id.story_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))

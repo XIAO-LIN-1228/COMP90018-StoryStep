@@ -136,7 +136,12 @@
         <item name="chipStrokeColor">@color/chip_stroke</item>
         <item name="chipStrokeWidth">@dimen/hairline</item>
         <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
-        <item name="android:minHeight">36dp</item>
+        <!--
+            48dp, not 36dp. A row of filter chips is several small controls sharing one parent,
+            and the platform allows one TouchDelegate per parent, so the tap area cannot be
+            widened without widening the chip. This makes the row visibly taller.
+        -->
+        <item name="android:minHeight">@dimen/minimum_touch_target</item>
         <item name="android:textSize">@dimen/text_supporting</item>
         <item name="android:fontFamily">@font/bricolage_medium</item>
     </style>
@@ -208,7 +213,11 @@
     -->
     <style name="Widget.StoryStep.Pill" parent="">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">@dimen/chip_height</item>
+        <!-- minHeight, not height: at a large font scale a fixed pill clips its own label. -->
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/chip_height</item>
+        <item name="android:paddingTop">3dp</item>
+        <item name="android:paddingBottom">3dp</item>
         <item name="android:background">@drawable/bg_chip_filled</item>
         <item name="android:gravity">center</item>
         <item name="android:paddingStart">12dp</item>

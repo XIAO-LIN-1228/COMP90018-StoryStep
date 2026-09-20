@@ -26,70 +26,87 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <LinearLayout
-        android:id="@+id/onboarding_brand"
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="24dp"
-        android:background="@drawable/bg_onboarding_label"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="12dp"
-        android:paddingEnd="16dp"
+    <!--
+        The text column scrolls. In landscape, or at a large font scale, the headline and body
+        no longer fit between the brand mark and the action button, and a poster layout that
+        cannot scroll simply hides the part that does not fit.
+    -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/onboarding_text_scroll"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toTopOf="@id/onboarding_start_button"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <ImageView
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:contentDescription="@null"
-            android:src="@drawable/ic_story_pin" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:fontFamily="@font/bricolage_semibold"
-            android:includeFontPadding="false"
-            android:text="@string/app_name"
-            android:textColor="@color/story_ink"
-            android:textSize="21sp" />
-    </LinearLayout>
+            android:orientation="vertical"
+            android:paddingBottom="16dp">
 
-    <TextView
-        android:id="@+id/onboarding_headline"
-        style="@style/TextAppearance.StoryStep.Display"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="36dp"
-        android:layout_marginEnd="48dp"
-        android:text="@string/onboarding_headline"
-        android:textColor="@color/white"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/onboarding_brand" />
+            <LinearLayout
+                android:id="@+id/onboarding_brand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minHeight="48dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="24dp"
+                android:background="@drawable/bg_onboarding_label"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="16dp">
 
-    <TextView
-        android:id="@+id/onboarding_body"
-        style="@style/TextAppearance.StoryStep.Body"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginEnd="48dp"
-        android:text="@string/onboarding_body"
-        android:textColor="#EBFFFFFF"
-        android:textSize="15sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/onboarding_headline" />
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_story_pin" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:fontFamily="@font/bricolage_semibold"
+                    android:includeFontPadding="false"
+                    android:text="@string/app_name"
+                    android:textColor="@color/story_ink"
+                    android:textSize="21sp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/onboarding_headline"
+                style="@style/TextAppearance.StoryStep.Display"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="36dp"
+                android:layout_marginEnd="48dp"
+                android:text="@string/onboarding_headline"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/onboarding_body"
+                style="@style/TextAppearance.StoryStep.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="24dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="48dp"
+                android:text="@string/onboarding_body"
+                android:textColor="#EBFFFFFF"
+                android:textSize="15sp" />
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <LinearLayout
         android:id="@+id/onboarding_privacy_row"
         android:layout_width="0dp"
-        android:layout_height="48dp"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
@@ -119,7 +136,7 @@
         android:id="@+id/onboarding_start_button"
         style="@style/Widget.StoryStep.Button.Primary"
         android:layout_width="0dp"
-        android:layout_height="@dimen/primary_button_height"
+        android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="4dp"

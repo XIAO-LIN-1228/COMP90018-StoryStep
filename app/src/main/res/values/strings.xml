@@ -74,6 +74,7 @@
     <string name="nav_saved">Saved</string>
     <string name="nav_profile">Profile</string>
     <string name="nav_start">Start</string>
+    <string name="nav_tab_role">Tab</string>
 
     <!-- First run -->
     <string name="onboarding_headline">Every place has a story</string>
@@ -111,6 +112,10 @@
     <string name="weather_age_hours">%1$d h ago</string>
     <string name="weather_reference_area">Reference area</string>
     <string name="home_map_description">Map of nearby StoryStep locations</string>
+    <plurals name="home_map_description_count">
+        <item quantity="one">Map showing %1$d nearby place. The same places are listed below.</item>
+        <item quantity="other">Map showing %1$d nearby places. The same places are listed below.</item>
+    </plurals>
     <string name="home_continue_title">Continue your journey</string>
     <string name="home_journey_name">University Heritage Walk</string>
     <string name="home_journey_progress">3 of 6 stories discovered</string>
@@ -136,6 +141,7 @@
     <string name="detail_unsave">Remove from saved</string>
     <string name="detail_save_failed">Could not update your saved places. Try again.</string>
     <string name="detail_back">Go back</string>
+    <string name="detail_saved_snapshot">%1$s\nYour saved copy, shown because this place is not in the local cache right now. It may differ from the current record.</string>
     <string name="confirm_title">Ready to explore?</string>
     <string name="confirm_destination">Exploring towards %1$s.</string>
     <string name="confirm_location">Location is used only while exploring.</string>
@@ -232,6 +238,10 @@
     <string name="history_duration_minutes">%1$d min</string>
     <string name="history_duration_hours">%1$dh %2$dm</string>
     <string name="history_duration_under_a_minute">&lt;1 min</string>
+    <plurals name="journey_photo_count">
+        <item quantity="one">%1$d photograph from this walk</item>
+        <item quantity="other">%1$d photographs from this walk</item>
+    </plurals>
     <plurals name="history_visit_count">
         <item quantity="one">%d place visited</item>
         <item quantity="other">%d places visited</item>
@@ -243,6 +253,8 @@
 
     <!-- History detail -->
     <string name="history_detail_error">Could not open this journey.</string>
+    <string name="history_loading">Loading your journeys</string>
+    <string name="history_detail_loading">Loading this journey</string>
     <string name="history_detail_not_found">This journey is no longer on this device.</string>
     <string name="history_movement_label">Movement</string>
     <string name="history_movement_unavailable">Not recorded — this phone has no motion sensor.</string>
@@ -276,6 +288,7 @@
     <string name="saved_search">Search saved places</string>
     <string name="saved_empty">Nothing saved yet. Tap the bookmark on a place to keep it here.</string>
     <string name="saved_error">Could not load your saved places.</string>
+    <string name="saved_loading">Loading your saved places</string>
     <string name="saved_cleared">Saved places cleared.</string>
     <string name="saved_clear_failed">Could not clear your saved places. Try again.</string>
     <string name="attraction_save">Save this place</string>
@@ -331,7 +344,6 @@
 
     <!-- Privacy and data -->
     <string name="privacy_data_title">Privacy &amp; data</string>
-    <string name="privacy_lock_icon_description">Privacy protected</string>
     <string name="privacy_data_headline">Your exploration stays yours</string>
     <string name="privacy_data_intro">StoryStep is designed for local, user-controlled exploration without an account.</string>
     <string name="privacy_location_title">Location use</string>
@@ -355,6 +367,7 @@
     <string name="journey_went_for_a_walk">%1$s went for a walk</string>
     <string name="journey_when_where">%1$s · %2$s</string>
     <string name="journey_photo">Photograph from this walk</string>
+    <string name="journey_photo_position">Photograph %1$d of %2$d</string>
     <string name="journey_publish_heading">Name this walk</string>
     <string name="journey_title_hint">e.g. Carlton laneways at dusk</string>
     <string name="journey_add_photos">Add photos</string>

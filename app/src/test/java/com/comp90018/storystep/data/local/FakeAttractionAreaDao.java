@@ -1,5 +1,6 @@
 package com.comp90018.storystep.data.local;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -28,6 +29,19 @@ public final class FakeAttractionAreaDao implements AttractionAreaDao {
     @Override
     public void upsert(AttractionAreaEntity area) {
         rows.put(area.areaKey, area);
+    }
+
+    @Override
+    public int deleteFetchedBefore(long cutoffMillis) {
+        int removed = 0;
+        Iterator<AttractionAreaEntity> iterator = rows.values().iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().fetchedAtMillis < cutoffMillis) {
+                iterator.remove();
+                removed++;
+            }
+        }
+        return removed;
     }
 
     @Override

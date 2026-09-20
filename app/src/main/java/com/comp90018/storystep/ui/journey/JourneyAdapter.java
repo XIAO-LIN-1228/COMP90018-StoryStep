@@ -16,6 +16,7 @@ import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.SessionHistoryEntry;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.HistoryText;
+import com.comp90018.storystep.ui.TouchTargets;
 
 /** Binds recorded sessions to the history list. */
 public final class JourneyAdapter
@@ -92,6 +93,8 @@ public final class JourneyAdapter
             statStories = itemView.findViewById(R.id.stat_stories);
             label = itemView.findViewById(R.id.journey_item_label);
             delete = itemView.findViewById(R.id.journey_item_delete);
+            // The smallest control in the app, and the destructive one.
+            TouchTargets.expand(delete);
             who = itemView.findViewById(R.id.journey_who);
             whenWhere = itemView.findViewById(R.id.journey_when_where);
             photos = itemView.findViewById(R.id.journey_item_photos);

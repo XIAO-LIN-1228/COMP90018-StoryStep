@@ -1,5 +1,6 @@
 package com.comp90018.storystep.data.local;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -38,6 +39,22 @@ public final class FakeWeatherCacheDao implements WeatherCacheDao {
         }
         upsertCount++;
         rows.put(weather.areaKey, copy(weather));
+    }
+
+    @Override
+    public int deleteFetchedBefore(long cutoffMillis) {
+        if (failWrites != null) {
+            throw failWrites;
+        }
+        int removed = 0;
+        Iterator<WeatherCacheEntity> iterator = rows.values().iterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().fetchedAtMillis < cutoffMillis) {
+                iterator.remove();
+                removed++;
+            }
+        }
+        return removed;
     }
 
     @Override

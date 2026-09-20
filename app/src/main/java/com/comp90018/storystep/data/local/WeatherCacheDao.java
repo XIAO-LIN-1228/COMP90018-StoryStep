@@ -27,6 +27,17 @@ public interface WeatherCacheDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void upsert(WeatherCacheEntity weather);
 
+    /**
+     * Removes observations fetched before {@code cutoffMillis} (D-06 retention).
+     *
+     * <p>By fetch time rather than observation time, matching the freshness policy: the fetch is
+     * what this device did, and it is the only one of the two timestamps this app produced.
+     *
+     * @return how many cached observations were removed
+     */
+    @Query("DELETE FROM weather_cache WHERE fetched_at_millis < :cutoffMillis")
+    int deleteFetchedBefore(long cutoffMillis);
+
     /** @return how many cached observations were removed */
     @Query("DELETE FROM weather_cache")
     int deleteAll();

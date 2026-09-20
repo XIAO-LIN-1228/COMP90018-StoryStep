@@ -15,6 +15,9 @@ import com.comp90018.storystep.data.repository.DeferredSavedAttractions;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
 import com.comp90018.storystep.data.repository.TestSavedAttractions;
 import com.comp90018.storystep.data.local.FakeSavedAttractionDao;
+import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.AttractionCategory;
+import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.session.FakeClock;
@@ -77,6 +80,102 @@ public class AttractionDetailViewModelTest {
         viewModel.load(null);
 
         assertEquals(AttractionDetailUiState.Status.ERROR, observe(viewModel).getStatus());
+    }
+
+    // --- falling back to the user's saved copy -------------------------------------------------
+
+    /**
+     * Saves {@code attraction} into {@code store} and returns it. The attraction is deliberately
+     * unknown to {@link InMemoryAttractionRepository}, which is what a place evicted from the
+     * cache looks like to the detail screen.
+     */
+    private static Attraction saveOnly(RoomSavedAttractionRepository store, Attraction attraction) {
+        store.save(attraction, new RepositoryCallback<Boolean>() {
+            @Override
+            public void onSuccess(Boolean written) {
+                // Direct executors: already written by the time save returns.
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                throw new AssertionError(error);
+            }
+        });
+        return attraction;
+    }
+
+    private static Attraction evictedPlace() {
+        return Attraction.seeded("evicted-place", "Evicted Place", AttractionCategory.PARK,
+                "A place the cache no longer holds.", IndoorClassification.OUTDOOR,
+                new GeoPoint(-37.8, 144.96));
+    }
+
+    @Test
+    public void aSavedPlaceMissingFromTheCacheIsReadBackFromTheSavedCopy() {
+        RoomSavedAttractionRepository store = TestSavedAttractions.empty();
+        Attraction saved = saveOnly(store, evictedPlace());
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(), store,
+                        TestCoordinators.idle());
+
+        viewModel.load(saved.getId());
+        AttractionDetailUiState state = observe(viewModel);
+
+        assertEquals(AttractionDetailUiState.Status.CONTENT, state.getStatus());
+        assertNotNull(state.getAttraction());
+        assertEquals("Evicted Place", state.getAttraction().getName());
+        assertTrue("the screen must say the content is the user's saved copy",
+                state.isFromSavedSnapshot());
+        assertTrue(state.isSaved());
+    }
+
+    @Test
+    public void anUnsavedPlaceMissingFromTheCacheStillFails() {
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(),
+                        TestSavedAttractions.empty(), TestCoordinators.idle());
+
+        viewModel.load("evicted-place");
+        AttractionDetailUiState state = observe(viewModel);
+
+        assertEquals(AttractionDetailUiState.Status.ERROR, state.getStatus());
+        assertFalse(state.isFromSavedSnapshot());
+    }
+
+    @Test
+    public void aFailingSavedLookupLeavesTheErrorStateRatherThanBlankContent() {
+        FakeSavedAttractionDao dao = new FakeSavedAttractionDao();
+        RoomSavedAttractionRepository store = TestSavedAttractions.over(dao);
+        saveOnly(store, evictedPlace());
+        dao.failSingleReads = new IllegalStateException("database unavailable");
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(), store,
+                        TestCoordinators.idle());
+
+        viewModel.load("evicted-place");
+        AttractionDetailUiState state = observe(viewModel);
+
+        assertEquals(AttractionDetailUiState.Status.ERROR, state.getStatus());
+        assertNull(state.getAttraction());
+    }
+
+    @Test
+    public void unsavingWhileReadingTheSavedCopyClearsTheBookmarkButKeepsTheContent() {
+        RoomSavedAttractionRepository store = TestSavedAttractions.empty();
+        saveOnly(store, evictedPlace());
+        AttractionDetailViewModel viewModel =
+                new AttractionDetailViewModel(new InMemoryAttractionRepository(), store,
+                        TestCoordinators.idle());
+        viewModel.load("evicted-place");
+        assertTrue(observe(viewModel).isSaved());
+
+        viewModel.onSaveToggleRequested();
+        AttractionDetailUiState state = observe(viewModel);
+
+        assertFalse(state.isSaved());
+        assertEquals(AttractionDetailUiState.Status.CONTENT, state.getStatus());
+        assertNotNull("the copy already on screen should not vanish under the user",
+                state.getAttraction());
     }
 
     // --- starting exploration from the detail screen -------------------------------------------

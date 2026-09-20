@@ -63,9 +63,5 @@
     <color name="story_error">#B23A2B</color>
 
     <!-- Route sketch and the prototype map surface, retuned to the daylight neutrals -->
-    <color name="map_land">#EBE8DF</color>
     <color name="map_park">#E2E7DA</color>
-    <color name="map_water">#DDE6EC</color>
-    <color name="map_road">#F4F2EC</color>
-    <color name="map_location">#211D16</color>
 </resources>

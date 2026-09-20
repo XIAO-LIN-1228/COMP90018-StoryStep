@@ -160,6 +160,23 @@ public class PlaceMapView extends FrameLayout {
         }
         pinOverlay.setPins(pins);
         map.invalidate();
+        describeContents(places.size());
+    }
+
+    /**
+     * Says how many places the map is showing, and where they can be read instead.
+     *
+     * <p>The pins are drawn on a canvas and are not reachable by touch exploration. Rather than
+     * build a virtual view tree over them, the map states what it holds and points at the list,
+     * which carries the same places as ordinary focusable rows with distance and category. The
+     * map is a second, visual rendering of that list — useful, but never the only way to the
+     * information.
+     */
+    private void describeContents(int placeCount) {
+        setContentDescription(placeCount == 0
+                ? getContext().getString(R.string.home_map_description)
+                : getResources().getQuantityString(
+                        R.plurals.home_map_description_count, placeCount, placeCount));
     }
 
     /**

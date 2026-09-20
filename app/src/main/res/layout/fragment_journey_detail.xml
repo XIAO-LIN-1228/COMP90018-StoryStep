@@ -41,6 +41,7 @@
 
     <ProgressBar
         android:id="@+id/journey_detail_loading"
+        android:contentDescription="@string/history_detail_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:indeterminateTint="@color/story_ink_3"
@@ -186,7 +187,7 @@
                         android:id="@+id/journey_publish_button"
                         style="@style/Widget.StoryStep.Button.Primary"
                         android:layout_width="match_parent"
-                        android:layout_height="@dimen/primary_button_height"
+                        android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/space_16"
                         android:text="@string/journey_publish" />
                 </LinearLayout>
@@ -292,7 +293,7 @@
         android:id="@+id/explore_again_button"
         style="@style/Widget.StoryStep.Button.Primary"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/primary_button_height"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/space_24"
         android:elevation="@dimen/floating_elevation"
         android:text="@string/journey_explore_again"

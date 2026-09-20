@@ -18,32 +18,45 @@ public final class AttractionDetailUiState {
     private final Attraction attraction;
     private final boolean saved;
     private final boolean saveInFlight;
+    private final boolean fromSavedSnapshot;
 
     private AttractionDetailUiState(Status status,
                                     @Nullable Attraction attraction,
                                     boolean saved,
-                                    boolean saveInFlight) {
+                                    boolean saveInFlight,
+                                    boolean fromSavedSnapshot) {
         this.status = status;
         this.attraction = attraction;
         this.saved = saved;
         this.saveInFlight = saveInFlight;
+        this.fromSavedSnapshot = fromSavedSnapshot;
     }
 
     public static AttractionDetailUiState loading() {
-        return new AttractionDetailUiState(Status.LOADING, null, false, false);
+        return new AttractionDetailUiState(Status.LOADING, null, false, false, false);
     }
 
     public static AttractionDetailUiState content(Attraction attraction) {
-        return new AttractionDetailUiState(Status.CONTENT, attraction, false, false);
+        return new AttractionDetailUiState(Status.CONTENT, attraction, false, false, false);
+    }
+
+    /**
+     * Content read back from the user's own saved copy because the attraction cache could not
+     * answer. It is shown as ordinary content, labelled, rather than as an error: the user kept
+     * this place, and a stored copy of it is a better answer than a dead end.
+     */
+    public static AttractionDetailUiState savedSnapshot(Attraction attraction) {
+        return new AttractionDetailUiState(Status.CONTENT, attraction, true, false, true);
     }
 
     public static AttractionDetailUiState error() {
-        return new AttractionDetailUiState(Status.ERROR, null, false, false);
+        return new AttractionDetailUiState(Status.ERROR, null, false, false, false);
     }
 
     /** The same screen with a new saved state; used when the store answers or another screen writes. */
     public AttractionDetailUiState withSaved(boolean saved, boolean saveInFlight) {
-        return new AttractionDetailUiState(status, attraction, saved, saveInFlight);
+        return new AttractionDetailUiState(status, attraction, saved, saveInFlight,
+                fromSavedSnapshot);
     }
 
     public Status getStatus() {
@@ -69,5 +82,15 @@ public final class AttractionDetailUiState {
      */
     public boolean isSaveInFlight() {
         return saveInFlight;
+    }
+
+    /**
+     * True when the content came from the user's saved copy rather than the attraction cache.
+     *
+     * <p>The screen says so. A snapshot was taken when the place was saved and the live record may
+     * have changed since; claiming it is current would be a claim the app cannot support.
+     */
+    public boolean isFromSavedSnapshot() {
+        return fromSavedSnapshot;
     }
 }

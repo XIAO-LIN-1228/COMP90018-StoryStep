@@ -37,6 +37,13 @@ public final class DeferredSavedAttractions implements SavedAttractionRepository
     }
 
     @Override
+    public void loadSavedById(String attractionId, RepositoryCallback<SavedAttraction> callback) {
+        // This fake only tracks identifiers, not stored content, so it can say whether a place is
+        // saved but has no snapshot to hand back. The tests that need one use TestSavedAttractions.
+        callback.onSuccess(null);
+    }
+
+    @Override
     public void save(Attraction attraction, RepositoryCallback<Boolean> callback) {
         pending.add(() -> {
             boolean added = savedIds.add(attraction.getId());

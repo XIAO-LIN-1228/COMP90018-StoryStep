@@ -23,6 +23,9 @@ import androidx.annotation.IdRes;
 import androidx.annotation.MenuRes;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.AccessibilityDelegateCompat;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat;
 
 import com.comp90018.storystep.R;
 
@@ -218,8 +221,21 @@ public class StoryTabBar extends LinearLayout {
         item.setBackground(ContextCompat.getDrawable(context, R.drawable.bg_tab_item));
         item.setClickable(true);
         item.setFocusable(true);
-        item.setContentDescription(menuItem.getTitle());
+        // No contentDescription: the label below carries the same words, and setting both makes a
+        // screen reader say the tab's name twice. What the label cannot carry is that this is a
+        // tab and whether it is the current one, which the node info below supplies.
         item.setId(menuItem.getItemId());
+        ViewCompat.setAccessibilityDelegate(item, new AccessibilityDelegateCompat() {
+            @Override
+            public void onInitializeAccessibilityNodeInfo(View host,
+                                                          AccessibilityNodeInfoCompat info) {
+                super.onInitializeAccessibilityNodeInfo(host, info);
+                info.setRoleDescription(getContext().getString(R.string.nav_tab_role));
+                info.setSelected(host.isSelected());
+                info.setCollectionItemInfo(AccessibilityNodeInfoCompat.CollectionItemInfoCompat
+                        .obtain(0, 1, menuItems.indexOf(menuItem), 1, false, host.isSelected()));
+            }
+        });
 
         ImageView icon = new ImageView(context);
         Drawable drawable = menuItem.getIcon();

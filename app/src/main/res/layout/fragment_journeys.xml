@@ -47,6 +47,7 @@
 
     <ProgressBar
         android:id="@+id/journeys_loading"
+        android:contentDescription="@string/history_loading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:indeterminateTint="@color/story_ink_3"
@@ -57,6 +58,7 @@
 
     <TextView
         android:id="@+id/journeys_status"
+        android:accessibilityLiveRegion="polite"
         style="@style/TextAppearance.StoryStep.Prose"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

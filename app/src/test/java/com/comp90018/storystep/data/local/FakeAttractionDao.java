@@ -72,6 +72,21 @@ public final class FakeAttractionDao implements AttractionDao {
     }
 
     @Override
+    public int deleteFetchedBefore(String seedProvenance, long cutoffMillis) {
+        int removed = 0;
+        Iterator<AttractionEntity> iterator = rows.values().iterator();
+        while (iterator.hasNext()) {
+            AttractionEntity entity = iterator.next();
+            boolean fromProvider = !seedProvenance.equals(entity.provenance);
+            if (fromProvider && entity.fetchedAtMillis < cutoffMillis) {
+                iterator.remove();
+                removed++;
+            }
+        }
+        return removed;
+    }
+
+    @Override
     public int count() {
         return rows.size();
     }

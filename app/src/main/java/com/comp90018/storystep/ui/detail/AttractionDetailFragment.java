@@ -21,6 +21,7 @@ import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.ui.AttributionText;
 import com.comp90018.storystep.ui.CategoryLabels;
 import com.comp90018.storystep.ui.AttractionArtwork;
+import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -67,6 +68,7 @@ public class AttractionDetailFragment extends Fragment {
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(AttractionDetailViewModel.class);
 
+        TouchTargets.expand(view.findViewById(R.id.detail_back_button));
         view.findViewById(R.id.detail_back_button).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
         saveButton.setOnClickListener(v -> viewModel.onSaveToggleRequested());
@@ -104,7 +106,13 @@ public class AttractionDetailFragment extends Fragment {
         } else {
             descriptionView.setText(R.string.attraction_no_description);
         }
-        attributionView.setText(AttributionText.attributionFor(attraction.getProvenance()));
+        String attribution = getString(AttributionText.attributionFor(attraction.getProvenance()));
+        // A saved copy is shown when the place is no longer in the cache. The line says which one
+        // the user is reading: the snapshot was taken when they saved it, and the real record may
+        // have moved on since.
+        attributionView.setText(state.isFromSavedSnapshot()
+                ? getString(R.string.detail_saved_snapshot, attribution)
+                : attribution);
         // Only three photographs ship with the app, and a fetched place almost never has
         // one. A 248dp placeholder for "no photo" is dead space on most real screens, so the
         // hero simply collapses; the pills and prose above and below it already carry the page.

@@ -45,9 +45,5 @@
     <color name="story_error_wash">#3A1D16</color>
     <color name="story_error">#E58B7B</color>
 
-    <color name="map_land">#1C1913</color>
     <color name="map_park">#1E211A</color>
-    <color name="map_water">#1A1F23</color>
-    <color name="map_road">#2A261E</color>
-    <color name="map_location">#F1EDE4</color>
 </resources>

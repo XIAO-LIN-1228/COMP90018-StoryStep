@@ -37,6 +37,9 @@ public class JourneyPhotoPager extends FrameLayout {
     private final PhotoAdapter adapter = new PhotoAdapter();
     private final LinearLayoutManager layout;
 
+    /** The page last announced, so a single swipe is not narrated once per scroll frame. */
+    private int announcedPosition = RecyclerView.NO_POSITION;
+
     public JourneyPhotoPager(Context context) {
         this(context, null);
     }
@@ -52,6 +55,9 @@ public class JourneyPhotoPager extends FrameLayout {
 
         dots = new LinearLayout(context);
         dots.setOrientation(LinearLayout.HORIZONTAL);
+        // Page dots repeat what the announcement already says, and a screen reader reading five
+        // unlabelled images between photographs is noise.
+        dots.setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
         LayoutParams dotParams = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
         dotParams.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
         dotParams.bottomMargin = dp(10);
@@ -76,6 +82,11 @@ public class JourneyPhotoPager extends FrameLayout {
 
     public void setPhotos(List<File> photos) {
         adapter.setPhotos(photos);
+        announcedPosition = RecyclerView.NO_POSITION;
+        setContentDescription(photos.isEmpty()
+                ? null
+                : getResources().getQuantityString(
+                        R.plurals.journey_photo_count, photos.size(), photos.size()));
         dots.removeAllViews();
         if (photos.size() > 1) {
             for (int i = 0; i < photos.size(); i++) {
@@ -101,6 +112,24 @@ public class JourneyPhotoPager extends FrameLayout {
         for (int i = 0; i < dots.getChildCount(); i++) {
             dots.getChildAt(i).setSelected(i == current);
         }
+        announceCurrent(current);
+    }
+
+    /**
+     * Says which photograph is showing, once per page.
+     *
+     * <p>Swiping between photographs is a silent change otherwise: the pager is one view and its
+     * contents move underneath. Guarded on the last announced page because {@code onScrolled}
+     * fires on every frame of the gesture, and announcing per frame would talk over itself.
+     */
+    private void announceCurrent(int current) {
+        int total = adapter.getItemCount();
+        if (current == RecyclerView.NO_POSITION || total <= 1 || current == announcedPosition) {
+            return;
+        }
+        announcedPosition = current;
+        announceForAccessibility(
+                getContext().getString(R.string.journey_photo_position, current + 1, total));
     }
 
     private int dp(int value) {
@@ -127,6 +156,10 @@ public class JourneyPhotoPager extends FrameLayout {
         @Override
         public void onBindViewHolder(@NonNull Holder holder, int position) {
             Glide.with(holder.image).load(photos.get(position)).centerCrop().into(holder.image);
+            // Position rather than a fixed label: "Photo" five times running says nothing about
+            // where in the set the reader is.
+            holder.image.setContentDescription(holder.image.getContext().getString(
+                    R.string.journey_photo_position, position + 1, photos.size()));
         }
 
         @Override
