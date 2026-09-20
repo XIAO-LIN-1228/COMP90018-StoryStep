@@ -114,13 +114,10 @@ public class AttractionAdapter
             name.setText(item.getName());
             category.setText(categoryLabel);
             distance.setText(distanceLabel);
-            // A sentence or two: the place's own description first, the bundled recommendation
-            // line for a seed place without one, nothing when there is neither.
-            String intro = item.getDescription();
-            if (intro.isEmpty()) {
-                String recommendation = AttractionArtwork.recommendationFor(item.getId());
-                intro = recommendation == null ? "" : recommendation;
-            }
+            // Recommended rows explain their actual score; Nearby and Saved show the description.
+            String intro = item.getReasons().isEmpty() ? item.getDescription()
+                    : com.comp90018.storystep.ui.RecommendationText.format(
+                            resources, item.getReasons(), item.getDistanceMeters());
             reason.setText(intro);
             reason.setVisibility(intro.isEmpty() ? View.GONE : View.VISIBLE);
             // A fetched photograph when the source has one; the bundled artwork or the placeholder
@@ -142,7 +139,7 @@ public class AttractionAdapter
                     R.string.attraction_item_description,
                     item.getName(),
                     categoryLabel,
-                    distanceLabel));
+                    distanceLabel) + (intro.isEmpty() ? "" : ". " + intro));
             itemView.setOnClickListener(v -> listener.onAttractionSelected(item));
 
             saveButton.setImageResource(item.isSaved()

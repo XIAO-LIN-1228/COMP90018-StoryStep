@@ -66,7 +66,7 @@ public class WeatherViewModelTest {
         CachedWeatherRepository repository = new CachedWeatherRepository(dao, source,
                 () -> online, WeatherFreshnessPolicy.defaultPolicy(), clock,
                 Runnable::run, Runnable::run);
-        return new WeatherViewModel(repository, coordinator, REFERENCE);
+        return new WeatherViewModel(repository, coordinator, REFERENCE, clock);
     }
 
     /**
@@ -233,8 +233,8 @@ public class WeatherViewModelTest {
     }
 
     @Test
-    public void aFailureForANewAreaKeepsTheObservationAlreadyOnScreen() {
-        // Walking out of coverage must not blank a temperature that is still broadly true.
+    public void aFailureForANewAreaCannotUseThePreviousAreasWeather() {
+        // Another city cannot inherit the previous city's weather for display or scoring.
         WeatherViewModel viewModel = viewModel();
         viewModel.load();
         source.failure =
@@ -244,7 +244,8 @@ public class WeatherViewModelTest {
 
         WeatherUiState state = viewModel.getUiState().getValue();
         assertNotNull(state);
-        assertEquals(WeatherUiState.Status.CONTENT, state.getStatus());
+        assertEquals(WeatherUiState.Status.UNAVAILABLE, state.getStatus());
+        org.junit.Assert.assertNull(viewModel.getContextWeather().getValue());
     }
 
     @Test
@@ -290,6 +291,22 @@ public class WeatherViewModelTest {
         WeatherUiState state = viewModel.getUiState().getValue();
         assertNotNull(state);
         assertEquals(WeatherUiState.Status.CONTENT, state.getStatus());
+    }
+
+    @Test public void visibleClockExpiryNeutralizesWeatherWithoutARequest() {
+        WeatherViewModel model = viewModel();
+        model.load();
+        int requests = source.requestCount();
+        clock.advance(31 * 60_000L);
+        model.refreshAge();
+        assertEquals(WeatherFreshness.STALE, model.getContextWeather().getValue().getFreshness());
+        assertTrue(model.getUiState().getValue().isStale());
+        assertEquals(requests, source.requestCount());
+        clock.advance(6 * 60 * 60_000L);
+        model.refreshAge();
+        org.junit.Assert.assertNull(model.getContextWeather().getValue());
+        assertEquals(WeatherUiState.Status.UNAVAILABLE, model.getUiState().getValue().getStatus());
+        assertEquals(requests, source.requestCount());
     }
 
     private void seedCacheFor(GeoPoint position, WeatherCondition condition, long fetchedAt) {

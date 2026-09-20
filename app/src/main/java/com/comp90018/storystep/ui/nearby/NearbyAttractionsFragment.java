@@ -1,5 +1,7 @@
 package com.comp90018.storystep.ui.nearby;
 
+import com.comp90018.storystep.domain.recommendation.RecommendationEngine.Mode;
+
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
@@ -81,6 +83,14 @@ public class NearbyAttractionsFragment extends Fragment
             Manifest.permission.ACCESS_COARSE_LOCATION
     };
 
+    private final android.os.Handler contextHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable contextTick = new Runnable() {
+        @Override public void run() {
+            weatherViewModel.refreshAge();
+            viewModel.refreshContext();
+            contextHandler.postDelayed(this, 30_000L);
+        }
+    };
     private NearbyAttractionsViewModel viewModel;
     private AttractionAdapter adapter;
     private SharedPreferences preferences;
@@ -247,6 +257,20 @@ public class NearbyAttractionsFragment extends Fragment
 
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(NearbyAttractionsViewModel.class);
+        com.google.android.material.chip.ChipGroup orderingGroup = view.findViewById(R.id.ordering_group);
+        orderingGroup.setOnCheckedStateChangeListener((group, ids) -> {
+            if (!ids.isEmpty()) {
+                viewModel.setOrdering(ids.contains(R.id.order_nearby)
+                        ? Mode.NEARBY
+                        : Mode.RECOMMENDED);
+            }
+        });
+        viewModel.getOrdering().observe(getViewLifecycleOwner(), mode -> {
+            orderingGroup.check(mode == Mode.NEARBY
+                    ? R.id.order_nearby : R.id.order_recommended);
+            sectionTitle.setText(mode == Mode.NEARBY
+                    ? R.string.order_nearby : R.string.order_recommended);
+        });
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
         viewModel.getMapOrigin().observe(getViewLifecycleOwner(), homeMap::setOrigin);
         viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
@@ -264,6 +288,7 @@ public class NearbyAttractionsFragment extends Fragment
         weatherViewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(WeatherViewModel.class);
         weatherViewModel.getUiState().observe(getViewLifecycleOwner(), this::renderWeather);
+        weatherViewModel.getContextWeather().observe(getViewLifecycleOwner(), viewModel::onWeatherChanged);
         // Tapping the card retries, which is the only recovery a user has for a failed fetch.
         weatherCard.setOnClickListener(v -> weatherViewModel.load());
         weatherViewModel.load();
@@ -292,6 +317,14 @@ public class NearbyAttractionsFragment extends Fragment
         // Access can have been changed in system settings while the app was away. Re-checking here
         // is what stops the screen from offering actions that would silently do nothing.
         viewModel.onLocationAccessChanged(currentAccess());
+        viewModel.onVisible();
+        contextHandler.post(contextTick);
+    }
+
+    @Override
+    public void onStop() {
+        contextHandler.removeCallbacks(contextTick);
+        super.onStop();
     }
 
     @Override
@@ -427,7 +460,7 @@ public class NearbyAttractionsFragment extends Fragment
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         originLabel.setText(provenanceLine(state));
-        originLabel.setVisibility(View.GONE);
+        originLabel.setVisibility(View.VISIBLE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -674,7 +707,8 @@ public class NearbyAttractionsFragment extends Fragment
         }
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        originLabel.setVisibility(View.GONE);
+        filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        originLabel.setVisibility(View.VISIBLE);
         listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
         // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
         // bar as well as the floating action; expanded, the credit line already does that.
@@ -685,7 +719,9 @@ public class NearbyAttractionsFragment extends Fragment
         if (!enabled) {
             unlockProgress.setVisibility(View.GONE);
         }
-        sectionTitle.setText(enabled ? R.string.nearby_results : R.string.home_nearby);
+        sectionTitle.setText(viewModel.getOrdering().getValue()
+                == Mode.NEARBY
+                ? R.string.order_nearby : R.string.order_recommended);
         seeAllButton.setText(R.string.home_see_all);
         seeAllButton.setVisibility(View.GONE);
 

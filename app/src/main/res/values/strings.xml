@@ -106,7 +106,7 @@
     <string name="weather_condition_unknown">Weather unclear</string>
     <string name="weather_loading">Checking weather…</string>
     <string name="weather_unavailable">Weather unavailable</string>
-    <string name="weather_offline">Offline</string>
+    <string name="weather_offline">No cached weather</string>
     <string name="weather_age_minutes">%1$d min ago</string>
     <string name="weather_age_hours">%1$d h ago</string>
     <string name="weather_reference_area">Reference area</string>
@@ -379,4 +379,13 @@
     <string name="journey_publish">Publish</string>
     <string name="journey_publishing">Publishing…</string>
     <string name="journey_photos_count">%1$d photos</string>
+    <string name="recommendation_nearby">A remarkable place close to your current location.</string>
+    <string name="order_recommended">Recommended</string>
+    <string name="order_nearby">Nearby</string>
+    <string name="recommendation_distance">Distance: %1$s</string>
+    <string name="recommendation_wet">Indoors for wet weather</string>
+    <string name="recommendation_day">Outdoor daytime preference</string>
+    <string name="recommendation_evening">Indoor time-of-day preference</string>
+    <string name="recommendation_saved">Saved by you</string>
+    <string name="recommendation_unvisited">Not yet visited</string>
 </resources>

@@ -206,11 +206,22 @@ public final class NearbyUiState {
                                         OriginLabel originLabel,
                                         SessionPhase phase,
                                         List<AttractionListItem> items) {
+        return blocked(status, originLabel, phase, items, AttractionFreshness.FRESH, noProvenances());
+    }
+
+    public static NearbyUiState blocked(Status status, OriginLabel originLabel, SessionPhase phase,
+            List<AttractionListItem> items, AttractionFreshness freshness,
+            Set<AttractionProvenance> provenances) {
         if (status == Status.CONTENT || status == Status.LOADING) {
             throw new IllegalArgumentException("not a blocked status: " + status);
         }
-        return new NearbyUiState(status, originLabel, phase, items,
-                AttractionFreshness.FRESH, noProvenances(), null);
+        return new NearbyUiState(status, originLabel, phase, items, freshness, provenances, null);
+    }
+
+    /** Re-ranks retained rows while keeping the permission/network notice and provenance. */
+    public NearbyUiState withItems(List<AttractionListItem> updated) {
+        return new NearbyUiState(status, originLabel, sessionPhase, updated,
+                freshness, provenances, errorReason);
     }
 
     public Status getStatus() {

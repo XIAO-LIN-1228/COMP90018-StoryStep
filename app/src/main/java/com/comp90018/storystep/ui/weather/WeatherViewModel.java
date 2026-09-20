@@ -1,5 +1,10 @@
 package com.comp90018.storystep.ui.weather;
 
+import com.comp90018.storystep.domain.weather.WeatherFreshnessPolicy;
+import com.comp90018.storystep.domain.weather.WeatherFreshness;
+import com.comp90018.storystep.domain.model.SessionState;
+import com.comp90018.storystep.domain.time.Clock;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -28,11 +33,16 @@ import com.comp90018.storystep.platform.location.LocationSource;
  * updates of its own: like every other screen, it observes the one subscription the coordinator
  * owns.
  *
- * <p>Refreshing is left to the repository's freshness rule rather than throttled here. Asking on
- * every sample is cheap — a fresh cache hit does no I/O worth avoiding, and two screens asking at
- * once are coalesced into one request.
+ * <p>Requests occur on area changes or explicit refresh. Age-only updates never issue HTTP;
+ * two screens requesting the same area share the repository cache and request coalescing.
  */
 public class WeatherViewModel extends ViewModel implements ExplorationCoordinator.Observer {
+
+    private final MutableLiveData<WeatherResult> contextWeather = new MutableLiveData<>();
+    private WeatherResult lastResult;
+    private final Clock clock;
+
+    public LiveData<WeatherResult> getContextWeather() { return contextWeather; }
 
     private final WeatherRepository weather;
     private final ExplorationCoordinator coordinator;
@@ -57,6 +67,15 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
     public WeatherViewModel(WeatherRepository weather,
                             ExplorationCoordinator coordinator,
                             GeoPoint referenceOrigin) {
+        this(weather, coordinator, referenceOrigin, new Clock() {
+            public long wallClockMillis() { return System.currentTimeMillis(); }
+            public long monotonicMillis() { return System.nanoTime() / 1_000_000L; }
+        });
+    }
+
+    public WeatherViewModel(WeatherRepository weather, ExplorationCoordinator coordinator,
+            GeoPoint referenceOrigin, Clock clock) {
+        this.clock = clock;
         this.weather = weather;
         this.coordinator = coordinator;
         this.referenceOrigin = referenceOrigin;
@@ -76,6 +95,7 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
     protected void onCleared() {
         // The coordinator outlives this ViewModel; a left-behind observer would keep a destroyed
         // screen's state alive and publishing.
+        ++requestGeneration;
         coordinator.removeObserver(this);
         super.onCleared();
     }
@@ -130,8 +150,16 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
 
     @Override
     public void onSessionChanged(SessionSummary summary) {
-        // Nothing: whose weather this is depends on whether a fix has arrived, not on the session
-        // state. A paused session keeps showing the last area it knew about.
+        if (summary.getState() == SessionState.IDLE
+                || summary.getState() == SessionState.COMPLETED) {
+            boolean changed = areaLabel != WeatherUiState.AreaLabel.REFERENCE_AREA;
+            currentOrigin = referenceOrigin;
+            areaLabel = WeatherUiState.AreaLabel.REFERENCE_AREA;
+            if (changed) {
+                request(currentOrigin, false);
+                relabelDisplayedState();
+            }
+        }
     }
 
     @Override
@@ -150,6 +178,11 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
         if (!force && areaKey.equals(requestedAreaKey)) {
             return;
         }
+        if (!areaKey.equals(requestedAreaKey)) {
+            lastResult = null;
+            contextWeather.setValue(null);
+            uiState.setValue(WeatherUiState.loading(areaLabel));
+        }
         requestedAreaKey = areaKey;
         int generation = ++requestGeneration;
         if (uiState.getValue() == null) {
@@ -161,10 +194,8 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
                 if (generation != requestGeneration) {
                     return;
                 }
-                WeatherSnapshot snapshot = result.getSnapshot();
-                uiState.setValue(WeatherUiState.content(areaLabel, snapshot.getCondition(),
-                        snapshot.getTemperatureCelsius(), snapshot.getObservedAtMillis(),
-                        result.getFreshness()));
+                lastResult = result;
+                refreshAge();
             }
 
             @Override
@@ -172,15 +203,36 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
                 if (generation != requestGeneration) {
                     return;
                 }
-                // A failure for a new area must not erase an observation already on screen for the
-                // old one; but with nothing to show, say so rather than spin.
-                WeatherUiState current = uiState.getValue();
-                if (current != null && current.getStatus() == WeatherUiState.Status.CONTENT) {
-                    return;
-                }
+                lastResult = null;
+                contextWeather.setValue(null);
                 uiState.setValue(WeatherUiState.unavailable(areaLabel, reasonOf(error)));
             }
         });
+    }
+
+    /** Age-only refresh while visible: no request, even when the observation expires. */
+    public void refreshAge() {
+        if (lastResult == null) { return; }
+        WeatherSnapshot snapshot = lastResult.getSnapshot();
+        long now = clock.wallClockMillis();
+        WeatherFreshnessPolicy policy =
+                WeatherFreshnessPolicy.defaultPolicy();
+        WeatherFreshness freshness = policy.classify(snapshot, now);
+        if (freshness == WeatherFreshness.EXPIRED) {
+            contextWeather.setValue(null);
+            uiState.setValue(WeatherUiState.unavailable(areaLabel,
+                    WeatherUnavailableException.Reason.NO_CACHE));
+            return;
+        }
+        if (lastResult.getFreshness() == WeatherFreshness.STALE
+                || now < snapshot.getFetchedAtMillis() || now < snapshot.getObservedAtMillis()
+                || now - snapshot.getObservedAtMillis() > policy.getRefreshAfterMillis()) {
+            freshness = WeatherFreshness.STALE;
+        }
+        WeatherResult aged = new WeatherResult(snapshot, freshness);
+        if (!aged.equals(contextWeather.getValue())) { contextWeather.setValue(aged); }
+        uiState.setValue(WeatherUiState.content(areaLabel, snapshot.getCondition(),
+                snapshot.getTemperatureCelsius(), snapshot.getObservedAtMillis(), freshness));
     }
 
     private static WeatherUnavailableException.Reason reasonOf(Throwable error) {

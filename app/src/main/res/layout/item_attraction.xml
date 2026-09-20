@@ -80,7 +80,7 @@
         android:layout_marginEnd="@dimen/space_12"
         android:ellipsize="end"
         android:lineSpacingExtra="1sp"
-        android:maxLines="2"
+        android:maxLines="6"
         android:textColor="@color/story_ink_3"
         android:textSize="12.5sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -89,8 +89,8 @@
 
     <ImageButton
         android:id="@+id/attraction_save_button"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_marginTop="-8dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/detail_save"
