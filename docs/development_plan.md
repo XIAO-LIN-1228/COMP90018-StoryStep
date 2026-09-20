@@ -4,7 +4,14 @@ Prepared: 2026-08-31. Planning baseline: `762662e` (`framework-build`).
 
 Status: proposed execution plan, not a claim that the features or tests below are complete.
 
-Current frontend assessment: `feature/frontend-ui` contains the frontend implementation at
+Latest implementation update (2026-09-20, teammate A branch): REQ-21 scoring and REQ-22
+presentation are implemented against the [initial policy](decisions/D-07-recommendation-baseline.md).
+Profile counts/capabilities are live; the obsolete Memory editor is removed. Room is v9. See
+[the evidence record](verification/EV-REQ21-REQ22-2026-09-20-01.md) for verification and open gates.
+The planning baseline and earlier frontend assessment below are historical, not the current
+missing-feature list. Automatic retries, saved-detail fallback and backup exclusions remain open.
+
+Historical frontend assessment: `feature/frontend-ui` contains the frontend implementation at
 `142c26f` and is integrating `origin/main@204708f`, including the REQ-02 process-wide session
 lifecycle. The branch is pushed for review; Android and physical-device acceptance remain partial.
 
@@ -52,7 +59,7 @@ Specific integration work already visible in the code:
 - Room schema export is disabled and backup rules are templates. Complete REQ-14 and NFR-04 before storing real user routes.
 - An attraction cache refresh must not erase saved attractions or visits. Review the existing `REPLACE` upsert when introducing relationships.
 
-### 2.1 Current frontend implementation snapshot
+### 2.1 Historical frontend implementation snapshot
 
 The frontend is a cross-iteration clickable prototype, not a completed iteration. Its screens and
 navigation reach later user journeys, while most of the corresponding domain, persistence, sensor
@@ -574,7 +581,7 @@ Acceptance: AT-20A, AT-20B. Warm offline launch retains labeled content and save
 
 User outcome: the order changes for understandable contextual reasons while remaining predictable.
 
-Owner M5; reviewer M3; I3; L; depends REQ-17, REQ-19, REQ-15 context contracts. Baseline: distance ordering only.
+Owner M5; reviewer M3; I3; L; depends REQ-17, REQ-19, REQ-15 context contracts. Implemented on the teammate A branch; final device/reviewer acceptance remains open.
 
 - REQ-21.1: Define a pure scoring input/output with distance, usable weather, local time, indoor/unknown classification, saved state and previous visits. Filter invalid/out-of-range candidates before scoring.
 - REQ-21.2: Implement documented bounded component scores. Initial proposal: `0.45*distance + 0.25*weather + 0.10*time + 0.10*saved + 0.10*unvisited`, where each component is in [0,1] and higher is better.
@@ -589,7 +596,7 @@ Acceptance: AT-21A, AT-21B. Same inputs produce identical scores/order; a contro
 
 User outcome: see why a place is recommended and choose distance-only order if preferred.
 
-Owner M2; reviewer M5; I4; M; depends REQ-04, REQ-21, REQ-17, REQ-13. Baseline: not implemented.
+Owner M2; reviewer M5; I4; M; depends REQ-04, REQ-21, REQ-17, REQ-13. Implemented on the teammate A branch; final device/reviewer acceptance remains open.
 
 - REQ-22.1: Add Recommended/Nearby ordering controls and short localized reason text generated from score reason codes, not arbitrary prose.
 - REQ-22.2: Recompute on meaningful location/weather/save/visit changes while keeping selection stable. Do not re-create the whole screen per sensor sample.

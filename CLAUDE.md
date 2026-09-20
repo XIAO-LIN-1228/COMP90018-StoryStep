@@ -6,41 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 StoryStep is a context-aware Android tourism companion for COMP90018 (University of Melbourne, Mobile Computing Systems Programming). It helps users discover nearby attractions and reveals location-triggered stories as they explore an area, using location, motion, orientation, weather, and cloud data — not turn-by-turn navigation.
 
-Current state: the layered Java/XML application skeleton and a cross-iteration frontend prototype
-are in place. The app includes onboarding, nearby discovery, attraction details, exploration, story,
-journey, saved and profile/recovery screens. Nearby discovery is integrated with a real foreground
-Android location adapter, permission recovery and quality-aware samples. A process-wide session
-coordinator owns the foreground location, accelerometer and magnetometer subscriptions and
-implements start, pause, resume, finish and discard, with movement-state estimation, true-north
-heading and directional guidance. Room is wired for runtime data: cached attractions, the record of which
-areas have been fetched, sessions,
-sampled route points, visits, saved attractions and cached weather live in `storystep.db` at
-schema version 6, and
-an unfinished session is restored as paused on the next launch. Arrival detection works: a
-sustained, credible stay at the selected destination records exactly one visit and offers its story
-on the exploration dashboard. Saved attractions are durable: a place is kept as a self-contained
-copy in a table with no foreign key onto the attraction cache, and one process-scoped repository
-keeps the detail screen, the nearby rows and the saved list in agreement. Weather is real: Open-Meteo's current-conditions endpoint behind a local cache,
-keyed by a coarse area grid rather than by position, cache-first with per-area
-request coalescing, served stale-and-labelled when a refresh fails and reported as offline when
-nothing is cached. Attractions are real too, and follow that same shape: the OpenStreetMap Overpass
-API supplies places by radius, `OverpassAttractionSource` is the only class on a socket and types
-every failure, `RemoteAttractionMapper` validates and deduplicates before anything reaches the
-domain, and `CachedAttractionRepository` fronts it with a 24-hour per-area cache. The request is a
-POST carrying a 0.01-degree grid-cell centre rather than the user's position, and an
-`attraction_areas` table keeps a legitimately empty area distinguishable from one never fetched. The
-indoor classification is tri-state (`IndoorClassification`), because a real provider frequently says
-nothing, and the ODbL attribution is visible wherever fetched places are shown. The weather a session was walked in, its movement totals and whether it was ever
-interrupted are copied onto the session row at schema version 5, which is what lets history describe
-a walk without the network or the attraction cache. Journey history is real: a `HistoryRepository`
-over the same session tables backs the list and detail screens, the route is drawn as a segmented
-sketch that never bridges the gaps between collection spans, and per-session and clear-all deletion
-remove exactly the route points and visits the session owns while leaving saved places untouched.
-The five bundled seed places remain alongside the fetched ones: they are the only content
-guaranteed at a cold offline start, and they carry written stories, which OpenStreetMap almost never
-supplies. Contextual ranking (REQ-21) has not started, and neither has automatic retry/backoff
-(REQ-20.2) on either network path. Instrumented tests have run on an emulator (API 36) but never on a physical device, and
-never on API 26 or 31+, so every physical acceptance case is still outstanding.
+Current state: the Java/XML app has real nearby discovery and map tiles, foreground location,
+movement and compass guidance, durable start/pause/resume/finish/discard, quality-aware arrival,
+story snapshots, saved places and journey history. Room is at schema version 9, including
+photographs and named finished journeys. OpenStreetMap Overpass supplies attractions; Wikidata
+and Wikipedia can enrich images/descriptions. Open-Meteo supplies cached weather. Both network
+repositories support area caches, request coalescing and labelled stale fallback.
+
+On the teammate A branch, `domain.recommendation.RecommendationEngine` implements the initial
+REQ-21 weights and deterministic reason codes. Nearby exposes Recommended/Nearby, preserves
+search/filter state and selection, and reacts to weather, local time, saves and visits. Invalid,
+wrong-area and stale weather is neutral. Profile shows real local counts and capability checks;
+the obsolete Memory editor is removed and photographs remain in finished-journey details. See
+`docs/decisions/D-07-recommendation-baseline.md` and the 2026-09-20 evidence for exact policy and
+validation limits. REQ-20.2 retry/backoff, saved-detail cache fallback and backup exclusions remain
+teammate B work. Physical-device, accessibility and multi-version acceptance remain outstanding;
+implementation and JVM tests do not establish those results.
+
 `README.md` is the requirements/scope document and is the source of truth for
 what to build; `docs/development_plan.md` and `docs/verification_checklist.md` track the current
 delivery and evidence status.

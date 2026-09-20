@@ -1,5 +1,6 @@
 package com.comp90018.storystep.ui;
 
+import com.comp90018.storystep.ui.profile.ProfileViewModel;
 
 import android.app.Application;
 
@@ -83,6 +84,10 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new SavedViewModel(
                     appContainer.getSavedAttractionRepository(),
                     appContainer.getReferenceOrigin());
+        }
+        if (modelClass.isAssignableFrom(ProfileViewModel.class)) {
+            return (T) new ProfileViewModel(
+                    appContainer.getHistoryRepository(), appContainer.getSavedAttractionRepository());
         }
         if (modelClass.isAssignableFrom(PrivacyDataViewModel.class)) {
             return (T) new PrivacyDataViewModel(

@@ -1,5 +1,7 @@
 package com.comp90018.storystep.ui.story;
 
+import com.comp90018.storystep.domain.model.AttractionProvenance;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -105,7 +107,10 @@ public class StoryViewModel extends ViewModel {
 
     private void publish(Visit visit) {
         uiState.setValue(StoryUiState.content(
-                visit.getAttractionId(), visit.getAttractionName(), visit.getStory()));
+                visit.getAttractionId(), visit.getAttractionName(), visit.getStory(),
+                visit.getAttractionId().startsWith("osm:")
+                        ? AttractionProvenance.OPENSTREETMAP
+                        : null, true));
     }
 
     private void markRead(String sessionId, String attractionId) {
@@ -128,7 +133,8 @@ public class StoryViewModel extends ViewModel {
             @Override
             public void onSuccess(Attraction attraction) {
                 uiState.setValue(StoryUiState.content(
-                        attraction.getId(), attraction.getName(), attraction.getDescription()));
+                        attraction.getId(), attraction.getName(), attraction.getDescription(),
+                        attraction.getProvenance(), false));
             }
 
             @Override

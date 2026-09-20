@@ -65,7 +65,7 @@ public final class WeatherText {
             reading = append(resources, reading,
                     resources.getString(R.string.weather_reference_area));
         }
-        return reading;
+        return append(resources, reading, resources.getString(R.string.weather_source));
     }
 
     /**
@@ -80,8 +80,8 @@ public final class WeatherText {
                 Math.round(snapshot.getTemperatureCelsius()));
         String condition = resources.getString(conditionLabel(snapshot.getCondition()));
         String reading = resources.getString(R.string.weather_reading, temperature, condition);
-        return append(resources, reading, resources.getString(R.string.weather_recorded_at,
-                HistoryText.formatTime(snapshot.getObservedAtMillis())));
+        return append(resources, append(resources, reading, resources.getString(R.string.weather_recorded_at,
+                HistoryText.formatTime(snapshot.getObservedAtMillis()))), resources.getString(R.string.weather_source));
     }
 
     private static String append(Resources resources, String reading, String suffix) {
