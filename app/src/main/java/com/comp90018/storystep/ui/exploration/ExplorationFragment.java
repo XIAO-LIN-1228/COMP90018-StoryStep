@@ -14,8 +14,10 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
+import com.comp90018.storystep.domain.guidance.CardinalDirection;
 import com.comp90018.storystep.domain.model.PauseReason;
 import com.comp90018.storystep.platform.location.LocationSource;
+import com.comp90018.storystep.ui.CardinalAnnouncer;
 import com.comp90018.storystep.ui.DirectionLabels;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.ViewModelFactory;
@@ -41,6 +43,9 @@ public class ExplorationFragment extends Fragment {
     private TextView offlinePill;
     private com.comp90018.storystep.platform.connectivity.ConnectivityMonitor connectivity;
     private boolean remainingUnavailable;
+
+    /** Keeps the compass from narrating every tremor; see {@link CardinalAnnouncer}. */
+    private final CardinalAnnouncer directionAnnouncer = new CardinalAnnouncer();
 
     private ExplorationViewModel viewModel;
 
@@ -274,6 +279,7 @@ public class ExplorationFragment extends Fragment {
             directionView.setText(remainingUnavailable
                     ? R.string.exploration_remaining_unavailable
                     : R.string.exploration_direction_unavailable);
+            announceDirection(null);
             return;
         }
         String cardinal = getString(DirectionLabels.cardinalOf(state.getCardinal()));
@@ -285,6 +291,21 @@ public class ExplorationFragment extends Fragment {
             directionArrow.setVisibility(View.GONE);
             directionView.setText(getString(R.string.direction_no_compass, cardinal));
         }
+        announceDirection(state.getCardinal());
+    }
+
+    /**
+     * Says the direction when it changes, and only then.
+     *
+     * <p>Deliberately not a live region: the compass updates continuously, and a region would
+     * make a screen reader talk over itself and over everything else on the screen. See
+     * {@link CardinalAnnouncer}.
+     */
+    private void announceDirection(@Nullable CardinalDirection cardinal) {
+        if (!directionAnnouncer.shouldAnnounce(cardinal)) {
+            return;
+        }
+        directionView.announceForAccessibility(directionView.getText());
     }
 
     private String stateLabel(ExplorationUiState state) {

@@ -34,6 +34,7 @@ import com.comp90018.storystep.R;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationAccessPolicy;
 import com.comp90018.storystep.ui.AttributionText;
+import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.weather.WeatherUiState;
@@ -174,6 +175,7 @@ public class NearbyAttractionsFragment extends Fragment
         homeMap = view.findViewById(R.id.home_map);
         homeMapCard = view.findViewById(R.id.home_map_card);
         View recenter = view.findViewById(R.id.recenter_button);
+        TouchTargets.expand(recenter);
         recenter.setOnClickListener(v -> homeMap.recenter());
         listCredit = view.findViewById(R.id.list_credit);
         View placesSheet = view.findViewById(R.id.places_sheet);
@@ -230,6 +232,7 @@ public class NearbyAttractionsFragment extends Fragment
         continueJourneyCard = view.findViewById(R.id.continue_journey_card);
         homeHeader = view.findViewById(R.id.home_header);
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
+        TouchTargets.expand(nearbyBackButton);
         weatherCard = view.findViewById(R.id.weather_card);
         weatherReading = view.findViewById(R.id.weather_reading);
         homeTitle = view.findViewById(R.id.home_title);

@@ -85,251 +85,268 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_margin="12dp"
+        app:layout_constrainedHeight="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/exploration_header"
+        app:layout_constraintVertical_bias="1">
 
-        <LinearLayout
+        <!--
+            The guidance, the six statistics and the five controls are taller than a landscape
+            window and taller again at a large font scale. The card is bounded by the header
+            above it (constrainedHeight), and its content scrolls inside that bound, so Stop is
+            always reachable. The map above takes whatever space is left, down to none.
+        -->
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp">
-
-            <TextView
-                android:id="@+id/exploration_state_chip"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_soft_teal"
-                android:paddingStart="10dp"
-                android:paddingTop="6dp"
-                android:paddingEnd="10dp"
-                android:paddingBottom="6dp"
-                android:text="@string/exploration_state_starting"
-                android:textColor="@color/story_ink_pressed"
-                android:textStyle="bold" />
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:gravity="center_vertical"
-                android:orientation="horizontal">
-
-                <!--
-                    Decorative: the direction text beside it says the same thing in words, and a
-                    screen reader announcing a rotation angle would be noise, not information.
-                -->
-                <ImageView
-                    android:id="@+id/exploration_direction_arrow"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="12dp"
-                    android:importantForAccessibility="no"
-                    android:src="@drawable/ic_direction_arrow"
-                    android:visibility="gone" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Widget.StoryStep.StatLabel"
-                        android:layout_width="match_parent"
-                        android:id="@+id/exploration_direction"
-                        android:text="@string/exploration_direction_unavailable" />
-
-                    <TextView
-                        style="@style/TextAppearance.StoryStep.Display"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:id="@+id/exploration_remaining"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/exploration_remaining_unavailable"
-                        android:textSize="@dimen/text_display" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_16"
-                android:baselineAligned="false"
-                android:orientation="horizontal">
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Widget.StoryStep.StatLabel"
-                        android:text="@string/exploration_label_travelled" />
-
-                    <TextView
-                        android:id="@+id/exploration_travelled"
-                        style="@style/Widget.StoryStep.StatValue"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/exploration_travelled_zero" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Widget.StoryStep.StatLabel"
-                        android:text="@string/exploration_label_movement" />
-
-                    <TextView
-                        android:id="@+id/exploration_movement"
-                        style="@style/Widget.StoryStep.StatValue"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/movement_unknown" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        style="@style/Widget.StoryStep.StatLabel"
-                        android:text="@string/exploration_label_accuracy" />
-
-                    <TextView
-                        android:id="@+id/exploration_accuracy"
-                        style="@style/Widget.StoryStep.StatValue"
-                        android:layout_marginTop="4dp"
-                        android:text="@string/exploration_accuracy_unavailable" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!--
-                Weather is an independent optional section, not a column of the row above. It has
-                its own source and its own failure, and it must be able to say "unavailable"
-                without the travelled distance beside it going blank too.
-            -->
-            <TextView
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/exploration_weather"
-                android:layout_marginTop="8dp"
-                android:text="@string/weather_loading" />
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:id="@+id/exploration_notice"
-                android:layout_marginTop="8dp"
-                android:text="@string/exploration_notice" />
-
-            <!--
-                The arrival prompt lives on the dashboard rather than as a separate screen: the
-                session is still running, and pushing a full-screen interstitial over a live walk
-                would interrupt the very thing the user is doing.
-            -->
-            <LinearLayout
-                android:id="@+id/arrival_banner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="@color/story_ink_wash"
                 android:orientation="vertical"
-                android:padding="12dp"
-                android:visibility="gone">
+                android:padding="16dp">
 
                 <TextView
-                    android:id="@+id/arrival_banner_text"
-                    style="@style/TextAppearance.StoryStep.Title"
+                    android:id="@+id/exploration_state_chip"
+                    android:accessibilityLiveRegion="polite"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_soft_teal"
+                    android:paddingStart="10dp"
+                    android:paddingTop="6dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="6dp"
+                    android:text="@string/exploration_state_starting"
+                    android:textColor="@color/story_ink_pressed"
+                    android:textStyle="bold" />
+
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!--
+                        Decorative: the direction text beside it says the same thing in words, and a
+                        screen reader announcing a rotation angle would be noise, not information.
+                    -->
+                    <ImageView
+                        android:id="@+id/exploration_direction_arrow"
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="12dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_direction_arrow"
+                        android:visibility="gone" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:layout_width="match_parent"
+                            android:id="@+id/exploration_direction"
+                            android:text="@string/exploration_direction_unavailable" />
+
+                        <TextView
+                            style="@style/TextAppearance.StoryStep.Display"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:id="@+id/exploration_remaining"
+                            android:accessibilityLiveRegion="polite"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_remaining_unavailable"
+                            android:textSize="@dimen/text_display" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_travelled" />
+
+                        <TextView
+                            android:id="@+id/exploration_travelled"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_travelled_zero" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_movement" />
+
+                        <TextView
+                            android:id="@+id/exploration_movement"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/movement_unknown" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_accuracy" />
+
+                        <TextView
+                            android:id="@+id/exploration_accuracy"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_accuracy_unavailable" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!--
+                    Weather is an independent optional section, not a column of the row above. It has
+                    its own source and its own failure, and it must be able to say "unavailable"
+                    without the travelled distance beside it going blank too.
+                -->
+                <TextView
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/exploration_weather"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/weather_loading" />
 
                 <TextView
                     style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="2dp"
-                    android:text="@string/exploration_arrival_supporting" />
+                    android:id="@+id/exploration_notice"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/exploration_notice" />
 
+                <!--
+                    The arrival prompt lives on the dashboard rather than as a separate screen: the
+                    session is still running, and pushing a full-screen interstitial over a live walk
+                    would interrupt the very thing the user is doing.
+                -->
                 <LinearLayout
+                    android:id="@+id/arrival_banner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@color/story_ink_wash"
+                    android:orientation="vertical"
+                    android:padding="12dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/arrival_banner_text"
+                        android:accessibilityLiveRegion="polite"
+                        style="@style/TextAppearance.StoryStep.Title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:text="@string/exploration_arrival_supporting" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/arrival_view_story_button"
+                            style="@style/Widget.StoryStep.Button.Primary"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/exploration_arrival_view_story" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/arrival_later_button"
+                            style="@style/Widget.StoryStep.Button.Secondary"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="@string/not_now" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/visit_save_failed_notice"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/exploration_visit_save_failed"
+                    android:textColor="@color/story_error"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/retry_visit_button"
+                    style="@style/Widget.StoryStep.Button.Secondary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:orientation="horizontal">
+                    android:text="@string/exploration_retry_visit"
+                    android:visibility="gone" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/arrival_view_story_button"
-                        style="@style/Widget.StoryStep.Button.Primary"
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/primary_button_height"
-                        android:layout_weight="1"
-                        android:text="@string/exploration_arrival_view_story" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/resume_exploration_button"
+                    style="@style/Widget.StoryStep.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/exploration_resume"
+                    android:visibility="gone" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/arrival_later_button"
-                        style="@style/Widget.StoryStep.Button.Secondary"
-                        android:layout_width="wrap_content"
-                        android:layout_height="@dimen/primary_button_height"
-                        android:layout_marginStart="8dp"
-                        android:text="@string/not_now" />
-                </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/retry_save_button"
+                    style="@style/Widget.StoryStep.Button.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="@string/exploration_retry_save"
+                    android:visibility="gone" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/stop_exploration_button"
+                    style="@style/Widget.StoryStep.Button.Secondary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/exploration_stop"
+                    android:textColor="@color/story_error"
+                    app:strokeColor="@color/story_error" />
             </LinearLayout>
-
-            <TextView
-                android:id="@+id/visit_save_failed_notice"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text="@string/exploration_visit_save_failed"
-                android:textColor="@color/story_error"
-                android:visibility="gone" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/retry_visit_button"
-                style="@style/Widget.StoryStep.Button.Secondary"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="8dp"
-                android:text="@string/exploration_retry_visit"
-                android:visibility="gone" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/resume_exploration_button"
-                style="@style/Widget.StoryStep.Button.Primary"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="12dp"
-                android:text="@string/exploration_resume"
-                android:visibility="gone" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/retry_save_button"
-                style="@style/Widget.StoryStep.Button.Primary"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="12dp"
-                android:text="@string/exploration_retry_save"
-                android:visibility="gone" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/stop_exploration_button"
-                style="@style/Widget.StoryStep.Button.Secondary"
-                android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="8dp"
-                android:text="@string/exploration_stop"
-                android:textColor="@color/story_error"
-                app:strokeColor="@color/story_error" />
-        </LinearLayout>
+        </androidx.core.widget.NestedScrollView>
     </com.google.android.material.card.MaterialCardView>
 </androidx.constraintlayout.widget.ConstraintLayout>

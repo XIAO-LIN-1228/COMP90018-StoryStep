@@ -62,6 +62,22 @@ public interface AttractionDao {
                                  double minLongitude,
                                  double maxLongitude);
 
+    /**
+     * Removes fetched records older than {@code cutoffMillis} (D-06 retention).
+     *
+     * <p>The seed set is excluded for the same reason a refresh excludes it: it is shipped
+     * content rather than a copy of a provider response, and removing it would leave the app with
+     * nothing to show offline in an area it has never fetched.
+     *
+     * <p>A place the user saved keeps its own row in {@code saved_attractions}, which this does
+     * not touch, so ageing out a cached record never removes a place the user kept.
+     *
+     * @return how many fetched records were removed
+     */
+    @Query("DELETE FROM attractions WHERE provenance != :seedProvenance "
+            + "AND fetched_at_millis < :cutoffMillis")
+    int deleteFetchedBefore(String seedProvenance, long cutoffMillis);
+
     @Query("SELECT COUNT(*) FROM attractions")
     int count();
 

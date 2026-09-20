@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
 import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.model.SavedAttraction;
 import com.comp90018.storystep.domain.model.SessionState;
 import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
@@ -72,6 +73,32 @@ public class AttractionDetailViewModel extends ViewModel
             public void onSuccess(Attraction attraction) {
                 uiState.setValue(AttractionDetailUiState.content(attraction)
                         .withSaved(savedIds.contains(attraction.getId()), false));
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fallBackToSavedCopy(attractionId);
+            }
+        });
+    }
+
+    /**
+     * The attraction cache could not answer. If the user saved this place, the stored copy is
+     * shown instead of an error.
+     *
+     * <p>The store is queried rather than consulting the in-memory identifier set: that set is
+     * filled asynchronously when the screen registers its observer, and it can still be empty at
+     * the moment a cache miss arrives. Asking it here would hide a saved place behind a race.
+     */
+    private void fallBackToSavedCopy(String attractionId) {
+        savedAttractions.loadSavedById(attractionId, new RepositoryCallback<SavedAttraction>() {
+            @Override
+            public void onSuccess(SavedAttraction saved) {
+                if (saved == null) {
+                    uiState.setValue(AttractionDetailUiState.error());
+                    return;
+                }
+                uiState.setValue(AttractionDetailUiState.savedSnapshot(saved.getAttraction()));
             }
 
             @Override

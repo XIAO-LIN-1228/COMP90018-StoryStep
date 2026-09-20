@@ -20,6 +20,7 @@ import com.comp90018.storystep.domain.model.SessionHistoryEntry;
 import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.HistoryText;
+import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.WeatherText;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
@@ -115,6 +116,7 @@ public class JourneyDetailFragment extends Fragment {
                     titleInput.getText() == null ? "" : titleInput.getText().toString());
         });
 
+        TouchTargets.expand(view.findViewById(R.id.journey_detail_back));
         view.findViewById(R.id.journey_detail_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
         view.findViewById(R.id.explore_again_button).setOnClickListener(v ->

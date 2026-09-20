@@ -9,7 +9,8 @@ presentation are implemented against the [initial policy](decisions/D-07-recomme
 Profile counts/capabilities are live; the obsolete Memory editor is removed. Room is v9. See
 [the evidence record](verification/EV-REQ21-REQ22-2026-09-20-01.md) for verification and open gates.
 The planning baseline and earlier frontend assessment below are historical, not the current
-missing-feature list. Automatic retries, saved-detail fallback and backup exclusions remain open.
+missing-feature list. Automatic retries, the saved-detail fallback, backup exclusions and the
+D-06 retention sweep have since been implemented; see the 2026-09-20 pre-release gap round.
 
 Local review on `feature/context-recommendations`: [execution plan](teammate-a-execution-plan.md),
 [test plan](teammate-a-test-plan.md), and [review results](verification/EV-TEAM-A-REVIEW-2026-09-20.md).
@@ -61,7 +62,7 @@ Specific integration work already visible in the code:
 - `RepositoryCallback` already requires Room/network implementations to deliver on the main thread. Preserve and test that contract; do not report it as missing.
 - `GeoPoint` checks coordinate ranges but does not explicitly reject `NaN`. REQ-03 adds finite-input tests and validation before sensor/remote input is trusted.
 - `ApiClientFactory` used BASIC logging with a comment claiming keys could never leak. That was too broad — request URLs carry credentials or coordinates — and it was resolved on the weather branch before the first real request: logging now records method, host, path and status only, and the `logging-interceptor` dependency is gone.
-- Room schema export is disabled and backup rules are templates. Complete REQ-14 and NFR-04 before storing real user routes.
+- Historical note: Room schema export was disabled and backup rules were templates at the planning baseline. Both are now real — schemas are exported to `app/schemas/` and the two XML rule files exclude the database domain and journey photographs.
 - An attraction cache refresh must not erase saved attractions or visits. Review the existing `REPLACE` upsert when introducing relationships.
 
 ### 2.1 Historical frontend implementation snapshot
@@ -79,10 +80,10 @@ recorded as `FOUNDATION_ONLY` unless it is connected to the required production 
 | Active exploration | I2; REQ-02, REQ-06, REQ-07, REQ-10, REQ-11 | Designed map/dashboard and stop dialog exist; one process-wide coordinator owns the real foreground location session, but dashboard values and route remain prototype presentation | Bind the dashboard to coordinator samples, then add route/motion/heading data and durable checkpoints |
 | Paused-session recovery | I1-I2; REQ-02, REQ-15 | Recovery appears only for a real paused process session; Resume, Finish and Discard command the shared coordinator, and elapsed time/segment come from its session summary | Implement Room-backed restoration after process death and verify the full interruption matrix |
 | Arrival, story and memory | I4; REQ-12, REQ-13 | Complete clickable visual flow exists, including a preview-only arrival action | Replace preview with quality-aware arrival detection and exactly-once persisted visit/story delivery |
-| Journeys, summary and detail | I4; REQ-15, REQ-16 | List and detail read real finished sessions through `HistoryRepository`; segmented route sketch, movement/weather/interrupted labels, per-session and clear-all deletion, and story reopening addressed by session id | Re-run AT-16A/AT-16B on a physical device; `JourneySummaryFragment`'s own body is still prototype content apart from the journey id it now passes |
+| Journeys, summary and detail | I4; REQ-15, REQ-16 | List and detail read real finished sessions through `HistoryRepository`; segmented route sketch, movement/weather/interrupted labels, per-session and clear-all deletion, and story reopening addressed by session id | Re-run AT-16A/AT-16B on a physical device. `JourneySummaryFragment` has been deleted; exploration navigates straight to the real journey-detail screen |
 | Saved | I3; REQ-17 | Durable `saved_attractions` table and process-scoped repository; detail, nearby rows and the saved list share one saved-id set; per-attraction toggle serialisation; Clear saved places wired, and REQ-16's clear-all is proved not to touch it; the snapshot carries its own indoor classification and provenance at schema 6 | Re-run AT-17B now that REQ-18 supplies a refreshable remote cache; fall back to the saved copy when the detail screen's cache lookup misses; make the saved search control real |
-| Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Real Open-Meteo observations on the nearby card and the exploration dashboard, cached per 0.05-degree area, refreshed after 30 min, served stale-and-labelled when a refresh fails and reported as offline when nothing is cached; the observation is now copied onto the session row at schema version 5 and shown, labelled by observation time, on the journey-detail screen; chips remain fixtures | Implement REQ-20.2 retry/backoff; add ranking/reasons (REQ-21/22) and a visible provider attribution |
-| Profile, capability recovery and privacy/data | NFR-03/04 and lifecycle support | Settings/recovery presentation and a dedicated Privacy & Data page exist; permissions open real system settings and destructive controls are confirmed prototype actions | Bind real permission/provider/session states and implement scoped history/saved deletion with backup-policy verification |
+| Weather and contextual presentation | I3-I4; REQ-19, REQ-21, REQ-22 | Real Open-Meteo observations on the nearby card and the exploration dashboard, cached per 0.05-degree area, refreshed after 30 min, served stale-and-labelled when a refresh fails and reported as offline when nothing is cached; the observation is now copied onto the session row at schema version 5 and shown, labelled by observation time, on the journey-detail screen; chips remain fixtures | REQ-20.2 retry/backoff and REQ-21/22 ranking and reasons are implemented; provider attribution is visible. Remaining: device acceptance and field tuning of the weights |
+| Profile, capability recovery and privacy/data | NFR-03/04 and lifecycle support | Settings/recovery presentation and a dedicated Privacy & Data page exist; permissions open real system settings, both destructive controls really delete, profile shows real local counts and capability checks, and backup/transfer exclusions plus the D-06 retention sweep are implemented | Verify backup and retention behavior on a device; no platform backup claim is supported without it |
 
 Iteration-level interpretation:
 
@@ -546,7 +547,7 @@ coalescing, stale-fallback and atomic-replace policies as the weather path, plus
 `attraction_areas` table so a legitimately empty area is distinguishable from one never fetched.
 Schema 6 makes the indoor classification tri-state wherever a place is stored — the cache, the saved
 snapshot and the session destination — which is REQ-14.3's deferred unknown-classification work.
-REQ-20.2 retry/backoff is deliberately **not** included; it remains open for both network paths.
+REQ-20.2 retry/backoff was deliberately **not** included in this round. It was added later for both network paths; see `NetworkRetryPolicy` and the two retrying sources.
 
 Code areas: `data.remote`, `data.repository`, `ApiClientFactory`, manifest and safe build configuration.
 
@@ -654,7 +655,7 @@ Owner M4; reviewer M5; I0 decisions, before real data/network, I5 audit; M.
 - NFR-04.1: Enforce user-started foreground-only collection, minimal requested permissions and sensitive-route minimization. No analytics, uploads or public route export by default.
 - NFR-04.2: Keep secrets out of Git/test fixtures/evidence. `local.properties` protects source control only; embedded APK configuration must not be treated as a server-side secret. D-02 must choose an appropriate provider authentication model; do not create a proxy service without approval.
 - NFR-04.3: Remove or sanitize request logging before real credentials/coordinates are used. BASIC includes URLs in the pinned [OkHttp 4.12 interceptor source](https://raw.githubusercontent.com/square/okhttp/parent-4.12.0/okhttp-logging-interceptor/src/main/kotlin/okhttp3/logging/HttpLoggingInterceptor.kt); header redaction alone does not protect query parameters. Verify with synthetic sentinel values, not real secrets.
-- NFR-04.4: Implement D-06 retention/deletion and explicit backup/transfer exclusions in both existing XML rule files. If data shares a database, exclude that database rather than pretending to exclude individual tables. Verify older and newer OS paths; see [Android Auto Backup rules](https://developer.android.com/identity/data/autobackup).
+- NFR-04.4: Implement D-06 retention/deletion and explicit backup/transfer exclusions in both existing XML rule files. Both are implemented as of 2026-09-20; see [D-06](decisions/D-06-data-retention.md). Device verification is still outstanding. If data shares a database, exclude that database rather than pretending to exclude individual tables. Verify older and newer OS paths; see [Android Auto Backup rules](https://developer.android.com/identity/data/autobackup).
 
 Acceptance: AT-Q04A, AT-Q04B. Sentinel credentials/coordinates are absent from logs/evidence; sensitive data is excluded according to policy; Delete and Stop actually take effect. Do not certify platform backup behavior without device evidence.
 

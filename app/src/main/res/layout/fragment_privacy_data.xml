@@ -49,7 +49,7 @@
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_gravity="center_horizontal"
-                android:contentDescription="@string/privacy_lock_icon_description"
+                android:importantForAccessibility="no"
                 android:src="@drawable/ic_privacy_lock" />
 
             <TextView
@@ -174,7 +174,7 @@
                 android:id="@+id/privacy_manage_permissions"
                 style="@style/Widget.StoryStep.Button.Primary"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_12"
                 android:text="@string/privacy_manage_permissions" />
 
@@ -182,7 +182,7 @@
                 android:id="@+id/privacy_clear_history"
                 style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_12"
                 android:text="@string/privacy_clear_history"
                 android:textColor="@color/story_error"
@@ -192,7 +192,7 @@
                 android:id="@+id/privacy_clear_saved"
                 style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/space_12"
                 android:layout_marginBottom="@dimen/space_16"
                 android:text="@string/privacy_clear_saved" />

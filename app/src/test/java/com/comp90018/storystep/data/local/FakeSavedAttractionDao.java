@@ -19,6 +19,13 @@ public final class FakeSavedAttractionDao implements SavedAttractionDao {
     /** Set to make the next call throw, standing in for a storage failure. */
     public RuntimeException failWrites;
 
+    /**
+     * Set to make single-row lookups throw. Kept apart from {@link #failWrites} so a test can make
+     * the saved-copy read fail while writes still work, which is the case the detail screen's
+     * fallback has to survive.
+     */
+    public RuntimeException failSingleReads;
+
     @Override
     public List<SavedAttractionEntity> findAllByRecency() {
         failIfRequested();
@@ -44,6 +51,9 @@ public final class FakeSavedAttractionDao implements SavedAttractionDao {
 
     @Override
     public SavedAttractionEntity findById(String attractionId) {
+        if (failSingleReads != null) {
+            throw failSingleReads;
+        }
         for (SavedAttractionEntity row : rows) {
             if (row.attractionId.equals(attractionId)) {
                 return copy(row);
@@ -105,6 +115,11 @@ public final class FakeSavedAttractionDao implements SavedAttractionDao {
         copy.savedAtMillis = source.savedAtMillis;
         copy.provenance = source.provenance;
         copy.sourceRef = source.sourceRef;
+        // Copied because the real table stores them. Without these two the fake would silently
+        // drop a saved place's photograph and popularity, and a test asserting that a saved copy
+        // still renders its image would fail against a defect that does not exist.
+        copy.imageUrl = source.imageUrl;
+        copy.popularity = source.popularity;
         return copy;
     }
 }

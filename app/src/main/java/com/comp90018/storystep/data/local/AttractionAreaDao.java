@@ -20,6 +20,18 @@ public interface AttractionAreaDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     void upsert(AttractionAreaEntity area);
 
+    /**
+     * Removes bookkeeping for areas last fetched before {@code cutoffMillis} (D-06 retention).
+     *
+     * <p>Removed together with the records they account for. An area row that outlived its
+     * records would claim the area had been fetched and hand the user a legitimately-empty
+     * verdict for a place that simply aged out.
+     *
+     * @return how many area records were removed
+     */
+    @Query("DELETE FROM attraction_areas WHERE fetched_at_millis < :cutoffMillis")
+    int deleteFetchedBefore(long cutoffMillis);
+
     @Query("DELETE FROM attraction_areas")
     int deleteAll();
 

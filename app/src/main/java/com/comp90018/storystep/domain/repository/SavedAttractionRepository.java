@@ -43,6 +43,18 @@ public interface SavedAttractionRepository {
     void loadSavedIds(RepositoryCallback<Set<String>> callback);
 
     /**
+     * The stored copy of one place, or null when it is not saved.
+     *
+     * <p>This is the offline reading of a saved place. The attraction cache can legitimately lose
+     * a record — a refresh replaces an area, or the device has never fetched it — and the saved
+     * snapshot is the only remaining source for a place the user explicitly kept. Not being saved
+     * is an answer, not a failure, so it arrives as a null success rather than an error.
+     *
+     * @param callback receives the stored copy, or null when nothing is saved under this id
+     */
+    void loadSavedById(String attractionId, RepositoryCallback<SavedAttraction> callback);
+
+    /**
      * Stores a copy of {@code attraction}.
      *
      * @param callback receives true when a new record was written, false when it was already saved

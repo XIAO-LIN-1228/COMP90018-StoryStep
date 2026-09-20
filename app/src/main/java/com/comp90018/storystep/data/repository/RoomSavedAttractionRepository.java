@@ -95,6 +95,28 @@ public final class RoomSavedAttractionRepository implements SavedAttractionRepos
         });
     }
 
+    @Override
+    public void loadSavedById(String attractionId, RepositoryCallback<SavedAttraction> callback) {
+        requireNonNull(callback, "callback");
+        if (attractionId == null) {
+            fail(callback, new IllegalArgumentException("attractionId must not be null"));
+            return;
+        }
+        ioExecutor.execute(() -> {
+            try {
+                SavedAttractionEntity row = dao.findById(attractionId);
+                SavedAttraction saved =
+                        row == null ? null : LocalSavedAttractionMapper.toDomain(row);
+                // Deliberately does not touch the identifier cache. One row says nothing about
+                // the rest of the table, and publishing from here would narrow the set every
+                // screen shares to whatever this single lookup happened to find.
+                mainExecutor.execute(() -> callback.onSuccess(saved));
+            } catch (RuntimeException error) {
+                fail(callback, error);
+            }
+        });
+    }
+
     // --- writes --------------------------------------------------------------------------------
 
     @Override

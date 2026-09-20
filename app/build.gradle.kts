@@ -72,6 +72,7 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
 
     androidTestImplementation(libs.espresso.core)
+    androidTestImplementation(libs.espresso.accessibility)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.test.runner)
     androidTestImplementation(libs.test.core)

@@ -250,6 +250,7 @@ public class RecommendationIntegrationTest {
         RepositoryCallback<Set<String>> pending;
         public void loadSavedIds(RepositoryCallback<Set<String>> callback) { reads++; pending = callback; }
         public void loadSaved(RepositoryCallback<List<SavedAttraction>> callback) { throw new AssertionError(); }
+        public void loadSavedById(String id, RepositoryCallback<SavedAttraction> cb) { throw new AssertionError(); }
         public void save(Attraction attraction, RepositoryCallback<Boolean> callback) { throw new AssertionError(); }
         public void unsave(String id, RepositoryCallback<Boolean> callback) { throw new AssertionError(); }
         public void clearAll(RepositoryCallback<Integer> callback) { throw new AssertionError(); }
