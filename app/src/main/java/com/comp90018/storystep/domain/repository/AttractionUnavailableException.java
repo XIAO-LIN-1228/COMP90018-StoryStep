@@ -42,17 +42,36 @@ public class AttractionUnavailableException extends RuntimeException {
     }
 
     private final Reason reason;
+    private final int httpStatus;
+    private final long retryAfterMillis;
 
     public AttractionUnavailableException(Reason reason) {
-        this(reason, null);
+        this(reason, null, -1, -1L);
     }
 
     public AttractionUnavailableException(Reason reason, Throwable cause) {
+        this(reason, cause, -1, -1L);
+    }
+
+    public AttractionUnavailableException(Reason reason,
+                                          Throwable cause,
+                                          int httpStatus,
+                                          long retryAfterMillis) {
         super("Attractions unavailable: " + reason, cause);
         this.reason = Objects.requireNonNull(reason, "reason");
+        this.httpStatus = httpStatus;
+        this.retryAfterMillis = retryAfterMillis;
     }
 
     public Reason getReason() {
         return reason;
+    }
+
+    public int getHttpStatus() {
+        return httpStatus;
+    }
+
+    public long getRetryAfterMillis() {
+        return retryAfterMillis;
     }
 }

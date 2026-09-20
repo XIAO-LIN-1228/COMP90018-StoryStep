@@ -79,52 +79,72 @@ public final class OverpassAttractionSource implements AttractionSource {
     public List<Attraction> fetchNearby(GeoPoint center, double radiusMeters, int limit)
             throws AttractionUnavailableException {
         Objects.requireNonNull(center, "center");
+
         Call<OverpassResponseDto> call = service.query(
                 OverpassQueryBuilder.nearbyAttractions(center, radiusMeters, limit));
+
         Response<OverpassResponseDto> response;
+
         try {
             response = call.execute();
-            // InterruptedIOException also covers SocketTimeoutException, which is what OkHttp
-            // raises when the connect or read timeout elapses.
         } catch (InterruptedIOException timeout) {
             throw new AttractionUnavailableException(
-                    AttractionUnavailableException.Reason.TIMEOUT, timeout);
+                    AttractionUnavailableException.Reason.TIMEOUT,
+                    timeout);
         } catch (EOFException | MalformedJsonException unparseable) {
-            // Deliberately ahead of the IOException branch. Gson signals an empty body and a body
-            // that is not JSON — an Overpass HTML error page, for instance — by throwing
-            // IOException subclasses from inside the converter, so catching IOException first
-            // would report a broken payload to the user as "offline": an outage they cannot fix
-            // by finding a better signal.
             throw new AttractionUnavailableException(
-                    AttractionUnavailableException.Reason.MALFORMED, unparseable);
+                    AttractionUnavailableException.Reason.MALFORMED,
+                    unparseable);
         } catch (IOException offline) {
-            // What remains really is transport: an unreachable host, a dropped connection, a DNS
-            // failure. From the user's side these are all "no usable network right now".
             throw new AttractionUnavailableException(
-                    AttractionUnavailableException.Reason.NO_NETWORK, offline);
+                    AttractionUnavailableException.Reason.NO_NETWORK,
+                    offline);
         } catch (JsonParseException malformed) {
-            // Well-formed JSON of the wrong shape, for example a string where the array goes.
             throw new AttractionUnavailableException(
-                    AttractionUnavailableException.Reason.MALFORMED, malformed);
+                    AttractionUnavailableException.Reason.MALFORMED,
+                    malformed);
         }
 
         if (!response.isSuccessful()) {
             int code = response.code();
+
             throw new AttractionUnavailableException(
-                    code == HTTP_TOO_MANY_REQUESTS || code == HTTP_GATEWAY_TIMEOUT
+                    code == HTTP_TOO_MANY_REQUESTS
+                            || code == HTTP_GATEWAY_TIMEOUT
                             ? AttractionUnavailableException.Reason.RATE_LIMITED
-                            : AttractionUnavailableException.Reason.HTTP_ERROR);
+                            : AttractionUnavailableException.Reason.HTTP_ERROR,
+                    null,
+                    code,
+                    retryAfterMillis(response));
         }
 
-        RemoteAttractionMapper.Mapped mapped = RemoteAttractionMapper.toDomain(response.body());
+        RemoteAttractionMapper.Mapped mapped =
+                RemoteAttractionMapper.toDomain(response.body());
+
         if (mapped.isMalformed()) {
-            // A 200 whose body holds nothing this app can use is not a success. Returning an empty
-            // list would let the caller cache "there is nothing here" for a day on the strength of
-            // a broken response.
             throw new AttractionUnavailableException(
                     AttractionUnavailableException.Reason.MALFORMED);
         }
+
         return withPhotographs(mapped.getAttractions());
+    }
+
+    private static long retryAfterMillis(Response<?> response) {
+        String value = response.headers().get("Retry-After");
+
+        if (value == null) {
+            return -1L;
+        }
+
+        try {
+            long seconds = Long.parseLong(value.trim());
+
+            return seconds < 0L
+                    ? -1L
+                    : Math.multiplyExact(seconds, 1_000L);
+        } catch (NumberFormatException | ArithmeticException ignored) {
+            return -1L;
+        }
     }
 
     /**

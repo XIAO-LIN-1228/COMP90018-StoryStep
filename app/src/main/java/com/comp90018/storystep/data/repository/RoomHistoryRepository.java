@@ -222,27 +222,44 @@ public final class RoomHistoryRepository implements HistoryRepository {
     @Override
     public void clearAll(RepositoryCallback<Integer> callback) {
         requireNonNull(callback, "callback");
+
         ioExecutor.execute(new Runnable() {
             @Override
             public void run() {
                 try {
                     final int[] removed = new int[1];
+                    final List<String> removedSessionIds = new ArrayList<>();
+
                     transactions.runInTransaction(new Runnable() {
                         @Override
                         public void run() {
-                            // Finished sessions only. Their route points and visits cascade;
-                            // saved attractions have no foreign key onto any of this and are
-                            // structurally untouchable from here.
+                            List<SessionHistoryRow> finishedSessions =
+                                    sessionDao.findFinished();
+
+                            for (SessionHistoryRow session : finishedSessions) {
+                                removedSessionIds.add(session.id);
+                            }
+
                             removed[0] = sessionDao.deleteAllFinished();
                         }
                     });
-                    artifacts.discardAll();
+
+                    /*
+                     * Delete photographs only for finished sessions that belonged
+                     * to history. An unfinished active session and its photographs
+                     * must remain untouched.
+                     */
+                    for (String sessionId : removedSessionIds) {
+                        artifacts.discard(sessionId);
+                    }
+
                     mainExecutor.execute(new Runnable() {
                         @Override
                         public void run() {
                             if (removed[0] > 0) {
                                 publishChanged();
                             }
+
                             callback.onSuccess(removed[0]);
                         }
                     });
