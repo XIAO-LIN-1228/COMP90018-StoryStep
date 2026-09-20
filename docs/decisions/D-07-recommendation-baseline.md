@@ -1,0 +1,36 @@
+# REQ-21 recommendation baseline
+
+Date: 2026-09-20. Scope: teammate A, REQ-21/22.
+
+The team authorized the development plan's initial weights for this implementation. They remain
+an initial product policy, not evidence of recommendation quality or physical-device acceptance.
+
+- Score: 0.45 distance + 0.25 weather + 0.10 local time + 0.10 saved + 0.10 unvisited.
+- Distance: 1 - distance/radius. Non-finite, negative and out-of-radius distances are excluded.
+- Rain/snow: indoor 1, outdoor 0, unknown 0.5. Dry or unavailable weather is neutral (0.5).
+- Local time: 08:00 inclusive to 18:00 exclusive prefers outdoor (1); otherwise indoor (1).
+  Other venue/time combinations are neutral (0.5). These are preferences, never opening hours.
+- Known saved: 1; known unsaved: 0; unavailable saved data: 0.5.
+- Known unvisited: 1; known visited: 0; unavailable visit data: 0.5.
+- Fresh weather must match the origin's weather area, have neither timestamp in the future,
+  and have both fetch and observation age at most 30 minutes. A repository stale result is
+  always neutral. This conservative observation-age check avoids scoring with old provider data.
+- Score ties break by distance, then stable attraction ID. Nearby mode uses distance then ID.
+- Search/venue/unvisited filters apply to the entire loaded candidate set before ranking.
+  The top 30 limit applies after ranking; Wikidata popularity is not a scoring component.
+- Positive reason codes come from the same calculation as the score; missing context never
+  generates a positive weather, saved or unvisited claim.
+
+Implementation is pure Java in `domain.recommendation`. Tests use controlled weather and clocks;
+no live rain or device sensor is required to reproduce the ranking fixture (0.76 indoor,
+0.51 outdoor, and 0.635 for neutral weather at the documented equal-distance inputs).
+
+## REQ-22 integration contract
+
+Presentation reuses existing data sources. Location moves of 10 m trigger a local rerank; the
+existing 250 m attraction requery threshold is unchanged. A visible-screen 30-second timer ages
+weather and recomputes local time without HTTP. Area changes or an explicit weather refresh may
+request weather through the existing cache. Mode and filters survive Activity recreation through
+the destination ViewModel. Selection stays in the existing exploration coordinator.
+
+Field tuning, full accessibility/device acceptance and network retry/backoff remain separate work.
