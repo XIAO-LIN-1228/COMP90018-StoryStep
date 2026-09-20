@@ -31,6 +31,18 @@ public final class WeatherText {
      * @param nowMillis the current wall clock, so the age is measured rather than assumed
      */
     public static String format(Resources resources, WeatherUiState state, long nowMillis) {
+        return format(resources, state, nowMillis, true);
+    }
+
+    /**
+     * @param withSource whether to name the provider on the line itself. The explore header
+     *                   credits Open-Meteo in the sheet's footer instead, so its one line stays
+     *                   one line; everywhere else the reading carries its own credit.
+     */
+    public static String format(Resources resources,
+                                WeatherUiState state,
+                                long nowMillis,
+                                boolean withSource) {
         switch (state.getStatus()) {
             case LOADING:
                 return resources.getString(R.string.weather_loading);
@@ -43,13 +55,14 @@ public final class WeatherText {
                                 : R.string.weather_unavailable);
             case CONTENT:
             default:
-                return formatContent(resources, state, nowMillis);
+                return formatContent(resources, state, nowMillis, withSource);
         }
     }
 
     private static String formatContent(Resources resources,
                                         WeatherUiState state,
-                                        long nowMillis) {
+                                        long nowMillis,
+                                        boolean withSource) {
         String temperature = resources.getString(R.string.weather_temperature,
                 Math.round(state.getTemperatureCelsius()));
         String condition = resources.getString(conditionLabel(state.getCondition()));
@@ -65,7 +78,9 @@ public final class WeatherText {
             reading = append(resources, reading,
                     resources.getString(R.string.weather_reference_area));
         }
-        return append(resources, reading, resources.getString(R.string.weather_source));
+        return withSource
+                ? append(resources, reading, resources.getString(R.string.weather_source))
+                : reading;
     }
 
     /**

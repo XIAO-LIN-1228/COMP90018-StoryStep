@@ -462,8 +462,10 @@ public class NearbyAttractionsFragment extends Fragment
         // should reduce what the screen claims, not empty it.
         list.setVisibility(hasItems ? View.VISIBLE : View.GONE);
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
-        originLabel.setText(provenanceLine(state));
-        originLabel.setVisibility(View.VISIBLE);
+        // The provenance line is folded into the sheet's one-line footer (list_credit); here it
+        // only keeps the stale banner in step. The freshness notice still matters on its own.
+        provenanceLine(state);
+        originLabel.setVisibility(View.GONE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -692,7 +694,7 @@ public class NearbyAttractionsFragment extends Fragment
      */
     private void renderWeather(WeatherUiState state) {
         weatherReading.setText(
-                WeatherText.format(getResources(), state, System.currentTimeMillis()));
+                WeatherText.format(getResources(), state, System.currentTimeMillis(), false));
         weatherCard.setClickable(state.isRetryable());
     }
 
@@ -711,7 +713,7 @@ public class NearbyAttractionsFragment extends Fragment
         updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        originLabel.setVisibility(View.VISIBLE);
+        originLabel.setVisibility(View.GONE);
         listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
         // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
         // bar as well as the floating action; expanded, the credit line already does that.
