@@ -1,19 +1,28 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
 <data-extraction-rules>
+
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <!-- Exclude all Room-managed project data from cloud backup. -->
+        <exclude
+            domain="database"
+            path="." />
+
+        <!-- Exclude private journey photographs from cloud backup. -->
+        <exclude
+            domain="file"
+            path="journeys/" />
     </cloud-backup>
-    <!--
+
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <!-- Do not transfer session, history, saved or cached database data. -->
+        <exclude
+            domain="database"
+            path="." />
+
+        <!-- Do not transfer private journey photographs. -->
+        <exclude
+            domain="file"
+            path="journeys/" />
     </device-transfer>
-    -->
+
 </data-extraction-rules>

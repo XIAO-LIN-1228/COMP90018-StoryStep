@@ -64,28 +64,42 @@ public final class JourneyPhotoStore {
     /** Removes every session's photographs. */
     public static void deleteEverything(Context context) {
         File root = new File(context.getFilesDir(), "journeys");
-        File[] sessions = root.listFiles();
-        if (sessions != null) {
-            for (File session : sessions) {
-                deleteAll(context, session.getName());
-            }
-        }
-        //noinspection ResultOfMethodCallIgnored
-        root.delete();
+        deleteRecursively(root);
     }
 
     /** Removes the session's directory and everything in it. Safe when there is none. */
     public static void deleteAll(Context context, String sessionId) {
-        File directory = directory(context, sessionId);
-        File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                //noinspection ResultOfMethodCallIgnored
-                file.delete();
+        deleteRecursively(directory(context, sessionId));
+    }
+
+    /**
+     * Recursively removes one file or directory.
+     *
+     * <p>A failed deletion is reported instead of silently leaving private
+     * photographs behind.
+     */
+    private static void deleteRecursively(File target) {
+        if (!target.exists()) {
+            return;
+        }
+
+        if (target.isDirectory()) {
+            File[] children = target.listFiles();
+
+            if (children == null) {
+                throw new IllegalStateException(
+                        "Unable to inspect photo directory: " + target);
+            }
+
+            for (File child : children) {
+                deleteRecursively(child);
             }
         }
-        //noinspection ResultOfMethodCallIgnored
-        directory.delete();
+
+        if (!target.delete() && target.exists()) {
+            throw new IllegalStateException(
+                    "Unable to delete session artifact: " + target);
+        }
     }
 
     @Nullable

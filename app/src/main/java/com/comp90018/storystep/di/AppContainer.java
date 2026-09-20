@@ -13,6 +13,8 @@ import com.comp90018.storystep.data.local.StoryStepDatabase;
 import com.comp90018.storystep.data.remote.ApiClientFactory;
 import com.comp90018.storystep.data.remote.OverpassAttractionSource;
 import com.comp90018.storystep.data.remote.RetrofitWeatherSource;
+import com.comp90018.storystep.data.remote.RetryingAttractionSource;
+import com.comp90018.storystep.data.remote.RetryingWeatherSource;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
 import com.comp90018.storystep.data.repository.AttractionCache;
 import com.comp90018.storystep.data.repository.CachedAttractionRepository;
@@ -113,13 +115,14 @@ public class AppContainer {
                 ? attractionRepository
                 : new CachedAttractionRepository(
                         attractionCache,
+                new RetryingAttractionSource(
                         new OverpassAttractionSource(
                                 ApiClientFactory.createOverpassService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikidataService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikipediaService(
-                                        isDebuggable(this.applicationContext))),
+                                        isDebuggable(this.applicationContext)))),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),
                         clock,
@@ -135,8 +138,10 @@ public class AppContainer {
         // issuing its own request for the same observation.
         this.weatherRepository = new CachedWeatherRepository(
                 database.weatherCacheDao(),
-                new RetrofitWeatherSource(
-                        ApiClientFactory.createWeatherService(isDebuggable(this.applicationContext))),
+                new RetryingWeatherSource(
+                        new RetrofitWeatherSource(
+                                ApiClientFactory.createWeatherService(
+                                        isDebuggable(this.applicationContext)))),
                 new AndroidConnectivityMonitor(this.applicationContext),
                 WeatherFreshnessPolicy.defaultPolicy(),
                 clock,
