@@ -6,7 +6,24 @@
 
 StoryStep helps tourists discover nearby attractions using location, motion, orientation, weather, and cloud data. As users explore an area, the app provides approximate directional guidance and reveals information about nearby landmarks.
 
-**Project status:** Planning and foundation development.
+**Project status:** Core flows implemented; recommendation integration and final acceptance in progress.
+
+The app uses real OpenStreetMap attractions, map tiles and Open-Meteo weather, with Room persistence
+(schema v9), foreground exploration, arrival stories, saved places and journey history. Contextual
+ranking and Recommended/Nearby controls are implemented in the teammate A branches using
+the [initial scoring policy](docs/decisions/D-07-recommendation-baseline.md). Profile now reads local
+counts and device capabilities; the obsolete memory editor is removed. These implementation claims
+are not release acceptance: network retry/backoff, saved-detail cache fallback, backup exclusions,
+and physical-device/accessibility/compatibility verification still require completion.
+
+See the [teammate A evidence](docs/verification/EV-REQ21-REQ22-2026-09-20-01.md) for commands,
+results and unexecuted checks. Older plan/ledger entries describe earlier commits and must not be
+used to infer that an already implemented feature needs rebuilding.
+
+For the current local `feature/context-recommendations` review, see the [execution plan](docs/teammate-a-execution-plan.md),
+[test plan](docs/teammate-a-test-plan.md) and [review report](docs/verification/EV-TEAM-A-REVIEW-2026-09-20.md).
+The review fixes saved-context read recovery and records 721 passing JVM tests;
+Android/device acceptance remains outstanding.
 
 [View UI implementation screenshots](docs/design/implementation/)
 

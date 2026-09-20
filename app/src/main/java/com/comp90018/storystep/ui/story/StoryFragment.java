@@ -33,6 +33,7 @@ public class StoryFragment extends Fragment {
     private TextView placeNameView;
     private TextView storyView;
     private ImageView heroView;
+    private TextView attributionView;
 
     @Nullable
     @Override
@@ -48,13 +49,10 @@ public class StoryFragment extends Fragment {
         placeNameView = view.findViewById(R.id.story_place_name);
         storyView = view.findViewById(R.id.story_body);
         heroView = view.findViewById(R.id.story_hero);
+        attributionView = view.findViewById(R.id.story_attribution);
 
         view.findViewById(R.id.story_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
-        view.findViewById(R.id.add_memory_button).setOnClickListener(v ->
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_story_to_memory));
-
         viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(StoryViewModel.class);
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
@@ -71,6 +69,7 @@ public class StoryFragment extends Fragment {
     }
 
     private void render(StoryUiState state) {
+        attributionView.setVisibility(state.isLoading() ? View.GONE : View.VISIBLE);
         if (state.isLoading()) {
             placeNameView.setText(R.string.story_toolbar_title);
             storyView.setText(R.string.story_loading);
@@ -84,6 +83,11 @@ public class StoryFragment extends Fragment {
         storyView.setText(state.hasStory()
                 ? state.getStory()
                 : getString(R.string.story_no_content));
+        int credit = state.getProvenance() == null ? R.string.story_source_unrecorded
+                : com.comp90018.storystep.ui.AttributionText.attributionFor(state.getProvenance());
+        attributionView.setText(state.isArchived()
+                ? getString(R.string.story_snapshot_credit, getString(credit), getString(R.string.story_saved_snapshot))
+                : getString(credit));
         if (state.getAttractionId() != null) {
             heroView.setImageResource(AttractionArtwork.heroDrawableFor(state.getAttractionId()));
         }

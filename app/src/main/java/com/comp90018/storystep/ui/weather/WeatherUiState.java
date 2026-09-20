@@ -132,6 +132,7 @@ public final class WeatherUiState {
      * asking again immediately is a loop rather than a recovery.
      */
     public boolean isRetryable() {
+        if (isStale()) { return true; }
         if (status != Status.UNAVAILABLE) {
             return false;
         }

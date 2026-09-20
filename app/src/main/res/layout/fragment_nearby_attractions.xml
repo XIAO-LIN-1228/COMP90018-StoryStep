@@ -81,28 +81,7 @@
                 android:textColor="@color/story_ink_2" />
         </com.google.android.material.card.MaterialCardView>
 
-        <HorizontalScrollView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_12"
-            android:clipToPadding="false"
-            android:scrollbars="none">
 
-<com.google.android.material.chip.ChipGroup
-        android:id="@+id/filter_group"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/space_16"
-        android:layout_marginTop="@dimen/space_8"
-        android:layout_marginEnd="@dimen/space_16"
-        android:visibility="gone">
-
-        <com.google.android.material.chip.Chip android:id="@+id/chip_all" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/home_filter_all" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_indoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_indoor" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_outdoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_outdoor" />
-        <com.google.android.material.chip.Chip android:id="@+id/chip_unvisited" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_unvisited" />
-    </com.google.android.material.chip.ChipGroup>
-        </HorizontalScrollView>
     </LinearLayout>
 
     <!-- The sheet: resting shows the first places; a pull fills the screen. -->
@@ -159,6 +138,32 @@
                 android:visibility="gone" />
         </LinearLayout>
 
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/ordering_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            app:singleSelection="true"
+            app:selectionRequired="true">
+            <com.google.android.material.chip.Chip
+                android:id="@+id/order_recommended"
+                style="@style/Widget.StoryStep.Chip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="@string/order_recommended"
+                app:ensureMinTouchTargetSize="true" />
+            <com.google.android.material.chip.Chip
+                android:id="@+id/order_nearby"
+                style="@style/Widget.StoryStep.Chip"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checkable="true"
+                android:text="@string/order_nearby"
+                app:ensureMinTouchTargetSize="true" />
+        </com.google.android.material.chip.ChipGroup>
+
         <TextView
             android:id="@+id/unlock_progress"
             style="@style/Widget.StoryStep.Pill"
@@ -168,6 +173,29 @@
             android:visibility="gone"
             app:drawableStartCompat="@drawable/ic_lock_outline"
             app:drawableTint="@color/story_signal_ink" />
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:clipToPadding="false"
+            android:scrollbars="none">
+
+<com.google.android.material.chip.ChipGroup
+        android:id="@+id/filter_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_16"
+        android:layout_marginTop="@dimen/space_8"
+        android:layout_marginEnd="@dimen/space_16"
+        android:visibility="gone">
+
+        <com.google.android.material.chip.Chip android:id="@+id/chip_all" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:text="@string/home_filter_all" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_indoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_indoor" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_outdoor" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_outdoor" />
+        <com.google.android.material.chip.Chip android:id="@+id/chip_unvisited" style="@style/Widget.StoryStep.Chip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/home_filter_unvisited" />
+    </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
 
 <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/search_container"
@@ -231,8 +259,11 @@
         <!-- Kept for the fragment's binding; the provenance line no longer shows here. -->
         <TextView
             android:id="@+id/origin_label"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:textAppearance="@style/TextAppearance.StoryStep.Supporting"
             android:visibility="gone" />
 
 <LinearLayout

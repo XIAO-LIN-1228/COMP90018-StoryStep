@@ -63,6 +63,23 @@ public class ExplorationFragment extends Fragment {
     private TextView movementView;
     private TextView weatherView;
     private WeatherViewModel weatherViewModel;
+    private final android.os.Handler weatherHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable weatherTick = new Runnable() {
+        @Override public void run() {
+            weatherViewModel.refreshAge();
+            weatherHandler.postDelayed(this, 30_000L);
+        }
+    };
+
+    @Override public void onStart() {
+        super.onStart();
+        weatherHandler.post(weatherTick);
+    }
+
+    @Override public void onStop() {
+        weatherHandler.removeCallbacks(weatherTick);
+        super.onStop();
+    }
     private ImageView directionArrow;
     private MaterialButton resumeButton;
     private MaterialButton retrySaveButton;

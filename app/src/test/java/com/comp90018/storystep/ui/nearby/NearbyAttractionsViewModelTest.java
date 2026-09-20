@@ -86,8 +86,10 @@ public class NearbyAttractionsViewModelTest {
     private static NearbyAttractionsViewModel viewModelFor(AttractionRepository repository,
                                                            double radiusMeters,
                                                            SavedAttractionRepository saved) {
-        return new NearbyAttractionsViewModel(
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(
                 repository, saved, ORIGIN, radiusMeters, coordinator());
+        model.setOrdering(com.comp90018.storystep.domain.recommendation.RecommendationEngine.Mode.NEARBY);
+        return model;
     }
 
     /**

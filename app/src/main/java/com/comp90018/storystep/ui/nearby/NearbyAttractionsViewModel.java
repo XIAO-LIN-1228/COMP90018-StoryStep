@@ -1,5 +1,7 @@
 package com.comp90018.storystep.ui.nearby;
 
+import java.util.Calendar;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
@@ -20,6 +22,11 @@ import com.comp90018.storystep.domain.repository.HistoryRepository;
 import com.comp90018.storystep.domain.repository.AttractionUnavailableException;
 import com.comp90018.storystep.domain.repository.RepositoryCallback;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
+import com.comp90018.storystep.domain.recommendation.RecommendationEngine;
+import com.comp90018.storystep.domain.recommendation.RecommendationEngine.Mode;
+import com.comp90018.storystep.domain.time.Clock;
+import com.comp90018.storystep.domain.weather.WeatherResult;
+import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.platform.location.LocationAccess;
 import com.comp90018.storystep.platform.location.LocationSource;
 
@@ -56,6 +63,15 @@ public class NearbyAttractionsViewModel extends ViewModel
     private final GeoPoint referenceOrigin;
     private final double radiusMeters;
     private final ExplorationCoordinator coordinator;
+    private final Clock clock;
+    private final RecommendationEngine recommendations = new RecommendationEngine();
+    private final MutableLiveData<Mode> ordering = new MutableLiveData<>(Mode.RECOMMENDED);
+    private WeatherResult recommendationWeather;
+    private boolean savedKnown;
+    private boolean savedReadInFlight;
+    private int savedVersion;
+    private boolean visitedKnown;
+    private int visitedGeneration;
 
     private final MutableLiveData<NearbyUiState> uiState = new MutableLiveData<>();
     private final MutableLiveData<Boolean> saveFailed = new MutableLiveData<>(false);
@@ -83,6 +99,8 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     /** Origin the last repository query used; drives the movement threshold. */
     private GeoPoint lastQueryOrigin;
+    private GeoPoint lastRankOrigin;
+    private static final double RERANK_DISTANCE_METERS = 10.0;
 
     private NearbyUiState.OriginLabel originLabel = NearbyUiState.OriginLabel.REFERENCE_AREA;
 
@@ -128,16 +146,39 @@ public class NearbyAttractionsViewModel extends ViewModel
                                       double radiusMeters,
                                       ExplorationCoordinator coordinator,
                                       @androidx.annotation.Nullable HistoryRepository history) {
+        this(repository, savedAttractions, referenceOrigin, radiusMeters, coordinator, history,
+                new Clock() {
+                    public long wallClockMillis() { return System.currentTimeMillis(); }
+                    public long monotonicMillis() { return System.nanoTime() / 1_000_000L; }
+                });
+    }
+
+    public NearbyAttractionsViewModel(AttractionRepository repository,
+            SavedAttractionRepository savedAttractions, GeoPoint referenceOrigin,
+            double radiusMeters, ExplorationCoordinator coordinator, HistoryRepository history,
+            Clock clock) {
         this.repository = repository;
+        this.clock = clock;
         this.savedAttractions = savedAttractions;
         this.referenceOrigin = referenceOrigin;
         this.radiusMeters = radiusMeters;
         this.coordinator = coordinator;
         this.history = history;
         this.currentOrigin = referenceOrigin;
-        mapOrigin.setValue(referenceOrigin);
+        LocationSample lastSample = coordinator.routeSnapshot().getLastSample();
+        SessionState initialState = coordinator.summary().getState();
+        if (lastSample != null && (initialState == SessionState.ACTIVE || initialState == SessionState.PAUSED)) {
+            currentOrigin = lastSample.getPosition();
+            liveLabel = coordinator.getAccess() == LocationAccess.APPROXIMATE
+                    ? NearbyUiState.OriginLabel.LIVE_APPROXIMATE : NearbyUiState.OriginLabel.LIVE_PRECISE;
+            originLabel = liveLabel;
+        }
+        mapOrigin.setValue(currentOrigin);
         coordinator.addObserver(this);
         savedAttractions.addObserver(this);
+        // The immediate observer replay can be an unloaded repository's empty placeholder.
+        savedKnown = false;
+        reloadSavedIfUnknown();
         if (history != null) {
             history.addObserver(historyObserver);
             reloadVisited();
@@ -146,6 +187,66 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     public LiveData<AttractionFilter> getFilter() {
         return filterState;
+    }
+
+    public LiveData<Mode> getOrdering() { return ordering; }
+
+    public void setOrdering(Mode mode) {
+        if (mode != null && mode != ordering.getValue()) {
+            ordering.setValue(mode);
+            refreshContext();
+        }
+    }
+
+    public void onWeatherChanged(WeatherResult result) {
+        recommendationWeather = result;
+        refreshContext();
+    }
+
+    /** Called while visible, including after returning from settings; never issues HTTP calls. */
+    public void refreshContext() {
+        NearbyUiState current = uiState.getValue();
+        if (current == null) { return; }
+        if (current.getStatus() == NearbyUiState.Status.CONTENT
+                || current.getStatus() == NearbyUiState.Status.EMPTY) {
+            publishContent(loadedAttractions);
+        } else if (!loadedAttractions.isEmpty() && current.getStatus() != NearbyUiState.Status.LOADING
+                && current.getStatus() != NearbyUiState.Status.ERROR) {
+            uiState.setValue(current.withItems(toItems(loadedAttractions)));
+        }
+    }
+
+    /** Reconcile changes made while this destination was not visible. */
+    public void onVisible() {
+        reloadSavedIfUnknown();
+        reloadVisited();
+        refreshContext();
+    }
+
+    /** Retry a failed local read on return, without duplicating a read or replacing a newer save. */
+    private void reloadSavedIfUnknown() {
+        if (savedKnown || savedReadInFlight) { return; }
+        savedReadInFlight = true;
+        final int savedReadVersion = savedVersion;
+        savedAttractions.loadSavedIds(new RepositoryCallback<Set<String>>() {
+            @Override public void onSuccess(Set<String> ids) {
+                savedReadInFlight = false;
+                if (savedVersion == savedReadVersion) { onSavedIdsChanged(ids); }
+            }
+            @Override public void onError(Throwable error) {
+                savedReadInFlight = false;
+                // Unknown remains neutral until a later visible-screen read or observer update.
+            }
+        });
+    }
+
+    @Override public void onPendingStoryChanged(Visit visit) {
+        if (visit != null) {
+            visitedIds = new HashSet<>(visitedIds);
+            visitedIds.add(visit.getAttractionId());
+            refreshContext();
+            reloadVisited();
+        }
     }
 
     /** {visited, total} among the places currently loaded, independent of the filter. */
@@ -160,35 +261,37 @@ public class NearbyAttractionsViewModel extends ViewModel
         }
         filter = newFilter;
         filterState.setValue(newFilter);
-        NearbyUiState current = uiState.getValue();
-        if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
-            publishContent(loadedAttractions);
-        }
+        refreshContext();
     }
 
     private void reloadVisited() {
         if (history == null) {
             return;
         }
+        final int generation = ++visitedGeneration;
         history.loadVisitedAttractionIds(new RepositoryCallback<Set<String>>() {
             @Override
             public void onSuccess(Set<String> ids) {
+                if (generation != visitedGeneration) { return; }
+                visitedKnown = true;
                 visitedIds = ids;
-                NearbyUiState current = uiState.getValue();
-                if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
-                    publishContent(loadedAttractions);
-                }
+                refreshContext();
             }
 
             @Override
             public void onError(Throwable error) {
-                // Visits are a refinement of the list, not the list: keep what we have.
+                if (generation != visitedGeneration) { return; }
+                visitedKnown = false;
+                refreshContext();
             }
         });
     }
 
     @Override
     protected void onCleared() {
+        ++requestGeneration;
+        ++visitedGeneration;
+        ++savedVersion;
         // Both collaborators outlive this ViewModel; leaving the observers registered would keep a
         // destroyed screen's state alive and publishing.
         coordinator.removeObserver(this);
@@ -356,13 +459,12 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     @Override
     public void onSavedIdsChanged(Set<String> ids) {
+        ++savedVersion;
+        savedKnown = true;
         savedIds = ids;
         // Rebuild the rows from what is already loaded: the saved state changed, the candidate set
         // did not, so there is nothing to ask the repository for.
-        NearbyUiState current = uiState.getValue();
-        if (current != null && current.getStatus() == NearbyUiState.Status.CONTENT) {
-            publishContent(loadedAttractions);
-        }
+        refreshContext();
     }
 
     private Attraction findLoaded(String attractionId) {
@@ -412,6 +514,7 @@ public class NearbyAttractionsViewModel extends ViewModel
     public void onSample(LocationSample sample) {
         GeoPoint acceptedOrigin = sample.getPosition();
         boolean firstFix = lastQueryOrigin == null;
+        boolean relabel = originLabel != liveLabel;
         currentOrigin = acceptedOrigin;
         mapOrigin.setValue(acceptedOrigin);
         originLabel = liveLabel;
@@ -420,8 +523,11 @@ public class NearbyAttractionsViewModel extends ViewModel
                 || GeoCalculator.distanceMeters(lastQueryOrigin, acceptedOrigin)
                         >= REQUERY_DISTANCE_METERS) {
             query(acceptedOrigin);
-        } else {
-            // Same candidate set, new distances and therefore possibly a new order.
+        } else if (relabel || lastRankOrigin == null
+                || GeoCalculator.distanceMeters(lastRankOrigin, acceptedOrigin) >= RERANK_DISTANCE_METERS
+                || uiState.getValue() == null
+                || (uiState.getValue().getStatus() != NearbyUiState.Status.CONTENT
+                        && uiState.getValue().getStatus() != NearbyUiState.Status.EMPTY)) {
             publishContent(loadedAttractions);
         }
     }
@@ -493,13 +599,14 @@ public class NearbyAttractionsViewModel extends ViewModel
         if (current == null) {
             return;
         }
-        if (current.getStatus() == NearbyUiState.Status.CONTENT) {
+        if ((current.getStatus() == NearbyUiState.Status.CONTENT || current.getStatus() == NearbyUiState.Status.EMPTY)) {
             publishContent(loadedAttractions);
         } else if (current.getStatus() == NearbyUiState.Status.LOADING) {
             uiState.setValue(NearbyUiState.loading(originLabel, sessionPhase));
         } else {
             uiState.setValue(NearbyUiState.blocked(
-                    current.getStatus(), originLabel, sessionPhase, current.getItems()));
+                    current.getStatus(), originLabel, sessionPhase, current.getItems(),
+                    loadedFreshness, provenancesOf(loadedAttractions)));
         }
     }
 
@@ -543,6 +650,7 @@ public class NearbyAttractionsViewModel extends ViewModel
     }
 
     private void publishContent(List<Attraction> attractions) {
+        lastRankOrigin = currentOrigin;
         int visited = 0;
         for (Attraction attraction : attractions) {
             if (visitedIds.contains(attraction.getId())) {
@@ -567,46 +675,38 @@ public class NearbyAttractionsViewModel extends ViewModel
         List<AttractionListItem> retained = uiState.getValue() == null
                 ? Collections.<AttractionListItem>emptyList()
                 : uiState.getValue().getItems();
-        uiState.setValue(NearbyUiState.blocked(status, originLabel, sessionPhase, retained));
+        uiState.setValue(NearbyUiState.blocked(status, originLabel, sessionPhase, retained,
+                loadedFreshness, provenancesOf(loadedAttractions)));
     }
 
     private List<AttractionListItem> toItems(List<Attraction> attractions) {
-        List<AttractionListItem> items = new ArrayList<>(attractions.size());
+        List<Attraction> candidates = new ArrayList<>();
         for (Attraction attraction : attractions) {
-            boolean visited = visitedIds.contains(attraction.getId());
-            if (!filter.matches(attraction.getName(), attraction.getIndoor(), visited)) {
-                continue;
+            if (filter.matches(attraction.getName(), attraction.getIndoor(),
+                    visitedIds.contains(attraction.getId()))) {
+                candidates.add(attraction);
             }
-            items.add(new AttractionListItem(
-                    attraction.getId(),
-                    attraction.getName(),
-                    attraction.getCategory(),
-                    GeoCalculator.distanceMeters(currentOrigin, attraction.getLocation()),
-                    savedIds.contains(attraction.getId()),
-                    attraction.getLocation(),
-                    attraction.getIndoor(),
-                    visited,
-                    attraction.getImageUrl(),
-                    attraction.getPopularity(),
-                    attraction.getDescription()));
         }
-        // The repository sorts by distance from the origin it was queried with. After the user
-        // moves without triggering a re-query, that order is stale, so sort by the distances just
-        // computed. Ties break on id to keep the order reproducible.
-        // The best-known places first - Wikidata's sitelink count - with distance deciding
-        // among places nobody has written about, and the id keeping the order reproducible.
-        // Then the top thirty: a list of everything within a kilometre is a directory, not a
-        // recommendation.
-        Collections.sort(items, (first, second) -> {
-            int byPopularity = Integer.compare(second.getPopularity(), first.getPopularity());
-            if (byPopularity != 0) {
-                return byPopularity;
-            }
-            int byDistance = Double.compare(
-                    first.getDistanceMeters(), second.getDistanceMeters());
-            return byDistance != 0 ? byDistance : first.getId().compareTo(second.getId());
-        });
-        return items.size() > TOP_PLACES ? new ArrayList<>(items.subList(0, TOP_PLACES)) : items;
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(clock.wallClockMillis());
+        List<RecommendationEngine.RankedAttraction> ranked = recommendations.rank(
+                candidates, currentOrigin, radiusMeters,
+                RecommendationEngine.usableWeather(recommendationWeather, currentOrigin,
+                        clock.wallClockMillis()), calendar.get(Calendar.HOUR_OF_DAY),
+                savedKnown ? savedIds : null, visitedKnown ? visitedIds : null,
+                ordering.getValue(), TOP_PLACES);
+        List<AttractionListItem> items = new ArrayList<>();
+        for (RecommendationEngine.RankedAttraction rankedItem : ranked) {
+            Attraction attraction = rankedItem.attraction;
+            items.add(new AttractionListItem(attraction.getId(), attraction.getName(),
+                    attraction.getCategory(), rankedItem.distanceMeters,
+                    savedIds.contains(attraction.getId()), attraction.getLocation(),
+                    attraction.getIndoor(), visitedIds.contains(attraction.getId()),
+                    attraction.getImageUrl(), attraction.getPopularity(), attraction.getDescription(),
+                    ordering.getValue() == Mode.RECOMMENDED
+                            ? rankedItem.score.reasons : Collections.emptyList()));
+        }
+        return items;
     }
 
     /** How many places the nearby list shows. */

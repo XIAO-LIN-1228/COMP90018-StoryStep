@@ -1,5 +1,10 @@
 package com.comp90018.storystep.ui.nearby;
 
+import com.comp90018.storystep.domain.recommendation.RecommendationEngine.Reason;
+import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.comp90018.storystep.domain.model.AttractionCategory;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.IndoorClassification;
@@ -29,6 +34,11 @@ public final class AttractionListItem {
     @Nullable private final String imageUrl;
     private final int popularity;
     private final String description;
+    private final List<Reason> reasons;
+
+    public List<Reason> getReasons() {
+        return reasons;
+    }
 
     public AttractionListItem(String id,
                               String name,
@@ -85,6 +95,15 @@ public final class AttractionListItem {
                               @Nullable String imageUrl,
                               int popularity,
                               String description) {
+        this(id, name, category, distanceMeters, saved, location, indoor, visited, imageUrl,
+                popularity, description, Collections.emptyList());
+    }
+
+    public AttractionListItem(String id, String name, AttractionCategory category,
+            double distanceMeters, boolean saved, GeoPoint location, IndoorClassification indoor,
+            boolean visited, String imageUrl, int popularity, String description,
+            List<Reason> reasons) {
+        this.reasons = Collections.unmodifiableList(new ArrayList<>(reasons));
         this.description = Objects.requireNonNull(description, "description");
         this.popularity = popularity;
         this.imageUrl = imageUrl;
@@ -165,11 +184,12 @@ public final class AttractionListItem {
                 && name.equals(that.name)
                 && category == that.category
                 && Objects.equals(imageUrl, that.imageUrl)
-                && description.equals(that.description);
+                && description.equals(that.description)
+                && indoor == that.indoor && visited == that.visited && reasons.equals(that.reasons);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, category, distanceMeters, saved, imageUrl, description);
+        return Objects.hash(id, name, category, distanceMeters, saved, imageUrl, description, indoor, visited, reasons);
     }
 }

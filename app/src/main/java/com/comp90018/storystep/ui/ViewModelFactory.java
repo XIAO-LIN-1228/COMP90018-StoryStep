@@ -1,5 +1,7 @@
 package com.comp90018.storystep.ui;
 
+import com.comp90018.storystep.ui.profile.ProfileViewModel;
+
 import android.app.Application;
 
 import androidx.annotation.NonNull;
@@ -49,7 +51,7 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getReferenceOrigin(),
                     appContainer.getNearbySearchRadiusMeters(),
                     appContainer.getExplorationCoordinator(),
-                    appContainer.getHistoryRepository());
+                    appContainer.getHistoryRepository(), appContainer.getClock());
         }
         if (modelClass.isAssignableFrom(AttractionDetailViewModel.class)) {
             return (T) new AttractionDetailViewModel(
@@ -76,12 +78,16 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new WeatherViewModel(
                     appContainer.getWeatherRepository(),
                     appContainer.getExplorationCoordinator(),
-                    appContainer.getReferenceOrigin());
+                    appContainer.getReferenceOrigin(), appContainer.getClock());
         }
         if (modelClass.isAssignableFrom(SavedViewModel.class)) {
             return (T) new SavedViewModel(
                     appContainer.getSavedAttractionRepository(),
                     appContainer.getReferenceOrigin());
+        }
+        if (modelClass.isAssignableFrom(ProfileViewModel.class)) {
+            return (T) new ProfileViewModel(
+                    appContainer.getHistoryRepository(), appContainer.getSavedAttractionRepository());
         }
         if (modelClass.isAssignableFrom(PrivacyDataViewModel.class)) {
             return (T) new PrivacyDataViewModel(

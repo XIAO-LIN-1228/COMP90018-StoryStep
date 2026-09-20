@@ -17,6 +17,9 @@ import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.LocationOrigin;
 import com.comp90018.storystep.domain.model.LocationSample;
 import com.comp90018.storystep.domain.model.WeatherCondition;
+import com.comp90018.storystep.domain.model.WeatherSnapshot;
+import com.comp90018.storystep.domain.repository.RepositoryCallback;
+import com.comp90018.storystep.domain.weather.WeatherResult;
 import com.comp90018.storystep.domain.repository.WeatherUnavailableException;
 import com.comp90018.storystep.domain.session.FakeClock;
 import com.comp90018.storystep.domain.weather.WeatherAreaBucket;
@@ -66,7 +69,7 @@ public class WeatherViewModelTest {
         CachedWeatherRepository repository = new CachedWeatherRepository(dao, source,
                 () -> online, WeatherFreshnessPolicy.defaultPolicy(), clock,
                 Runnable::run, Runnable::run);
-        return new WeatherViewModel(repository, coordinator, REFERENCE);
+        return new WeatherViewModel(repository, coordinator, REFERENCE, clock);
     }
 
     /**
@@ -233,8 +236,8 @@ public class WeatherViewModelTest {
     }
 
     @Test
-    public void aFailureForANewAreaKeepsTheObservationAlreadyOnScreen() {
-        // Walking out of coverage must not blank a temperature that is still broadly true.
+    public void aFailureForANewAreaCannotUseThePreviousAreasWeather() {
+        // Another city cannot inherit the previous city's weather for display or scoring.
         WeatherViewModel viewModel = viewModel();
         viewModel.load();
         source.failure =
@@ -244,7 +247,8 @@ public class WeatherViewModelTest {
 
         WeatherUiState state = viewModel.getUiState().getValue();
         assertNotNull(state);
-        assertEquals(WeatherUiState.Status.CONTENT, state.getStatus());
+        assertEquals(WeatherUiState.Status.UNAVAILABLE, state.getStatus());
+        org.junit.Assert.assertNull(viewModel.getContextWeather().getValue());
     }
 
     @Test
@@ -290,6 +294,64 @@ public class WeatherViewModelTest {
         WeatherUiState state = viewModel.getUiState().getValue();
         assertNotNull(state);
         assertEquals(WeatherUiState.Status.CONTENT, state.getStatus());
+    }
+
+    @Test public void visibleClockExpiryNeutralizesWeatherWithoutARequest() {
+        WeatherViewModel model = viewModel();
+        model.load();
+        int requests = source.requestCount();
+        clock.advance(31 * 60_000L);
+        model.refreshAge();
+        assertEquals(WeatherFreshness.STALE, model.getContextWeather().getValue().getFreshness());
+        assertTrue(model.getUiState().getValue().isStale());
+        assertEquals(requests, source.requestCount());
+        clock.advance(6 * 60 * 60_000L);
+        model.refreshAge();
+        org.junit.Assert.assertNull(model.getContextWeather().getValue());
+        assertEquals(WeatherUiState.Status.UNAVAILABLE, model.getUiState().getValue().getStatus());
+        assertEquals(requests, source.requestCount());
+    }
+
+    @Test public void lateWeatherReadCannotRestoreTheAreaTheUserAlreadyLeft() {
+        java.util.List<RepositoryCallback<WeatherResult>> reads = new java.util.ArrayList<>();
+        WeatherViewModel model = new WeatherViewModel(weatherReads(callback -> reads.add(callback)),
+                coordinator, REFERENCE, clock);
+        model.load();
+        model.onSample(sampleAt(FAR_AWAY));
+        WeatherResult current = new WeatherResult(new WeatherSnapshot(WeatherAreaBucket.of(FAR_AWAY).key(),
+                WeatherCondition.CLEAR, 20, START, START, WeatherSnapshot.Provenance.NETWORK), WeatherFreshness.FRESH);
+        reads.get(1).onSuccess(current);
+        reads.get(0).onSuccess(new WeatherResult(new WeatherSnapshot(WeatherAreaBucket.of(REFERENCE).key(),
+                WeatherCondition.RAIN, 10, START, START, WeatherSnapshot.Provenance.NETWORK), WeatherFreshness.FRESH));
+        assertEquals(current, model.getContextWeather().getValue());
+        assertEquals(WeatherCondition.CLEAR, model.getUiState().getValue().getCondition());
+        model.load();
+        model.onCleared();
+        reads.get(2).onError(new IllegalStateException("late failure"));
+        assertEquals(current, model.getContextWeather().getValue());
+    }
+
+    @Test public void recentlyFetchedOldOrFutureObservationsAreNotDisplayedAsFresh() {
+        for (long observed : new long[] {START - 31 * 60_000L, START + 1}) {
+            WeatherResult result = new WeatherResult(new WeatherSnapshot(WeatherAreaBucket.of(REFERENCE).key(),
+                    WeatherCondition.RAIN, 10, observed, START, WeatherSnapshot.Provenance.NETWORK), WeatherFreshness.FRESH);
+            WeatherViewModel model = new WeatherViewModel(weatherReads(callback -> callback.onSuccess(result)),
+                    coordinator, REFERENCE, clock);
+            model.load();
+            assertTrue(model.getUiState().getValue().isStale());
+            assertEquals(WeatherFreshness.STALE, model.getContextWeather().getValue().getFreshness());
+            model.onCleared();
+        }
+    }
+
+    private static com.comp90018.storystep.domain.repository.WeatherRepository weatherReads(
+            java.util.function.Consumer<RepositoryCallback<WeatherResult>> read) {
+        return new com.comp90018.storystep.domain.repository.WeatherRepository() {
+            @Override public void loadWeather(GeoPoint point, RepositoryCallback<WeatherResult> callback) {
+                read.accept(callback);
+            }
+            @Override public void clearCache(RepositoryCallback<Integer> callback) { throw new AssertionError(); }
+        };
     }
 
     private void seedCacheFor(GeoPoint position, WeatherCondition condition, long fetchedAt) {
