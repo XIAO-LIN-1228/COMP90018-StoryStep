@@ -68,6 +68,7 @@ public class NearbyAttractionsViewModel extends ViewModel
     private final MutableLiveData<Mode> ordering = new MutableLiveData<>(Mode.RECOMMENDED);
     private WeatherResult recommendationWeather;
     private boolean savedKnown;
+    private boolean savedReadInFlight;
     private int savedVersion;
     private boolean visitedKnown;
     private int visitedGeneration;
@@ -175,14 +176,9 @@ public class NearbyAttractionsViewModel extends ViewModel
         mapOrigin.setValue(currentOrigin);
         coordinator.addObserver(this);
         savedAttractions.addObserver(this);
+        // The immediate observer replay can be an unloaded repository's empty placeholder.
         savedKnown = false;
-        final int savedReadVersion = savedVersion;
-        savedAttractions.loadSavedIds(new RepositoryCallback<Set<String>>() {
-            @Override public void onSuccess(Set<String> ids) {
-                if (savedVersion == savedReadVersion) { onSavedIdsChanged(ids); }
-            }
-            @Override public void onError(Throwable error) { /* Unknown is neutral. */ }
-        });
+        reloadSavedIfUnknown();
         if (history != null) {
             history.addObserver(historyObserver);
             reloadVisited();
@@ -222,8 +218,26 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     /** Reconcile changes made while this destination was not visible. */
     public void onVisible() {
+        reloadSavedIfUnknown();
         reloadVisited();
         refreshContext();
+    }
+
+    /** Retry a failed local read on return, without duplicating a read or replacing a newer save. */
+    private void reloadSavedIfUnknown() {
+        if (savedKnown || savedReadInFlight) { return; }
+        savedReadInFlight = true;
+        final int savedReadVersion = savedVersion;
+        savedAttractions.loadSavedIds(new RepositoryCallback<Set<String>>() {
+            @Override public void onSuccess(Set<String> ids) {
+                savedReadInFlight = false;
+                if (savedVersion == savedReadVersion) { onSavedIdsChanged(ids); }
+            }
+            @Override public void onError(Throwable error) {
+                savedReadInFlight = false;
+                // Unknown remains neutral until a later visible-screen read or observer update.
+            }
+        });
     }
 
     @Override public void onPendingStoryChanged(Visit visit) {

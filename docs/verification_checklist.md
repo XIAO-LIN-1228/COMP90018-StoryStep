@@ -5,6 +5,11 @@ Latest teammate A update: REQ-21/22 and visible prototype cleanup are implemente
 Older commit/branch references below are historical and have not been globally re-audited.
 No physical-device or full release acceptance is claimed by this update.
 
+Latest local revalidation on `feature/context-recommendations`: [review evidence](verification/EV-TEAM-A-REVIEW-2026-09-20.md)
+records one repaired saved-context recovery defect, 721 passing JVM tests, successful APK builds
+and 0 Lint errors / 63 warnings. The [test plan](teammate-a-test-plan.md) explicitly separates
+these checks from the unexecuted Android/manual/physical cases.
+
 
 Prepared: 2026-08-31. Last updated: 2026-09-05 (weather round). Requirements: [development plan](development_plan.md).
 

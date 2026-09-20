@@ -20,6 +20,11 @@ See the [teammate A evidence](docs/verification/EV-REQ21-REQ22-2026-09-20-01.md)
 results and unexecuted checks. Older plan/ledger entries describe earlier commits and must not be
 used to infer that an already implemented feature needs rebuilding.
 
+For the current local `feature/context-recommendations` review, see the [execution plan](docs/teammate-a-execution-plan.md),
+[test plan](docs/teammate-a-test-plan.md) and [review report](docs/verification/EV-TEAM-A-REVIEW-2026-09-20.md).
+The review fixes saved-context read recovery and records 721 passing JVM tests;
+Android/device acceptance remains outstanding.
+
 [View UI implementation screenshots](docs/design/implementation/)
 
 ## Core Features

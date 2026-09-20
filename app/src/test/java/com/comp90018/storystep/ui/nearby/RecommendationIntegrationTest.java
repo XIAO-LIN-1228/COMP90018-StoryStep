@@ -138,6 +138,84 @@ public class RecommendationIntegrationTest {
         }
     }
 
+    @Test public void failedInitialSavedReadCanRecoverWhenTheScreenReturns() {
+        DeferredSaves saves = new DeferredSaves();
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(places,
+                saves, ORIGIN, 3000, coordinator, visits, clock);
+        model.load();
+        saves.pending.onError(new IllegalStateException("temporarily unavailable"));
+        assertEquals("out", first(model));
+        model.onVisible();
+        assertEquals(2, saves.reads);
+        saves.pending.onSuccess(Collections.singleton("in"));
+        assertEquals("in", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons().contains(Reason.SAVED));
+        assertEquals(1, places.requests);
+    }
+
+    @Test public void savedRecoveryCoalescesReadsAndCannotUndoANewerSaveEvent() {
+        DeferredSaves saves = new DeferredSaves();
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(places,
+                saves, ORIGIN, 3000, coordinator, visits, clock);
+        model.load();
+        model.onVisible();
+        model.onVisible();
+        assertEquals(1, saves.reads);
+        saves.pending.onError(new IllegalStateException("temporarily unavailable"));
+        model.onVisible();
+        assertEquals(2, saves.reads);
+        saves.observer.onSavedIdsChanged(Collections.singleton("in"));
+        saves.pending.onSuccess(Collections.emptySet());
+        assertEquals("in", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).isSaved());
+        model.onVisible();
+        assertEquals(2, saves.reads);
+    }
+
+    @Test public void searchAndVenueFilteringUseCandidatesBeyondTheDisplayLimit() {
+        List<Attraction> data = new ArrayList<>();
+        for (int i = 0; i < 35; i++) {
+            data.add(Attraction.seeded("park" + i, "Park " + i, AttractionCategory.PARK,
+                    "", IndoorClassification.OUTDOOR, ORIGIN));
+        }
+        data.add(Attraction.seeded("museum", "Museum", AttractionCategory.MUSEUM,
+                "", IndoorClassification.INDOOR, ORIGIN));
+        places.data = data;
+        NearbyAttractionsViewModel model = model();
+        assertEquals(30, ids(model).size());
+        model.setFilter(AttractionFilter.NONE.withQuery("Museum")
+                .withVenue(AttractionFilter.Venue.INDOOR));
+        assertEquals(Collections.singletonList("museum"), ids(model));
+        model.setOrdering(Mode.NEARBY);
+        assertEquals(Collections.singletonList("museum"), ids(model));
+        assertEquals(1, places.requests);
+    }
+
+    @Test public void localEveningChangesRankingWithoutARepositoryRequest() {
+        NearbyAttractionsViewModel model = model();
+        assertEquals("out", first(model));
+        clock.advance(6 * 60 * 60_000L);
+        model.refreshContext();
+        assertEquals("in", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons()
+                .contains(Reason.INDOOR_EVENING));
+        assertEquals(1, places.requests);
+    }
+
+    @Test public void cachedAttractionLabelsSurviveContextChangesAndPermissionRecovery() {
+        places.freshness = com.comp90018.storystep.domain.attraction.AttractionFreshness.STALE;
+        NearbyAttractionsViewModel model = model();
+        model.onWeatherChanged(rain());
+        model.setOrdering(Mode.NEARBY);
+        model.onSavedIdsChanged(Collections.singleton("in"));
+        model.onLocationUnavailable(com.comp90018.storystep.platform.location.LocationSource.Reason.PERMISSION_DENIED);
+        clock.advance(31 * 60_000L);
+        model.refreshContext();
+        assertEquals(places.freshness, model.getUiState().getValue().getFreshness());
+        assertEquals(2, ids(model).size());
+        assertEquals(1, places.requests);
+    }
+
     private WeatherResult rain() {
         return new WeatherResult(new WeatherSnapshot(WeatherAreaBucket.of(ORIGIN).key(), WeatherCondition.RAIN,
                 12, clock.wallClockMillis(), clock.wallClockMillis(), WeatherSnapshot.Provenance.CACHE), WeatherFreshness.FRESH);
@@ -155,14 +233,31 @@ public class RecommendationIntegrationTest {
     }
     private static class Places implements AttractionRepository {
         int requests;
-        final List<Attraction> data = Arrays.asList(
+        com.comp90018.storystep.domain.attraction.AttractionFreshness freshness =
+                com.comp90018.storystep.domain.attraction.AttractionFreshness.FRESH;
+        List<Attraction> data = Arrays.asList(
                 Attraction.seeded("in", "Inside", AttractionCategory.MUSEUM, "", IndoorClassification.INDOOR, ORIGIN),
                 Attraction.seeded("out", "Outside", AttractionCategory.PARK, "", IndoorClassification.OUTDOOR, ORIGIN));
         public void loadNearbyAttractions(GeoPoint origin, double radius, RepositoryCallback<AttractionResult> callback) {
             requests++;
-            callback.onSuccess(AttractionResult.fresh(data));
+            callback.onSuccess(new AttractionResult(data, freshness));
         }
         public void loadAttraction(String id, RepositoryCallback<Attraction> callback) { throw new AssertionError(); }
+    }
+    private static class DeferredSaves implements SavedAttractionRepository {
+        int reads;
+        Observer observer;
+        RepositoryCallback<Set<String>> pending;
+        public void loadSavedIds(RepositoryCallback<Set<String>> callback) { reads++; pending = callback; }
+        public void loadSaved(RepositoryCallback<List<SavedAttraction>> callback) { throw new AssertionError(); }
+        public void save(Attraction attraction, RepositoryCallback<Boolean> callback) { throw new AssertionError(); }
+        public void unsave(String id, RepositoryCallback<Boolean> callback) { throw new AssertionError(); }
+        public void clearAll(RepositoryCallback<Integer> callback) { throw new AssertionError(); }
+        public void addObserver(Observer observer) {
+            this.observer = observer;
+            observer.onSavedIdsChanged(Collections.emptySet());
+        }
+        public void removeObserver(Observer observer) { this.observer = null; }
     }
     private static class Visits implements HistoryRepository {
         Set<String> ids = Collections.emptySet();

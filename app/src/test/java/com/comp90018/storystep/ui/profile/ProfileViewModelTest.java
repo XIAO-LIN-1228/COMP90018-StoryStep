@@ -46,6 +46,28 @@ public class ProfileViewModelTest {
         assertEquals(Integer.valueOf(0), model.getSaves().getValue());
     }
 
+    @Test public void repeatVisitsCountAsOnePlaceAndFailedVisitReadsBecomeUnknown() {
+        FakeVisitDao visits = new FakeVisitDao();
+        for (String session : Arrays.asList("first", "second")) {
+            VisitEntity visit = new VisitEntity();
+            visit.sessionId = session;
+            visit.attractionId = "same-place";
+            visits.insert(visit);
+        }
+        ProfileViewModel model = new ProfileViewModel(TestHistory.over(new FakeSessionDao(),
+                new FakeRoutePointDao(), visits), TestSavedAttractions.empty());
+        model.refresh();
+        assertEquals(Integer.valueOf(1), model.getVisits().getValue());
+        DelayedHistory unreadable = new DelayedHistory() {
+            @Override public void loadVisitedAttractionIds(RepositoryCallback<Set<String>> callback) {
+                callback.onError(new IllegalStateException("unreadable visits"));
+            }
+        };
+        ProfileViewModel failed = new ProfileViewModel(unreadable, TestSavedAttractions.empty());
+        failed.refresh();
+        assertNull(failed.getVisits().getValue());
+    }
+
     @Test public void oldReadAndClearedModelCannotOverwriteNewCounts() {
         DelayedHistory history = new DelayedHistory();
         ProfileViewModel model = new ProfileViewModel(history, TestSavedAttractions.empty());
