@@ -59,6 +59,10 @@ public final class WikidataAreaPhotos {
                 if (!(named ? distance <= NAMED_RADIUS_M : distance <= UNNAMED_RADIUS_M)) {
                     continue;
                 }
+                // Close but called something else is something else.
+                if (!named && CommonsPhotos.namesSomethingElse(names.get(i), label)) {
+                    continue;
+                }
                 // A name match beats proximity; among equals, the nearer item.
                 Boolean currentNamed = bestNamed.get(i);
                 Double current = bestDistance.get(i);
@@ -84,7 +88,8 @@ public final class WikidataAreaPhotos {
         if (x.length() < 5 || y.length() < 5) {
             return false;
         }
-        return x.equals(y) || x.contains(y) || y.contains(x);
+        // "Melbourne Skydeck" and "Eureka Skydeck" are the same thing under two names.
+        return x.equals(y) || x.contains(y) || y.contains(x) || CommonsPhotos.sharesAWord(a, b);
     }
 
     private static String normalise(String name) {

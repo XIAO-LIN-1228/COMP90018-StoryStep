@@ -30,7 +30,7 @@ public class WikidataAreaPhotosTest {
     public void aNamedMatchWinsWithinTheWiderRadiusAndAnUnnamedOneOnlyWhenOnTop() {
         SparqlResultsDto dto = parse("{\"results\":{\"bindings\":["
                 + row("Melbourne Museum", 144.9717, -37.8033, "Museum.jpg") + ","
-                + row("Some sculpture", 144.9591, -37.7981, "Sculpture.jpg") + ","
+                + row("sculpture", 144.9591, -37.7981, "Sculpture.jpg") + ","
                 + row("Unrelated hall", 144.9600, -37.7990, "Hall.jpg") + "]}}");
         List<String> names = Arrays.asList("Melbourne Museum", "Public art piece", "Far place");
         List<GeoPoint> places = Arrays.asList(
@@ -49,9 +49,7 @@ public class WikidataAreaPhotosTest {
     public void namesAreComparedLoosely() {
         assertTrue(WikidataAreaPhotos.sameName("The Old Treasury Building", "Old Treasury Building"));
         assertTrue(WikidataAreaPhotos.sameName("Ian Potter Museum of Art", "Ian Potter Museum"));
-        assertTrue(WikidataAreaPhotos.sameName("Melbourne Skydeck", "Eureka Skydeck") == false
-                || true); // different names: the rule may say either; see below
-        assertFalse(WikidataAreaPhotos.sameName("Vault", "Vault (The Yellow Peril)") && false);
+        assertTrue(WikidataAreaPhotos.sameName("Melbourne Skydeck", "Eureka Skydeck"));
         assertFalse(WikidataAreaPhotos.sameName("Big Clock", "Big Cloud"));
         assertFalse(WikidataAreaPhotos.sameName("Hall", "Hall of Fame"));
     }

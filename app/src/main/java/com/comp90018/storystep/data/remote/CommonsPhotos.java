@@ -32,7 +32,12 @@ public final class CommonsPhotos {
             java.util.Arrays.asList("melbourne", "victoria", "australia", "university", "museum",
                     "building", "memorial", "gallery", "theatre", "theater", "garden", "gardens",
                     "park", "street", "centre", "center", "carlton", "parkville", "statue",
-                    "sculpture", "monument", "house", "hall", "church", "bridge", "station"));
+                    "sculpture", "monument", "house", "hall", "church", "bridge", "station",
+                    "east", "west", "north", "south", "view", "road", "lane", "tower", "front",
+                    "side", "from", "with", "near", "over", "wing", "main", "old", "new"));
+
+    /** Words shorter than this ("of", "the", "St") never identify anything. */
+    private static final int MIN_WORD_LENGTH = 4;
 
     private static final Pattern NOT_A_PHOTOGRAPH = Pattern.compile(
             "map|plan|logo|diagram|plaque|sign|panorama|collage|\\.svg|\\.png|\\.gif",
@@ -102,6 +107,11 @@ public final class CommonsPhotos {
                 if (distance > (named ? radiusMetres : UNNAMED_RADIUS_M)) {
                     continue;
                 }
+                // A file that names something else is of something else, however close: the
+                // hall behind a cenotaph is photographed far more often than the cenotaph.
+                if (!named && namesSomethingElse(names.get(i), page.title)) {
+                    continue;
+                }
                 // A named file outranks any unnamed one; among equals, the larger.
                 long score = named ? pixels + (1L << 40) : pixels;
                 Long current = bestPixels.get(i);
@@ -149,14 +159,45 @@ public final class CommonsPhotos {
         return page.title == null ? null : OsmImageUrls.fromCommonsTag(page.title);
     }
 
-    /** Whether a distinctive word (five letters or more, not a place-name commonplace) is shared. */
+    /**
+     * Whether the file or item name shares enough of the place's name to be of it: two
+     * distinctive words (four letters or more, not a place-name commonplace) when the place
+     * has two or more, one when it has only one. One word is not enough for a name with
+     * several - a memorial to one John is not a statue of another.
+     */
     static boolean sharesAWord(@Nullable String placeName, @Nullable String fileTitle) {
         if (placeName == null || fileTitle == null) {
             return false;
         }
         String title = fileTitle.toLowerCase(Locale.ROOT);
+        int distinctive = 0;
+        int shared = 0;
         for (String word : placeName.toLowerCase(Locale.ROOT).split("[^a-z0-9]+")) {
-            if (word.length() >= 5 && !GENERIC_WORDS.contains(word) && title.contains(word)) {
+            if (word.length() < MIN_WORD_LENGTH || GENERIC_WORDS.contains(word)) {
+                continue;
+            }
+            distinctive++;
+            if (title.contains(word)) {
+                shared++;
+            }
+        }
+        return distinctive > 0 && shared >= Math.min(2, distinctive);
+    }
+
+    /**
+     * Whether the title carries a distinctive word the place's name lacks. Empty or generic
+     * titles ("IMG 4021", "Melbourne 2019") say nothing and do not count against a match.
+     */
+    static boolean namesSomethingElse(@Nullable String placeName, @Nullable String title) {
+        if (title == null) {
+            return false;
+        }
+        String place = placeName == null ? "" : placeName.toLowerCase(Locale.ROOT);
+        String body = title.toLowerCase(Locale.ROOT).replaceFirst("^file:", "")
+                .replaceAll("\\.[a-z0-9]+$", "");
+        for (String word : body.split("[^a-z]+")) {
+            if (word.length() >= MIN_WORD_LENGTH && !GENERIC_WORDS.contains(word)
+                    && !place.contains(word)) {
                 return true;
             }
         }

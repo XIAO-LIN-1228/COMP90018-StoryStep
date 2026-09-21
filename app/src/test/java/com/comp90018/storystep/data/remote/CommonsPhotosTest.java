@@ -56,11 +56,11 @@ public class CommonsPhotosTest {
     @Test
     public void theAreaPassGivesEachPlaceTheBestPhotographWithinReach() {
         CommonsGeosearchDto dto = parse("{\"query\":{\"pages\":{"
-                + "\"a\":{\"title\":\"File:A small.jpg\",\"coordinates\":[{\"lat\":-37.7981,\"lon\":144.9591}],"
+                + "\"a\":{\"title\":\"File:IMG 0001.jpg\",\"coordinates\":[{\"lat\":-37.7981,\"lon\":144.9591}],"
                 + "\"imageinfo\":[{\"width\":1200,\"height\":800,\"mime\":\"image/jpeg\"}]},"
-                + "\"b\":{\"title\":\"File:A large.jpg\",\"coordinates\":[{\"lat\":-37.7982,\"lon\":144.9592}],"
+                + "\"b\":{\"title\":\"File:IMG 0002.jpg\",\"coordinates\":[{\"lat\":-37.7982,\"lon\":144.9592}],"
                 + "\"imageinfo\":[{\"width\":4000,\"height\":3000,\"mime\":\"image/jpeg\"}]},"
-                + "\"c\":{\"title\":\"File:Elsewhere.jpg\",\"coordinates\":[{\"lat\":-37.81,\"lon\":144.99}],"
+                + "\"c\":{\"title\":\"File:IMG 0003.jpg\",\"coordinates\":[{\"lat\":-37.81,\"lon\":144.99}],"
                 + "\"imageinfo\":[{\"width\":4000,\"height\":3000,\"mime\":\"image/jpeg\"}]}}}}");
         java.util.List<com.comp90018.storystep.domain.model.GeoPoint> places = java.util.Arrays.asList(
                 new com.comp90018.storystep.domain.model.GeoPoint(-37.7981, 144.9591),
@@ -68,7 +68,7 @@ public class CommonsPhotosTest {
                 new com.comp90018.storystep.domain.model.GeoPoint(-37.75, 144.90));
         java.util.Map<Integer, String> chosen = CommonsPhotos.assign(dto, places, 80);
         assertEquals(1, chosen.size());
-        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/A_large.jpg?width=1280",
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/IMG_0002.jpg?width=1280",
                 chosen.get(0));
     }
 
@@ -96,5 +96,25 @@ public class CommonsPhotosTest {
         assertTrue(CommonsPhotos.sharesAWord("University Cenotaph", "File:Cenotaph 2019.jpg"));
         assertTrue(!CommonsPhotos.sharesAWord("Melbourne Museum", "File:Melbourne skyline.jpg"));
         assertTrue(!CommonsPhotos.sharesAWord("Big Clock", "File:Tower at dusk.jpg"));
+        // One shared word is not enough for a name that has several.
+        assertTrue(!CommonsPhotos.sharesAWord("John F. Kennedy Memorial", "File:Sir William John Clarke.jpg"));
+        assertTrue(!CommonsPhotos.sharesAWord("Major General Charles George Gordon", "File:Adam Lindsay Gordon Statue.jpg"));
+        assertTrue(CommonsPhotos.sharesAWord("John F. Kennedy Memorial", "File:Kennedy memorial John.jpg"));
+        assertTrue(CommonsPhotos.sharesAWord("Melbourne Skydeck", "Eureka Skydeck"));
+    }
+
+    @Test
+    public void aFileNamedForSomethingElseIsRejectedHoweverClose() {
+        CommonsGeosearchDto dto = parse("{\"query\":{\"pages\":{"
+                + "\"a\":{\"title\":\"File:Wilson Hall 2.jpg\",\"coordinates\":[{\"lat\":-37.7981,\"lon\":144.9591}],"
+                + "\"imageinfo\":[{\"width\":4000,\"height\":3000,\"mime\":\"image/jpeg\"}]}}}}");
+        java.util.List<com.comp90018.storystep.domain.model.GeoPoint> places = java.util.Collections.singletonList(
+                new com.comp90018.storystep.domain.model.GeoPoint(-37.7981, 144.9591));
+        assertTrue(CommonsPhotos.assign(dto, places,
+                java.util.Collections.singletonList("University Cenotaph"), 80).isEmpty());
+        assertTrue(CommonsPhotos.namesSomethingElse("University Cenotaph", "File:Wilson Hall 2.jpg"));
+        assertTrue(!CommonsPhotos.namesSomethingElse("University Cenotaph", "File:IMG 4021.jpg"));
+        assertTrue(!CommonsPhotos.namesSomethingElse("University Cenotaph", "File:Melbourne 2019.jpg"));
+        assertTrue(CommonsPhotos.namesSomethingElse("University Cenotaph", "File:The Old Arts Building.jpg"));
     }
 }
