@@ -172,9 +172,9 @@ public class JourneyDetailFragment extends Fragment {
         date.setText(when);
         bindIdentity(summary, when);
         publishCard.setVisibility(summary.isPublished() ? View.GONE : View.VISIBLE);
-        java.util.List<java.io.File> files = new java.util.ArrayList<>();
+        java.util.List<Object> files = new java.util.ArrayList<>();
         for (String name : summary.getPhotoFiles()) {
-            files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+            files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.source(
                     requireContext(), summary.getId(), name));
         }
         photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);

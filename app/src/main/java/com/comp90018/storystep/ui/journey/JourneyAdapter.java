@@ -122,9 +122,9 @@ public final class JourneyAdapter
                     : resources.getString(R.string.journey_when_where, when, where));
 
             // The photographs the user attached, if any; the card stays compact without them.
-            java.util.List<java.io.File> files = new java.util.ArrayList<>();
+            java.util.List<Object> files = new java.util.ArrayList<>();
             for (String name : journey.getPhotoFiles()) {
-                files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+                files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.source(
                         itemView.getContext(), journey.getId(), name));
             }
             photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);

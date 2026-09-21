@@ -43,6 +43,15 @@ public final class JourneyPhotoStore {
     }
 
     /**
+     * What to load for a stored photo entry: the file under the session's directory, or the
+     * URL itself when the entry is one - the bundled sample walks point at Commons.
+     */
+    public static Object source(Context context, String sessionId, String entry) {
+        return entry.startsWith("http://") || entry.startsWith("https://")
+                ? entry : file(context, sessionId, entry);
+    }
+
+    /**
      * Copies each photo into the session's directory and returns the stored names, in order.
      * A photo that cannot be read is skipped rather than failing the batch. Blocking; call
      * from a background executor.

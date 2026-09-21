@@ -18,6 +18,7 @@ import com.comp90018.storystep.data.remote.RetryingAttractionSource;
 import com.comp90018.storystep.data.remote.RetryingWeatherSource;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
 import com.comp90018.storystep.data.repository.AttractionCache;
+import com.comp90018.storystep.data.repository.SampleJourneys;
 import com.comp90018.storystep.data.repository.CachedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomHistoryRepository;
@@ -106,6 +107,9 @@ public class AppContainer {
         // Opened here, once, because the database is process-scoped: a second instance would mean
         // a second connection pool and two views of the same file.
         this.database = StoryStepDatabase.create(this.applicationContext);
+        // Three published walks to open on, once; see SampleJourneys.
+        this.ioExecutor.execute(() -> SampleJourneys.seedIfNeeded(
+                this.applicationContext, database, clock.wallClockMillis()));
         // One cache object behind whichever repository is wired, so the seeding rule and the
         // write policy exist once rather than once per repository.
         this.attractionCache = new AttractionCache(
