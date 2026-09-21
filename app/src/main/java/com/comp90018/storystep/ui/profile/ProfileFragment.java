@@ -49,6 +49,15 @@ public class ProfileFragment extends Fragment {
                 showCount(view, R.id.profile_visits_count, count));
         viewModel.getSaves().observe(getViewLifecycleOwner(), count ->
                 showCount(view, R.id.profile_saves_count, count));
+        viewModel.getDistanceMeters().observe(getViewLifecycleOwner(), metres ->
+                ((TextView) view.findViewById(R.id.profile_distance_total)).setText(metres == null
+                        ? getString(R.string.profile_count_unknown)
+                        : com.comp90018.storystep.ui.DistanceText.format(getResources(), metres)));
+        viewModel.getFirstWalkMillis().observe(getViewLifecycleOwner(), first ->
+                ((TextView) view.findViewById(R.id.profile_subtitle)).setText(first == null
+                        ? getString(R.string.profile_local)
+                        : getString(R.string.profile_since, new java.text.SimpleDateFormat(
+                                "MMM yyyy", java.util.Locale.getDefault()).format(new java.util.Date(first)))));
         View.OnClickListener openPrivacyData = v ->
                 NavHostFragment.findNavController(this)
                         .navigate(R.id.action_profile_to_privacy_data);
