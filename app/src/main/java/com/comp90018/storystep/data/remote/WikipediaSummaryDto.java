@@ -7,4 +7,19 @@ public class WikipediaSummaryDto {
 
     @SerializedName("extract")
     public String extract;
+
+    /** The article's lead image at full size, when it has one. */
+    @SerializedName("originalimage")
+    public Image originalimage;
+
+    public static class Image {
+        @SerializedName("source")
+        public String source;
+
+        @SerializedName("width")
+        public int width;
+
+        @SerializedName("height")
+        public int height;
+    }
 }

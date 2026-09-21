@@ -34,6 +34,11 @@ public final class SampleAttractions {
         // Utility class.
     }
 
+    /**
+     * Four of the five carry a photograph from Wikimedia Commons, the same source the fetched
+     * places use, so a seed looks no different from a fetched place in the list. System Garden
+     * has no photograph on Commons; it keeps the bundled artwork.
+     */
     public static List<Attraction> get() {
         return Collections.unmodifiableList(Arrays.asList(
                 Attraction.seeded(
@@ -44,7 +49,8 @@ public final class SampleAttractions {
                                 + "one of the oldest surviving teaching buildings of the "
                                 + "University of Melbourne.",
                         IndoorClassification.OUTDOOR,
-                        new GeoPoint(-37.79810, 144.95910)),
+                        new GeoPoint(-37.79810, 144.95910))
+                        .withImageUrl("https://commons.wikimedia.org/wiki/Special:FilePath/Old_Arts_Building_University_of_Melbourne_2018.jpg?width=1280"),
                 Attraction.seeded(
                         "potter-museum",
                         "Ian Potter Museum of Art",
@@ -52,7 +58,8 @@ public final class SampleAttractions {
                         "The university art museum on Swanston Street, holding collections that "
                                 + "range from antiquities to contemporary Australian art.",
                         IndoorClassification.INDOOR,
-                        new GeoPoint(-37.79750, 144.96400)),
+                        new GeoPoint(-37.79750, 144.96400))
+                        .withImageUrl("https://commons.wikimedia.org/wiki/Special:FilePath/Ian_Potter_Museum_of_Art_2010.jpg?width=1280"),
                 Attraction.seeded(
                         "system-garden",
                         "System Garden",
@@ -68,7 +75,8 @@ public final class SampleAttractions {
                         "Built for the 1880 International Exhibition and the first building in "
                                 + "Australia to receive UNESCO World Heritage listing.",
                         IndoorClassification.INDOOR,
-                        new GeoPoint(-37.80460, 144.97170)),
+                        new GeoPoint(-37.80460, 144.97170))
+                        .withImageUrl("https://commons.wikimedia.org/wiki/Special:FilePath/Royal_exhibition_building_tulips_straight.jpg?width=1280"),
                 Attraction.seeded(
                         "melbourne-museum",
                         "Melbourne Museum",
@@ -76,6 +84,7 @@ public final class SampleAttractions {
                         "A natural and cultural history museum in Carlton Gardens, with galleries "
                                 + "covering science, Victorian history and First Peoples stories.",
                         IndoorClassification.INDOOR,
-                        new GeoPoint(-37.80330, 144.97170))));
+                        new GeoPoint(-37.80330, 144.97170))
+                        .withImageUrl("https://commons.wikimedia.org/wiki/Special:FilePath/Melbourne_museum_exterior_panorama.jpg?width=1280")));
     }
 }

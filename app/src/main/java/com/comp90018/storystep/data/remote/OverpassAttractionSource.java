@@ -45,6 +45,11 @@ public final class OverpassAttractionSource implements AttractionSource {
     private final OverpassApiService service;
     @androidx.annotation.Nullable private final WikidataApiService wikidata;
     @androidx.annotation.Nullable private final WikipediaApiService wikipedia;
+    @androidx.annotation.Nullable private final CommonsApiService commons;
+    @androidx.annotation.Nullable private final WikidataQueryService wikidataQuery;
+
+    /** How far from a place's coordinate a geotagged photograph may be and still be of it. */
+    private static final int NEARBY_PHOTO_RADIUS_M = 80;
 
     /** Summaries are fetched one article at a time, so a few go out together. */
     private static final int SUMMARY_PARALLELISM = 6;
@@ -70,9 +75,36 @@ public final class OverpassAttractionSource implements AttractionSource {
     public OverpassAttractionSource(OverpassApiService service,
                                     @androidx.annotation.Nullable WikidataApiService wikidata,
                                     @androidx.annotation.Nullable WikipediaApiService wikipedia) {
+        this(service, wikidata, wikipedia, null);
+    }
+
+    /**
+     * With Commons as well, a place that neither Wikidata nor Wikipedia pictures gets the best
+     * photograph geotagged within a few tens of metres of it. The last link in the chain, and
+     * the one that reaches the memorials and sculptures no article covers.
+     */
+    public OverpassAttractionSource(OverpassApiService service,
+                                    @androidx.annotation.Nullable WikidataApiService wikidata,
+                                    @androidx.annotation.Nullable WikipediaApiService wikipedia,
+                                    @androidx.annotation.Nullable CommonsApiService commons) {
+        this(service, wikidata, wikipedia, commons, null);
+    }
+
+    /**
+     * With the Wikidata Query Service as well: one request for every photographed item in the
+     * area, matched to places by name and distance. Reaches the landmarks whose OpenStreetMap
+     * node carries no {@code wikidata} tag, which is most of them.
+     */
+    public OverpassAttractionSource(OverpassApiService service,
+                                    @androidx.annotation.Nullable WikidataApiService wikidata,
+                                    @androidx.annotation.Nullable WikipediaApiService wikipedia,
+                                    @androidx.annotation.Nullable CommonsApiService commons,
+                                    @androidx.annotation.Nullable WikidataQueryService wikidataQuery) {
         this.service = Objects.requireNonNull(service, "service");
         this.wikidata = wikidata;
         this.wikipedia = wikipedia;
+        this.commons = commons;
+        this.wikidataQuery = wikidataQuery;
     }
 
     @Override
@@ -126,7 +158,9 @@ public final class OverpassAttractionSource implements AttractionSource {
                     AttractionUnavailableException.Reason.MALFORMED);
         }
 
-        return withPhotographs(mapped.getAttractions());
+        return withNearbyPhotographs(
+                withAreaPhotographs(withPhotographs(mapped.getAttractions()), center, radiusMeters),
+                center, radiusMeters);
     }
 
     private static long retryAfterMillis(Response<?> response) {
@@ -202,7 +236,8 @@ public final class OverpassAttractionSource implements AttractionSource {
             } catch (java.io.IOException | RuntimeException ignored) {
                 continue;
             }
-            java.util.Map<String, String> summaries = summaries(batch, idToIndex, enriched, titles);
+            java.util.Map<String, WikipediaSummaryDto> summaries =
+                    summaries(batch, idToIndex, enriched, titles, urls);
             for (String id : batch) {
                 Integer index = idToIndex.get(id);
                 Integer links = popularity.get(id);
@@ -210,11 +245,20 @@ public final class OverpassAttractionSource implements AttractionSource {
                     continue;
                 }
                 Attraction place = enriched.get(index);
-                if (urls.containsKey(id) || links != null) {
-                    place = place.withWikidata(urls.get(id), links == null ? 0 : links);
+                WikipediaSummaryDto summary = summaries.get(id);
+                // Wikidata's P18 first; the article's own lead image when there is none.
+                String url = urls.get(id);
+                if (url == null && summary != null && summary.originalimage != null
+                        && summary.originalimage.source != null) {
+                    url = summary.originalimage.source;
+                }
+                if (url != null || links != null) {
+                    place = place.withWikidata(url, links == null ? 0 : links);
                 }
                 if (place.getDescription().isEmpty()) {
-                    String intro = summaries.containsKey(id) ? summaries.get(id) : descriptions.get(id);
+                    String intro = summary != null && summary.extract != null
+                            && !summary.extract.trim().isEmpty()
+                            ? summary.extract.trim() : descriptions.get(id);
                     if (intro != null) {
                         place = place.withDescription(intro);
                     }
@@ -226,15 +270,18 @@ public final class OverpassAttractionSource implements AttractionSource {
     }
 
     /**
-     * The opening paragraph of the English article for each place in the batch that has one and
-     * still lacks a description. Fetched a few at a time; a summary that fails or times out is
-     * simply absent, and the Wikidata description stands in for it.
+     * The English article's summary - opening paragraph and lead image - for each place in the
+     * batch that has an article and still lacks a description or a photograph. Fetched a few at
+     * a time; a summary that fails or times out is simply absent.
      */
-    private java.util.Map<String, String> summaries(List<String> batch,
-                                                    java.util.Map<String, Integer> idToIndex,
-                                                    List<Attraction> places,
-                                                    java.util.Map<String, String> titles) {
-        java.util.Map<String, String> summaries = new java.util.concurrent.ConcurrentHashMap<>();
+    private java.util.Map<String, WikipediaSummaryDto> summaries(
+            List<String> batch,
+            java.util.Map<String, Integer> idToIndex,
+            List<Attraction> places,
+            java.util.Map<String, String> titles,
+            java.util.Map<String, String> wikidataImages) {
+        java.util.Map<String, WikipediaSummaryDto> summaries =
+                new java.util.concurrent.ConcurrentHashMap<>();
         if (wikipedia == null || titles.isEmpty()) {
             return summaries;
         }
@@ -242,17 +289,21 @@ public final class OverpassAttractionSource implements AttractionSource {
         for (String id : batch) {
             Integer index = idToIndex.get(id);
             String title = titles.get(id);
-            if (index == null || title == null || !places.get(index).getDescription().isEmpty()) {
+            if (index == null || title == null) {
+                continue;
+            }
+            Attraction place = places.get(index);
+            boolean wantsText = place.getDescription().isEmpty();
+            boolean wantsImage = place.getImageUrl() == null && !wikidataImages.containsKey(id);
+            if (!wantsText && !wantsImage) {
                 continue;
             }
             tasks.add(() -> {
                 try {
                     retrofit2.Response<WikipediaSummaryDto> response =
                             wikipedia.summary(title.replace(' ', '_')).execute();
-                    WikipediaSummaryDto body = response.body();
-                    if (response.isSuccessful() && body != null && body.extract != null
-                            && !body.extract.trim().isEmpty()) {
-                        summaries.put(id, body.extract.trim());
+                    if (response.isSuccessful() && response.body() != null) {
+                        summaries.put(id, response.body());
                     }
                 } catch (java.io.IOException | RuntimeException ignored) {
                     // Absent, and the Wikidata description stands in.
@@ -260,8 +311,100 @@ public final class OverpassAttractionSource implements AttractionSource {
                 return null;
             });
         }
+        runAll(tasks);
+        return summaries;
+    }
+
+    /**
+     * Every photographed Wikidata item in the area, in one query, matched to the places still
+     * without a picture by name and distance. Enrichment only: a failed query changes nothing.
+     */
+    private List<Attraction> withAreaPhotographs(List<Attraction> attractions,
+                                                 GeoPoint center,
+                                                 double radiusMeters) {
+        if (wikidataQuery == null) {
+            return attractions;
+        }
+        List<Attraction> enriched = new java.util.ArrayList<>(attractions);
+        List<String> names = new java.util.ArrayList<>();
+        List<GeoPoint> wanted = new java.util.ArrayList<>();
+        boolean any = false;
+        for (Attraction place : enriched) {
+            names.add(place.getName());
+            GeoPoint at = place.getImageUrl() == null ? place.getLocation() : null;
+            wanted.add(at);
+            any |= at != null;
+        }
+        if (!any) {
+            return enriched;
+        }
+        try {
+            retrofit2.Response<SparqlResultsDto> response = wikidataQuery.query(
+                    WikidataQueryService.photographedItemsAround(center.getLatitude(),
+                            center.getLongitude(), Math.ceil(radiusMeters / 100.0) / 10.0))
+                    .execute();
+            if (response.isSuccessful()) {
+                for (java.util.Map.Entry<Integer, String> entry
+                        : WikidataAreaPhotos.assign(response.body(), names, wanted).entrySet()) {
+                    enriched.set(entry.getKey(),
+                            enriched.get(entry.getKey()).withImageUrl(entry.getValue()));
+                }
+            }
+        } catch (java.io.IOException | RuntimeException ignored) {
+            // No area photographs; the Commons pass still runs.
+        }
+        return enriched;
+    }
+
+    /**
+     * A photograph for every place that still has none, from Commons: one request for the
+     * five hundred geotagged files nearest the area's centre, assigned to places within
+     * {@link #NEARBY_PHOTO_RADIUS_M}. One request only - Commons throttles the geosearch hard,
+     * so per-place lookups are not worth attempting. A place with nothing nearby keeps its
+     * placeholder.
+     */
+    private List<Attraction> withNearbyPhotographs(List<Attraction> attractions,
+                                                   GeoPoint center,
+                                                   double radiusMeters) {
+        if (commons == null) {
+            return attractions;
+        }
+        List<Attraction> enriched = new java.util.ArrayList<>(attractions);
+        List<GeoPoint> wanted = new java.util.ArrayList<>();
+        List<String> names = new java.util.ArrayList<>();
+        boolean any = false;
+        for (Attraction place : enriched) {
+            GeoPoint at = place.getImageUrl() == null ? place.getLocation() : null;
+            wanted.add(at);
+            names.add(place.getName());
+            any |= at != null;
+        }
+        if (!any) {
+            return enriched;
+        }
+        try {
+            retrofit2.Response<CommonsGeosearchDto> response = commons.area(
+                    CommonsPhotos.coordinate(center.getLatitude(), center.getLongitude()),
+                    (int) Math.ceil(radiusMeters)).execute();
+            if (response.isSuccessful()) {
+                for (java.util.Map.Entry<Integer, String> entry
+                        : CommonsPhotos.assign(response.body(), wanted, names, NEARBY_PHOTO_RADIUS_M)
+                        .entrySet()) {
+                    enriched.set(entry.getKey(),
+                            enriched.get(entry.getKey()).withImageUrl(entry.getValue()));
+                    wanted.set(entry.getKey(), null);
+                }
+            }
+        } catch (java.io.IOException | RuntimeException ignored) {
+            // The per-place pass below still gets its chance.
+        }
+        return enriched;
+    }
+
+    /** Runs the tasks a few at a time and waits for all of them; failures are theirs to swallow. */
+    private static void runAll(List<java.util.concurrent.Callable<Void>> tasks) {
         if (tasks.isEmpty()) {
-            return summaries;
+            return;
         }
         java.util.concurrent.ExecutorService pool =
                 java.util.concurrent.Executors.newFixedThreadPool(
@@ -273,6 +416,5 @@ public final class OverpassAttractionSource implements AttractionSource {
         } finally {
             pool.shutdownNow();
         }
-        return summaries;
     }
 }

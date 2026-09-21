@@ -92,6 +92,14 @@ public final class ApiClientFactory {
         return createRetrofit(WikidataApiService.BASE_URL, debug).create(WikidataApiService.class);
     }
 
+    public static WikidataQueryService createWikidataQueryService(boolean debug) {
+        return createRetrofit(WikidataQueryService.BASE_URL, debug).create(WikidataQueryService.class);
+    }
+
+    public static CommonsApiService createCommonsService(boolean debug) {
+        return createRetrofit(CommonsApiService.BASE_URL, debug).create(CommonsApiService.class);
+    }
+
     public static WikipediaApiService createWikipediaService(boolean debug) {
         return createRetrofit(WikipediaApiService.BASE_URL, debug).create(WikipediaApiService.class);
     }

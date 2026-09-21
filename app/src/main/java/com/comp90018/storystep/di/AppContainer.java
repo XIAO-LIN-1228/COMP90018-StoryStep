@@ -125,6 +125,10 @@ public class AppContainer {
                                 ApiClientFactory.createWikidataService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikipediaService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createCommonsService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createWikidataQueryService(
                                         isDebuggable(this.applicationContext)))),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),

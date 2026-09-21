@@ -268,12 +268,14 @@ public class OverpassAttractionSourceTest {
                 + "\"wikidata\":\"Q1747074\"}},"
                 + "{\"type\":\"node\",\"id\":2,\"lat\":-37.7975,\"lon\":144.9640,"
                 + "\"tags\":{\"name\":\"Described\",\"tourism\":\"attraction\","
-                + "\"description\":\"Its own words.\",\"wikidata\":\"Q2\"}}]}"));
+                + "\"description\":\"Its own words.\",\"wikidata\":\"Q2\","
+                + "\"image\":\"https://example.org/described.jpg\"}}]}"));
         server.enqueue(new MockResponse().setBody("{\"entities\":{"
                 + "\"Q1747074\":{\"descriptions\":{\"en\":{\"value\":\"building in Parkville\"}},"
                 + "\"sitelinks\":{\"enwiki\":{\"site\":\"enwiki\",\"title\":\"Old Arts Building\"}}},"
                 + "\"Q2\":{\"sitelinks\":{\"enwiki\":{\"site\":\"enwiki\",\"title\":\"Described\"}}}}}"));
-        // Only the place without a description asks Wikipedia.
+        // Only the place missing something - here a description - asks Wikipedia; the other
+        // has its own words and its own picture.
         server.enqueue(new MockResponse().setBody(
                 "{\"extract\":\"The Old Arts Building is a lecture hall. It opened in 1924.\"}"));
 
@@ -309,5 +311,80 @@ public class OverpassAttractionSourceTest {
                 new GeoPoint(-37.7963, 144.9614), 1000, 50);
 
         assertEquals("Building in Parkville.", places.get(0).getDescription());
+    }
+
+    @Test
+    public void aPlaceWithNothingPhotographedNearItKeepsItsPlaceholderAfterOneRequest() throws Exception {
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class), null, null,
+                retrofit.create(CommonsApiService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.7981,\"lon\":144.9591,"
+                + "\"tags\":{\"name\":\"Some Memorial\",\"tourism\":\"attraction\"}}]}"));
+        server.enqueue(new MockResponse().setBody("{\"query\":{\"pages\":{"
+                + "\"1\":{\"title\":\"File:Far away.jpg\",\"coordinates\":[{\"lat\":-37.81,\"lon\":144.99}],"
+                + "\"imageinfo\":[{\"width\":4000,\"height\":3000,\"mime\":\"image/jpeg\"}]}}}}"));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertNull(places.get(0).getImageUrl());
+        // Commons throttles geosearch hard, so there is no per-place follow-up.
+        assertEquals(2, server.getRequestCount());
+        server.takeRequest();
+        String area = server.takeRequest().getPath();
+        assertTrue(area, area.contains("ggslimit=500"));
+        assertTrue(area, area.contains("ggscoord=-37.796300%7C144.961400"));
+        assertTrue(area, area.contains("ggsradius=1000"));
+    }
+
+    @Test
+    public void theWikidataAreaQueryPicturesALandmarkByNameBeforeCommonsIsAsked() throws Exception {
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class), null, null,
+                retrofit.create(CommonsApiService.class),
+                retrofit.create(WikidataQueryService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.8047,\"lon\":144.9717,"
+                + "\"tags\":{\"name\":\"Royal Exhibition Building\",\"tourism\":\"attraction\"}}]}"));
+        server.enqueue(new MockResponse().setBody("{\"results\":{\"bindings\":[{"
+                + "\"itemLabel\":{\"value\":\"Royal Exhibition Building\"},"
+                + "\"coord\":{\"value\":\"Point(144.9712 -37.8045)\"},"
+                + "\"image\":{\"value\":\"http://commons.wikimedia.org/wiki/Special:FilePath/REB%20dome.jpg\"}}]}}"));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/REB_dome.jpg?width=1280",
+                places.get(0).getImageUrl());
+        // Everything is pictured, so the Commons pass has nothing to ask for.
+        assertEquals(2, server.getRequestCount());
+        server.takeRequest();
+        String sparql = server.takeRequest().getPath();
+        assertTrue(sparql, sparql.startsWith("/sparql?format=json&query="));
+        assertTrue(sparql, sparql.contains("wikibase%3Aradius"));
+    }
+
+    @Test
+    public void theAreaPassAloneCoversAPlaceWithAPhotographTakenBesideIt() throws Exception {
+        Retrofit retrofit = ApiClientFactory.createRetrofit(server.url("/").toString(), false);
+        OverpassAttractionSource enriching = new OverpassAttractionSource(
+                retrofit.create(OverpassApiService.class), null, null,
+                retrofit.create(CommonsApiService.class));
+        server.enqueue(new MockResponse().setBody("{\"elements\":["
+                + "{\"type\":\"node\",\"id\":1,\"lat\":-37.7981,\"lon\":144.9591,"
+                + "\"tags\":{\"name\":\"Some Memorial\",\"tourism\":\"attraction\"}}]}"));
+        server.enqueue(new MockResponse().setBody("{\"query\":{\"pages\":{"
+                + "\"1\":{\"title\":\"File:Some Memorial.jpg\",\"coordinates\":[{\"lat\":-37.79815,\"lon\":144.95915}],"
+                + "\"imageinfo\":[{\"width\":4000,\"height\":3000,\"mime\":\"image/jpeg\"}]}}}}"));
+
+        List<Attraction> places = enriching.fetchNearby(
+                new GeoPoint(-37.7963, 144.9614), 1000, 50);
+
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/Some_Memorial.jpg?width=1280",
+                places.get(0).getImageUrl());
+        assertEquals(2, server.getRequestCount());
     }
 }
