@@ -400,4 +400,13 @@
     <string name="story_source_unrecorded">Original source details were not recorded for this text.</string>
     <string name="story_saved_snapshot">Saved on arrival; this text may differ from the current place record.</string>
     <string name="story_snapshot_credit">%1$s\n%2$s</string>
+    <string name="profile_name">You</string>
+    <string name="profile_since">Exploring since %1$s · stored on this device</string>
+    <string name="profile_distance_label">Walked</string>
+    <string name="profile_visits_short_label">Visited</string>
+    <string name="profile_saves_short_label">Saved</string>
+    <string name="profile_group_device">Device</string>
+    <string name="profile_group_preferences">Preferences</string>
+    <string name="profile_group_data">Your data</string>
+    <string name="profile_group_about">About</string>
 </resources>
