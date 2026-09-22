@@ -19,6 +19,24 @@ public class SettingsFragment extends Fragment {
 
     private AndroidCapabilityReader capabilities;
 
+    private final androidx.activity.result.ActivityResultLauncher<
+            androidx.activity.result.PickVisualMediaRequest> pickAvatar =
+            registerForActivityResult(
+                    new androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
+                    uri -> {
+                        if (uri == null) {
+                            return;
+                        }
+                        android.content.Context app = requireContext().getApplicationContext();
+                        com.comp90018.storystep.di.AppContainer container =
+                                ((com.comp90018.storystep.StoryStepApplication)
+                                        requireActivity().getApplication()).getAppContainer();
+                        container.getIoExecutor().execute(() -> {
+                            com.comp90018.storystep.platform.media.ProfileAvatar.set(app, uri);
+                            container.getMainExecutor().execute(this::showAvatar);
+                        });
+                    });
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -33,6 +51,27 @@ public class SettingsFragment extends Fragment {
         capabilities = new AndroidCapabilityReader(requireContext());
         view.findViewById(R.id.settings_back).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
+        view.findViewById(R.id.avatar_row).setOnClickListener(v -> {
+            if (!com.comp90018.storystep.platform.media.ProfileAvatar.exists(requireContext())) {
+                choosePhoto();
+                return;
+            }
+            new com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                    .setTitle(R.string.settings_avatar)
+                    .setItems(new CharSequence[]{
+                            getString(R.string.settings_avatar_change),
+                            getString(R.string.settings_avatar_remove)}, (dialog, which) -> {
+                        if (which == 0) {
+                            choosePhoto();
+                        } else {
+                            com.comp90018.storystep.platform.media.ProfileAvatar
+                                    .clear(requireContext());
+                            showAvatar();
+                        }
+                    })
+                    .show();
+        });
+        showAvatar();
         view.findViewById(R.id.location_settings_row).setOnClickListener(v -> {
             Bundle args = new Bundle();
             args.putString(RecoveryStateFragment.ARG_STATE, RecoveryStateFragment.STATE_LOCATION);
@@ -48,6 +87,25 @@ public class SettingsFragment extends Fragment {
                         .navigate(R.id.action_settings_to_privacy_data);
         view.findViewById(R.id.privacy_data_row).setOnClickListener(openPrivacyData);
         view.findViewById(R.id.clear_history_row).setOnClickListener(openPrivacyData);
+    }
+
+    private void choosePhoto() {
+        pickAvatar.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                .setMediaType(androidx.activity.result.contract.ActivityResultContracts
+                        .PickVisualMedia.ImageOnly.INSTANCE)
+                .build());
+    }
+
+    private void showAvatar() {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                view.findViewById(R.id.settings_avatar));
+        ((TextView) view.findViewById(R.id.settings_avatar_hint)).setText(
+                com.comp90018.storystep.platform.media.ProfileAvatar.exists(requireContext())
+                        ? R.string.settings_avatar_set : R.string.settings_avatar_choose);
     }
 
     @Override

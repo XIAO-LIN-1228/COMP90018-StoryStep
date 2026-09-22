@@ -117,6 +117,8 @@ public final class JourneyAdapter
                                     itemView.getContext(), R.color.story_signal_ink)),
                     0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             who.setText(styledWho);
+            com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                    itemView.findViewById(R.id.journey_avatar));
             String when = HistoryText.formatDateTime(resources, journey.getStartWallClockMillis());
             String where = journey.getPlaceName() != null ? journey.getPlaceName()
                     : journey.getDestinationName();

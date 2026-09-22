@@ -405,6 +405,12 @@
     <string name="profile_distance_label">Walked</string>
     <string name="profile_visits_short_label">Visited</string>
     <string name="profile_saves_short_label">Saved</string>
+    <string name="profile_group_profile">Profile</string>
+    <string name="settings_avatar">Profile photo</string>
+    <string name="settings_avatar_choose">Choose a photo from your library</string>
+    <string name="settings_avatar_set">Tap to change or remove</string>
+    <string name="settings_avatar_change">Choose a new photo</string>
+    <string name="settings_avatar_remove">Remove photo</string>
     <string name="profile_group_device">Device</string>
     <string name="profile_group_preferences">Preferences</string>
     <string name="profile_group_data">Your data</string>

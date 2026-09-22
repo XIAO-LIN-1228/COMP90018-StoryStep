@@ -92,6 +92,8 @@ public class ProfileFragment extends Fragment {
     @Override public void onResume() {
         super.onResume();
         viewModel.refresh();
+        com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                requireView().findViewById(R.id.profile_avatar));
     }
 
     private void showCount(View view, int id, Integer count) {

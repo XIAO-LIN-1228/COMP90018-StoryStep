@@ -38,6 +38,70 @@
                 style="@style/Widget.StoryStep.Eyebrow"
                 android:layout_marginTop="@dimen/space_8"
                 android:layout_marginBottom="@dimen/space_8"
+                android:text="@string/profile_group_profile" />
+
+            <com.google.android.material.card.MaterialCardView
+                style="@style/Widget.StoryStep.Card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <LinearLayout
+                    android:id="@+id/avatar_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center_vertical"
+                    android:minHeight="@dimen/settings_row_height"
+                    android:orientation="horizontal"
+                    android:paddingStart="14dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingBottom="10dp">
+
+                    <ImageView
+                        android:id="@+id/settings_avatar"
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_avatar" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/TextAppearance.StoryStep.Body"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/settings_avatar"
+                            android:textColor="@color/story_ink" />
+
+                        <TextView
+                            android:id="@+id/settings_avatar_hint"
+                            style="@style/TextAppearance.StoryStep.Supporting"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="1dp"
+                            android:text="@string/settings_avatar_choose" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_chevron_right" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                style="@style/Widget.StoryStep.Eyebrow"
+                android:layout_marginTop="@dimen/space_24"
+                android:layout_marginBottom="@dimen/space_8"
                 android:text="@string/profile_group_device" />
 
             <com.google.android.material.card.MaterialCardView

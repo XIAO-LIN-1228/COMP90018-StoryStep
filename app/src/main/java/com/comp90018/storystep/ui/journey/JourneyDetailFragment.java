@@ -220,6 +220,8 @@ public class JourneyDetailFragment extends Fragment {
                                 requireContext(), R.color.story_signal_ink)),
                 0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         who.setText(styled);
+        com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                requireView().findViewById(R.id.journey_avatar));
         String where = summary.getPlaceName() != null ? summary.getPlaceName()
                 : summary.getDestinationName();
         whenWhere.setText(where == null ? when
