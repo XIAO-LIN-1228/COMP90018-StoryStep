@@ -69,7 +69,14 @@ public class JourneyPhotoPager extends FrameLayout {
             }
         });
 
-        float radius = dp(14);
+        setCornerRadius(dp(14));
+    }
+
+    /**
+     * How rounded the pager's corners are; zero for a pager that runs to the edges of a card,
+     * where the card's own outline does the clipping.
+     */
+    public void setCornerRadius(float radius) {
         setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
@@ -77,6 +84,7 @@ public class JourneyPhotoPager extends FrameLayout {
             }
         });
         setClipToOutline(true);
+        invalidateOutline();
     }
 
     public void setPhotos(List<?> photos) {

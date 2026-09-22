@@ -98,6 +98,8 @@ public final class JourneyAdapter
             who = itemView.findViewById(R.id.journey_who);
             whenWhere = itemView.findViewById(R.id.journey_when_where);
             photos = itemView.findViewById(R.id.journey_item_photos);
+            // Full-bleed in the card: square corners, the card's outline clips the bottom.
+            photos.setCornerRadius(0f);
         }
 
         void bind(SessionHistoryEntry journey,
