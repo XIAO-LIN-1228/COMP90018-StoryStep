@@ -68,6 +68,25 @@ public class ProfileFragment extends Fragment {
             walks.setVisibility(any ? View.VISIBLE : View.GONE);
             walkAdapter.submitList(any ? recent : java.util.Collections.emptyList());
         });
+
+        androidx.recyclerview.widget.RecyclerView places = view.findViewById(R.id.profile_saved);
+        View placesHeading = view.findViewById(R.id.profile_saved_heading);
+        view.findViewById(R.id.profile_saved_all).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_profile_to_saved));
+        ProfilePlaceAdapter placeAdapter = new ProfilePlaceAdapter(place -> {
+            Bundle args = new Bundle();
+            args.putString(com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment
+                    .ARG_ATTRACTION_ID, place.getId());
+            NavHostFragment.findNavController(this)
+                    .navigate(R.id.action_profile_to_attraction_detail, args);
+        });
+        places.setAdapter(placeAdapter);
+        viewModel.getSavedPlaces().observe(getViewLifecycleOwner(), kept -> {
+            boolean any = kept != null && !kept.isEmpty();
+            placesHeading.setVisibility(any ? View.VISIBLE : View.GONE);
+            places.setVisibility(any ? View.VISIBLE : View.GONE);
+            placeAdapter.submitList(any ? kept : java.util.Collections.emptyList());
+        });
     }
 
     @Override public void onResume() {

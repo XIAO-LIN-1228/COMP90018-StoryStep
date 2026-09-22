@@ -267,5 +267,53 @@
             tools:listitem="@layout/item_profile_walk"
             tools:visibility="visible" />
 
+
+        <!-- The places kept, as photographs, with the full list a tap away. -->
+        <LinearLayout
+            android:id="@+id/profile_saved_heading"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_32"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                style="@style/TextAppearance.StoryStep.Headline"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/profile_saved_places" />
+
+            <TextView
+                android:id="@+id/profile_saved_all"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/minimum_touch_target"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:fontFamily="@font/bricolage_semibold"
+                android:gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="4dp"
+                android:text="@string/home_see_all"
+                android:textColor="@color/story_signal_ink"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/profile_saved"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_8"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/space_8"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_profile_place"
+            tools:visibility="visible" />
     </LinearLayout>
 </ScrollView>

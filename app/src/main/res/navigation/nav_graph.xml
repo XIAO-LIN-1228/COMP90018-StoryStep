@@ -64,6 +64,7 @@
         <action android:id="@+id/action_profile_to_settings" app:destination="@id/settingsFragment" />
         <action android:id="@+id/action_profile_to_journey_detail" app:destination="@id/journeyDetailFragment" />
         <action android:id="@+id/action_profile_to_attraction_detail" app:destination="@id/attractionDetailFragment" />
+        <action android:id="@+id/action_profile_to_saved" app:destination="@id/savedFragment" />
     </fragment>
 
     <fragment
