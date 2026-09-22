@@ -103,7 +103,7 @@
                         android:layout_marginStart="@dimen/space_8"
                         android:text="@string/detail_pill_locked"
                         android:textColor="@color/story_signal_ink"
-                        app:drawableStartCompat="@drawable/ic_lock_outline"
+                        app:drawableStartCompat="@drawable/ic_spark"
                         app:drawableTint="@color/story_signal_ink" />
                 </LinearLayout>
 
@@ -144,7 +144,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:contentDescription="@null"
-                        android:src="@drawable/ic_lock_outline"
+                        android:src="@drawable/ic_spark"
                         app:tint="@color/story_signal_ink" />
 
                     <TextView

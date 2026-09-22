@@ -124,7 +124,7 @@
     <string name="home_nearby">Nearby stories</string>
     <string name="home_see_all">See all</string>
     <string name="home_search_hint">Search places</string>
-    <string name="home_unlock_progress">%1$d of %2$d unlocked</string>
+    <string name="home_unlock_progress">%1$d of %2$d sparks lit</string>
     <string name="home_filter_all">All</string>
     <string name="home_filter_indoor">Indoor</string>
     <string name="home_filter_outdoor">Outdoor</string>
@@ -135,9 +135,9 @@
     <!-- Attraction detail and confirmation -->
     <string name="detail_start_exploration">Start exploration</string>
     <string name="detail_save">Save place</string>
-    <string name="detail_pill_locked">Story locked</string>
+    <string name="detail_pill_locked">Spark not lit</string>
     <string name="detail_photo_credit">Photo via OpenStreetMap · Wikimedia Commons</string>
-    <string name="detail_story_locked">This place keeps its story until you get there. Walk over and it unlocks.</string>
+    <string name="detail_story_locked">This place keeps its story until you get there. Walk over and light its spark.</string>
     <string name="detail_unsave">Remove from saved</string>
     <string name="detail_save_failed">Could not update your saved places. Try again.</string>
     <string name="detail_back">Go back</string>

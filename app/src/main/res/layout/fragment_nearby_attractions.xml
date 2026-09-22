@@ -231,7 +231,7 @@
             android:layout_marginTop="@dimen/space_4"
             android:textColor="@color/story_signal_ink"
             android:visibility="gone"
-            app:drawableStartCompat="@drawable/ic_lock_outline"
+            app:drawableStartCompat="@drawable/ic_spark"
             app:drawableTint="@color/story_signal_ink" />
 
         <HorizontalScrollView
