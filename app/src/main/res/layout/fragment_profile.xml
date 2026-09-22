@@ -71,7 +71,8 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- The record: four figures, each its own tile with an icon, two to a row. -->
+        <!-- The record: four figures, each its own tile with an icon, two to a row. The text
+             starts under the icon's centre, half the disc in. -->
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -109,12 +110,14 @@
                     <TextView
                         android:id="@+id/profile_journeys_count"
                         style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="@dimen/space_12"
                         android:text="@string/profile_count_unknown"
                         android:textSize="24sp" />
 
                     <TextView
                         style="@style/Widget.StoryStep.StatLabel"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="2dp"
                         android:text="@string/profile_journeys_label" />
                 </LinearLayout>
@@ -151,12 +154,14 @@
                     <TextView
                         android:id="@+id/profile_distance_total"
                         style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="@dimen/space_12"
                         android:text="@string/profile_count_unknown"
                         android:textSize="24sp" />
 
                     <TextView
                         style="@style/Widget.StoryStep.StatLabel"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="2dp"
                         android:text="@string/profile_distance_label" />
                 </LinearLayout>
@@ -199,12 +204,14 @@
                     <TextView
                         android:id="@+id/profile_visits_count"
                         style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="@dimen/space_12"
                         android:text="@string/profile_count_unknown"
                         android:textSize="24sp" />
 
                     <TextView
                         style="@style/Widget.StoryStep.StatLabel"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="2dp"
                         android:text="@string/profile_visits_short_label" />
                 </LinearLayout>
@@ -241,12 +248,14 @@
                     <TextView
                         android:id="@+id/profile_saves_count"
                         style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="@dimen/space_12"
                         android:text="@string/profile_count_unknown"
                         android:textSize="24sp" />
 
                     <TextView
                         style="@style/Widget.StoryStep.StatLabel"
+                        android:layout_marginStart="18dp"
                         android:layout_marginTop="2dp"
                         android:text="@string/profile_saves_short_label" />
                 </LinearLayout>
