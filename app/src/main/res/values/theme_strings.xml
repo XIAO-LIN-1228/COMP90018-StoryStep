@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_explore">Theme explorations</string>
+    <string name="theme_start">Start this theme</string>
+    <string name="theme_directions">Open exploration and directions</string>
+    <string name="theme_pause">Pause exploration</string>
+    <string name="theme_finish">Finish this journey</string>
+    <string name="theme_finish_message">Save the progress you have made and end this journey? Skipped and unvisited stops will remain separate from arrived stops.</string>
+    <string name="theme_results">View journey results</string>
+    <string name="theme_choose_stop">Choose as destination</string>
+    <string name="theme_skip">Skip this stop</string>
+    <string name="theme_restore_stop">Restore this stop</string>
+    <string name="theme_continue">Continue</string>
+    <string name="theme_location_explanation">This theme uses location while you explore in the foreground to show direction and verify arrival. Pausing or leaving the app stops collection. Precise location improves arrival detection. You can browse the stops without granting access.</string>
+    <string name="theme_permission_denied">Location access was not granted. You can still browse the theme, or enable access in Settings before starting.</string>
+    <string name="theme_location_services">Turn on device location services, then return and press Start or Resume.</string>
+    <string name="theme_preview">Stops: %1$d · Stories unlock on arrival</string>
+    <string name="theme_progress">Arrived: %1$d / %2$d · Skipped: %3$d · Remaining: %4$d</string>
+    <string name="theme_error">Could not load or save theme progress. Retry before continuing; no completion has been assumed.</string>
+    <string name="theme_exploration_error">Exploration progress could not be saved. Open exploration and directions to review the error and recovery options. Unrecorded arrivals stay locked.</string>
+    <string name="theme_loading">Updating journey…</string>
+    <string name="theme_none">This journey has no theme record.</string>
+    <string name="theme_other_session">Another exploration is in progress. Finish or discard it before starting a theme.</string>
+    <string name="theme_ready">Start when you are ready. Opening this page does not collect location.</string>
+    <string name="theme_complete">Journey finished · All stops visited</string>
+    <string name="theme_partial">Journey finished · Partial exploration</string>
+    <string name="theme_paused">Paused · Resume when ready.</string>
+    <string name="theme_stations_resolved">Every stop is visited or skipped. You can restore a skipped stop, or finish the journey.</string>
+    <string name="theme_active">Exploring · Choose a pending stop to change your destination.</string>
+    <string name="theme_stop_title">%1$d. %2$s</string>
+    <string name="theme_arrived">Arrived · Story unlocked</string>
+    <string name="theme_skipped">Skipped · Not counted as visited</string>
+    <string name="theme_selected">Current destination · Arrival not yet verified</string>
+    <string name="theme_pending">Not yet visited</string>
+    <string name="theme_story_locked">Arrive at this stop during this journey to unlock its story and optional observation question.</string>
+    <string name="theme_source">Curated from University of Melbourne sources:\n%1$s</string>
+    <string name="theme_question_optional">Optional question · Answers do not change your arrival record.</string>
+    <string name="theme_answer_correct">Correct · Answer saved</string>
+    <string name="theme_answer_incorrect">Answer saved. Look again at the place and story; you can try another answer before finishing.</string>
+    <string name="theme_journey_summary">%1$s\nArrived: %2$d / %3$d · Skipped: %4$d</string>
+    <string name="theme_view_progress">View theme stops and progress</string>
+    <string name="theme_paused_user">Paused by you</string>
+</resources>

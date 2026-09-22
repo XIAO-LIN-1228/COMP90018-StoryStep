@@ -44,6 +44,10 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
+        if (modelClass.isAssignableFrom(com.comp90018.storystep.ui.theme.ThemeViewModel.class)) {
+            return (T) new com.comp90018.storystep.ui.theme.ThemeViewModel(
+                    appContainer.getThemeRepository(), appContainer.getExplorationCoordinator());
+        }
         if (modelClass.isAssignableFrom(NearbyAttractionsViewModel.class)) {
             return (T) new NearbyAttractionsViewModel(
                     appContainer.getAttractionRepository(),

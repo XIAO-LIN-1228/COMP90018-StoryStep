@@ -110,6 +110,11 @@
                     android:layout_marginTop="@dimen/space_16"
                     android:text="@string/story_source_unrecorded"
                     android:textAppearance="@style/TextAppearance.StoryStep.Label" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/story_theme" style="@style/Widget.StoryStep.Button.Secondary"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/theme_view_progress" android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

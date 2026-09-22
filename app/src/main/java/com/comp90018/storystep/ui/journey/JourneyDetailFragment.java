@@ -78,6 +78,22 @@ public class JourneyDetailFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        com.comp90018.storystep.ui.theme.ThemeViewModel themeModel =
+                new ViewModelProvider(this, ViewModelFactory.from(this))
+                        .get(com.comp90018.storystep.ui.theme.ThemeViewModel.class);
+        themeModel.showSession(sessionId());
+        TextView themeButton = view.findViewById(R.id.journey_theme);
+        themeButton.setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            args.putString(com.comp90018.storystep.ui.theme.ThemeFragment.ARG_SESSION_ID, sessionId());
+            NavHostFragment.findNavController(this).navigate(R.id.themeFragment, args);
+        });
+        themeModel.getState().observe(getViewLifecycleOwner(), state -> {
+            themeButton.setVisibility(state.progress != null || state.failed ? View.VISIBLE : View.GONE);
+            themeButton.setText(state.progress == null ? getString(R.string.theme_error)
+                    : getString(R.string.theme_journey_summary, state.progress.theme.title,
+                            state.progress.arrivedCount(), state.progress.theme.stops.size(), state.progress.skippedCount()));
+        });
         content = view.findViewById(R.id.journey_detail_content);
         loading = view.findViewById(R.id.journey_detail_loading);
         status = view.findViewById(R.id.journey_detail_status);

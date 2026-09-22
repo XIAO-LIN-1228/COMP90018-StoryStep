@@ -167,6 +167,8 @@ public class NearbyAttractionsFragment extends Fragment
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        view.findViewById(R.id.open_themes).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.themeFragment));
         list = view.findViewById(R.id.attraction_list);
         loadingIndicator = view.findViewById(R.id.loading_indicator);
         statusMessage = view.findViewById(R.id.status_message);

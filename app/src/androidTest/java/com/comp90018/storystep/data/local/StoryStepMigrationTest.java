@@ -334,6 +334,24 @@ public class StoryStepMigrationTest {
         version6.close();
     }
 
+    @Test public void migratingNineToTenKeepsFinishedAndInterruptedJourneysAndAddsEmptyThemes() throws IOException {
+        SupportSQLiteDatabase old = helper.createDatabase(TEST_DATABASE, 9);
+        for (String reason : new String[] {null, "PROCESS_INTERRUPTED"}) {
+            ContentValues row = sessionValues(reason == null ? "finished" : "active", reason);
+            row.put("weather_temperature_celsius", 0.0); row.put("weather_observed_at_millis", 0L);
+            row.put("weather_fetched_at_millis", 0L); row.put("movement_stationary_millis", 0L);
+            row.put("movement_moving_millis", 0L); row.put("interrupted", reason == null ? 0 : 1);
+            row.put("destination_indoor", "outdoor"); row.put("title", "Existing walk");
+            old.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, row);
+        }
+        old.close();
+        SupportSQLiteDatabase current = helper.runMigrationsAndValidate(TEST_DATABASE, 10, true, StoryStepMigrations.MIGRATION_9_10);
+        assertEquals(2, count(current, "SELECT COUNT(*) FROM sessions WHERE title = 'Existing walk'"));
+        assertEquals(1, count(current, "SELECT COUNT(*) FROM sessions WHERE finished = 0 AND pause_reason = 'PROCESS_INTERRUPTED'"));
+        assertEquals(0, count(current, "SELECT COUNT(*) FROM theme_runs"));
+        assertEquals(0, count(current, "SELECT COUNT(*) FROM theme_stops")); current.close();
+    }
+
     private static ContentValues sessionValues(String id, String pauseReason) {
         ContentValues session = new ContentValues();
         session.put("id", id);

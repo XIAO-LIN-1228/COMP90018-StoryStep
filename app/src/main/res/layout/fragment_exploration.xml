@@ -239,6 +239,11 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/weather_loading" />
 
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/exploration_theme" style="@style/Widget.StoryStep.Button.Secondary"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:text="@string/theme_view_progress" android:visibility="gone" />
+
                 <TextView
                     style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="match_parent"

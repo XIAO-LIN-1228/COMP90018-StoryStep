@@ -442,7 +442,7 @@ public final class ExplorationCoordinator {
      */
     private void persistDestination() {
         String sessionId = machine.getSessionId();
-        if (sessionId == null) {
+        if (sessionId == null || !machine.getState().hasSession()) {
             return;
         }
         sessionStore.saveDestination(sessionId, destination, new RepositoryCallback<Void>() {
@@ -466,6 +466,19 @@ public final class ExplorationCoordinator {
 
     /** The user pressed Start. A second press while starting or running does nothing. */
     public void requestStart() {
+        startSession(null);
+    }
+
+    public void requestStartTheme(com.comp90018.storystep.domain.theme.ThemeDefinition theme) {
+        if (theme == null || (machine.getState() != SessionState.IDLE
+                && machine.getState() != SessionState.COMPLETED)) { return; }
+        selectDestination(theme.stops.get(0).attraction());
+        startSession(theme);
+    }
+
+    public void requestPause() { pauseFor(PauseReason.USER_REQUESTED); }
+
+    private void startSession(com.comp90018.storystep.domain.theme.ThemeDefinition theme) {
         if (!machine.start().isChanged()) {
             return;
         }
@@ -476,7 +489,7 @@ public final class ExplorationCoordinator {
             publishSession();
             return;
         }
-        sessionStore.create(new RepositoryCallback<SessionSummary>() {
+        RepositoryCallback<SessionSummary> callback = new RepositoryCallback<SessionSummary>() {
             @Override
             public void onSuccess(SessionSummary created) {
                 if (!machine.onSessionCreated(created.getId()).isChanged()) {
@@ -520,7 +533,9 @@ public final class ExplorationCoordinator {
                 machine.onStartFailed();
                 publishSession();
             }
-        });
+        };
+        if (theme == null) { sessionStore.create(callback); }
+        else { sessionStore.createForTheme(theme, callback); }
     }
 
     /**
