@@ -1,12 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The user's avatar until there is a real one: a warm disc with the profile figure. -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
-        <shape android:shape="oval">
-            <solid android:color="@color/story_signal_wash" />
-        </shape>
-    </item>
-    <item
-        android:drawable="@drawable/ic_profile_filled"
-        android:inset="9dp" />
-</layer-list>
+<!--
+    The walker until they choose a photograph: a drawn person, not a glyph - a face, hair and
+    shoulders on the brand wash, so a profile with no photo still looks like somebody's.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+    <!-- disc -->
+    <path
+        android:fillColor="@color/story_signal_wash"
+        android:pathData="M48,0a48,48 0 1,0 0,96a48,48 0 1,0 0,-96z" />
+    <!-- clip everything below to the disc -->
+    <group>
+        <clip-path android:pathData="M48,0a48,48 0 1,0 0,96a48,48 0 1,0 0,-96z" />
+        <!-- shoulders: an amber jacket -->
+        <path
+            android:fillColor="@color/story_signal"
+            android:pathData="M14,96c0,-16 12,-28 34,-28s34,12 34,28z" />
+        <!-- collar -->
+        <path
+            android:fillColor="#FFF8F1"
+            android:pathData="M40,68l8,10l8,-10l-4,4l-4,-1l-4,1z" />
+        <!-- neck -->
+        <path
+            android:fillColor="#E5B68F"
+            android:pathData="M41,56h14v14c0,4 -14,4 -14,0z" />
+        <!-- face -->
+        <path
+            android:fillColor="#F2C9A4"
+            android:pathData="M48,22c11,0 18,8 18,19c0,11 -7,20 -18,20s-18,-9 -18,-20c0,-11 7,-19 18,-19z" />
+        <!-- ears -->
+        <path
+            android:fillColor="#E5B68F"
+            android:pathData="M30,40a3.5,4 0 1,0 0,8a3.5,4 0 1,0 0,-8zM66,40a3.5,4 0 1,0 0,8a3.5,4 0 1,0 0,-8z" />
+        <!-- hair -->
+        <path
+            android:fillColor="#3B2E22"
+            android:pathData="M29,42c-1,-14 8,-22 19,-22s21,7 19,22c-2,-6 -6,-9 -9,-9c-4,3 -12,4 -20,1c-2,2 -6,4 -9,8z" />
+        <!-- eyes -->
+        <path
+            android:fillColor="#3B2E22"
+            android:pathData="M40,44a2,2.4 0 1,0 0,4.8a2,2.4 0 1,0 0,-4.8zM56,44a2,2.4 0 1,0 0,4.8a2,2.4 0 1,0 0,-4.8z" />
+        <!-- smile -->
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#B7743B"
+            android:strokeWidth="1.8"
+            android:strokeLineCap="round"
+            android:pathData="M43,53c2.5,2.5 7.5,2.5 10,0" />
+        <!-- cheeks -->
+        <path
+            android:fillColor="#F4A98E"
+            android:fillAlpha="0.55"
+            android:pathData="M36,50a2.6,1.8 0 1,0 0,3.6a2.6,1.8 0 1,0 0,-3.6zM60,50a2.6,1.8 0 1,0 0,3.6a2.6,1.8 0 1,0 0,-3.6z" />
+    </group>
+</vector>

@@ -10,7 +10,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/page_horizontal_margin"
-    android:layout_marginTop="@dimen/space_16"
+    android:layout_marginTop="@dimen/space_24"
     android:layout_marginEnd="@dimen/page_horizontal_margin"
     android:clickable="true"
     android:focusable="true"
