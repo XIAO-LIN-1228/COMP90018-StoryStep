@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    A walk in three figures on one line, each figure bold with its unit, separated by dots:
+    "52 min · 1.2 km · 2 places". Same ids as view_stat_row, so a host binds either.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/stat_duration"
+        style="@style/Widget.StoryStep.StatInline" />
+
+    <TextView
+        style="@style/Widget.StoryStep.StatDot"
+        android:text="@string/stat_separator" />
+
+    <TextView
+        android:id="@+id/stat_distance"
+        style="@style/Widget.StoryStep.StatInline" />
+
+    <TextView
+        style="@style/Widget.StoryStep.StatDot"
+        android:text="@string/stat_separator" />
+
+    <TextView
+        android:id="@+id/stat_stories"
+        style="@style/Widget.StoryStep.StatInline" />
+
+    <TextView
+        style="@style/Widget.StoryStep.StatInlineUnit"
+        android:text="@string/stat_places_unit" />
+</LinearLayout>
