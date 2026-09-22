@@ -12,6 +12,11 @@
 <resources>
     <color name="story_ground">#14120E</color>
     <color name="story_surface">#1E1B15</color>
+    <color name="kind_sights">#6DB57A</color>
+    <color name="kind_food">#EF8A55</color>
+    <color name="kind_drink">#D69A4E</color>
+    <color name="kind_shopping">#E081C2</color>
+    <color name="kind_saved">#EFC65A</color>
     <color name="story_glass">#B81E1B15</color>
     <color name="story_glass_edge">#26FFFFFF</color>
     <color name="story_surface_sunk">#221E17</color>

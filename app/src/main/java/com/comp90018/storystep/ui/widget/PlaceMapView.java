@@ -40,11 +40,23 @@ public class PlaceMapView extends FrameLayout {
         public final String id;
         public final String name;
         public final GeoPoint location;
+        /** Which glyph and colour the pin gets; null for the plain story dot. */
+        @Nullable public final com.comp90018.storystep.domain.model.AttractionCategory.Kind kind;
+        /** Kept places wear the star when the map is showing what is kept. */
+        public final boolean starred;
 
         public Place(String id, String name, GeoPoint location) {
+            this(id, name, location, null, false);
+        }
+
+        public Place(String id, String name, GeoPoint location,
+                     @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+                     boolean starred) {
             this.id = id;
             this.name = name;
             this.location = location;
+            this.kind = kind;
+            this.starred = starred;
         }
     }
 
@@ -156,7 +168,8 @@ public class PlaceMapView extends FrameLayout {
     public void setPlaces(List<Place> places) {
         List<PinOverlay.Pin> pins = new ArrayList<>(places.size());
         for (Place place : places) {
-            pins.add(new PinOverlay.Pin(place.id, toOsm(place.location), labelledPin(place.name)));
+            pins.add(new PinOverlay.Pin(place.id, toOsm(place.location),
+                    labelledPin(place.name, place.kind, place.starred)));
         }
         pinOverlay.setPins(pins);
         map.invalidate();
@@ -305,8 +318,14 @@ public class PlaceMapView extends FrameLayout {
     }
 
 
-    /** The disc with the story dot, and the name in ink with a paper halo beneath it. */
-    private android.graphics.Bitmap labelledPin(String name) {
+    /**
+     * The disc - coloured for its kind with the kind's glyph, or white with the story dot -
+     * and the name in ink with a paper halo beneath it.
+     */
+    private android.graphics.Bitmap labelledPin(
+            String name,
+            @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+            boolean starred) {
         float density = getResources().getDisplayMetrics().density;
         int disc = Math.round(30 * density);
         PinOverlay.discPx = disc;
@@ -333,8 +352,31 @@ public class PlaceMapView extends FrameLayout {
         canvas.drawCircle(cx, cy + density, disc / 2f, paint);
         paint.setColor(ContextCompat.getColor(getContext(), R.color.story_surface));
         canvas.drawCircle(cx, cy, disc / 2f, paint);
-        paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
-        canvas.drawCircle(cx, cy, 5.5f * density, paint);
+        int glyph = starred ? R.drawable.ic_kind_saved
+                : kind == null ? 0
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.FOOD
+                        ? R.drawable.ic_kind_food
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.DRINK
+                        ? R.drawable.ic_kind_drink
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.SHOPPING
+                        ? R.drawable.ic_kind_shopping
+                : R.drawable.ic_kind_sights;
+        if (glyph == 0) {
+            paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
+            canvas.drawCircle(cx, cy, 5.5f * density, paint);
+        } else {
+            // A smaller coloured disc inside the white one, the glyph in white on it.
+            paint.setColor(ContextCompat.getColor(getContext(), kindColour(kind, starred)));
+            float inner = disc / 2f - 3 * density;
+            canvas.drawCircle(cx, cy, inner, paint);
+            android.graphics.drawable.Drawable icon = ContextCompat.getDrawable(getContext(), glyph);
+            if (icon != null) {
+                int half = Math.round(inner * 0.62f);
+                icon.setBounds(Math.round(cx) - half, Math.round(cy) - half,
+                        Math.round(cx) + half, Math.round(cy) + half);
+                icon.draw(canvas);
+            }
+        }
 
         // Halo first, then the ink, so the name reads over roads and labels.
         float baseline = disc + gap - text.getFontMetrics().ascent;
@@ -345,6 +387,28 @@ public class PlaceMapView extends FrameLayout {
         canvas.drawText(label, cx - textWidth / 2f, baseline, halo);
         canvas.drawText(label, cx - textWidth / 2f, baseline, text);
         return bitmap;
+    }
+
+    /** The colour of a kind's disc; the star has its own. */
+    public static int kindColour(
+            @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+            boolean starred) {
+        if (starred) {
+            return R.color.kind_saved;
+        }
+        if (kind == null) {
+            return R.color.story_signal;
+        }
+        switch (kind) {
+            case FOOD:
+                return R.color.kind_food;
+            case DRINK:
+                return R.color.kind_drink;
+            case SHOPPING:
+                return R.color.kind_shopping;
+            default:
+                return R.color.kind_sights;
+        }
     }
 
     /** Most colour out, a little light in: the map becomes a light grey ground. */

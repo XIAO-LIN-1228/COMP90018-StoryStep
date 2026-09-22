@@ -481,8 +481,11 @@ public class NearbyAttractionsFragment extends Fragment
         List<com.comp90018.storystep.ui.widget.PlaceMapView.Place> pins = new ArrayList<>();
         for (AttractionListItem item : state.getItems()) {
             if (item.getLocation() != null) {
+                boolean showingSaved = currentFilter().getKind()
+                        == com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SAVED;
                 pins.add(new com.comp90018.storystep.ui.widget.PlaceMapView.Place(
-                        item.getId(), item.getName(), item.getLocation()));
+                        item.getId(), item.getName(), item.getLocation(),
+                        item.getCategory().kind(), showingSaved && item.isSaved()));
             }
         }
         homeMap.setPlaces(pins);
@@ -770,6 +773,16 @@ public class NearbyAttractionsFragment extends Fragment
             }
             viewModel.setFilter(currentFilter().withVenue(choice));
         };
+        // The kind chips over the map. ChipGroup's single selection with no requirement means
+        // tapping the chosen chip clears it, which reads as "back to everything".
+        com.google.android.material.chip.ChipGroup kinds = requireView().findViewById(R.id.kind_group);
+        kinds.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (syncingChips) {
+                return;
+            }
+            viewModel.setFilter(currentFilter().withKind(kindOfChip(
+                    checkedIds.isEmpty() ? View.NO_ID : checkedIds.get(0))));
+        });
         chipAll.setOnClickListener(venue);
         chipIndoor.setOnClickListener(venue);
         chipOutdoor.setOnClickListener(venue);
@@ -808,8 +821,47 @@ public class NearbyAttractionsFragment extends Fragment
             chipIndoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.INDOOR);
             chipOutdoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.OUTDOOR);
             chipUnvisited.setChecked(filter.isUnvisitedOnly());
+            com.google.android.material.chip.ChipGroup kinds = requireView().findViewById(R.id.kind_group);
+            int wanted = chipOfKind(filter.getKind());
+            if (wanted == View.NO_ID) {
+                kinds.clearCheck();
+            } else if (kinds.getCheckedChipId() != wanted) {
+                kinds.check(wanted);
+            }
         } finally {
             syncingChips = false;
+        }
+    }
+
+    private static com.comp90018.storystep.domain.attraction.AttractionFilter.Kind kindOfChip(int id) {
+        if (id == R.id.kind_saved) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SAVED;
+        } else if (id == R.id.kind_sights) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SIGHTS;
+        } else if (id == R.id.kind_food) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.FOOD;
+        } else if (id == R.id.kind_drink) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.DRINK;
+        } else if (id == R.id.kind_shopping) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SHOPPING;
+        }
+        return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.ALL;
+    }
+
+    private static int chipOfKind(com.comp90018.storystep.domain.attraction.AttractionFilter.Kind kind) {
+        switch (kind) {
+            case SAVED:
+                return R.id.kind_saved;
+            case SIGHTS:
+                return R.id.kind_sights;
+            case FOOD:
+                return R.id.kind_food;
+            case DRINK:
+                return R.id.kind_drink;
+            case SHOPPING:
+                return R.id.kind_shopping;
+            default:
+                return View.NO_ID;
         }
     }
 }

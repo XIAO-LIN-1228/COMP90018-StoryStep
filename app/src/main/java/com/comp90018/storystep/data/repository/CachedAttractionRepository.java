@@ -63,7 +63,7 @@ public final class CachedAttractionRepository implements AttractionRepository {
      * centre is not truncated in a way the user would notice and bounded enough that one query
      * cannot return a response large enough to matter.
      */
-    private static final int FETCH_LIMIT = 60;
+    private static final int FETCH_LIMIT = 80;
 
     private final AttractionCache cache;
     private final AttractionSource source;

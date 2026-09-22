@@ -416,6 +416,14 @@
     <string name="profile_group_data">Your data</string>
     <string name="profile_group_about">About</string>
     <string name="settings_title">Settings</string>
+    <string name="category_food">Food</string>
+    <string name="category_drink">Cafe &amp; bar</string>
+    <string name="category_shopping">Shopping</string>
+    <string name="kind_saved">Saved</string>
+    <string name="kind_sights">Sights</string>
+    <string name="kind_food">Food</string>
+    <string name="kind_drink">Drinks</string>
+    <string name="kind_shopping">Shopping</string>
     <string name="profile_recent_walks">Recent walks</string>
     <string name="profile_saved_places">Saved places</string>
 </resources>

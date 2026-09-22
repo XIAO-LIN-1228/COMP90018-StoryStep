@@ -81,7 +81,67 @@
                 android:textColor="@color/story_ink_2" />
         </com.google.android.material.card.MaterialCardView>
 
+        <!--
+            The kinds of place, as chips over the map: kept, sights, food, drinks, shopping.
+            One at a time; the chosen one again means all. Each carries its own glyph in its
+            own colour, the same as its pins.
+        -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-20dp"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="-20dp"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:scrollbars="none">
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/kind_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="8dp"
+                app:selectionRequired="false"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_saved"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_saved"
+                    app:chipIcon="@drawable/ic_kind_saved"
+                    app:chipIconTint="@color/kind_saved" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_sights"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_sights"
+                    app:chipIcon="@drawable/ic_kind_sights"
+                    app:chipIconTint="@color/kind_sights" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_food"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_food"
+                    app:chipIcon="@drawable/ic_kind_food"
+                    app:chipIconTint="@color/kind_food" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_drink"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_drink"
+                    app:chipIcon="@drawable/ic_kind_drink"
+                    app:chipIconTint="@color/kind_drink" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_shopping"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_shopping"
+                    app:chipIcon="@drawable/ic_kind_shopping"
+                    app:chipIconTint="@color/kind_shopping" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
     </LinearLayout>
 
     <!-- The sheet: resting shows the first places; a pull fills the screen. -->

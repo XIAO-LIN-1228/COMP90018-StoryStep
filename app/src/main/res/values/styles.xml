@@ -129,6 +129,28 @@
         <item name="elevation">@dimen/card_elevation</item>
     </style>
 
+    <!-- The kind chips over the map: white pills, a coloured glyph, the wash when chosen. -->
+    <style name="Widget.StoryStep.KindChip" parent="Widget.Material3.Chip.Assist">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:checkable">true</item>
+        <item name="chipBackgroundColor">@color/kind_chip_background</item>
+        <item name="android:textColor">@color/story_ink</item>
+        <item name="android:fontFamily">@font/bricolage_semibold</item>
+        <item name="android:textSize">13.5sp</item>
+        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
+        <item name="chipIconSize">18dp</item>
+        <item name="chipIconVisible">true</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipStartPadding">10dp</item>
+        <item name="chipEndPadding">12dp</item>
+        <item name="iconStartPadding">2dp</item>
+        <item name="iconEndPadding">4dp</item>
+        <item name="chipMinHeight">36dp</item>
+        <item name="android:elevation">2dp</item>
+    </style>
+
     <style name="Widget.StoryStep.Chip" parent="Widget.Material3.Chip.Assist">
         <item name="android:checkable">true</item>
         <item name="chipBackgroundColor">@color/chip_background</item>
