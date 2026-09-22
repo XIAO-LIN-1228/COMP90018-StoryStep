@@ -357,9 +357,20 @@ public final class StoryStepMigrations {
         }
     };
 
+    public static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `theme_runs` ("
+                    + "`session_id` TEXT NOT NULL, `definition_json` TEXT NOT NULL, "
+                    + "PRIMARY KEY(`session_id`), FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+            database.execSQL("CREATE TABLE IF NOT EXISTS `theme_stops` ("
+                    + "`session_id` TEXT NOT NULL, `stop_id` TEXT NOT NULL, `skipped` INTEGER NOT NULL, `answer` INTEGER, "
+                    + "PRIMARY KEY(`session_id`, `stop_id`), FOREIGN KEY(`session_id`) REFERENCES `theme_runs`(`session_id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9};
+                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10};
     }
 }

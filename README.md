@@ -6,15 +6,30 @@
 
 StoryStep helps tourists discover nearby attractions using location, motion, orientation, weather, and cloud data. As users explore an area, the app provides approximate directional guidance and reveals information about nearby landmarks.
 
-**Project status:** Core flows implemented; recommendation integration and final acceptance in progress.
+**Project status:** Core flows implemented; theme exploration added locally; final acceptance in progress.
 
 The app uses real OpenStreetMap attractions, map tiles and Open-Meteo weather, with Room persistence
-(schema v9), foreground exploration, arrival stories, saved places and journey history. Contextual
-ranking and Recommended/Nearby controls are implemented in the teammate A branches using
+(schema v10), foreground exploration, arrival stories, saved places and journey history. Contextual
+ranking and Recommended/Nearby controls are implemented using
 the [initial scoring policy](docs/decisions/D-07-recommendation-baseline.md). Profile now reads local
 counts and device capabilities; the obsolete memory editor is removed. These implementation claims
-are not release acceptance: network retry/backoff, saved-detail cache fallback, backup exclusions,
-and physical-device/accessibility/compatibility verification still require completion.
+are not release acceptance. Network retry/backoff, saved-detail cache fallback and backup exclusions
+are also present in the current baseline; physical-device/accessibility/compatibility verification
+still requires completion.
+
+The local `feature/theme-exploration` branch adds a complete three-stop **Parkville: buildings and
+botany** theme. Start it from Nearby → Explore a theme. Choose a station, use existing directional
+guidance, dwell within the arrival policy to unlock its sourced story and optional observation
+question, skip/restore stations, pause/resume, and finish with complete or partial results. Progress,
+questions and content survive restart and attraction-cache eviction. Opening a theme never starts
+GPS; only an explicit start/resume does. All three stops must be visited for a completed theme;
+skips and quiz answers never stand in for arrival. Existing history deletion removes the owned
+theme records. Stories are bundled; map availability still depends on the existing map cache.
+
+See the [theme execution and test plan](docs/theme-exploration-plan.md) and
+[theme verification evidence](docs/verification/EV-THEME-EXPLORATION-2026-09-21.md).
+Coordinates guide users approximately; current access and real GPS approach performance require
+field verification. Theme selection does not promise open buildings or a computed walking route.
 
 See the [teammate A evidence](docs/verification/EV-REQ21-REQ22-2026-09-20-01.md) for commands,
 results and unexecuted checks. Older plan/ledger entries describe earlier commits and must not be

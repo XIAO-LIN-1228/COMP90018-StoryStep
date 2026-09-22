@@ -5,6 +5,10 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/onboardingFragment">
 
+    <fragment android:id="@+id/themeFragment"
+        android:name="com.comp90018.storystep.ui.theme.ThemeFragment"
+        android:label="@string/theme_explore" tools:layout="@layout/fragment_theme" />
+
     <fragment
         android:id="@+id/onboardingFragment"
         android:name="com.comp90018.storystep.ui.onboarding.OnboardingFragment"

@@ -37,6 +37,11 @@ public class AccessibilityChecksTest {
     }
 
     @Test
+    public void theThemeScreenPassesTheAutomatedChecks() {
+        assertScreenIsClean(R.id.themeFragment);
+    }
+
+    @Test
     public void theNearbyScreenPassesTheAutomatedChecks() {
         assertScreenIsClean(R.id.nearbyAttractionsFragment);
     }

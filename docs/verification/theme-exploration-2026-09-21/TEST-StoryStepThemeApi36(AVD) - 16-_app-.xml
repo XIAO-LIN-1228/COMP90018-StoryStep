@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuites tests="73" failures="0" errors="0" skipped="0" time="65.704" timestamp="2026-09-21T08:14:09" hostname="localhost">
+  <testsuite name="com.comp90018.storystep.ApplicationIdentityTest" tests="2" failures="0" errors="0" skipped="0" time="0.084" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="applicationIdMatchesTheSourcePackage" classname="com.comp90018.storystep.ApplicationIdentityTest" time="0.067" />
+    <testcase name="launcherActivityClassResolves" classname="com.comp90018.storystep.ApplicationIdentityTest" time="0.017" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.AttractionAreaDaoTest" tests="6" failures="0" errors="0" skipped="0" time="0.083" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="anUnfetchedAreaHasNoRow" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.015" />
+    <testcase name="areasAreKeptSeparately" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.013" />
+    <testcase name="clearingForgetsEveryFetchAndReportsHowMany" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.012" />
+    <testcase name="refetchingAnAreaReplacesItsRowRatherThanAddingOne" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.015" />
+    <testcase name="aFetchedAreaRoundTripsWithItsTimeAndCount" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.014" />
+    <testcase name="anAreaFetchedWithNothingInItIsStillRecordedAsFetched" classname="com.comp90018.storystep.data.local.AttractionAreaDaoTest" time="0.014" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.AttractionDaoTest" tests="6" failures="0" errors="0" skipped="0" time="0.079" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="upsertReplacesAnExistingRow" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.012" />
+    <testcase name="theIndoorClassificationRoundTripsThroughStorageIncludingUnknown" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.014" />
+    <testcase name="findByIdReturnsNullForAnUnknownIdentifier" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.015" />
+    <testcase name="deleteAllClearsTheCache" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.012" />
+    <testcase name="theScopedDeleteRemovesProviderRowsInTheBoxAndNothingElse" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.012" />
+    <testcase name="insertedAttractionsCanBeReadBack" classname="com.comp90018.storystep.data.local.AttractionDaoTest" time="0.014" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.SavedAttractionDaoTest" tests="6" failures="0" errors="0" skipped="0" time="0.079" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="aSavedAttractionCanBeReadBackWithItsCopiedContent" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.013" />
+    <testcase name="removingOneSavedPlaceLeavesTheOthers" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.013" />
+    <testcase name="aSecondSaveOfTheSamePlaceIsIgnoredAndKeepsTheOriginalTime" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.012" />
+    <testcase name="savedPlacesComeBackMostRecentlySavedFirst" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.012" />
+    <testcase name="clearingTheAttractionCacheDoesNotUnsaveAnything" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.014" />
+    <testcase name="clearingReportsHowManySavedPlacesItRemoved" classname="com.comp90018.storystep.data.local.SavedAttractionDaoTest" time="0.015" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.SessionHistoryDaoTest" tests="8" failures="0" errors="0" skipped="0" time="0.196" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="theVisitCountIsAggregatedAndASessionWithNoVisitsStillAppears" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.04" />
+    <testcase name="clearingHistoryRemovesFinishedSessionsAndLeavesAWalkInProgressWithItsRoute" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.015" />
+    <testcase name="sessionsThatEndedTogetherAreOrderedDeterministically" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.039" />
+    <testcase name="deletingAnUnknownSessionRemovesNothing" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.012" />
+    <testcase name="deletingOneSessionCascadesToItsOwnRoutePointsAndVisitsOnly" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.039" />
+    <testcase name="clearingEmptyHistoryRemovesNothing" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.017" />
+    <testcase name="theRecordedContextSurvivesAWriteAndReadBack" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.021" />
+    <testcase name="onlyFinishedSessionsAreListedAndTheNewestComesFirst" classname="com.comp90018.storystep.data.local.SessionHistoryDaoTest" time="0.013" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.SessionStorageDaoTest" tests="14" failures="0" errors="0" skipped="0" time="0.328" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="deletingASessionRemovesItsOwnRouteAndVisitsAndNothingElse" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.047" />
+    <testcase name="aReadVisitIsNoLongerOffered" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.016" />
+    <testcase name="routePointsComeBackInSequenceOrder" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.016" />
+    <testcase name="markingAnUnknownVisitReadChangesNothing" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.013" />
+    <testcase name="theOldestUnreadVisitIsTheOneOfferedBack" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.04" />
+    <testcase name="reInsertingAStoredSequenceIsIgnoredRatherThanDuplicated" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.013" />
+    <testcase name="aVisitCanBeLookedUpByItsSessionAndAttractionPair" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.038" />
+    <testcase name="anUnreadVisitBelongsOnlyToItsOwnSession" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.015" />
+    <testcase name="aSecondVisitToTheSamePlaceInOneSessionIsRejected" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.014" />
+    <testcase name="twoSessionsMayEachHaveTheirOwnSequenceZero" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.011" />
+    <testcase name="aSessionRoundTripsWithItsDestinationSnapshot" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.04" />
+    <testcase name="thereIsNothingToRecoverWhenEverySessionIsFinished" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.012" />
+    <testcase name="onlyUnfinishedSessionsAreOfferedForRecovery" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.013" />
+    <testcase name="thesamePlaceMayBeVisitedAgainInADifferentSession" classname="com.comp90018.storystep.data.local.SessionStorageDaoTest" time="0.04" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.StoryStepMigrationTest" tests="10" failures="0" errors="0" skipped="0" time="2.065" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="migratingFromTwoToThreeAddsTheSavedTableAndKeepsWhatWasThere" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.27" />
+    <testcase name="theMigratedDatabaseCarriesTheNewSessionTables" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.243" />
+    <testcase name="migratingFromFourToFiveAddsTheSessionContextAndLabelsInterruptedSessions" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.246" />
+    <testcase name="migratingToSevenAddsANullablePhotoColumnWithoutTouchingRows" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.192" />
+    <testcase name="migratingNineToTenKeepsFinishedAndInterruptedJourneysAndAddsEmptyThemes" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.244" />
+    <testcase name="migratingFromThreeToFourAddsTheWeatherCacheAndKeepsUserRecords" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.169" />
+    <testcase name="migratingToNineLeavesEveryWalkUnpublished" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.169" />
+    <testcase name="migratingToSixMakesTheIndoorClassificationTriStateWithoutLosingRows" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.274" />
+    <testcase name="migratingToEightAddsPopularityDefaultingToZero" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.14" />
+    <testcase name="migratingFromOneToTwoKeepsTheCachedAttractionsAndMarksTheirProvenance" classname="com.comp90018.storystep.data.local.StoryStepMigrationTest" time="0.118" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.ThemeStorageTest" tests="5" failures="0" errors="0" skipped="0" time="0.499" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="reopenAfterCacheDeletionKeepsStoriesArrivalSkipAndAnswer" classname="com.comp90018.storystep.data.local.ThemeStorageTest" time="0.166" />
+    <testcase name="duplicateSqliteArrivalCannotInflateThemeProgress" classname="com.comp90018.storystep.data.local.ThemeStorageTest" time="0.062" />
+    <testcase name="failedStopInsertionRollsBackSessionAndThemeTogether" classname="com.comp90018.storystep.data.local.ThemeStorageTest" time="0.091" />
+    <testcase name="deletingFinishedHistoryCascadesThemesAndKeepsActiveRunAndSavedPlaces" classname="com.comp90018.storystep.data.local.ThemeStorageTest" time="0.091" />
+    <testcase name="discardRemovesOnlyItsOwnTheme" classname="com.comp90018.storystep.data.local.ThemeStorageTest" time="0.089" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.data.local.WeatherCacheDaoTest" tests="6" failures="0" errors="0" skipped="0" time="0.103" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="aRowStoredWithAnUnrecognisedConditionReadsBackAsUnknown" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.014" />
+    <testcase name="refreshingAnAreaReplacesItsRowRatherThanAddingOne" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.013" />
+    <testcase name="separateAreasKeepSeparateRows" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.01" />
+    <testcase name="anObservationSurvivesTheRoundTrip" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.014" />
+    <testcase name="clearingRemovesEveryAreaAndReportsHowMany" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.013" />
+    <testcase name="anUncachedAreaReadsAsAbsentRatherThanEmpty" classname="com.comp90018.storystep.data.local.WeatherCacheDaoTest" time="0.039" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.ui.AccessibilityChecksTest" tests="6" failures="0" errors="0" skipped="0" time="35.446" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="theSavedScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="7.768" />
+    <testcase name="theThemeScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="5.394" />
+    <testcase name="theNearbyScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="8.117" />
+    <testcase name="theJourneysScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="3.028" />
+    <testcase name="theProfileScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="7.865" />
+    <testcase name="thePrivacyScreenPassesTheAutomatedChecks" classname="com.comp90018.storystep.ui.AccessibilityChecksTest" time="3.274" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.ui.RecommendationPresentationTest" tests="2" failures="0" errors="0" skipped="0" time="7.867" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="nearbyChoiceSurvivesActivityRecreation" classname="com.comp90018.storystep.ui.RecommendationPresentationTest" time="4.523" />
+    <testcase name="profileShowsCapabilityResultsAndNoMemoryEditorIsReachable" classname="com.comp90018.storystep.ui.RecommendationPresentationTest" time="3.344" />
+  </testsuite>
+  <testsuite name="com.comp90018.storystep.ui.ThemePresentationTest" tests="2" failures="0" errors="0" skipped="0" time="11.819" timestamp="2026-09-21T08:14:09" hostname="localhost">
+    <properties>
+      <property name="device" value="StoryStepThemeApi36(AVD) - 16" />
+      <property name="flavor" value="" />
+      <property name="project" value=":app" />
+    </properties>
+    <testcase name="restoredThemeAllowsSkipUndoQuizAndRecreationThenShowsReadOnlyResults" classname="com.comp90018.storystep.ui.ThemePresentationTest" time="7.056" />
+    <testcase name="previewAndRotationDoNotStartExploration" classname="com.comp90018.storystep.ui.ThemePresentationTest" time="4.763" />
+  </testsuite>
+</testsuites>

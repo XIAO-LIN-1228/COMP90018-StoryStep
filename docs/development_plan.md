@@ -4,6 +4,11 @@ Prepared: 2026-08-31. Planning baseline: `762662e` (`framework-build`).
 
 Status: proposed execution plan, not a claim that the features or tests below are complete.
 
+2026-09-21 authorized extension: theme exploration is implemented locally on
+`feature/theme-exploration`, with Room v10. See the [implementation/test plan](theme-exploration-plan.md)
+and [execution evidence](verification/EV-THEME-EXPLORATION-2026-09-21.md). Earlier schema and
+test counts below describe their dated baselines rather than the current branch.
+
 Latest implementation update (2026-09-20, teammate A branch): REQ-21 scoring and REQ-22
 presentation are implemented against the [initial policy](decisions/D-07-recommendation-baseline.md).
 Profile counts/capabilities are live; the obsolete Memory editor is removed. Room is v9. See

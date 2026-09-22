@@ -53,6 +53,8 @@ import java.util.concurrent.Executor;
  */
 public final class RoomSessionStore implements SessionStore {
 
+    private final com.comp90018.storystep.data.local.ThemeDao themeDao;
+
     private final Transactions transactions;
     private final SessionDao sessionDao;
     private final RoutePointDao routePointDao;
@@ -68,6 +70,13 @@ public final class RoomSessionStore implements SessionStore {
                             Clock clock,
                             Executor ioExecutor,
                             Executor mainExecutor) {
+        this(transactions, sessionDao, routePointDao, visitDao, clock, ioExecutor, mainExecutor, null);
+    }
+
+    public RoomSessionStore(Transactions transactions, SessionDao sessionDao, RoutePointDao routePointDao,
+            VisitDao visitDao, Clock clock, Executor ioExecutor, Executor mainExecutor,
+            com.comp90018.storystep.data.local.ThemeDao themeDao) {
+        this.themeDao = themeDao;
         this.transactions = requireNonNull(transactions, "transactions");
         this.sessionDao = requireNonNull(sessionDao, "sessionDao");
         this.routePointDao = requireNonNull(routePointDao, "routePointDao");
@@ -79,6 +88,20 @@ public final class RoomSessionStore implements SessionStore {
 
     @Override
     public void create(RepositoryCallback<SessionSummary> callback) {
+        createSession(null, callback);
+    }
+
+    @Override public void createForTheme(com.comp90018.storystep.domain.theme.ThemeDefinition theme,
+            RepositoryCallback<SessionSummary> callback) {
+        if (theme == null || themeDao == null) {
+            fail(callback, new IllegalArgumentException("theme storage is unavailable"));
+            return;
+        }
+        createSession(theme, callback);
+    }
+
+    private void createSession(com.comp90018.storystep.domain.theme.ThemeDefinition theme,
+            RepositoryCallback<SessionSummary> callback) {
         run(callback, new Work<SessionSummary>() {
             @Override
             public SessionSummary perform() {
@@ -104,7 +127,20 @@ public final class RoomSessionStore implements SessionStore {
                         entity.segmentCount = 0;
                         entity.finished = false;
                         entity.lastCheckpointWallClockMillis = startedAt;
+                        if (theme != null) { applyDestination(entity, theme.stops.get(0).attraction()); }
                         sessionDao.insert(entity);
+                        if (theme != null) {
+                            com.comp90018.storystep.data.local.ThemeRunEntity run = new com.comp90018.storystep.data.local.ThemeRunEntity();
+                            run.sessionId = entity.id;
+                            run.definitionJson = com.comp90018.storystep.data.local.ThemeJson.encode(theme);
+                            themeDao.insertRun(run);
+                            List<com.comp90018.storystep.data.local.ThemeStopEntity> stops = new ArrayList<>();
+                            for (com.comp90018.storystep.domain.theme.ThemeStop stop : theme.stops) {
+                                com.comp90018.storystep.data.local.ThemeStopEntity row = new com.comp90018.storystep.data.local.ThemeStopEntity();
+                                row.sessionId = entity.id; row.stopId = stop.id; stops.add(row);
+                            }
+                            themeDao.insertStops(stops);
+                        }
                         created[0] = toSummary(entity);
                     }
                 });

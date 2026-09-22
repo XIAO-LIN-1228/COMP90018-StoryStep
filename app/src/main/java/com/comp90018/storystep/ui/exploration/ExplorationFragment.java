@@ -48,6 +48,7 @@ public class ExplorationFragment extends Fragment {
     private final CardinalAnnouncer directionAnnouncer = new CardinalAnnouncer();
 
     private ExplorationViewModel viewModel;
+    private com.comp90018.storystep.ui.theme.ThemeViewModel themeModel;
 
     /**
      * True once this screen has actually seen a session. Without it, opening the dashboard with no
@@ -108,6 +109,16 @@ public class ExplorationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        themeModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(com.comp90018.storystep.ui.theme.ThemeViewModel.class);
+        TextView themeButton = view.findViewById(R.id.exploration_theme);
+        themeButton.setOnClickListener(v -> NavHostFragment.findNavController(this).navigate(R.id.themeFragment));
+        themeModel.getState().observe(getViewLifecycleOwner(), state -> {
+            themeButton.setVisibility(state.progress != null || state.failed ? View.VISIBLE : View.GONE);
+            themeButton.setText(state.progress == null ? getString(R.string.theme_view_progress)
+                    : getString(R.string.theme_journey_summary, state.progress.theme.title,
+                            state.progress.arrivedCount(), state.progress.theme.stops.size(), state.progress.skippedCount()));
+        });
         map = view.findViewById(R.id.exploration_map);
         offlinePill = view.findViewById(R.id.exploration_offline);
         connectivity = new com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor(
@@ -331,6 +342,7 @@ public class ExplorationFragment extends Fragment {
     }
 
     private String pausedLabel(PauseReason reason) {
+        if (reason == PauseReason.USER_REQUESTED) { return getString(R.string.theme_paused_user); }
         if (reason == PauseReason.PERMISSION_LOST) {
             return getString(R.string.exploration_paused_permission);
         }
@@ -391,6 +403,7 @@ public class ExplorationFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        themeModel.refresh();
         map.onResume();
     }
 

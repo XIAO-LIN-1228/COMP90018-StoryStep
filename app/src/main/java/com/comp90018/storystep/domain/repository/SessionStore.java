@@ -38,6 +38,12 @@ public interface SessionStore {
      */
     void create(RepositoryCallback<SessionSummary> callback);
 
+    /** Atomically creates the session, first destination and versioned theme content. */
+    default void createForTheme(com.comp90018.storystep.domain.theme.ThemeDefinition theme,
+            RepositoryCallback<SessionSummary> callback) {
+        callback.onError(new UnsupportedOperationException("themed sessions"));
+    }
+
     /**
      * Saves progress without ending the session, so an interruption does not discard everything.
      *
