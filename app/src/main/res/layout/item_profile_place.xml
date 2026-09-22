@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A kept place as a square photograph with its name beneath. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/profile_place_card"
+    android:layout_width="120dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/space_12"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <com.google.android.material.imageview.ShapeableImageView
+        android:id="@+id/profile_place_photo"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:background="@drawable/bg_thumb_placeholder"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
+
+    <TextView
+        android:id="@+id/profile_place_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:ellipsize="end"
+        android:fontFamily="@font/bricolage_semibold"
+        android:maxLines="2"
+        android:textColor="@color/story_ink"
+        android:textSize="13sp" />
+</LinearLayout>

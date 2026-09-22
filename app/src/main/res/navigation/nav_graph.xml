@@ -61,8 +61,18 @@
         android:name="com.comp90018.storystep.ui.profile.ProfileFragment"
         android:label="@string/nav_profile"
         tools:layout="@layout/fragment_profile">
-        <action android:id="@+id/action_profile_to_recovery" app:destination="@id/recoveryStateFragment" />
-        <action android:id="@+id/action_profile_to_privacy_data" app:destination="@id/privacyDataFragment" />
+        <action android:id="@+id/action_profile_to_settings" app:destination="@id/settingsFragment" />
+        <action android:id="@+id/action_profile_to_journey_detail" app:destination="@id/journeyDetailFragment" />
+        <action android:id="@+id/action_profile_to_attraction_detail" app:destination="@id/attractionDetailFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.comp90018.storystep.ui.profile.SettingsFragment"
+        android:label="@string/settings_title"
+        tools:layout="@layout/fragment_settings">
+        <action android:id="@+id/action_settings_to_recovery" app:destination="@id/recoveryStateFragment" />
+        <action android:id="@+id/action_settings_to_privacy_data" app:destination="@id/privacyDataFragment" />
     </fragment>
 
     <fragment

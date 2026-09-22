@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    The profile, read top to bottom: who (the avatar and the walker's line), what they have
-    done (the four figures in one card), then the settings in small labelled groups rather
-    than one long list. The page starts where every other top-level page starts, close to
-    the top; the figures are the reason to come back, so they come first.
+    The profile is about the walker: who they are, what they have done, the walks they took
+    and the places they kept. Settings live behind the gear at the top right, on their own
+    page, so nothing about the device or the app sits between the person and their record.
 -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -19,21 +18,31 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="@dimen/page_horizontal_margin"
         android:paddingTop="@dimen/space_16"
-        android:paddingEnd="@dimen/page_horizontal_margin"
         android:paddingBottom="98dp">
 
-        <!-- The identity line: avatar, name, and the one sentence about the walker. -->
+        <!-- The gear, alone on the top line, as the reference keeps it. -->
+        <ImageButton
+            android:id="@+id/profile_settings"
+            style="@style/Widget.StoryStep.ScrimButton"
+            android:layout_gravity="end"
+            android:layout_marginEnd="@dimen/page_horizontal_margin"
+            android:contentDescription="@string/settings_title"
+            android:src="@drawable/ic_settings" />
+
+        <!-- Who: a large avatar, the name, one line about the walker, one more about them. -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_4"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin">
 
             <ImageView
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="76dp"
+                android:layout_height="76dp"
                 android:contentDescription="@null"
                 android:src="@drawable/ic_avatar" />
 
@@ -58,16 +67,29 @@
                     android:layout_marginTop="2dp"
                     android:text="@string/profile_local"
                     android:textColor="@color/story_ink_3"
-                    tools:text="Exploring since Sep 2026 · stored on this device" />
+                    tools:text="Exploring since Sep 2026 · Parkville" />
             </LinearLayout>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/profile_bio"
+            style="@style/TextAppearance.StoryStep.Prose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:text="@string/profile_bio"
+            android:textColor="@color/story_ink_2" />
 
         <!-- The record: four figures in one white card. -->
         <com.google.android.material.card.MaterialCardView
             style="@style/Widget.StoryStep.Card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_16">
+            android:layout_marginStart="@dimen/page_horizontal_margin"
+            android:layout_marginTop="@dimen/space_16"
+            android:layout_marginEnd="@dimen/page_horizontal_margin">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -95,7 +117,6 @@
                         android:layout_marginTop="4dp"
                         android:text="@string/profile_count_unknown" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -112,7 +133,6 @@
                         android:layout_marginTop="4dp"
                         android:text="@string/profile_count_unknown" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -129,7 +149,6 @@
                         android:layout_marginTop="4dp"
                         android:text="@string/profile_count_unknown" />
                 </LinearLayout>
-
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
@@ -149,358 +168,58 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-            <TextView
-                style="@style/Widget.StoryStep.Eyebrow"
-                android:layout_marginTop="@dimen/space_24"
-                android:layout_marginBottom="@dimen/space_8"
-                android:text="@string/profile_group_device" />
+        <!-- The walks, most recent first, as photographs; hidden until there is one. -->
+        <TextView
+            android:id="@+id/profile_walks_heading"
+            style="@style/TextAppearance.StoryStep.Headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_32"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:text="@string/profile_recent_walks"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.StoryStep.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/profile_walks"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/space_8"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_profile_walk"
+            tools:visibility="visible" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:id="@+id/location_settings_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="10dp"
-                        android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
+        <!-- The places kept, as photographs; hidden until there is one. -->
+        <TextView
+            android:id="@+id/profile_saved_heading"
+            style="@style/TextAppearance.StoryStep.Headline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_32"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:text="@string/profile_saved_places"
+            android:visibility="gone"
+            tools:visibility="visible" />
 
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_location_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_location"
-                                android:textColor="@color/story_ink" />
-
-                            <TextView
-                                android:id="@+id/profile_location_status"
-                                style="@style/TextAppearance.StoryStep.Supporting"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="1dp"
-                                android:text="@string/profile_count_unknown" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_chevron_right" />
-                    </LinearLayout>
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="62dp"
-                        android:background="@color/story_hairline" />
-                    <LinearLayout
-                        android:id="@+id/sensor_settings_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="10dp"
-                        android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_sensor_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_sensor"
-                                android:textColor="@color/story_ink" />
-
-                            <TextView
-                                android:id="@+id/profile_sensor_status"
-                                style="@style/TextAppearance.StoryStep.Supporting"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="1dp"
-                                android:text="@string/profile_count_unknown" />
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_chevron_right" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                style="@style/Widget.StoryStep.Eyebrow"
-                android:layout_marginTop="@dimen/space_24"
-                android:layout_marginBottom="@dimen/space_8"
-                android:text="@string/profile_group_preferences" />
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.StoryStep.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="14dp"
-                        android:paddingBottom="10dp"
-                        
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_ruler_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_units"
-                                android:textColor="@color/story_ink" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            style="@style/TextAppearance.StoryStep.Supporting"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_units_value" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                style="@style/Widget.StoryStep.Eyebrow"
-                android:layout_marginTop="@dimen/space_24"
-                android:layout_marginBottom="@dimen/space_8"
-                android:text="@string/profile_group_data" />
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.StoryStep.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        android:id="@+id/privacy_data_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="10dp"
-                        android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_lock_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_privacy"
-                                android:textColor="@color/story_ink" />
-
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_chevron_right" />
-                    </LinearLayout>
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginStart="62dp"
-                        android:background="@color/story_hairline" />
-                    <LinearLayout
-                        android:id="@+id/clear_history_row"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="10dp"
-                        android:paddingBottom="10dp"
-                        android:clickable="true" android:focusable="true" android:foreground="?attr/selectableItemBackground"
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_error_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_delete_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_clear"
-                                android:textColor="@color/story_error" />
-
-                        </LinearLayout>
-
-                        <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:contentDescription="@null"
-                            android:src="@drawable/ic_chevron_right" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <TextView
-                style="@style/Widget.StoryStep.Eyebrow"
-                android:layout_marginTop="@dimen/space_24"
-                android:layout_marginBottom="@dimen/space_8"
-                android:text="@string/profile_group_about" />
-
-            <com.google.android.material.card.MaterialCardView
-                style="@style/Widget.StoryStep.Card"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-                    <LinearLayout
-                        
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="@dimen/settings_row_height"
-                        android:paddingStart="14dp"
-                        android:paddingTop="10dp"
-                        android:paddingEnd="14dp"
-                        android:paddingBottom="10dp"
-                        
-                        android:gravity="center_vertical"
-                        android:orientation="horizontal">
-
-                        <ImageView
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:background="@drawable/bg_icon_surface"
-                            android:contentDescription="@null"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_info_outline" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="12dp"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/TextAppearance.StoryStep.Body"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="@string/settings_about"
-                                android:textColor="@color/story_ink" />
-
-                        </LinearLayout>
-
-                        <TextView
-                            style="@style/TextAppearance.StoryStep.Supporting"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/settings_version" />
-                    </LinearLayout>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/profile_saved"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_12"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/space_8"
+            android:visibility="gone"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_profile_place"
+            tools:visibility="visible" />
     </LinearLayout>
 </ScrollView>
