@@ -101,7 +101,7 @@
                 android:id="@+id/kind_group"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:chipSpacingHorizontal="8dp"
+                app:chipSpacingHorizontal="6dp"
                 app:selectionRequired="false"
                 app:singleLine="true"
                 app:singleSelection="true">

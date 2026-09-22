@@ -136,19 +136,28 @@
         <item name="android:checkable">true</item>
         <item name="chipBackgroundColor">@color/kind_chip_background</item>
         <item name="android:textColor">@color/story_ink</item>
-        <item name="android:fontFamily">@font/bricolage_semibold</item>
-        <item name="android:textSize">13.5sp</item>
+        <!-- Chips read their face from textAppearance, not fontFamily. -->
+        <item name="android:textAppearance">@style/TextAppearance.StoryStep.KindChip</item>
         <item name="chipStrokeWidth">0dp</item>
         <item name="chipCornerRadius">@dimen/pill_corner_radius</item>
-        <item name="chipIconSize">18dp</item>
+        <item name="chipIconSize">16dp</item>
         <item name="chipIconVisible">true</item>
         <item name="checkedIconVisible">false</item>
-        <item name="chipStartPadding">10dp</item>
-        <item name="chipEndPadding">12dp</item>
-        <item name="iconStartPadding">2dp</item>
-        <item name="iconEndPadding">4dp</item>
-        <item name="chipMinHeight">36dp</item>
+        <item name="chipStartPadding">8dp</item>
+        <item name="chipEndPadding">10dp</item>
+        <item name="iconStartPadding">1dp</item>
+        <item name="iconEndPadding">2dp</item>
+        <item name="textStartPadding">3dp</item>
+        <item name="textEndPadding">1dp</item>
+        <item name="chipMinHeight">34dp</item>
         <item name="android:elevation">2dp</item>
+    </style>
+
+    <style name="TextAppearance.StoryStep.KindChip" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/bricolage_semibold</item>
+        <item name="fontFamily">@font/bricolage_semibold</item>
+        <item name="android:textSize">13sp</item>
+        <item name="android:letterSpacing">0</item>
     </style>
 
     <style name="Widget.StoryStep.Chip" parent="Widget.Material3.Chip.Assist">
