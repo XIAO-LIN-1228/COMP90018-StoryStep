@@ -81,12 +81,11 @@
                 android:layout_height="0dp"
                 android:visibility="gone" />
 
-            <!-- The figures as one quiet line: the card is a post, not a dashboard. -->
             <include
-                layout="@layout/view_stat_line"
+                layout="@layout/view_stat_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp" />
+                android:layout_marginTop="16dp" />
 
             <!-- Interrupted, or with gaps: the honesty label, as a brand-coloured pill. -->
             <TextView

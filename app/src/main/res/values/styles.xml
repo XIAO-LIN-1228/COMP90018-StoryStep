@@ -234,31 +234,6 @@
       content, the label names it, the unit is a footnote. Three or four of these in a
       row is how a walk is summarised.
     -->
-    <style name="Widget.StoryStep.StatInline" parent="">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/bricolage_bold</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/story_ink</item>
-        <item name="android:letterSpacing">-0.01</item>
-    </style>
-
-    <style name="Widget.StoryStep.StatInlineUnit" parent="Widget.StoryStep.StatInline">
-        <item name="android:fontFamily">@font/bricolage_medium</item>
-        <item name="android:textColor">@color/story_ink_2</item>
-        <item name="android:layout_marginStart">4dp</item>
-    </style>
-
-    <style name="Widget.StoryStep.StatDot" parent="">
-        <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:fontFamily">@font/bricolage_medium</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:textColor">@color/story_ink_3</item>
-        <item name="android:layout_marginStart">8dp</item>
-        <item name="android:layout_marginEnd">8dp</item>
-    </style>
-
     <style name="Widget.StoryStep.StatLabel" parent="">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
