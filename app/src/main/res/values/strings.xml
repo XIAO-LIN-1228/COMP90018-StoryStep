@@ -410,7 +410,5 @@
     <string name="profile_group_data">Your data</string>
     <string name="profile_group_about">About</string>
     <string name="settings_title">Settings</string>
-    <string name="profile_bio">Walking Melbourne one story at a time. Everything here stays on this phone.</string>
     <string name="profile_recent_walks">Recent walks</string>
-    <string name="profile_saved_places">Saved places</string>
 </resources>
