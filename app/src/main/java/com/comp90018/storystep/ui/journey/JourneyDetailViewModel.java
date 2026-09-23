@@ -87,8 +87,16 @@ public class JourneyDetailViewModel extends ViewModel {
         }
         com.comp90018.storystep.domain.model.GeoPoint origin = start;
         io.execute(() -> {
+            // Photographs taken on the walk are already in the session's directory; the ones
+            // chosen here are copied in beside them, and the order is the order they arrived.
             java.util.List<String> files = com.comp90018.storystep.platform.media.JourneyPhotoStore
-                    .importAll(appContext, sessionId, photos);
+                    .names(appContext, sessionId);
+            for (String added : com.comp90018.storystep.platform.media.JourneyPhotoStore
+                    .importAll(appContext, sessionId, photos)) {
+                if (!files.contains(added)) {
+                    files.add(added);
+                }
+            }
             String place = com.comp90018.storystep.platform.location.PlaceNamer
                     .name(appContext, origin);
             main.execute(() -> history.publish(sessionId, title.trim(), place, files,

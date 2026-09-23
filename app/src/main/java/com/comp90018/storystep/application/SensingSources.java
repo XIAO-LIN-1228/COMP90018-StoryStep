@@ -23,13 +23,26 @@ public final class SensingSources {
     private final MotionSource motionSource;
     private final HeadingSource headingSource;
     private final DeclinationSource declinationSource;
+    private final com.comp90018.storystep.platform.sensor.StepSource stepSource;
+    private final com.comp90018.storystep.platform.sensor.PressureSource pressureSource;
 
     public SensingSources(MotionSource motionSource,
                           HeadingSource headingSource,
                           DeclinationSource declinationSource) {
+        this(motionSource, headingSource, declinationSource, null, null);
+    }
+
+    /** With the two optional walk sensors: the step counter and the barometer. */
+    public SensingSources(MotionSource motionSource,
+                          HeadingSource headingSource,
+                          DeclinationSource declinationSource,
+                          com.comp90018.storystep.platform.sensor.StepSource stepSource,
+                          com.comp90018.storystep.platform.sensor.PressureSource pressureSource) {
         this.motionSource = motionSource;
         this.headingSource = headingSource;
         this.declinationSource = declinationSource;
+        this.stepSource = stepSource;
+        this.pressureSource = pressureSource;
     }
 
     /** Location only: what a device with no usable sensors, and most JVM tests, get. */
@@ -45,6 +58,24 @@ public final class SensingSources {
     /** True when the device can produce a heading and that heading can be corrected to true north. */
     public boolean hasHeading() {
         return headingSource != null && headingSource.isAvailable() && declinationSource != null;
+    }
+
+    /** True when the device counts steps and the app may read them. */
+    public boolean hasSteps() {
+        return stepSource != null && stepSource.isAvailable();
+    }
+
+    /** True when the device has a barometer. */
+    public boolean hasPressure() {
+        return pressureSource != null && pressureSource.isAvailable();
+    }
+
+    public com.comp90018.storystep.platform.sensor.StepSource getStepSource() {
+        return stepSource;
+    }
+
+    public com.comp90018.storystep.platform.sensor.PressureSource getPressureSource() {
+        return pressureSource;
     }
 
     public MotionSource getMotionSource() {

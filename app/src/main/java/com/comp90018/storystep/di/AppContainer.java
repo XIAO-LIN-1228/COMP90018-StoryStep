@@ -201,7 +201,11 @@ public class AppContainer {
                 new LocationSampleFilter(locationQualityPolicy),
                 clock,
                 new SensingSources(sensorHub, sensorHub.asHeadingSource(),
-                        new AndroidDeclinationSource()),
+                        new AndroidDeclinationSource(),
+                        new com.comp90018.storystep.platform.sensor.AndroidStepSource(
+                                this.applicationContext),
+                        new com.comp90018.storystep.platform.sensor.AndroidPressureSource(
+                                this.applicationContext)),
                 ArrivalPolicy.defaultPolicy(),
                 // The session records the weather it was walked in. Passed the same process-scoped
                 // repository every screen uses, so the capture is a cache read rather than an

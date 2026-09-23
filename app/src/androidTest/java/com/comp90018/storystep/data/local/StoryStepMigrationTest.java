@@ -456,4 +456,25 @@ public class StoryStepMigrationTest {
                 + "AND place_name IS NULL AND photo_files IS NULL"));
         version9.close();
     }
+
+    @Test
+    public void migratingToTenLeavesEveryWalkWithoutStepsOrClimb() throws IOException {
+        SupportSQLiteDatabase version9 = helper.createDatabase(TEST_DATABASE, 9);
+        ContentValues session = sessionValues("finished-walk", null);
+        session.put("weather_temperature_celsius", 0.0);
+        session.put("weather_observed_at_millis", 0L);
+        session.put("weather_fetched_at_millis", 0L);
+        session.put("movement_stationary_millis", 0L);
+        session.put("movement_moving_millis", 0L);
+        session.put("interrupted", 0);
+        session.put("destination_indoor", "outdoor");
+        version9.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
+        version9.close();
+
+        SupportSQLiteDatabase version10 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 10, true, StoryStepMigrations.MIGRATION_9_10);
+        assertEquals(1, count(version10, "SELECT COUNT(*) FROM sessions "
+                + "WHERE steps IS NULL AND ascent_meters IS NULL"));
+        version10.close();
+    }
 }

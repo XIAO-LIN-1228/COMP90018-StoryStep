@@ -357,9 +357,21 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 10: what the walk's own sensors counted. Both nullable, because most devices
+     * report neither and a zero would be a claim the walk was flat and still.
+     */
+    public static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `steps` INTEGER");
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `ascent_meters` REAL");
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9};
+                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10};
     }
 }

@@ -416,6 +416,16 @@
     <string name="profile_group_data">Your data</string>
     <string name="profile_group_about">About</string>
     <string name="settings_title">Settings</string>
+    <string name="exploration_take_photo">Take photo</string>
+    <string name="exploration_add_photo">From library</string>
+    <string name="exploration_photo_count">%1$d photo on this walk</string>
+    <string name="exploration_photo_count_plural">%1$d photos on this walk</string>
+    <string name="exploration_camera_unavailable">No camera app on this phone.</string>
+    <string name="exploration_label_steps">Steps</string>
+    <string name="exploration_label_climb">Climb</string>
+    <string name="exploration_count_zero">0</string>
+    <string name="journey_steps_label">Steps</string>
+    <string name="journey_climb_label">Climb</string>
     <string name="category_food">Food</string>
     <string name="category_drink">Cafe &amp; bar</string>
     <string name="category_shopping">Shopping</string>

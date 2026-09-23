@@ -227,6 +227,62 @@
                 </LinearLayout>
 
                 <!--
+                    Steps and climb, from the phone's own counters. The whole row is hidden on a
+                    device that has neither, rather than showing two confident zeros.
+                -->
+                <LinearLayout
+                    android:id="@+id/exploration_fitness"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/exploration_steps_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_steps" />
+
+                        <TextView
+                            android:id="@+id/exploration_steps"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_count_zero" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/exploration_climb_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_climb" />
+
+                        <TextView
+                            android:id="@+id/exploration_climb"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_travelled_zero" />
+                    </LinearLayout>
+
+                    <!-- Keeps the two columns on the same grid as the three above. -->
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+                <!--
                     Weather is an independent optional section, not a column of the row above. It has
                     its own source and its own failure, and it must be able to say "unavailable"
                     without the travelled distance beside it going blank too.
@@ -335,6 +391,51 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/exploration_retry_save"
+                    android:visibility="gone" />
+
+                <!--
+                    A picture of where you are, taken on the walk and kept with it: the shutter
+                    here, the library for anything already on the phone. Both land in the walk's
+                    own photo directory and appear when it is published.
+                -->
+                <LinearLayout
+                    android:id="@+id/exploration_photo_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/exploration_camera_button"
+                        style="@style/Widget.StoryStep.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/exploration_take_photo"
+                        app:icon="@drawable/ic_camera"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/exploration_library_button"
+                        style="@style/Widget.StoryStep.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/exploration_add_photo"
+                        app:icon="@drawable/ic_add_photo"
+                        app:iconGravity="textStart" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/exploration_photo_count"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/story_ink_3"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton

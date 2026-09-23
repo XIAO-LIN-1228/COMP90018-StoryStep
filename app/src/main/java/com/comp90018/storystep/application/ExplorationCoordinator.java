@@ -141,6 +141,12 @@ public final class ExplorationCoordinator {
     /** Same reason as the route: one session, one answer to how long the user has been walking. */
     private final MovementClassifier movement = new MovementClassifier();
 
+    /** Steps and metres climbed during the walk, when the device can report them. */
+    private final com.comp90018.storystep.domain.fitness.StepCounter steps =
+            new com.comp90018.storystep.domain.fitness.StepCounter();
+    private final com.comp90018.storystep.domain.fitness.AscentAccumulator ascent =
+            new com.comp90018.storystep.domain.fitness.AscentAccumulator();
+
     private final CircularSmoother headingSmoother = new CircularSmoother();
 
     /**
@@ -318,6 +324,16 @@ public final class ExplorationCoordinator {
         return sensing.hasMotion() ? movement.snapshot() : MovementSnapshot.unavailable();
     }
 
+    /** Steps taken during this walk, or null when the device does not count them. */
+    public Long stepsWalked() {
+        return sensing.hasSteps() ? steps.steps() : null;
+    }
+
+    /** Metres climbed during this walk, or null when the device has no barometer. */
+    public Double ascentMetres() {
+        return sensing.hasPressure() ? ascent.ascentMetres() : null;
+    }
+
     /** Where the destination lies relative to the user, as far as current data can say. */
     public GuidanceSnapshot guidanceSnapshot() {
         LocationSample last = route.snapshot().getLastSample();
@@ -486,6 +502,8 @@ public final class ExplorationCoordinator {
                 // finished route stays readable to the summary screen until the next session.
                 route.reset();
                 movement.clear();
+                steps.reset();
+                ascent.reset();
                 persistedRoutePointCount = 0;
                 // Weather belongs to the walk it was observed during, not to the app.
                 capturedWeather = null;
@@ -631,6 +649,8 @@ public final class ExplorationCoordinator {
                 // it recorded as walked.
                 route.reset();
                 movement.clear();
+                steps.reset();
+                ascent.reset();
                 persistedRoutePointCount = 0;
                 capturedWeather = null;
                 weatherCaptureInFlight = false;
@@ -725,6 +745,14 @@ public final class ExplorationCoordinator {
         if (sensing.hasHeading()) {
             sensing.getHeadingSource().startUpdates(subscription);
         }
+        // Steps and climb continue across a pause - the same walk, interrupted - so neither
+        // accumulator is reset here; the step counter rebases itself on its next reading.
+        if (sensing.hasSteps()) {
+            sensing.getStepSource().startUpdates(subscription);
+        }
+        if (sensing.hasPressure()) {
+            sensing.getPressureSource().startUpdates(subscription);
+        }
     }
 
     private void closeSubscription() {
@@ -740,6 +768,12 @@ public final class ExplorationCoordinator {
         }
         if (sensing.getHeadingSource() != null) {
             sensing.getHeadingSource().stopUpdates();
+        }
+        if (sensing.getStepSource() != null) {
+            sensing.getStepSource().stopUpdates();
+        }
+        if (sensing.getPressureSource() != null) {
+            sensing.getPressureSource().stopUpdates();
         }
         headingUsable = false;
     }
@@ -1038,6 +1072,18 @@ public final class ExplorationCoordinator {
                         }
                     }
                 });
+        // The walk's own counts, on the same occasions and with the same rule: a failure here
+        // degrades the record, never the walk.
+        sessionStore.saveWalkTotals(sessionId, stepsWalked(), ascentMetres(),
+                new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                    }
+                });
     }
 
     private void publishSession() {
@@ -1108,7 +1154,9 @@ public final class ExplorationCoordinator {
      * queued by a subscription that has since been replaced.
      */
     private final class Subscription
-            implements LocationSource.Listener, MotionSource.Listener, HeadingSource.Listener {
+            implements LocationSource.Listener, MotionSource.Listener, HeadingSource.Listener,
+            com.comp90018.storystep.platform.sensor.StepSource.Listener,
+            com.comp90018.storystep.platform.sensor.PressureSource.Listener {
 
         private final int ownGeneration;
 
@@ -1150,6 +1198,24 @@ public final class ExplorationCoordinator {
                 return;
             }
             movement.offer(sample);
+            publishMovement();
+        }
+
+        @Override
+        public void onStepCount(long sinceBoot) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            steps.accept(sinceBoot);
+            publishMovement();
+        }
+
+        @Override
+        public void onPressure(double hectopascals) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            ascent.accept(hectopascals);
             publishMovement();
         }
 

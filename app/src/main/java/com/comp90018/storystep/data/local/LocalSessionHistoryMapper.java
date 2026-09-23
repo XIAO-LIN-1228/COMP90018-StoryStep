@@ -39,7 +39,9 @@ public final class LocalSessionHistoryMapper {
                 row.destinationName,
                 row.title,
                 row.placeName,
-                splitPhotoFiles(row.photoFiles));
+                splitPhotoFiles(row.photoFiles),
+                row.steps,
+                row.ascentMeters);
     }
 
     /** One file name per line; blank lines and a null column both read as no photographs. */
@@ -94,7 +96,9 @@ public final class LocalSessionHistoryMapper {
                 session.destinationName,
                 session.title,
                 session.placeName,
-                splitPhotoFiles(session.photoFiles));
+                splitPhotoFiles(session.photoFiles),
+                session.steps,
+                session.ascentMeters);
     }
 
     /**

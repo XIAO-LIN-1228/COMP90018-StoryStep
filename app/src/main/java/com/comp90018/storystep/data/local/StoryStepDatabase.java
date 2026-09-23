@@ -34,7 +34,7 @@ import androidx.room.RoomDatabase;
                 WeatherCacheEntity.class,
                 AttractionAreaEntity.class
         },
-        version = 9,
+        version = 10,
         exportSchema = true)
 public abstract class StoryStepDatabase extends RoomDatabase {
 

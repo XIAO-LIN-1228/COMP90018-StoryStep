@@ -70,6 +70,32 @@ public final class JourneyPhotoStore {
         return names;
     }
 
+    /**
+     * A file in the session's directory for the camera to write into, created empty. The
+     * caller passes its content URI to the camera and, if the capture succeeds, records the
+     * returned name with the walk's other photographs.
+     */
+    public static java.io.File newCapture(Context context, String sessionId) {
+        File directory = directory(context, sessionId);
+        //noinspection ResultOfMethodCallIgnored
+        directory.mkdirs();
+        return new File(directory, UUID.randomUUID().toString() + ".jpg");
+    }
+
+    /** The names of the photographs already in the session's directory, oldest first. */
+    public static List<String> names(Context context, String sessionId) {
+        File[] files = directory(context, sessionId).listFiles();
+        List<String> names = new ArrayList<>();
+        if (files == null) {
+            return names;
+        }
+        java.util.Arrays.sort(files, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
+        for (File file : files) {
+            names.add(file.getName());
+        }
+        return names;
+    }
+
     /** Removes every session's photographs. */
     public static void deleteEverything(Context context) {
         File root = new File(context.getFilesDir(), "journeys");

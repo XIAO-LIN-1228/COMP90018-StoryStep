@@ -121,6 +121,12 @@ public class ExplorationFragment extends Fragment {
         remainingView = view.findViewById(R.id.exploration_remaining);
         travelledView = view.findViewById(R.id.exploration_travelled);
         accuracyView = view.findViewById(R.id.exploration_accuracy);
+        view.findViewById(R.id.exploration_camera_button).setOnClickListener(v -> takePhotoOfHere());
+        view.findViewById(R.id.exploration_library_button).setOnClickListener(v ->
+                pickPhotos.launch(new androidx.activity.result.PickVisualMediaRequest.Builder()
+                        .setMediaType(androidx.activity.result.contract.ActivityResultContracts
+                                .PickVisualMedia.ImageOnly.INSTANCE)
+                        .build()));
         directionView = view.findViewById(R.id.exploration_direction);
         movementView = view.findViewById(R.id.exploration_movement);
         weatherView = view.findViewById(R.id.exploration_weather);
@@ -173,6 +179,100 @@ public class ExplorationFragment extends Fragment {
         weatherView.setClickable(state.isRetryable());
     }
 
+    /** The file the camera is writing into, kept across the launch. */
+    @Nullable private java.io.File pendingCapture;
+
+    private final androidx.activity.result.ActivityResultLauncher<android.net.Uri> takePhoto =
+            registerForActivityResult(
+                    new androidx.activity.result.contract.ActivityResultContracts.TakePicture(),
+                    saved -> {
+                        java.io.File file = pendingCapture;
+                        pendingCapture = null;
+                        if (file == null) {
+                            return;
+                        }
+                        if (!Boolean.TRUE.equals(saved) || file.length() == 0) {
+                            // Cancelled, or the camera wrote nothing: leave no empty file behind.
+                            //noinspection ResultOfMethodCallIgnored
+                            file.delete();
+                        }
+                        showPhotoCount();
+                    });
+
+    private final androidx.activity.result.ActivityResultLauncher<
+            androidx.activity.result.PickVisualMediaRequest> pickPhotos =
+            registerForActivityResult(
+                    new androidx.activity.result.contract.ActivityResultContracts
+                            .PickMultipleVisualMedia(8),
+                    uris -> {
+                        String sessionId = walkId();
+                        if (uris == null || uris.isEmpty() || sessionId == null) {
+                            return;
+                        }
+                        android.content.Context app = requireContext().getApplicationContext();
+                        com.comp90018.storystep.di.AppContainer container = container();
+                        container.getIoExecutor().execute(() -> {
+                            com.comp90018.storystep.platform.media.JourneyPhotoStore
+                                    .importAll(app, sessionId, uris);
+                            container.getMainExecutor().execute(this::showPhotoCount);
+                        });
+                    });
+
+    private com.comp90018.storystep.di.AppContainer container() {
+        return ((com.comp90018.storystep.StoryStepApplication)
+                requireActivity().getApplication()).getAppContainer();
+    }
+
+    /** The running walk's id, or null when there is no walk to attach a photograph to. */
+    @Nullable
+    private String walkId() {
+        com.comp90018.storystep.domain.model.SessionSummary summary =
+                container().getExplorationCoordinator().summary();
+        return summary == null || summary.getId() == null || summary.getId().isEmpty()
+                ? null : summary.getId();
+    }
+
+    private void takePhotoOfHere() {
+        String sessionId = walkId();
+        if (sessionId == null) {
+            return;
+        }
+        java.io.File file = com.comp90018.storystep.platform.media.JourneyPhotoStore
+                .newCapture(requireContext(), sessionId);
+        android.net.Uri target = androidx.core.content.FileProvider.getUriForFile(
+                requireContext(), requireContext().getPackageName() + ".fileprovider", file);
+        pendingCapture = file;
+        try {
+            takePhoto.launch(target);
+        } catch (android.content.ActivityNotFoundException noCamera) {
+            pendingCapture = null;
+            //noinspection ResultOfMethodCallIgnored
+            file.delete();
+            com.google.android.material.snackbar.Snackbar.make(requireView(),
+                    R.string.exploration_camera_unavailable,
+                    com.google.android.material.snackbar.Snackbar.LENGTH_SHORT).show();
+        }
+    }
+
+    /** Says how many photographs the walk has, and nothing at all when it has none. */
+    private void showPhotoCount() {
+        View view = getView();
+        String sessionId = walkId();
+        if (view == null) {
+            return;
+        }
+        TextView count = view.findViewById(R.id.exploration_photo_count);
+        int taken = sessionId == null ? 0
+                : com.comp90018.storystep.platform.media.JourneyPhotoStore
+                        .names(requireContext(), sessionId).size();
+        count.setVisibility(taken == 0 ? View.GONE : View.VISIBLE);
+        if (taken > 0) {
+            count.setText(getString(taken == 1
+                    ? R.string.exploration_photo_count
+                    : R.string.exploration_photo_count_plural, taken));
+        }
+    }
+
     private void render(ExplorationUiState state) {
         destinationNameView.setText(state.getDestinationName() == null
                 ? getString(R.string.exploration_no_destination)
@@ -192,6 +292,29 @@ public class ExplorationFragment extends Fragment {
         offlinePill.setVisibility(connectivity.isOnline() ? View.GONE : View.VISIBLE);
         travelledView.setText(getString(R.string.exploration_travelled_format,
                 DistanceText.format(getResources(), state.getTravelledDistanceMeters())));
+        // Photographs belong to a walk, so the row is there only while one is running.
+        boolean walking = state.getState() != null && state.getState().hasSession();
+        requireView().findViewById(R.id.exploration_photo_row)
+                .setVisibility(walking ? View.VISIBLE : View.GONE);
+        showPhotoCount();
+        // Steps and climb: each column appears only when its sensor reported, and the row
+        // only when at least one did.
+        View fitness = requireView().findViewById(R.id.exploration_fitness);
+        View stepsColumn = requireView().findViewById(R.id.exploration_steps_column);
+        View climbColumn = requireView().findViewById(R.id.exploration_climb_column);
+        Long steps = state.getSteps();
+        Double climb = state.getAscentMeters();
+        stepsColumn.setVisibility(steps == null ? View.GONE : View.VISIBLE);
+        climbColumn.setVisibility(climb == null ? View.GONE : View.VISIBLE);
+        fitness.setVisibility(steps == null && climb == null ? View.GONE : View.VISIBLE);
+        if (steps != null) {
+            ((TextView) requireView().findViewById(R.id.exploration_steps)).setText(
+                    java.text.NumberFormat.getIntegerInstance().format(steps));
+        }
+        if (climb != null) {
+            ((TextView) requireView().findViewById(R.id.exploration_climb)).setText(
+                    DistanceText.format(getResources(), climb));
+        }
         accuracyView.setText(state.hasAccuracy()
                 ? getString(R.string.exploration_accuracy_format,
                         Math.round(state.getAccuracyMeters()))

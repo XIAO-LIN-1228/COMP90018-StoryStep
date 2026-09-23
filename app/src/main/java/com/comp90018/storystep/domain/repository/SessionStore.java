@@ -106,6 +106,21 @@ public interface SessionStore {
                             RepositoryCallback<Void> callback);
 
     /**
+     * Records what the walk's own sensors counted: steps taken and metres climbed, either of
+     * which is null on a device that cannot count it.
+     *
+     * <p>Like {@link #saveSessionContext}, a failure here degrades the record rather than the
+     * session, and callers must not report it as a lost walk. The default does nothing, for
+     * in-memory stores that keep no such record.
+     */
+    default void saveWalkTotals(String sessionId,
+                                Long steps,
+                                Double ascentMeters,
+                                RepositoryCallback<Void> callback) {
+        callback.onSuccess(null);
+    }
+
+    /**
      * Ends the session permanently. Idempotent: finishing an already-finished session succeeds
      * without creating a second record.
      */

@@ -52,4 +52,12 @@ public class SessionHistoryRow {
     @Nullable
     @ColumnInfo(name = "photoFiles")
     public String photoFiles;
+
+    @Nullable
+    @ColumnInfo(name = "steps")
+    public Long steps;
+
+    @Nullable
+    @ColumnInfo(name = "ascentMeters")
+    public Double ascentMeters;
 }

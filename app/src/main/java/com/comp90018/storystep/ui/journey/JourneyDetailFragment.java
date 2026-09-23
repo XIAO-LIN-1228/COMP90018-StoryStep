@@ -200,6 +200,24 @@ public class JourneyDetailFragment extends Fragment {
             label.setVisibility(View.GONE);
         }
 
+        // What the phone counted, when it could: each column only with its figure.
+        View fitness = requireView().findViewById(R.id.journey_detail_fitness);
+        View stepsColumn = requireView().findViewById(R.id.journey_detail_steps_column);
+        View climbColumn = requireView().findViewById(R.id.journey_detail_climb_column);
+        Long walkSteps = summary.getSteps();
+        Double climbed = summary.getAscentMeters();
+        stepsColumn.setVisibility(walkSteps == null ? View.GONE : View.VISIBLE);
+        climbColumn.setVisibility(climbed == null ? View.GONE : View.VISIBLE);
+        fitness.setVisibility(walkSteps == null && climbed == null ? View.GONE : View.VISIBLE);
+        if (walkSteps != null) {
+            ((TextView) requireView().findViewById(R.id.journey_detail_steps)).setText(
+                    java.text.NumberFormat.getIntegerInstance().format(walkSteps));
+        }
+        if (climbed != null) {
+            ((TextView) requireView().findViewById(R.id.journey_detail_climb)).setText(
+                    com.comp90018.storystep.ui.DistanceText.format(getResources(), climbed));
+        }
+
         bindRoute(detail);
 
         movement.setText(HistoryText.formatMovement(getResources(), detail.getMovement()));
