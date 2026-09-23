@@ -82,7 +82,7 @@
                     style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="10dp"
                     android:drawablePadding="6dp"
                     android:textColor="@color/story_ink_3"
                     app:drawableStartCompat="@drawable/ic_location_outline"
