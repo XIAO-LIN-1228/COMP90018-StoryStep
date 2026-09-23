@@ -50,6 +50,10 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
 
     private WalkPlanner planner;
     @Nullable private GeoPoint origin;
+    /** The route last worked out, and the plan it was worked out for. */
+    @Nullable private com.comp90018.storystep.domain.plan.PlannedRoute route;
+    @Nullable private WalkPlan routedPlan;
+    private int routeGeneration;
 
     @Nullable
     @Override
@@ -105,10 +109,22 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
                     stop.getId(), stop.getName(), stop.getLocation(), i + 1));
         }
         map.setPlaces(pins);
-        // One segment: the walk as planned, origin first. Straight legs by design.
+        // Straight legs at once, so the map is never empty while the router is asked; the real
+        // path replaces them when it arrives.
+        if (!plan.equals(routedPlan)) {
+            route = null;
+            routedPlan = null;
+            requestRoute(plan);
+        }
+        drawRoute(plan);
+    }
+
+    /** Draws the routed path when there is one for this plan, and the straight legs otherwise. */
+    private void drawRoute(WalkPlan plan) {
         List<List<GeoPoint>> path = new ArrayList<>();
         if (plan.size() > 0) {
-            path.add(plan.path(origin));
+            path.add(route != null && plan.equals(routedPlan)
+                    ? route.getPath() : plan.path(origin));
         }
         map.setRoute(path);
         if (!path.isEmpty()) {
@@ -116,13 +132,52 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         }
     }
 
-    /** "3 stops · about 2.1 km · around 40 min". Every figure is approximate and says so. */
+    /**
+     * Asks the router for the walk through this plan's stops. The answer is the path, the
+     * distance and the walking time; the plan adds its own stay at each stop. A router that
+     * cannot answer leaves the straight legs in place, which is what the plan showed before.
+     */
+    private void requestRoute(WalkPlan plan) {
+        if (plan.isEmpty() || origin == null) {
+            return;
+        }
+        AppContainer container = container();
+        com.comp90018.storystep.data.remote.WalkRouteSource source = container.getWalkRouteSource();
+        if (source == null) {
+            return;
+        }
+        int generation = ++routeGeneration;
+        List<GeoPoint> points = plan.path(origin);
+        container.getIoExecutor().execute(() -> {
+            com.comp90018.storystep.domain.plan.PlannedRoute walked = source.walkThrough(points);
+            container.getMainExecutor().execute(() -> {
+                if (generation != routeGeneration || getView() == null || walked == null) {
+                    return;
+                }
+                route = walked;
+                routedPlan = plan;
+                subtitle.setText(summary(plan));
+                drawRoute(plan);
+            });
+        });
+    }
+
+    /**
+     * "3 stops · about 2.1 km · around 40 min". The walking figures come from the router when
+     * it has answered and from the plan's straight legs until then; the stay at each stop is
+     * the plan's either way. Every figure is approximate and the line says so.
+     */
     private String summary(WalkPlan plan) {
         String stops = getString(plan.size() == 1
                 ? R.string.plan_stop_count : R.string.plan_stop_count_plural, plan.size());
+        boolean routed = route != null && plan.equals(routedPlan);
+        double metres = routed ? route.getDistanceMeters() : plan.distanceMeters(origin);
+        long millis = routed
+                ? route.getDurationMillis() + WalkPlan.DWELL_MILLIS_PER_STOP * plan.size()
+                : plan.durationMillis(origin);
         return getString(R.string.plan_subtitle, stops,
-                DistanceText.format(getResources(), plan.distanceMeters(origin)),
-                HistoryText.formatDuration(getResources(), plan.durationMillis(origin)));
+                DistanceText.format(getResources(), metres),
+                HistoryText.formatDuration(getResources(), millis));
     }
 
     private void startWalking() {

@@ -76,6 +76,7 @@ public class AppContainer {
     /** The walk being planned; process-scoped so it survives navigation between screens. */
     private final com.comp90018.storystep.application.WalkPlanner walkPlanner =
             new com.comp90018.storystep.application.WalkPlanner();
+    private final com.comp90018.storystep.data.remote.WalkRouteSource walkRouteSource;
     private final CacheRetentionSweeper cacheRetentionSweeper;
 
     private final Executor mainExecutor;
@@ -216,6 +217,8 @@ public class AppContainer {
                 weatherRepository);
         // The coordinator follows the plan when there is one: arriving moves it to the next stop.
         this.explorationCoordinator.setPlanner(walkPlanner);
+        this.walkRouteSource = new com.comp90018.storystep.data.remote.ValhallaWalkRouteSource(
+                ApiClientFactory.createValhallaService(isDebuggable(this.applicationContext)));
     }
 
     /**
@@ -271,6 +274,11 @@ public class AppContainer {
      * {@link LocationSource}: a screen that could register its own would be a second, invisible
      * subscription running alongside the session's.
      */
+    /** The walking router, or null when none is wired: plans then draw straight legs. */
+    public com.comp90018.storystep.data.remote.WalkRouteSource getWalkRouteSource() {
+        return walkRouteSource;
+    }
+
     public com.comp90018.storystep.application.WalkPlanner getWalkPlanner() {
         return walkPlanner;
     }

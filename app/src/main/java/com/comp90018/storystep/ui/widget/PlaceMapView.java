@@ -80,13 +80,20 @@ public class PlaceMapView extends FrameLayout {
     }
 
     /**
-     * OpenStreetMap's Humanitarian style: lighter and far less cluttered than the default
-     * Mapnik rendering, served by OSM France without a key. Lifted further toward the page's
-     * paper by {@link #paperFilter()} so the map recedes and the pins carry the colour.
-     * (CARTO's Positron, the obvious choice, now stamps "API KEY REQUIRED" across anonymous
-     * tiles.)
+     * OpenStreetMap's Humanitarian style, served by OSM France without a key: full detail at
+     * every walking zoom, and far less cluttered than the standard Carto rendering, which
+     * covers a campus in parking and cafe icons at z18.
+     *
+     * <p>Warmed and quietened toward the page's paper by {@link #paperFilter()}, so the map
+     * reads as the sheet the rest of the app is printed on and the app's own pins, stops and
+     * route carry the colour.
+     *
+     * <p>Rejected: CARTO's Positron stamps "API KEY REQUIRED" across anonymous tiles; Esri's
+     * World Light Gray Canvas is beautifully quiet but has no data above zoom 16 in Melbourne,
+     * which is below walking zoom; OpenStreetMap's own Mapnik tiles are forbidden to apps by
+     * the OSMF tile usage policy.
      */
-    private static final org.osmdroid.tileprovider.tilesource.XYTileSource HUMANITARIAN =
+    private static final org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase LIGHT_CANVAS =
             new org.osmdroid.tileprovider.tilesource.XYTileSource(
                     "OsmHumanitarian", 0, 19, 256, ".png",
                     new String[] {
@@ -115,7 +122,7 @@ public class PlaceMapView extends FrameLayout {
     public PlaceMapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         map = new MapView(context);
-        map.setTileSource(HUMANITARIAN);
+        map.setTileSource(LIGHT_CANVAS);
         map.getOverlayManager().getTilesOverlay().setColorFilter(paperFilter());
         map.setMultiTouchControls(true);
         map.getZoomController().setVisibility(
@@ -296,7 +303,14 @@ public class PlaceMapView extends FrameLayout {
             map.getController().setCenter(points.get(0));
         } else {
             BoundingBox box = BoundingBox.fromGeoPoints(points);
-            map.post(() -> map.zoomToBoundingBox(box.increaseByScale(1.5f), false));
+            map.post(() -> {
+                map.zoomToBoundingBox(box.increaseByScale(1.5f), false);
+                // A short walk otherwise frames itself at a zoom where the tiles are all
+                // building outlines and the street names have gone.
+                if (map.getZoomLevelDouble() > WALK_ZOOM) {
+                    map.getController().setZoom(WALK_ZOOM);
+                }
+            });
         }
         framed = true;
     }
@@ -456,14 +470,19 @@ public class PlaceMapView extends FrameLayout {
         }
     }
 
-    /** Most colour out, a little light in: the map becomes a light grey ground. */
+    /**
+     * Quietens the tiles and warms them toward the page's paper: enough colour left that a
+     * park is green and water is blue, red and green lifted more than blue so the map's white
+     * becomes the app's cream. The earlier filter took almost all the colour out and left a
+     * grey rectangle the rest of the app sat on rather than contained.
+     */
     private static android.graphics.ColorMatrixColorFilter paperFilter() {
         android.graphics.ColorMatrix desaturate = new android.graphics.ColorMatrix();
-        desaturate.setSaturation(0.18f);
+        desaturate.setSaturation(0.42f);
         android.graphics.ColorMatrix lift = new android.graphics.ColorMatrix(new float[] {
-                0.86f, 0, 0, 0, 34,
-                0, 0.86f, 0, 0, 33,
-                0, 0, 0.86f, 0, 30,
+                0.92f, 0, 0, 0, 20,
+                0, 0.92f, 0, 0, 18,
+                0, 0, 0.92f, 0, 8,
                 0, 0, 0, 1, 0
         });
         desaturate.postConcat(lift);

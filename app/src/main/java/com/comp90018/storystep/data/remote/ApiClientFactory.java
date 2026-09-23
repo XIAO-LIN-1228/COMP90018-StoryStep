@@ -92,6 +92,10 @@ public final class ApiClientFactory {
         return createRetrofit(WikidataApiService.BASE_URL, debug).create(WikidataApiService.class);
     }
 
+    public static ValhallaApiService createValhallaService(boolean debug) {
+        return createRetrofit(ValhallaApiService.BASE_URL, debug).create(ValhallaApiService.class);
+    }
+
     public static WikidataQueryService createWikidataQueryService(boolean debug) {
         return createRetrofit(WikidataQueryService.BASE_URL, debug).create(WikidataQueryService.class);
     }
