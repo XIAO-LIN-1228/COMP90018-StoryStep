@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The camera writes into the walk's own photo directory and nowhere else: one path, under
+    files/journeys, shared with the camera app for the moment it takes to write one picture.
+-->
+<paths>
+    <files-path name="journey_photos" path="journeys/" />
+</paths>

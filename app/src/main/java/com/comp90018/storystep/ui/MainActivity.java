@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
             int destinationId = destination.getId();
             boolean topLevel = destinationId == R.id.nearbyAttractionsFragment
                     || destinationId == R.id.journeysFragment
-                    || destinationId == R.id.savedFragment
+                    || destinationId == R.id.planFragment
                     || destinationId == R.id.profileFragment;
             bottomNavigation.setSelectedId(destinationId);
             bottomNavigation.setVisibility(topLevel ? android.view.View.VISIBLE

@@ -34,6 +34,13 @@ public class OverpassQueryBuilderTest {
                         + "  nwr[\"amenity\"~\"^(theatre|arts_centre)$\"]"
                         + "(around:3800,-37.795000,144.965000);\n"
                         + ");\n"
+                        + "out center 60;\n"
+                        + "(\n"
+                        + "  nwr[\"amenity\"~\"^(restaurant|food_court|cafe|bar|pub|ice_cream|marketplace)$\"][\"name\"]"
+                        + "(around:3800,-37.795000,144.965000);\n"
+                        + "  nwr[\"shop\"~\"^(mall|department_store|marketplace|gift|books|bakery|chocolate|deli)$\"][\"name\"]"
+                        + "(around:3800,-37.795000,144.965000);\n"
+                        + ");\n"
                         + "out center 60;",
                 query);
     }

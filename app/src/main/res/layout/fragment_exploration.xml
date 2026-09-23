@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/story_ground">
@@ -123,6 +124,17 @@
                     android:textColor="@color/story_ink_pressed"
                     android:textStyle="bold" />
 
+                <!-- Which stop of the planned walk this is; absent when there is no plan. -->
+                <TextView
+                    android:id="@+id/exploration_plan_progress"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:textColor="@color/story_ink_2"
+                    android:visibility="gone"
+                    tools:text="Stop 2 of 4" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -224,6 +236,62 @@
                             android:layout_marginTop="4dp"
                             android:text="@string/exploration_accuracy_unavailable" />
                     </LinearLayout>
+                </LinearLayout>
+
+                <!--
+                    Steps and climb, from the phone's own counters. The whole row is hidden on a
+                    device that has neither, rather than showing two confident zeros.
+                -->
+                <LinearLayout
+                    android:id="@+id/exploration_fitness"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_16"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:id="@+id/exploration_steps_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_steps" />
+
+                        <TextView
+                            android:id="@+id/exploration_steps"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_count_zero" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/exploration_climb_column"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Widget.StoryStep.StatLabel"
+                            android:text="@string/exploration_label_climb" />
+
+                        <TextView
+                            android:id="@+id/exploration_climb"
+                            style="@style/Widget.StoryStep.StatValue"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_travelled_zero" />
+                    </LinearLayout>
+
+                    <!-- Keeps the two columns on the same grid as the three above. -->
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
                 </LinearLayout>
 
                 <!--
@@ -340,6 +408,51 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
                     android:text="@string/exploration_retry_save"
+                    android:visibility="gone" />
+
+                <!--
+                    A picture of where you are, taken on the walk and kept with it: the shutter
+                    here, the library for anything already on the phone. Both land in the walk's
+                    own photo directory and appear when it is published.
+                -->
+                <LinearLayout
+                    android:id="@+id/exploration_photo_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/exploration_camera_button"
+                        style="@style/Widget.StoryStep.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/exploration_take_photo"
+                        app:icon="@drawable/ic_camera"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/exploration_library_button"
+                        style="@style/Widget.StoryStep.Button.Secondary"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_weight="1"
+                        android:text="@string/exploration_add_photo"
+                        app:icon="@drawable/ic_add_photo"
+                        app:iconGravity="textStart" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/exploration_photo_count"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:textColor="@color/story_ink_3"
                     android:visibility="gone" />
 
                 <com.google.android.material.button.MaterialButton

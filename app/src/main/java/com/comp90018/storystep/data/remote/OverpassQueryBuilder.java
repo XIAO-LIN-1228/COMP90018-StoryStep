@@ -71,7 +71,9 @@ public final class OverpassQueryBuilder {
         String around = String.format(Locale.ROOT, "(around:%d,%.6f,%.6f)",
                 Math.round(radiusMeters), center.getLatitude(), center.getLongitude());
 
-        StringBuilder query = new StringBuilder(512);
+        // Two sets with their own caps, because a city centre has more cafes than sights and
+        // one union would let the cafes crowd the sights out of the limit.
+        StringBuilder query = new StringBuilder(768);
         query.append("[out:json][timeout:").append(SERVER_TIMEOUT_SECONDS).append("];\n");
         query.append("(\n");
         appendClause(query, "\"tourism\"~\"^(museum|gallery|artwork|attraction|viewpoint)$\"", around);
@@ -79,8 +81,20 @@ public final class OverpassQueryBuilder {
         appendClause(query, "\"leisure\"~\"^(park|garden)$\"", around);
         appendClause(query, "\"amenity\"~\"^(theatre|arts_centre)$\"", around);
         query.append(");\n");
-        query.append("out center ").append(limit).append(";");
+        query.append("out center ").append(limit).append(";\n");
+        // Food, drink and shopping, named: the map's chips show them by kind. Named only,
+        // because an unnamed cafe node is not a place anyone can be sent to.
+        query.append("(\n");
+        appendClause(query, "\"amenity\"~\"^(restaurant|food_court|cafe|bar|pub|ice_cream|marketplace)$\"][\"name\"", around);
+        appendClause(query, "\"shop\"~\"^(mall|department_store|marketplace|gift|books|bakery|chocolate|deli)$\"][\"name\"", around);
+        query.append(");\n");
+        query.append("out center ").append(everydayLimit(limit)).append(";");
         return query.toString();
+    }
+
+    /** How many everyday places ride along with the sights: as many, at most sixty. */
+    static int everydayLimit(int limit) {
+        return Math.min(60, limit);
     }
 
     private static void appendClause(StringBuilder query, String selector, String around) {

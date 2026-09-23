@@ -109,7 +109,6 @@ public class NearbyAttractionsFragment extends Fragment
     private com.comp90018.storystep.ui.widget.PlaceMapView homeMap;
     @Nullable private com.google.android.material.bottomsheet.BottomSheetBehavior<View> sheet;
     private View homeMapCard;
-    private MaterialCardView continueJourneyCard;
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
@@ -134,8 +133,6 @@ public class NearbyAttractionsFragment extends Fragment
     private int peekHeight;
     private boolean listMode;
     private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
-    private MaterialButton sessionButton;
-    private MaterialButton stopButton;
     private View permissionNotice;
     private TextView permissionNoticeMessage;
     private MaterialButton permissionNoticeAction;
@@ -231,7 +228,6 @@ public class NearbyAttractionsFragment extends Fragment
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_nearby_to_detail, arguments);
         });
-        continueJourneyCard = view.findViewById(R.id.continue_journey_card);
         homeHeader = view.findViewById(R.id.home_header);
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
         TouchTargets.expand(nearbyBackButton);
@@ -250,8 +246,6 @@ public class NearbyAttractionsFragment extends Fragment
         bindFilterControls();
         sectionTitle = view.findViewById(R.id.nearby_title);
         seeAllButton = view.findViewById(R.id.see_all_button);
-        sessionButton = view.findViewById(R.id.session_button);
-        stopButton = view.findViewById(R.id.stop_button);
         permissionNotice = view.findViewById(R.id.permission_notice);
         permissionNoticeMessage = view.findViewById(R.id.permission_notice_message);
         permissionNoticeAction = view.findViewById(R.id.permission_notice_action);
@@ -300,11 +294,6 @@ public class NearbyAttractionsFragment extends Fragment
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         nearbyBackButton.setOnClickListener(v -> setListMode(false));
-        view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_nearby_to_session_recovery));
-        sessionButton.setOnClickListener(v -> onSessionButtonClicked());
-        stopButton.setOnClickListener(v -> viewModel.onStopRequested());
         viewModel.loadIfNeeded();
     }
 
@@ -483,8 +472,11 @@ public class NearbyAttractionsFragment extends Fragment
         List<com.comp90018.storystep.ui.widget.PlaceMapView.Place> pins = new ArrayList<>();
         for (AttractionListItem item : state.getItems()) {
             if (item.getLocation() != null) {
+                boolean showingSaved = currentFilter().getKind()
+                        == com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SAVED;
                 pins.add(new com.comp90018.storystep.ui.widget.PlaceMapView.Place(
-                        item.getId(), item.getName(), item.getLocation()));
+                        item.getId(), item.getName(), item.getLocation(),
+                        item.getCategory().kind(), showingSaved && item.isSaved()));
             }
         }
         homeMap.setPlaces(pins);
@@ -550,33 +542,13 @@ public class NearbyAttractionsFragment extends Fragment
      * launch, so anything shown only on an empty list would never be seen at all — which is what
      * previously kept the purpose explanation from ever reaching the user.
      */
+    /**
+     * Explore finds places; it does not start, pause or stop a walk - Start owns that, and a
+     * walk under way is picked back up there. The phase is still tracked because the permission
+     * notice and the list's own messages are worded differently while one is running.
+     */
     private void renderSessionControls(NearbyUiState.SessionPhase phase) {
         currentSessionPhase = phase;
-        switch (phase) {
-            case ACTIVE:
-                sessionButton.setText(R.string.nearby_stop_exploring);
-                break;
-            case PAUSED_BACKGROUND:
-            case PAUSED_ACCESS_LOST:
-                sessionButton.setText(R.string.nearby_resume_exploring);
-                break;
-            case STARTING:
-                sessionButton.setText(R.string.nearby_starting);
-                break;
-            case STOPPING:
-                sessionButton.setText(R.string.nearby_stopping);
-                break;
-            case IDLE:
-            default:
-                sessionButton.setText(R.string.nearby_start_exploring);
-                break;
-        }
-        // Inert rather than hidden while a transition is in flight: a control that vanishes under
-        // the user's finger is worse than one that briefly does nothing.
-        sessionButton.setEnabled(!phase.isBusy());
-        // A paused session must be endable without resuming it first.
-        stopButton.setVisibility(phase.isPaused() ? View.VISIBLE : View.GONE);
-        updateContinueJourneyCard();
     }
 
     private void renderPermissionNotice(NearbyUiState.Status status,
@@ -616,14 +588,8 @@ public class NearbyAttractionsFragment extends Fragment
                 action = v -> openLocationSettings();
                 break;
             default:
-                if (phase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND) {
-                    // Explains why the totals stopped moving. Without it, returning to the app
-                    // looks like the session silently died.
-                    message = R.string.nearby_session_paused_background;
-                    actionLabel = R.string.nearby_resume_exploring;
-                    action = v -> resumeIfAccessAllows();
-                    break;
-                }
+                // A paused walk is not a permission problem, and it has its own line below;
+                // saying it twice in a paragraph filled the resting sheet and hid the places.
                 permissionNotice.setVisibility(View.GONE);
                 permissionNoticeAction.setOnClickListener(null);
                 return;
@@ -712,7 +678,6 @@ public class NearbyAttractionsFragment extends Fragment
                     ? com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
                     : com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED);
         }
-        updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
         originLabel.setVisibility(View.GONE);
@@ -731,25 +696,6 @@ public class NearbyAttractionsFragment extends Fragment
                 ? R.string.order_nearby : R.string.order_recommended);
         seeAllButton.setText(R.string.home_see_all);
         seeAllButton.setVisibility(View.GONE);
-
-        View fragmentView = getView();
-        if (fragmentView == null) {
-            return;
-        }
-        View sectionHeader = fragmentView.findViewById(R.id.nearby_section_header);
-        ViewGroup.LayoutParams rawParams = sectionHeader.getLayoutParams();
-        if (rawParams instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
-            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
-                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) rawParams;
-            params.topToBottom = enabled ? R.id.filter_group : R.id.continue_journey_card;
-            sectionHeader.setLayoutParams(params);
-        }
-    }
-
-    /** The recovery card represents a real resumable session, never a permanent demo fixture. */
-    private void updateContinueJourneyCard() {
-        boolean resumable = currentSessionPhase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND;
-        continueJourneyCard.setVisibility(!listMode && resumable ? View.VISIBLE : View.GONE);
     }
 
     /**
@@ -772,6 +718,16 @@ public class NearbyAttractionsFragment extends Fragment
             }
             viewModel.setFilter(currentFilter().withVenue(choice));
         };
+        // The kind chips over the map. ChipGroup's single selection with no requirement means
+        // tapping the chosen chip clears it, which reads as "back to everything".
+        com.google.android.material.chip.ChipGroup kinds = requireView().findViewById(R.id.kind_group);
+        kinds.setOnCheckedStateChangeListener((group, checkedIds) -> {
+            if (syncingChips) {
+                return;
+            }
+            viewModel.setFilter(currentFilter().withKind(kindOfChip(
+                    checkedIds.isEmpty() ? View.NO_ID : checkedIds.get(0))));
+        });
         chipAll.setOnClickListener(venue);
         chipIndoor.setOnClickListener(venue);
         chipOutdoor.setOnClickListener(venue);
@@ -810,8 +766,47 @@ public class NearbyAttractionsFragment extends Fragment
             chipIndoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.INDOOR);
             chipOutdoor.setChecked(venue == com.comp90018.storystep.domain.attraction.AttractionFilter.Venue.OUTDOOR);
             chipUnvisited.setChecked(filter.isUnvisitedOnly());
+            com.google.android.material.chip.ChipGroup kinds = requireView().findViewById(R.id.kind_group);
+            int wanted = chipOfKind(filter.getKind());
+            if (wanted == View.NO_ID) {
+                kinds.clearCheck();
+            } else if (kinds.getCheckedChipId() != wanted) {
+                kinds.check(wanted);
+            }
         } finally {
             syncingChips = false;
+        }
+    }
+
+    private static com.comp90018.storystep.domain.attraction.AttractionFilter.Kind kindOfChip(int id) {
+        if (id == R.id.kind_saved) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SAVED;
+        } else if (id == R.id.kind_sights) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SIGHTS;
+        } else if (id == R.id.kind_food) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.FOOD;
+        } else if (id == R.id.kind_drink) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.DRINK;
+        } else if (id == R.id.kind_shopping) {
+            return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.SHOPPING;
+        }
+        return com.comp90018.storystep.domain.attraction.AttractionFilter.Kind.ALL;
+    }
+
+    private static int chipOfKind(com.comp90018.storystep.domain.attraction.AttractionFilter.Kind kind) {
+        switch (kind) {
+            case SAVED:
+                return R.id.kind_saved;
+            case SIGHTS:
+                return R.id.kind_sights;
+            case FOOD:
+                return R.id.kind_food;
+            case DRINK:
+                return R.id.kind_drink;
+            case SHOPPING:
+                return R.id.kind_shopping;
+            default:
+                return View.NO_ID;
         }
     }
 }

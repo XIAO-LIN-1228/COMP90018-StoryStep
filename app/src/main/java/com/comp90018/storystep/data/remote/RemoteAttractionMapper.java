@@ -133,7 +133,31 @@ public final class RemoteAttractionMapper {
                 location,
                 AttractionProvenance.OPENSTREETMAP,
                 sourceRef(element.tags),
-                OsmImageUrls.fromTags(element.tags));
+                OsmImageUrls.fromTags(element.tags),
+                0,
+                facts(element.tags));
+    }
+
+    /**
+     * The practical facts OpenStreetMap records when somebody bothered to: opening hours,
+     * contact, access, entry fee. Absent far more often than present, and taken exactly as
+     * tagged - the UI tidies them for reading rather than this mapper reinterpreting them.
+     *
+     * <p>{@code contact:*} is the newer convention for the same facts, so each is read from
+     * the plain tag first and the contact-namespaced one after.
+     */
+    private static com.comp90018.storystep.domain.model.PlaceFacts facts(Map<String, String> tags) {
+        return new com.comp90018.storystep.domain.model.PlaceFacts(
+                trimmedTag(tags, "opening_hours"),
+                either(tags, "phone", "contact:phone"),
+                either(tags, "website", "contact:website"),
+                trimmedTag(tags, "wheelchair"),
+                trimmedTag(tags, "fee"));
+    }
+
+    private static String either(Map<String, String> tags, String first, String second) {
+        String value = trimmedTag(tags, first);
+        return value != null ? value : trimmedTag(tags, second);
     }
 
     /**
@@ -190,6 +214,21 @@ public final class RemoteAttractionMapper {
         String tourism = tag(tags, "tourism");
         String historic = tag(tags, "historic");
         String leisure = tag(tags, "leisure");
+        String amenity = tag(tags, "amenity");
+        String shop = tag(tags, "shop");
+
+        // The everyday kinds first: a cafe inside a historic arcade is still a cafe.
+        if ("restaurant".equals(amenity) || "food_court".equals(amenity)
+                || "fast_food".equals(amenity)) {
+            return AttractionCategory.FOOD;
+        }
+        if ("cafe".equals(amenity) || "bar".equals(amenity) || "pub".equals(amenity)
+                || "ice_cream".equals(amenity)) {
+            return AttractionCategory.DRINK;
+        }
+        if ("marketplace".equals(amenity) || shop != null) {
+            return AttractionCategory.SHOPPING;
+        }
 
         if ("museum".equals(tourism) || "gallery".equals(tourism)) {
             return AttractionCategory.MUSEUM;
@@ -232,6 +271,9 @@ public final class RemoteAttractionMapper {
         if ("yes".equals(indoorTag)
                 || "museum".equals(tourism) || "gallery".equals(tourism)
                 || "theatre".equals(amenity) || "arts_centre".equals(amenity)
+                || "restaurant".equals(amenity) || "cafe".equals(amenity)
+                || "bar".equals(amenity) || "pub".equals(amenity)
+                || "food_court".equals(amenity) || tag(tags, "shop") != null
                 || (building != null && !"no".equals(building))) {
             return IndoorClassification.INDOOR;
         }

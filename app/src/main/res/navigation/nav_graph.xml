@@ -45,6 +45,19 @@
     </fragment>
 
     <fragment
+        android:id="@+id/planFragment"
+        android:name="com.comp90018.storystep.ui.plan.PlanFragment"
+        android:label="@string/plan_title"
+        tools:layout="@layout/fragment_plan">
+        <action android:id="@+id/action_plan_to_nearby" app:destination="@id/nearbyAttractionsFragment" />
+        <action android:id="@+id/action_plan_to_detail" app:destination="@id/attractionDetailFragment" />
+        <action
+            android:id="@+id/action_plan_to_exploration"
+            app:destination="@id/explorationFragment"
+            app:popUpTo="@id/planFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/journeysFragment"
         android:name="com.comp90018.storystep.ui.journey.JourneysFragment"
         android:label="@string/nav_journeys"
@@ -65,8 +78,19 @@
         android:name="com.comp90018.storystep.ui.profile.ProfileFragment"
         android:label="@string/nav_profile"
         tools:layout="@layout/fragment_profile">
-        <action android:id="@+id/action_profile_to_recovery" app:destination="@id/recoveryStateFragment" />
-        <action android:id="@+id/action_profile_to_privacy_data" app:destination="@id/privacyDataFragment" />
+        <action android:id="@+id/action_profile_to_settings" app:destination="@id/settingsFragment" />
+        <action android:id="@+id/action_profile_to_journey_detail" app:destination="@id/journeyDetailFragment" />
+        <action android:id="@+id/action_profile_to_attraction_detail" app:destination="@id/attractionDetailFragment" />
+        <action android:id="@+id/action_profile_to_saved" app:destination="@id/savedFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.comp90018.storystep.ui.profile.SettingsFragment"
+        android:label="@string/settings_title"
+        tools:layout="@layout/fragment_settings">
+        <action android:id="@+id/action_settings_to_recovery" app:destination="@id/recoveryStateFragment" />
+        <action android:id="@+id/action_settings_to_privacy_data" app:destination="@id/privacyDataFragment" />
     </fragment>
 
     <fragment
@@ -104,7 +128,7 @@
     <fragment
         android:id="@+id/journeyDetailFragment"
         android:name="com.comp90018.storystep.ui.journey.JourneyDetailFragment"
-        android:label="@string/home_journey_name"
+        android:label="@string/journey_detail_title"
         tools:layout="@layout/fragment_journey_detail">
         <argument android:name="sessionId" app:argType="string" />
         <action android:id="@+id/action_journey_detail_to_exploration" app:destination="@id/explorationFragment" />

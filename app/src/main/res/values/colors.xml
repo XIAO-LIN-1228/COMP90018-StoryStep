@@ -20,6 +20,12 @@
     <color name="story_ground">#F4F2EC</color>
     <color name="story_surface">#FFFFFFFF</color>
     <!-- Frosted chrome: the surface at four fifths, with a bright hairline edge. -->
+    <!-- The kinds of place, on the map's pins and chips. -->
+    <color name="kind_sights">#5FA46A</color>
+    <color name="kind_food">#E8743B</color>
+    <color name="kind_drink">#C9893A</color>
+    <color name="kind_shopping">#D96BB0</color>
+    <color name="kind_saved">#E9B93A</color>
     <color name="story_glass">#B8FFFFFF</color>
     <color name="story_glass_edge">#B3FFFFFF</color>
     <color name="story_surface_sunk">#ECE9E0</color>
@@ -37,7 +43,7 @@
     <color name="story_ink_wash">#E9E6DC</color>
     <color name="story_ink_2">#6B655A</color>
     <color name="story_ink_3">#948D80</color>
-    <color name="story_disabled">#B5AFA3</color>
+    <color name="story_disabled">#1FA79B84</color>
 
     <!-- The one accent: an unread story -->
     <!--

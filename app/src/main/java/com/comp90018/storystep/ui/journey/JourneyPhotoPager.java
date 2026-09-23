@@ -21,7 +21,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.bumptech.glide.Glide;
 import com.comp90018.storystep.R;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,7 +69,14 @@ public class JourneyPhotoPager extends FrameLayout {
             }
         });
 
-        float radius = dp(14);
+        setCornerRadius(dp(14));
+    }
+
+    /**
+     * How rounded the pager's corners are; zero for a pager that runs to the edges of a card,
+     * where the card's own outline does the clipping.
+     */
+    public void setCornerRadius(float radius) {
         setOutlineProvider(new ViewOutlineProvider() {
             @Override
             public void getOutline(View view, Outline outline) {
@@ -78,9 +84,10 @@ public class JourneyPhotoPager extends FrameLayout {
             }
         });
         setClipToOutline(true);
+        invalidateOutline();
     }
 
-    public void setPhotos(List<File> photos) {
+    public void setPhotos(List<?> photos) {
         adapter.setPhotos(photos);
         announcedPosition = RecyclerView.NO_POSITION;
         setContentDescription(photos.isEmpty()
@@ -138,9 +145,9 @@ public class JourneyPhotoPager extends FrameLayout {
 
     private static final class PhotoAdapter extends RecyclerView.Adapter<PhotoAdapter.Holder> {
 
-        private final List<File> photos = new ArrayList<>();
+        private final List<Object> photos = new ArrayList<>();
 
-        void setPhotos(List<File> files) {
+        void setPhotos(List<?> files) {
             photos.clear();
             photos.addAll(files);
             notifyDataSetChanged();

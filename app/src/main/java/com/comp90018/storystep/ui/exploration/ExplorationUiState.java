@@ -37,6 +37,8 @@ public final class ExplorationUiState {
     private final GuidanceSnapshot guidance;
     private final Visit pendingStory;
     private final boolean visitSaveFailed;
+    private final Long steps;
+    private final Double ascentMeters;
 
     private ExplorationUiState(String destinationName,
                                SessionState state,
@@ -51,7 +53,11 @@ public final class ExplorationUiState {
                                MovementSnapshot movement,
                                GuidanceSnapshot guidance,
                                Visit pendingStory,
-                               boolean visitSaveFailed) {
+                               boolean visitSaveFailed,
+                               Long steps,
+                               Double ascentMeters) {
+        this.steps = steps;
+        this.ascentMeters = ascentMeters;
         this.destinationName = destinationName;
         this.state = state;
         this.pauseReason = pauseReason;
@@ -84,6 +90,26 @@ public final class ExplorationUiState {
                                           GuidanceSnapshot guidance,
                                           Visit pendingStory,
                                           boolean visitSaveFailed) {
+        return from(summary, destination, route, unavailableReason, stopSaveFailed,
+                checkpointFailed, movement, guidance, pendingStory, visitSaveFailed, null, null);
+    }
+
+    /**
+     * @param steps        steps counted so far, or null on a device that cannot count them
+     * @param ascentMeters metres climbed so far, or null without a barometer
+     */
+    public static ExplorationUiState from(SessionSummary summary,
+                                          Attraction destination,
+                                          RouteSnapshot route,
+                                          LocationSource.Reason unavailableReason,
+                                          boolean stopSaveFailed,
+                                          boolean checkpointFailed,
+                                          MovementSnapshot movement,
+                                          GuidanceSnapshot guidance,
+                                          Visit pendingStory,
+                                          boolean visitSaveFailed,
+                                          Long steps,
+                                          Double ascentMeters) {
         LocationSample last = route.getLastSample();
         Double remaining = null;
         if (last != null && destination != null) {
@@ -104,7 +130,19 @@ public final class ExplorationUiState {
                 movement,
                 guidance,
                 pendingStory,
-                visitSaveFailed);
+                visitSaveFailed,
+                steps,
+                ascentMeters);
+    }
+
+    /** Steps counted so far, or null when the device cannot count them. */
+    public Long getSteps() {
+        return steps;
+    }
+
+    /** Metres climbed so far, or null when the device has no barometer. */
+    public Double getAscentMeters() {
+        return ascentMeters;
     }
 
     /**

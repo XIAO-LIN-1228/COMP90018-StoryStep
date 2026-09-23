@@ -188,9 +188,9 @@ public class JourneyDetailFragment extends Fragment {
         date.setText(when);
         bindIdentity(summary, when);
         publishCard.setVisibility(summary.isPublished() ? View.GONE : View.VISIBLE);
-        java.util.List<java.io.File> files = new java.util.ArrayList<>();
+        java.util.List<Object> files = new java.util.ArrayList<>();
         for (String name : summary.getPhotoFiles()) {
-            files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+            files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.source(
                     requireContext(), summary.getId(), name));
         }
         photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);
@@ -216,6 +216,24 @@ public class JourneyDetailFragment extends Fragment {
             label.setVisibility(View.GONE);
         }
 
+        // What the phone counted, when it could: each column only with its figure.
+        View fitness = requireView().findViewById(R.id.journey_detail_fitness);
+        View stepsColumn = requireView().findViewById(R.id.journey_detail_steps_column);
+        View climbColumn = requireView().findViewById(R.id.journey_detail_climb_column);
+        Long walkSteps = summary.getSteps();
+        Double climbed = summary.getAscentMeters();
+        stepsColumn.setVisibility(walkSteps == null ? View.GONE : View.VISIBLE);
+        climbColumn.setVisibility(climbed == null ? View.GONE : View.VISIBLE);
+        fitness.setVisibility(walkSteps == null && climbed == null ? View.GONE : View.VISIBLE);
+        if (walkSteps != null) {
+            ((TextView) requireView().findViewById(R.id.journey_detail_steps)).setText(
+                    java.text.NumberFormat.getIntegerInstance().format(walkSteps));
+        }
+        if (climbed != null) {
+            ((TextView) requireView().findViewById(R.id.journey_detail_climb)).setText(
+                    com.comp90018.storystep.ui.DistanceText.format(getResources(), climbed));
+        }
+
         bindRoute(detail);
 
         movement.setText(HistoryText.formatMovement(getResources(), detail.getMovement()));
@@ -236,6 +254,8 @@ public class JourneyDetailFragment extends Fragment {
                                 requireContext(), R.color.story_signal_ink)),
                 0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         who.setText(styled);
+        com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                requireView().findViewById(R.id.journey_avatar));
         String where = summary.getPlaceName() != null ? summary.getPlaceName()
                 : summary.getDestinationName();
         whenWhere.setText(where == null ? when

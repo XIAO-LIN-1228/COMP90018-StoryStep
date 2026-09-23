@@ -68,7 +68,7 @@
                     android:text="@string/story_discovered"
                     android:textAppearance="@style/TextAppearance.StoryStep.Label"
                     android:textColor="@color/story_on_photo"
-                    app:drawableStartCompat="@drawable/ic_lock_outline"
+                    app:drawableStartCompat="@drawable/ic_spark"
                     app:drawableTint="@color/story_on_photo" />
             </FrameLayout>
 

@@ -23,6 +23,8 @@ public final class Attraction {
      * Zero when nothing is known, which is what every place starts with.
      */
     private final int popularity;
+    /** When it is open, how to reach it, whether you can get in; {@link PlaceFacts#NONE} usually. */
+    private final PlaceFacts facts;
 
     public Attraction(String id,
                       String name,
@@ -57,6 +59,23 @@ public final class Attraction {
                       String sourceRef,
                       String imageUrl,
                       int popularity) {
+        this(id, name, category, description, indoor, location, provenance, sourceRef, imageUrl,
+                popularity, PlaceFacts.NONE);
+    }
+
+    /** With the practical facts: opening hours, contact, access. */
+    public Attraction(String id,
+                      String name,
+                      AttractionCategory category,
+                      String description,
+                      IndoorClassification indoor,
+                      GeoPoint location,
+                      AttractionProvenance provenance,
+                      String sourceRef,
+                      String imageUrl,
+                      int popularity,
+                      PlaceFacts facts) {
+        this.facts = facts == null ? PlaceFacts.NONE : facts;
         this.id = Objects.requireNonNull(id, "id");
         this.name = Objects.requireNonNull(name, "name");
         this.category = Objects.requireNonNull(category, "category");
@@ -83,6 +102,17 @@ public final class Attraction {
     public Attraction withDescription(String text) {
         return new Attraction(id, name, category, text == null ? description : text, indoor,
                 location, provenance, sourceRef, imageUrl, popularity);
+    }
+
+    /** When it is open and how to reach it; never null, often empty. */
+    public PlaceFacts getFacts() {
+        return facts;
+    }
+
+    /** The same place with its practical facts attached. */
+    public Attraction withFacts(PlaceFacts newFacts) {
+        return new Attraction(id, name, category, description, indoor, location, provenance,
+                sourceRef, imageUrl, popularity, newFacts);
     }
 
     /** The photograph's URL, or null. Sources that carry one are credited where it is shown. */

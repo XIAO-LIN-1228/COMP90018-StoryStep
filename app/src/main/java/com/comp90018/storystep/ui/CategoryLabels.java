@@ -28,6 +28,12 @@ public final class CategoryLabels {
                 return R.string.category_public_art;
             case UNIVERSITY_LANDMARK:
                 return R.string.category_university_landmark;
+            case FOOD:
+                return R.string.category_food;
+            case DRINK:
+                return R.string.category_drink;
+            case SHOPPING:
+                return R.string.category_shopping;
             case CULTURAL_SITE:
             default:
                 return R.string.category_cultural_site;

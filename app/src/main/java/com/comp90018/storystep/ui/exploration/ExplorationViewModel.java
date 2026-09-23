@@ -181,7 +181,8 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         // whole job is to show a duration that grows without the session having changed.
         uiState.setValue(ExplorationUiState.from(coordinator.summary(), destination, route,
                 unavailableReason, coordinator.hasStopSaveFailed(), checkpointFailed, movement,
-                guidance, pendingStory, visitSaveFailed));
+                guidance, pendingStory, visitSaveFailed,
+                coordinator.stepsWalked(), coordinator.ascentMetres()));
         mapState.setValue(ExplorationMapState.from(
                 destination == null ? null : destination.getLocation(), route));
     }

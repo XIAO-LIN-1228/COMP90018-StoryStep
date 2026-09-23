@@ -141,6 +141,12 @@ public final class ExplorationCoordinator {
     /** Same reason as the route: one session, one answer to how long the user has been walking. */
     private final MovementClassifier movement = new MovementClassifier();
 
+    /** Steps and metres climbed during the walk, when the device can report them. */
+    private final com.comp90018.storystep.domain.fitness.StepCounter steps =
+            new com.comp90018.storystep.domain.fitness.StepCounter();
+    private final com.comp90018.storystep.domain.fitness.AscentAccumulator ascent =
+            new com.comp90018.storystep.domain.fitness.AscentAccumulator();
+
     private final CircularSmoother headingSmoother = new CircularSmoother();
 
     /**
@@ -215,6 +221,12 @@ public final class ExplorationCoordinator {
      */
     private final WeatherRepository weather;
 
+    /**
+     * The walk being followed, when there is one. Optional: a walk started from a single place
+     * has no plan, and the coordinator behaves exactly as it did before plans existed.
+     */
+    @androidx.annotation.Nullable private com.comp90018.storystep.application.WalkPlanner planner;
+
     /** The observation recorded for this session, or null when none has been captured yet. */
     private WeatherSnapshot capturedWeather;
 
@@ -277,6 +289,31 @@ public final class ExplorationCoordinator {
     // --- observers ---------------------------------------------------------------------------
 
     /** Registers {@code observer} and immediately gives it the current session state. */
+    /** Tells the coordinator which walk is being followed, so arriving advances it. */
+    public void setPlanner(@androidx.annotation.Nullable
+                           com.comp90018.storystep.application.WalkPlanner planner) {
+        this.planner = planner;
+    }
+
+    /** The stop the plan expects next, or null when there is no plan or the walk is done. */
+    @androidx.annotation.Nullable
+    public com.comp90018.storystep.domain.model.Attraction nextPlannedStop() {
+        if (planner == null || destination == null) {
+            return null;
+        }
+        return planner.plan().after(destination.getId());
+    }
+
+    /** Which stop of how many the walk is on, or null when it is not following a plan. */
+    @androidx.annotation.Nullable
+    public int[] planProgress() {
+        if (planner == null || destination == null) {
+            return null;
+        }
+        int at = planner.plan().indexOf(destination.getId());
+        return at < 0 ? null : new int[]{at + 1, planner.plan().size()};
+    }
+
     public void addObserver(Observer observer) {
         if (observer == null) {
             throw new IllegalArgumentException("observer must not be null");
@@ -316,6 +353,16 @@ public final class ExplorationCoordinator {
      */
     public MovementSnapshot movementSnapshot() {
         return sensing.hasMotion() ? movement.snapshot() : MovementSnapshot.unavailable();
+    }
+
+    /** Steps taken during this walk, or null when the device does not count them. */
+    public Long stepsWalked() {
+        return sensing.hasSteps() ? steps.steps() : null;
+    }
+
+    /** Metres climbed during this walk, or null when the device has no barometer. */
+    public Double ascentMetres() {
+        return sensing.hasPressure() ? ascent.ascentMetres() : null;
     }
 
     /** Where the destination lies relative to the user, as far as current data can say. */
@@ -499,6 +546,8 @@ public final class ExplorationCoordinator {
                 // finished route stays readable to the summary screen until the next session.
                 route.reset();
                 movement.clear();
+                steps.reset();
+                ascent.reset();
                 persistedRoutePointCount = 0;
                 // Weather belongs to the walk it was observed during, not to the app.
                 capturedWeather = null;
@@ -646,6 +695,8 @@ public final class ExplorationCoordinator {
                 // it recorded as walked.
                 route.reset();
                 movement.clear();
+                steps.reset();
+                ascent.reset();
                 persistedRoutePointCount = 0;
                 capturedWeather = null;
                 weatherCaptureInFlight = false;
@@ -740,6 +791,14 @@ public final class ExplorationCoordinator {
         if (sensing.hasHeading()) {
             sensing.getHeadingSource().startUpdates(subscription);
         }
+        // Steps and climb continue across a pause - the same walk, interrupted - so neither
+        // accumulator is reset here; the step counter rebases itself on its next reading.
+        if (sensing.hasSteps()) {
+            sensing.getStepSource().startUpdates(subscription);
+        }
+        if (sensing.hasPressure()) {
+            sensing.getPressureSource().startUpdates(subscription);
+        }
     }
 
     private void closeSubscription() {
@@ -755,6 +814,12 @@ public final class ExplorationCoordinator {
         }
         if (sensing.getHeadingSource() != null) {
             sensing.getHeadingSource().stopUpdates();
+        }
+        if (sensing.getStepSource() != null) {
+            sensing.getStepSource().stopUpdates();
+        }
+        if (sensing.getPressureSource() != null) {
+            sensing.getPressureSource().stopUpdates();
         }
         headingUsable = false;
     }
@@ -847,13 +912,32 @@ public final class ExplorationCoordinator {
         if (sessionId == null || destination == null) {
             return;
         }
+        String arrivedAt = destination.getId();
         storeVisit(new Visit(
                 sessionId,
-                destination.getId(),
+                arrivedAt,
                 clock.wallClockMillis(),
                 destination.getName(),
                 destination.getDescription(),
                 true));
+        advancePlan(arrivedAt);
+    }
+
+    /**
+     * Moves a planned walk on to its next stop once this one is reached.
+     *
+     * <p>Only when the walk is being walked to a plan and the stop just reached is the one the
+     * plan expected. The last stop leaves the destination where it is: the walk is done, and
+     * clearing it would blank the screen at the moment the user arrives.
+     */
+    private void advancePlan(String arrivedAt) {
+        if (planner == null) {
+            return;
+        }
+        com.comp90018.storystep.domain.model.Attraction next = planner.plan().after(arrivedAt);
+        if (next != null) {
+            selectDestination(next);
+        }
     }
 
     /**
@@ -1053,6 +1137,18 @@ public final class ExplorationCoordinator {
                         }
                     }
                 });
+        // The walk's own counts, on the same occasions and with the same rule: a failure here
+        // degrades the record, never the walk.
+        sessionStore.saveWalkTotals(sessionId, stepsWalked(), ascentMetres(),
+                new RepositoryCallback<Void>() {
+                    @Override
+                    public void onSuccess(Void result) {
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                    }
+                });
     }
 
     private void publishSession() {
@@ -1123,7 +1219,9 @@ public final class ExplorationCoordinator {
      * queued by a subscription that has since been replaced.
      */
     private final class Subscription
-            implements LocationSource.Listener, MotionSource.Listener, HeadingSource.Listener {
+            implements LocationSource.Listener, MotionSource.Listener, HeadingSource.Listener,
+            com.comp90018.storystep.platform.sensor.StepSource.Listener,
+            com.comp90018.storystep.platform.sensor.PressureSource.Listener {
 
         private final int ownGeneration;
 
@@ -1165,6 +1263,24 @@ public final class ExplorationCoordinator {
                 return;
             }
             movement.offer(sample);
+            publishMovement();
+        }
+
+        @Override
+        public void onStepCount(long sinceBoot) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            steps.accept(sinceBoot);
+            publishMovement();
+        }
+
+        @Override
+        public void onPressure(double hectopascals) {
+            if (isStale() || !machine.getState().isCollecting()) {
+                return;
+            }
+            ascent.accept(hectopascals);
             publishMovement();
         }
 

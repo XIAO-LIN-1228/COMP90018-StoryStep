@@ -683,7 +683,8 @@ public class NearbyAttractionsViewModel extends ViewModel
         List<Attraction> candidates = new ArrayList<>();
         for (Attraction attraction : attractions) {
             if (filter.matches(attraction.getName(), attraction.getIndoor(),
-                    visitedIds.contains(attraction.getId()))) {
+                    visitedIds.contains(attraction.getId()), attraction.getCategory(),
+                    savedIds.contains(attraction.getId()))) {
                 candidates.add(attraction);
             }
         }

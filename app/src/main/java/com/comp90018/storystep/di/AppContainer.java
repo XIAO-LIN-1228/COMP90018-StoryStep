@@ -18,6 +18,7 @@ import com.comp90018.storystep.data.remote.RetryingAttractionSource;
 import com.comp90018.storystep.data.remote.RetryingWeatherSource;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
 import com.comp90018.storystep.data.repository.AttractionCache;
+import com.comp90018.storystep.data.repository.SampleJourneys;
 import com.comp90018.storystep.data.repository.CachedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomSavedAttractionRepository;
 import com.comp90018.storystep.data.repository.RoomHistoryRepository;
@@ -72,6 +73,10 @@ public class AppContainer {
     private final SavedAttractionRepository savedAttractionRepository;
     private final WeatherRepository weatherRepository;
     private final ExplorationCoordinator explorationCoordinator;
+    /** The walk being planned; process-scoped so it survives navigation between screens. */
+    private final com.comp90018.storystep.application.WalkPlanner walkPlanner =
+            new com.comp90018.storystep.application.WalkPlanner();
+    private final com.comp90018.storystep.data.remote.WalkRouteSource walkRouteSource;
     private final CacheRetentionSweeper cacheRetentionSweeper;
     private final com.comp90018.storystep.domain.repository.ThemeRepository themeRepository;
 
@@ -107,6 +112,9 @@ public class AppContainer {
         // Opened here, once, because the database is process-scoped: a second instance would mean
         // a second connection pool and two views of the same file.
         this.database = StoryStepDatabase.create(this.applicationContext);
+        // Three published walks to open on, once; see SampleJourneys.
+        this.ioExecutor.execute(() -> SampleJourneys.seedIfNeeded(
+                this.applicationContext, database, clock.wallClockMillis()));
         // One cache object behind whichever repository is wired, so the seeding rule and the
         // write policy exist once rather than once per repository.
         this.attractionCache = new AttractionCache(
@@ -126,6 +134,10 @@ public class AppContainer {
                                 ApiClientFactory.createWikidataService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikipediaService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createCommonsService(
+                                        isDebuggable(this.applicationContext)),
+                                ApiClientFactory.createWikidataQueryService(
                                         isDebuggable(this.applicationContext)))),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),
@@ -197,12 +209,20 @@ public class AppContainer {
                 new LocationSampleFilter(locationQualityPolicy),
                 clock,
                 new SensingSources(sensorHub, sensorHub.asHeadingSource(),
-                        new AndroidDeclinationSource()),
+                        new AndroidDeclinationSource(),
+                        new com.comp90018.storystep.platform.sensor.AndroidStepSource(
+                                this.applicationContext),
+                        new com.comp90018.storystep.platform.sensor.AndroidPressureSource(
+                                this.applicationContext)),
                 ArrivalPolicy.defaultPolicy(),
                 // The session records the weather it was walked in. Passed the same process-scoped
                 // repository every screen uses, so the capture is a cache read rather than an
                 // extra request.
                 weatherRepository);
+        // The coordinator follows the plan when there is one: arriving moves it to the next stop.
+        this.explorationCoordinator.setPlanner(walkPlanner);
+        this.walkRouteSource = new com.comp90018.storystep.data.remote.ValhallaWalkRouteSource(
+                ApiClientFactory.createValhallaService(isDebuggable(this.applicationContext)));
     }
 
     /**
@@ -258,6 +278,15 @@ public class AppContainer {
      * {@link LocationSource}: a screen that could register its own would be a second, invisible
      * subscription running alongside the session's.
      */
+    /** The walking router, or null when none is wired: plans then draw straight legs. */
+    public com.comp90018.storystep.data.remote.WalkRouteSource getWalkRouteSource() {
+        return walkRouteSource;
+    }
+
+    public com.comp90018.storystep.application.WalkPlanner getWalkPlanner() {
+        return walkPlanner;
+    }
+
     public ExplorationCoordinator getExplorationCoordinator() {
         return explorationCoordinator;
     }

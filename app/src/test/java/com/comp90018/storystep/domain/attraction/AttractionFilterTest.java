@@ -70,4 +70,25 @@ public class AttractionFilterTest {
         assertFalse(AttractionFilter.NONE.withQuery("x").matches(null, IndoorClassification.INDOOR, false));
         assertTrue(AttractionFilter.NONE.matches(null, IndoorClassification.INDOOR, false));
     }
+
+    @Test
+    public void aKindShowsOnlyThatKindAndSavedShowsOnlyWhatIsKept() {
+        AttractionFilter food = AttractionFilter.NONE.withKind(AttractionFilter.Kind.FOOD);
+        assertTrue(food.matches("Pellegrini's", IndoorClassification.INDOOR, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.FOOD, false));
+        assertFalse(food.matches("Old Arts", IndoorClassification.OUTDOOR, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.HISTORICAL_BUILDING, false));
+        AttractionFilter sights = AttractionFilter.NONE.withKind(AttractionFilter.Kind.SIGHTS);
+        assertTrue(sights.matches("Old Arts", IndoorClassification.OUTDOOR, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.HISTORICAL_BUILDING, false));
+        assertFalse(sights.matches("A cafe", IndoorClassification.INDOOR, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.DRINK, false));
+        AttractionFilter saved = AttractionFilter.NONE.withKind(AttractionFilter.Kind.SAVED);
+        assertTrue(saved.matches("Kept", IndoorClassification.UNKNOWN, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.DRINK, true));
+        assertFalse(saved.matches("Not kept", IndoorClassification.UNKNOWN, false,
+                com.comp90018.storystep.domain.model.AttractionCategory.DRINK, false));
+        assertTrue(saved.isActive());
+        assertFalse(AttractionFilter.NONE.withKind(AttractionFilter.Kind.ALL).isActive());
+    }
 }

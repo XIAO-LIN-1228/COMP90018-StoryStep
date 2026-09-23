@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One practical fact: an icon, a label, and what the source recorded. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:paddingTop="10dp"
+    android:paddingBottom="10dp">
+
+    <ImageView
+        android:id="@+id/fact_icon"
+        android:layout_width="22dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="1dp"
+        android:contentDescription="@null"
+        app:tint="@color/story_ink_2"
+        tools:src="@drawable/ic_clock" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/fact_label"
+            style="@style/Widget.StoryStep.StatLabel"
+            tools:text="Opening hours" />
+
+        <TextView
+            android:id="@+id/fact_value"
+            style="@style/TextAppearance.StoryStep.Body"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:lineSpacingExtra="2sp"
+            android:textColor="@color/story_ink"
+            tools:text="Mon–Fri 09:00–17:00" />
+    </LinearLayout>
+</LinearLayout>

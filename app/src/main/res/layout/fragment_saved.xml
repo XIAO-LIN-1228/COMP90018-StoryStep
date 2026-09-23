@@ -18,15 +18,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            style="@style/Widget.StoryStep.Eyebrow"
-            android:text="@string/app_name" />
+        <ImageButton
+            android:id="@+id/saved_back"
+            style="@style/Widget.StoryStep.ScrimButton"
+            android:contentDescription="@string/detail_back"
+            android:src="@drawable/ic_back" />
 
         <TextView
             style="@style/TextAppearance.StoryStep.PageTitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
+            android:layout_marginTop="@dimen/space_16"
             android:text="@string/saved_title" />
     </LinearLayout>
 
@@ -35,7 +37,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingBottom="98dp"
+        android:paddingBottom="@dimen/space_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

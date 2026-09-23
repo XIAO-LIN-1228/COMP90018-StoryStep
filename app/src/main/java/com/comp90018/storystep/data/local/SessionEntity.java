@@ -201,4 +201,19 @@ public class SessionEntity {
     @Nullable
     @ColumnInfo(name = "photo_files")
     public String photoFiles;
+
+    // ---- What the walk's own sensors counted ---------------------------------------------
+    //
+    // Nullable because most devices report neither: a null is "this phone could not count",
+    // which history must be able to say rather than showing a confident zero.
+
+    /** Steps taken, from the platform step counter, or null when the device has none. */
+    @Nullable
+    @ColumnInfo(name = "steps")
+    public Long steps;
+
+    /** Metres climbed, from the barometer, or null when the device has none. */
+    @Nullable
+    @ColumnInfo(name = "ascent_meters")
+    public Double ascentMeters;
 }

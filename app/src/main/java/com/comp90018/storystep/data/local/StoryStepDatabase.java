@@ -37,7 +37,7 @@ import androidx.room.RoomDatabase;
                 ThemeRunEntity.class,
                 ThemeStopEntity.class
         },
-        version = 10,
+        version = 12,
         exportSchema = true)
 public abstract class StoryStepDatabase extends RoomDatabase {
 

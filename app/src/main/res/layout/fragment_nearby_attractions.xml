@@ -81,7 +81,67 @@
                 android:textColor="@color/story_ink_2" />
         </com.google.android.material.card.MaterialCardView>
 
+        <!--
+            The kinds of place, as chips over the map: kept, sights, food, drinks, shopping.
+            One at a time; the chosen one again means all. Each carries its own glyph in its
+            own colour, the same as its pins.
+        -->
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-20dp"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="-20dp"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/page_horizontal_margin"
+            android:paddingEnd="@dimen/page_horizontal_margin"
+            android:scrollbars="none">
 
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/kind_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:chipSpacingHorizontal="6dp"
+                app:selectionRequired="false"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_saved"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_saved"
+                    app:chipIcon="@drawable/ic_kind_saved"
+                    app:chipIconTint="@color/kind_saved" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_sights"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_sights"
+                    app:chipIcon="@drawable/ic_kind_sights"
+                    app:chipIconTint="@color/kind_sights" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_food"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_food"
+                    app:chipIcon="@drawable/ic_kind_food"
+                    app:chipIconTint="@color/kind_food" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_drink"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_drink"
+                    app:chipIcon="@drawable/ic_kind_drink"
+                    app:chipIconTint="@color/kind_drink" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/kind_shopping"
+                    style="@style/Widget.StoryStep.KindChip"
+                    android:text="@string/kind_shopping"
+                    app:chipIcon="@drawable/ic_kind_shopping"
+                    app:chipIconTint="@color/kind_shopping" />
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
     </LinearLayout>
 
     <!-- The sheet: resting shows the first places; a pull fills the screen. -->
@@ -178,7 +238,7 @@
             android:layout_marginTop="@dimen/space_4"
             android:textColor="@color/story_signal_ink"
             android:visibility="gone"
-            app:drawableStartCompat="@drawable/ic_lock_outline"
+            app:drawableStartCompat="@drawable/ic_spark"
             app:drawableTint="@color/story_signal_ink" />
 
         <HorizontalScrollView
@@ -306,98 +366,6 @@
 
     </LinearLayout>
 
-<com.google.android.material.card.MaterialCardView
-        android:id="@+id/continue_journey_card"
-        style="@style/Widget.StoryStep.Card"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_16"
-        app:cardCornerRadius="0dp"
-        app:strokeWidth="0dp"
-        app:cardBackgroundColor="@color/story_ground">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="@drawable/bg_hairline_top"
-            android:paddingStart="@dimen/page_horizontal_margin"
-            android:paddingTop="@dimen/space_16"
-            android:paddingEnd="@dimen/page_horizontal_margin"
-            android:paddingBottom="@dimen/space_16">
-
-            <com.google.android.material.imageview.ShapeableImageView
-                android:id="@+id/journey_image"
-                android:layout_width="92dp"
-                android:layout_height="0dp"
-                android:importantForAccessibility="no"
-                android:scaleType="centerCrop"
-                android:src="@drawable/photo_old_arts_thumb"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:shapeAppearanceOverlay="@style/ShapeAppearanceOverlay.StoryStep.Image" />
-
-            <TextView
-                android:id="@+id/journey_label"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="@string/home_continue_title"
-                android:textColor="@color/story_ink"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/journey_image"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/journey_name"
-                style="@style/TextAppearance.StoryStep.Title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="2dp"
-                android:text="@string/home_journey_name"
-                android:textSize="16sp"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/journey_image"
-                app:layout_constraintTop_toBottomOf="@id/journey_label" />
-
-            <TextView
-                android:id="@+id/journey_progress"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginTop="2dp"
-                android:text="@string/home_journey_progress"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/journey_image"
-                app:layout_constraintTop_toBottomOf="@id/journey_name" />
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:text="@string/home_journey_meta"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/journey_image" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/resume_journey_button"
-                style="@style/Widget.StoryStep.Button.Primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="124dp"
-                android:minHeight="42dp"
-                android:text="@string/home_resume"
-                android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent" />
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
@@ -439,34 +407,6 @@
                 android:layout_marginTop="88dp"
                 android:text="@string/nearby_retry"
                 android:visibility="gone" />
-
-            <!-- The one action, floating over the list's foot. -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="86dp"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/session_button"
-                    style="@style/Widget.StoryStep.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:elevation="@dimen/floating_elevation"
-                    android:minHeight="@dimen/minimum_touch_target"
-                    android:text="@string/nearby_start_exploring" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/stop_button"
-                    style="@style/Widget.StoryStep.Button.Secondary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_8"
-                    android:minHeight="@dimen/minimum_touch_target"
-                    android:text="@string/nearby_stop_exploring"
-                    android:visibility="gone" />
-            </LinearLayout>
         </FrameLayout>
 
         <!-- The place-data credit the licence requires, shown when the map's own is hidden. -->

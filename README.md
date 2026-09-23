@@ -107,7 +107,8 @@ Users will be able to review previous exploration sessions and save attractions 
 
 ## Sensors
 
-StoryStep plans to use three primary sensing capabilities:
+StoryStep uses three primary sensing capabilities. Every device has them, and the app's core
+behaviour depends on them:
 
 | Sensor or capability | Purpose |
 |---|---|
@@ -115,7 +116,18 @@ StoryStep plans to use three primary sensing capabilities:
 | Accelerometer | Estimate movement state and assist with device orientation |
 | Magnetometer | Calculate compass heading and show attraction direction |
 
-Sensor availability will be checked at runtime. The app must continue functioning gracefully when a sensor is unavailable.
+Three further capabilities are used when the device has them. Each adds to a walk's record and
+none is required: a phone without them records exactly the same walk, minus that one figure.
+
+| Sensor or capability | Purpose | When absent |
+|---|---|---|
+| Step counter | Count the steps taken during a walk | The Steps figure is not shown |
+| Barometer | Measure metres climbed during a walk | The Climb figure is not shown |
+| Camera | Take a photograph during a walk, kept with it and published with it | Photographs can still be chosen from the library |
+
+Sensor availability is checked at runtime. The app continues functioning gracefully when a sensor
+is unavailable: an optional figure is omitted rather than shown as zero, because a zero would
+claim the walk was flat or still when the truth is that the phone could not tell.
 
 ## Internet and Cloud Features
 
@@ -235,7 +247,9 @@ This is a private repository. Access must be granted by the repository owner.
 3. Select an emulator or connected Android device.
 4. Run the `app` configuration.
 
-A physical Android device is recommended for testing real location, accelerometer, magnetometer, and compass behaviour.
+A physical Android device is recommended for testing real location, accelerometer, magnetometer,
+and compass behaviour. The step counter in particular cannot be exercised on an emulator, which
+reports no such sensor; the barometer and camera can be, but only with synthetic values.
 
 ### Build and test
 

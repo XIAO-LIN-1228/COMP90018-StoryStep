@@ -21,6 +21,12 @@ public final class ProfileViewModel extends ViewModel {
     private final MutableLiveData<Double> distanceMeters = new MutableLiveData<>();
     /** When the first finished walk started, or null when there is none. */
     private final MutableLiveData<Long> firstWalkMillis = new MutableLiveData<>();
+    /** The most recent finished walks, newest first, at most {@link #RECENT_WALKS}. */
+    private final MutableLiveData<List<SessionHistoryEntry>> recentWalks = new MutableLiveData<>();
+    /** The kept places, most recently kept first. */
+    private final MutableLiveData<List<com.comp90018.storystep.domain.model.SavedAttraction>>
+            savedPlaces = new MutableLiveData<>();
+    static final int RECENT_WALKS = 6;
     private final HistoryRepository.Observer historyObserver = this::refresh;
     private final SavedAttractionRepository.Observer savedObserver = ids -> refresh();
     private int generation;
@@ -37,6 +43,10 @@ public final class ProfileViewModel extends ViewModel {
     public LiveData<Integer> getSaves() { return saves; }
     public LiveData<Double> getDistanceMeters() { return distanceMeters; }
     public LiveData<Long> getFirstWalkMillis() { return firstWalkMillis; }
+    public LiveData<List<SessionHistoryEntry>> getRecentWalks() { return recentWalks; }
+    public LiveData<List<com.comp90018.storystep.domain.model.SavedAttraction>> getSavedPlaces() {
+        return savedPlaces;
+    }
 
     public void refresh() {
         final int request = ++generation;
@@ -54,12 +64,14 @@ public final class ProfileViewModel extends ViewModel {
                 }
                 distanceMeters.setValue(metres);
                 firstWalkMillis.setValue(first);
+                recentWalks.setValue(rows.subList(0, Math.min(RECENT_WALKS, rows.size())));
             }
             @Override public void onError(Throwable error) {
                 if (request != generation) { return; }
                 journeys.setValue(null);
                 distanceMeters.setValue(null);
                 firstWalkMillis.setValue(null);
+                recentWalks.setValue(java.util.Collections.<SessionHistoryEntry>emptyList());
             }
         });
         history.loadVisitedAttractionIds(new RepositoryCallback<Set<String>>() {
@@ -68,6 +80,17 @@ public final class ProfileViewModel extends ViewModel {
             }
             @Override public void onError(Throwable error) {
                 if (request == generation) { visits.setValue(null); }
+            }
+        });
+        saved.loadSaved(new RepositoryCallback<List<com.comp90018.storystep.domain.model.SavedAttraction>>() {
+            @Override public void onSuccess(List<com.comp90018.storystep.domain.model.SavedAttraction> places) {
+                if (request == generation) { savedPlaces.setValue(places); }
+            }
+            @Override public void onError(Throwable error) {
+                if (request == generation) {
+                    savedPlaces.setValue(java.util.Collections
+                            .<com.comp90018.storystep.domain.model.SavedAttraction>emptyList());
+                }
             }
         });
         saved.loadSavedIds(new RepositoryCallback<Set<String>>() {

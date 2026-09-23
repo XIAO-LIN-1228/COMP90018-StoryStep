@@ -357,6 +357,9 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 10: a themed walk's definition and the stops it has answered or skipped.
+     */
     public static final Migration MIGRATION_9_10 = new Migration(9, 10) {
         @Override public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("CREATE TABLE IF NOT EXISTS `theme_runs` ("
@@ -368,9 +371,42 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 11: what the walk's own sensors counted. Both nullable, because most devices
+     * report neither and a zero would be a claim the walk was flat and still.
+     *
+     * <p>Written against version 10 as 9-to-10 on its own branch; renumbered on merging, because
+     * the themed-walk tables reached main first and a version number means one schema.
+     */
+    public static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `steps` INTEGER");
+            database.execSQL("ALTER TABLE `sessions` ADD COLUMN `ascent_meters` REAL");
+        }
+    };
+
+    /**
+     * Version 12: the practical facts about a place. All nullable, because most places have
+     * none of them recorded and an empty string would be a claim that they were.
+     */
+    public static final Migration MIGRATION_11_12 = new Migration(11, 12) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            for (String table : new String[]{"attractions", "saved_attractions"}) {
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `opening_hours` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `phone` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `website` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `wheelchair` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `fee` TEXT");
+            }
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10};
+                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
+                MIGRATION_10_11, MIGRATION_11_12};
     }
 }

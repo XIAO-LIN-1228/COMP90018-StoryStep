@@ -48,6 +48,8 @@ public class SavedFragment extends Fragment
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        view.findViewById(R.id.saved_back).setOnClickListener(v ->
+                androidx.navigation.fragment.NavHostFragment.findNavController(this).navigateUp());
         list = view.findViewById(R.id.saved_list);
         loading = view.findViewById(R.id.saved_loading);
         message = view.findViewById(R.id.saved_message);

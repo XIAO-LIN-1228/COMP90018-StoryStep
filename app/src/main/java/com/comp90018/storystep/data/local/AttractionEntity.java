@@ -1,6 +1,7 @@
 package com.comp90018.storystep.data.local;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
@@ -82,6 +83,31 @@ public class AttractionEntity {
     public String imageUrl;
 
     /** Sitelink count from Wikidata; zero when unknown. Added at schema version 8. */
+    // ---- What a visitor needs to know before going ----------------------------------------
+    //
+    // All nullable: OpenStreetMap records these for a museum far more often than for a statue,
+    // and a null means "not recorded" rather than "none".
+
+    @Nullable
+    @ColumnInfo(name = "opening_hours")
+    public String openingHours;
+
+    @Nullable
+    @ColumnInfo(name = "phone")
+    public String phone;
+
+    @Nullable
+    @ColumnInfo(name = "website")
+    public String website;
+
+    @Nullable
+    @ColumnInfo(name = "wheelchair")
+    public String wheelchair;
+
+    @Nullable
+    @ColumnInfo(name = "fee")
+    public String fee;
+
     @ColumnInfo(name = "popularity", defaultValue = "0")
     public int popularity;
 }

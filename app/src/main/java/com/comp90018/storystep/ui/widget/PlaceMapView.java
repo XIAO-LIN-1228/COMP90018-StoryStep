@@ -40,11 +40,37 @@ public class PlaceMapView extends FrameLayout {
         public final String id;
         public final String name;
         public final GeoPoint location;
+        /** Which glyph and colour the pin gets; null for the plain story dot. */
+        @Nullable public final com.comp90018.storystep.domain.model.AttractionCategory.Kind kind;
+        /** Kept places wear the star when the map is showing what is kept. */
+        public final boolean starred;
+        /** A planned stop's position in the walk, 1-based; zero for a place that is not one. */
+        public final int order;
 
         public Place(String id, String name, GeoPoint location) {
+            this(id, name, location, null, false);
+        }
+
+        public Place(String id, String name, GeoPoint location,
+                     @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+                     boolean starred) {
+            this(id, name, location, kind, starred, 0);
+        }
+
+        /** A stop in a planned walk: the pin carries its number instead of a glyph. */
+        public static Place stop(String id, String name, GeoPoint location, int order) {
+            return new Place(id, name, location, null, false, order);
+        }
+
+        private Place(String id, String name, GeoPoint location,
+                      @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+                      boolean starred, int order) {
             this.id = id;
             this.name = name;
             this.location = location;
+            this.kind = kind;
+            this.starred = starred;
+            this.order = order;
         }
     }
 
@@ -54,13 +80,20 @@ public class PlaceMapView extends FrameLayout {
     }
 
     /**
-     * OpenStreetMap's Humanitarian style: lighter and far less cluttered than the default
-     * Mapnik rendering, served by OSM France without a key. Lifted further toward the page's
-     * paper by {@link #paperFilter()} so the map recedes and the pins carry the colour.
-     * (CARTO's Positron, the obvious choice, now stamps "API KEY REQUIRED" across anonymous
-     * tiles.)
+     * OpenStreetMap's Humanitarian style, served by OSM France without a key: full detail at
+     * every walking zoom, and far less cluttered than the standard Carto rendering, which
+     * covers a campus in parking and cafe icons at z18.
+     *
+     * <p>Warmed and quietened toward the page's paper by {@link #paperFilter()}, so the map
+     * reads as the sheet the rest of the app is printed on and the app's own pins, stops and
+     * route carry the colour.
+     *
+     * <p>Rejected: CARTO's Positron stamps "API KEY REQUIRED" across anonymous tiles; Esri's
+     * World Light Gray Canvas is beautifully quiet but has no data above zoom 16 in Melbourne,
+     * which is below walking zoom; OpenStreetMap's own Mapnik tiles are forbidden to apps by
+     * the OSMF tile usage policy.
      */
-    private static final org.osmdroid.tileprovider.tilesource.XYTileSource HUMANITARIAN =
+    private static final org.osmdroid.tileprovider.tilesource.OnlineTileSourceBase LIGHT_CANVAS =
             new org.osmdroid.tileprovider.tilesource.XYTileSource(
                     "OsmHumanitarian", 0, 19, 256, ".png",
                     new String[] {
@@ -89,7 +122,7 @@ public class PlaceMapView extends FrameLayout {
     public PlaceMapView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
         map = new MapView(context);
-        map.setTileSource(HUMANITARIAN);
+        map.setTileSource(LIGHT_CANVAS);
         map.getOverlayManager().getTilesOverlay().setColorFilter(paperFilter());
         map.setMultiTouchControls(true);
         map.getZoomController().setVisibility(
@@ -156,7 +189,8 @@ public class PlaceMapView extends FrameLayout {
     public void setPlaces(List<Place> places) {
         List<PinOverlay.Pin> pins = new ArrayList<>(places.size());
         for (Place place : places) {
-            pins.add(new PinOverlay.Pin(place.id, toOsm(place.location), labelledPin(place.name)));
+            pins.add(new PinOverlay.Pin(place.id, toOsm(place.location),
+                    labelledPin(place.name, place.kind, place.starred, place.order)));
         }
         pinOverlay.setPins(pins);
         map.invalidate();
@@ -231,26 +265,46 @@ public class PlaceMapView extends FrameLayout {
             map.getOverlays().remove(line);
         }
         routeLines.clear();
-        int ink = ContextCompat.getColor(getContext(), R.color.story_ink);
+        int brand = ContextCompat.getColor(getContext(), R.color.story_signal);
+        int casing = ContextCompat.getColor(getContext(), R.color.story_surface);
         for (List<GeoPoint> segment : segments) {
             if (segment.size() < 2) {
                 continue;
             }
-            Polyline line = new Polyline(map);
             List<org.osmdroid.util.GeoPoint> points = new ArrayList<>(segment.size());
             for (GeoPoint p : segment) {
                 points.add(toOsm(p));
             }
-            line.setPoints(points);
-            line.getOutlinePaint().setColor(ink);
-            line.getOutlinePaint().setStrokeWidth(dp(4));
-            line.getOutlinePaint().setStrokeCap(android.graphics.Paint.Cap.ROUND);
-            line.setInfoWindow(null);
-            routeLines.add(line);
-            // Routes sit under the markers so the pins stay tappable.
-            map.getOverlays().add(0, line);
+            // Two lines, as a map draws a road: a white casing under a brand-coloured stroke,
+            // so the route reads over parks, buildings and the map's own streets alike. Round
+            // caps and joins keep the corners from spiking where a path turns sharply.
+            routeLines.add(stroke(points, casing, 9f, false));
+            routeLines.add(stroke(points, brand, 5.5f, true));
+        }
+        // Added after the loop, casing first within each pair, and all of them under the pins.
+        for (int i = routeLines.size() - 1; i >= 0; i--) {
+            map.getOverlays().add(0, routeLines.get(i));
         }
         map.invalidate();
+    }
+
+    /** One line of the route: the casing beneath, or the coloured stroke over it. */
+    private Polyline stroke(List<org.osmdroid.util.GeoPoint> points, int colour, float widthDp,
+                            boolean shadowed) {
+        Polyline line = new Polyline(map);
+        line.setPoints(points);
+        android.graphics.Paint paint = line.getOutlinePaint();
+        paint.setColor(colour);
+        paint.setStrokeWidth(dp(widthDp));
+        paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+        paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+        paint.setAntiAlias(true);
+        if (shadowed) {
+            // A hairline shadow lifts the route off the paper without darkening the colour.
+            paint.setShadowLayer(dp(2f), 0, dp(0.5f), 0x33000000);
+        }
+        line.setInfoWindow(null);
+        return line;
     }
 
     /** Frames a finished route so every recorded point is in view. Static: no user marker. */
@@ -269,7 +323,14 @@ public class PlaceMapView extends FrameLayout {
             map.getController().setCenter(points.get(0));
         } else {
             BoundingBox box = BoundingBox.fromGeoPoints(points);
-            map.post(() -> map.zoomToBoundingBox(box.increaseByScale(1.5f), false));
+            map.post(() -> {
+                map.zoomToBoundingBox(box.increaseByScale(1.5f), false);
+                // A short walk otherwise frames itself at a zoom where the tiles are all
+                // building outlines and the street names have gone.
+                if (map.getZoomLevelDouble() > WALK_ZOOM) {
+                    map.getController().setZoom(WALK_ZOOM);
+                }
+            });
         }
         framed = true;
     }
@@ -305,8 +366,15 @@ public class PlaceMapView extends FrameLayout {
     }
 
 
-    /** The disc with the story dot, and the name in ink with a paper halo beneath it. */
-    private android.graphics.Bitmap labelledPin(String name) {
+    /**
+     * The disc - coloured for its kind with the kind's glyph, or white with the story dot -
+     * and the name in ink with a paper halo beneath it.
+     */
+    private android.graphics.Bitmap labelledPin(
+            String name,
+            @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+            boolean starred,
+            int order) {
         float density = getResources().getDisplayMetrics().density;
         int disc = Math.round(30 * density);
         PinOverlay.discPx = disc;
@@ -333,9 +401,62 @@ public class PlaceMapView extends FrameLayout {
         canvas.drawCircle(cx, cy + density, disc / 2f, paint);
         paint.setColor(ContextCompat.getColor(getContext(), R.color.story_surface));
         canvas.drawCircle(cx, cy, disc / 2f, paint);
-        paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
-        canvas.drawCircle(cx, cy, 5.5f * density, paint);
+        if (order > 0) {
+            // A planned stop: the brand disc with its number, so the order reads off the map.
+            paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
+            canvas.drawCircle(cx, cy, disc / 2f - 2.5f * density, paint);
+            android.text.TextPaint number = new android.text.TextPaint(
+                    android.graphics.Paint.ANTI_ALIAS_FLAG);
+            number.setTextSize(13f * density);
+            number.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(
+                    getContext(), R.font.bricolage_bold));
+            number.setColor(ContextCompat.getColor(getContext(), R.color.story_signal_ink));
+            String label2 = String.valueOf(order);
+            float width2 = number.measureText(label2);
+            canvas.drawText(label2, cx - width2 / 2f,
+                    cy - (number.getFontMetrics().ascent + number.getFontMetrics().descent) / 2f,
+                    number);
+            return finishPin(bitmap, canvas, text, label, cx, disc, gap, textWidth, density);
+        }
+        int glyph = starred ? R.drawable.ic_kind_saved
+                : kind == null ? 0
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.FOOD
+                        ? R.drawable.ic_kind_food
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.DRINK
+                        ? R.drawable.ic_kind_drink
+                : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.SHOPPING
+                        ? R.drawable.ic_kind_shopping
+                : R.drawable.ic_kind_sights;
+        if (glyph == 0) {
+            paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
+            canvas.drawCircle(cx, cy, 5.5f * density, paint);
+        } else {
+            // A smaller coloured disc inside the white one, the glyph in white on it.
+            paint.setColor(ContextCompat.getColor(getContext(), kindColour(kind, starred)));
+            float inner = disc / 2f - 3 * density;
+            canvas.drawCircle(cx, cy, inner, paint);
+            android.graphics.drawable.Drawable icon = ContextCompat.getDrawable(getContext(), glyph);
+            if (icon != null) {
+                int half = Math.round(inner * 0.62f);
+                icon.setBounds(Math.round(cx) - half, Math.round(cy) - half,
+                        Math.round(cx) + half, Math.round(cy) + half);
+                icon.draw(canvas);
+            }
+        }
 
+        return finishPin(bitmap, canvas, text, label, cx, disc, gap, textWidth, density);
+    }
+
+    /** Draws the name under a pin's disc and returns the finished bitmap. */
+    private android.graphics.Bitmap finishPin(android.graphics.Bitmap bitmap,
+                                              android.graphics.Canvas canvas,
+                                              android.text.TextPaint text,
+                                              String label,
+                                              float cx,
+                                              int disc,
+                                              int gap,
+                                              float textWidth,
+                                              float density) {
         // Halo first, then the ink, so the name reads over roads and labels.
         float baseline = disc + gap - text.getFontMetrics().ascent;
         android.text.TextPaint halo = new android.text.TextPaint(text);
@@ -347,14 +468,41 @@ public class PlaceMapView extends FrameLayout {
         return bitmap;
     }
 
-    /** Most colour out, a little light in: the map becomes a light grey ground. */
+    /** The colour of a kind's disc; the star has its own. */
+    public static int kindColour(
+            @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+            boolean starred) {
+        if (starred) {
+            return R.color.kind_saved;
+        }
+        if (kind == null) {
+            return R.color.story_signal;
+        }
+        switch (kind) {
+            case FOOD:
+                return R.color.kind_food;
+            case DRINK:
+                return R.color.kind_drink;
+            case SHOPPING:
+                return R.color.kind_shopping;
+            default:
+                return R.color.kind_sights;
+        }
+    }
+
+    /**
+     * Quietens the tiles and warms them toward the page's paper: enough colour left that a
+     * park is green and water is blue, red and green lifted more than blue so the map's white
+     * becomes the app's cream. The earlier filter took almost all the colour out and left a
+     * grey rectangle the rest of the app sat on rather than contained.
+     */
     private static android.graphics.ColorMatrixColorFilter paperFilter() {
         android.graphics.ColorMatrix desaturate = new android.graphics.ColorMatrix();
-        desaturate.setSaturation(0.18f);
+        desaturate.setSaturation(0.42f);
         android.graphics.ColorMatrix lift = new android.graphics.ColorMatrix(new float[] {
-                0.86f, 0, 0, 0, 34,
-                0, 0.86f, 0, 0, 33,
-                0, 0, 0.86f, 0, 30,
+                0.92f, 0, 0, 0, 20,
+                0, 0.92f, 0, 0, 18,
+                0, 0, 0.92f, 0, 8,
                 0, 0, 0, 1, 0
         });
         desaturate.postConcat(lift);

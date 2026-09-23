@@ -77,16 +77,37 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
 
-                <TextView
-                    android:id="@+id/detail_category"
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                <!--
+                    The pin and the category as a row rather than a compound drawable: a
+                    drawableStart is centred against the whole view box, which with this face's
+                    ascent left the words riding above the pin. Baseline alignment puts them on
+                    the line the pin stands on.
+                -->
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="6dp"
-                    android:drawablePadding="6dp"
-                    android:textColor="@color/story_ink_3"
-                    app:drawableStartCompat="@drawable/ic_location_outline"
-                    app:drawableTint="@color/story_ink_3" />
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:contentDescription="@null"
+                        android:src="@drawable/ic_location_outline"
+                        app:tint="@color/story_ink_3" />
+
+                    <TextView
+                        android:id="@+id/detail_category"
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:includeFontPadding="false"
+                        android:textColor="@color/story_ink_3" />
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -103,7 +124,7 @@
                         android:layout_marginStart="@dimen/space_8"
                         android:text="@string/detail_pill_locked"
                         android:textColor="@color/story_signal_ink"
-                        app:drawableStartCompat="@drawable/ic_lock_outline"
+                        app:drawableStartCompat="@drawable/ic_spark"
                         app:drawableTint="@color/story_signal_ink" />
                 </LinearLayout>
 
@@ -121,14 +142,26 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_12" />
 
-                <!-- Where the place data came from. OpenStreetMap's licence requires it on screen. -->
+                <!--
+                    What a visitor needs before going: hours, contact, access, entry. Absent
+                    for most places, so the whole block goes when there is nothing in it.
+                -->
                 <TextView
-                    android:id="@+id/detail_attribution"
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:id="@+id/detail_facts_heading"
+                    style="@style/TextAppearance.StoryStep.Headline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_12"
-                    android:textColor="@color/story_ink_3" />
+                    android:layout_marginTop="@dimen/space_32"
+                    android:text="@string/detail_good_to_know"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/detail_facts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -144,7 +177,7 @@
                         android:layout_width="20dp"
                         android:layout_height="20dp"
                         android:contentDescription="@null"
-                        android:src="@drawable/ic_lock_outline"
+                        android:src="@drawable/ic_spark"
                         app:tint="@color/story_signal_ink" />
 
                     <TextView
@@ -154,6 +187,20 @@
                         android:layout_marginStart="@dimen/space_12"
                         android:text="@string/detail_story_locked" />
                 </LinearLayout>
+
+                <!--
+                    Where the place data came from. OpenStreetMap's licence requires it on
+                    screen; at the foot, small and quiet, it is credited without competing
+                    with the place it credits.
+                -->
+                <TextView
+                    android:id="@+id/detail_attribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_16"
+                    android:fontFamily="@font/bricolage"
+                    android:textColor="@color/story_ink_3"
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>
@@ -181,8 +228,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/detail_save"
             android:padding="13dp"
-            android:src="@drawable/ic_bookmark_outline"
-            app:tint="@color/story_ink" />
+            android:src="@drawable/ic_bookmark_outline" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/detail_start_button"
@@ -194,6 +240,6 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:minHeight="50dp"
-            android:text="@string/detail_start_exploration" />
+            android:text="@string/detail_add_to_walk" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

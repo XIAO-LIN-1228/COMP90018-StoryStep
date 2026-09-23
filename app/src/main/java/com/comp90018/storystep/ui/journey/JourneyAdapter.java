@@ -98,6 +98,8 @@ public final class JourneyAdapter
             who = itemView.findViewById(R.id.journey_who);
             whenWhere = itemView.findViewById(R.id.journey_when_where);
             photos = itemView.findViewById(R.id.journey_item_photos);
+            // Full-bleed in the card: square corners, the card's outline clips the bottom.
+            photos.setCornerRadius(0f);
         }
 
         void bind(SessionHistoryEntry journey,
@@ -115,6 +117,8 @@ public final class JourneyAdapter
                                     itemView.getContext(), R.color.story_signal_ink)),
                     0, you.length(), android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
             who.setText(styledWho);
+            com.comp90018.storystep.platform.media.ProfileAvatar.bind(
+                    itemView.findViewById(R.id.journey_avatar));
             String when = HistoryText.formatDateTime(resources, journey.getStartWallClockMillis());
             String where = journey.getPlaceName() != null ? journey.getPlaceName()
                     : journey.getDestinationName();
@@ -122,9 +126,9 @@ public final class JourneyAdapter
                     : resources.getString(R.string.journey_when_where, when, where));
 
             // The photographs the user attached, if any; the card stays compact without them.
-            java.util.List<java.io.File> files = new java.util.ArrayList<>();
+            java.util.List<Object> files = new java.util.ArrayList<>();
             for (String name : journey.getPhotoFiles()) {
-                files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.file(
+                files.add(com.comp90018.storystep.platform.media.JourneyPhotoStore.source(
                         itemView.getContext(), journey.getId(), name));
             }
             photos.setVisibility(files.isEmpty() ? View.GONE : View.VISIBLE);

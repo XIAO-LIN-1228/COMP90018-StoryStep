@@ -132,11 +132,24 @@ public final class FakeSessionDao implements SessionDao {
             historyRow.title = row.title;
             historyRow.placeName = row.placeName;
             historyRow.photoFiles = row.photoFiles;
+            historyRow.steps = row.steps;
+            historyRow.ascentMeters = row.ascentMeters;
             historyRow.visitCount = visitCounts.containsKey(row.id)
                     ? visitCounts.get(row.id) : 0;
             projected.add(historyRow);
         }
         return projected;
+    }
+
+    @Override
+    public int saveWalkTotals(String sessionId, Long steps, Double ascentMeters) {
+        SessionEntity row = rows.get(sessionId);
+        if (row == null) {
+            return 0;
+        }
+        row.steps = steps;
+        row.ascentMeters = ascentMeters;
+        return 1;
     }
 
     @Override

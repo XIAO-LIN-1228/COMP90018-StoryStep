@@ -30,6 +30,8 @@ public final class SessionHistoryEntry {
     private final String title;
     private final String placeName;
     private final List<String> photoFiles;
+    private final Long steps;
+    private final Double ascentMeters;
 
     /**
      * @param destinationName the place the user was heading towards, or null when none was chosen
@@ -45,7 +47,7 @@ public final class SessionHistoryEntry {
                                String destinationName) {
         this(id, startWallClockMillis, endWallClockMillis, activeDurationMillis, distanceMeters,
                 visitCount, segmentCount, interrupted, destinationName, null, null,
-                Collections.<String>emptyList());
+                Collections.<String>emptyList(), null, null);
     }
 
     /**
@@ -65,6 +67,31 @@ public final class SessionHistoryEntry {
                                String title,
                                String placeName,
                                List<String> photoFiles) {
+        this(id, startWallClockMillis, endWallClockMillis, activeDurationMillis, distanceMeters,
+                visitCount, segmentCount, interrupted, destinationName, title, placeName,
+                photoFiles, null, null);
+    }
+
+    /**
+     * @param steps        steps counted during the walk, or null when the device could not count
+     * @param ascentMeters metres climbed, or null when the device had no barometer
+     */
+    public SessionHistoryEntry(String id,
+                               long startWallClockMillis,
+                               long endWallClockMillis,
+                               long activeDurationMillis,
+                               double distanceMeters,
+                               int visitCount,
+                               int segmentCount,
+                               boolean interrupted,
+                               String destinationName,
+                               String title,
+                               String placeName,
+                               List<String> photoFiles,
+                               Long steps,
+                               Double ascentMeters) {
+        this.steps = steps;
+        this.ascentMeters = ascentMeters;
         this.title = title;
         this.placeName = placeName;
         this.photoFiles = Collections.unmodifiableList(
@@ -159,6 +186,16 @@ public final class SessionHistoryEntry {
         return photoFiles;
     }
 
+    /** Steps counted during the walk, or null when the device could not count them. */
+    public Long getSteps() {
+        return steps;
+    }
+
+    /** Metres climbed, or null when the device had no barometer. */
+    public Double getAscentMeters() {
+        return ascentMeters;
+    }
+
     /** True once the user has named the walk. Photographs are optional; the name is the act. */
     public boolean isPublished() {
         return title != null && !title.trim().isEmpty();
@@ -184,14 +221,16 @@ public final class SessionHistoryEntry {
                 && Objects.equals(destinationName, that.destinationName)
                 && Objects.equals(title, that.title)
                 && Objects.equals(placeName, that.placeName)
-                && photoFiles.equals(that.photoFiles);
+                && photoFiles.equals(that.photoFiles)
+                && Objects.equals(steps, that.steps)
+                && Objects.equals(ascentMeters, that.ascentMeters);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id, startWallClockMillis, endWallClockMillis, activeDurationMillis,
                 distanceMeters, visitCount, segmentCount, interrupted, destinationName, title,
-                placeName, photoFiles);
+                placeName, photoFiles, steps, ascentMeters);
     }
 
     @Override

@@ -474,4 +474,53 @@ public class StoryStepMigrationTest {
                 + "AND place_name IS NULL AND photo_files IS NULL"));
         version9.close();
     }
+
+    /**
+     * Version 11 adds what the walk's sensors counted. Renumbered from 9-to-10 on merging: the
+     * themed-walk tables reached main first, and a version number means exactly one schema.
+     */
+    @Test
+    public void migratingToElevenLeavesEveryWalkWithoutStepsOrClimb() throws IOException {
+        SupportSQLiteDatabase version10 = helper.createDatabase(TEST_DATABASE, 10);
+        ContentValues session = sessionValues("finished-walk", null);
+        session.put("weather_temperature_celsius", 0.0);
+        session.put("weather_observed_at_millis", 0L);
+        session.put("weather_fetched_at_millis", 0L);
+        session.put("movement_stationary_millis", 0L);
+        session.put("movement_moving_millis", 0L);
+        session.put("interrupted", 0);
+        session.put("destination_indoor", "outdoor");
+        version10.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
+        version10.close();
+
+        SupportSQLiteDatabase version11 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 11, true, StoryStepMigrations.MIGRATION_10_11);
+        assertEquals(1, count(version11, "SELECT COUNT(*) FROM sessions "
+                + "WHERE steps IS NULL AND ascent_meters IS NULL"));
+        version11.close();
+    }
+
+    @Test
+    public void migratingToTwelveLeavesEveryPlaceWithoutPracticalFacts() throws IOException {
+        SupportSQLiteDatabase version11 = helper.createDatabase(TEST_DATABASE, 11);
+        ContentValues place = new ContentValues();
+        place.put("id", "old-arts");
+        place.put("name", "Old Arts Building");
+        place.put("category", "university_landmark");
+        place.put("description", "A clocktower.");
+        place.put("indoor", "outdoor");
+        place.put("latitude", -37.79810);
+        place.put("longitude", 144.95910);
+        place.put("provenance", "seed");
+        place.put("fetched_at_millis", 0L);
+        version11.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
+        version11.close();
+
+        SupportSQLiteDatabase version12 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 12, true, StoryStepMigrations.MIGRATION_11_12);
+        assertEquals(1, count(version12, "SELECT COUNT(*) FROM attractions "
+                + "WHERE opening_hours IS NULL AND phone IS NULL AND website IS NULL "
+                + "AND wheelchair IS NULL AND fee IS NULL"));
+        version12.close();
+    }
 }

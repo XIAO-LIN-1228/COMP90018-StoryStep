@@ -264,6 +264,58 @@
                 android:layout_marginTop="4dp"
                 tools:text="Moving 31 min · still 11 min" />
 
+            <LinearLayout
+                android:id="@+id/journey_detail_fitness"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_24"
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:id="@+id/journey_detail_steps_column"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/journey_steps_label" />
+
+                    <TextView
+                        android:id="@+id/journey_detail_steps"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        tools:text="4,120" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/journey_detail_climb_column"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget.StoryStep.StatLabel"
+                        android:text="@string/journey_climb_label" />
+
+                    <TextView
+                        android:id="@+id/journey_detail_climb"
+                        style="@style/Widget.StoryStep.StatValue"
+                        android:layout_marginTop="4dp"
+                        tools:text="34 m" />
+                </LinearLayout>
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
             <TextView
                 style="@style/Widget.StoryStep.StatLabel"
                 android:layout_marginTop="@dimen/space_24"

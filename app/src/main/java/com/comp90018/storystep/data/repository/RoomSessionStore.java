@@ -252,6 +252,24 @@ public final class RoomSessionStore implements SessionStore {
 
 
     @Override
+    public void saveWalkTotals(String sessionId,
+                               Long steps,
+                               Double ascentMeters,
+                               RepositoryCallback<Void> callback) {
+        if (sessionId == null) {
+            fail(callback, new IllegalArgumentException("sessionId must not be null"));
+            return;
+        }
+        run(callback, new Work<Void>() {
+            @Override
+            public Void perform() {
+                sessionDao.saveWalkTotals(sessionId, steps, ascentMeters);
+                return null;
+            }
+        });
+    }
+
+    @Override
     public void saveSessionContext(String sessionId,
                                    MovementSnapshot movement,
                                    WeatherSnapshot weather,

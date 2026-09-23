@@ -17,28 +17,48 @@ public final class AttractionFilter {
 
     public enum Venue { ALL, INDOOR, OUTDOOR }
 
+    /**
+     * What the map's chips choose: everything, only the kept places, or one kind of place.
+     * One at a time, as the reference does it; tapping the chosen chip again returns to all.
+     */
+    public enum Kind { ALL, SAVED, SIGHTS, FOOD, DRINK, SHOPPING }
+
     public static final AttractionFilter NONE = new AttractionFilter(Venue.ALL, false, "");
 
     private final Venue venue;
     private final boolean unvisitedOnly;
     private final String query;
+    private final Kind kind;
 
     public AttractionFilter(Venue venue, boolean unvisitedOnly, String query) {
+        this(venue, unvisitedOnly, query, Kind.ALL);
+    }
+
+    public AttractionFilter(Venue venue, boolean unvisitedOnly, String query, Kind kind) {
         this.venue = Objects.requireNonNull(venue, "venue");
         this.unvisitedOnly = unvisitedOnly;
         this.query = query == null ? "" : query.trim();
+        this.kind = Objects.requireNonNull(kind, "kind");
     }
 
     public AttractionFilter withVenue(Venue newVenue) {
-        return new AttractionFilter(newVenue, unvisitedOnly, query);
+        return new AttractionFilter(newVenue, unvisitedOnly, query, kind);
     }
 
     public AttractionFilter withUnvisitedOnly(boolean only) {
-        return new AttractionFilter(venue, only, query);
+        return new AttractionFilter(venue, only, query, kind);
     }
 
     public AttractionFilter withQuery(String newQuery) {
-        return new AttractionFilter(venue, unvisitedOnly, newQuery);
+        return new AttractionFilter(venue, unvisitedOnly, newQuery, kind);
+    }
+
+    public AttractionFilter withKind(Kind newKind) {
+        return new AttractionFilter(venue, unvisitedOnly, query, newKind);
+    }
+
+    public Kind getKind() {
+        return kind;
     }
 
     public Venue getVenue() {
@@ -54,11 +74,28 @@ public final class AttractionFilter {
     }
 
     public boolean isActive() {
-        return venue != Venue.ALL || unvisitedOnly || !query.isEmpty();
+        return venue != Venue.ALL || unvisitedOnly || !query.isEmpty() || kind != Kind.ALL;
     }
 
-    /** Whether a place with these facts passes the filter. */
+    /** Whether a place with these facts passes the filter, ignoring its kind. */
     public boolean matches(String name, IndoorClassification indoor, boolean visited) {
+        return matches(name, indoor, visited, null, false);
+    }
+
+    /**
+     * Whether a place with these facts passes the filter. A null category passes every kind
+     * but {@link Kind#SAVED}, which asks only whether the place is kept.
+     */
+    public boolean matches(String name, IndoorClassification indoor, boolean visited,
+                           com.comp90018.storystep.domain.model.AttractionCategory category,
+                           boolean saved) {
+        if (kind == Kind.SAVED && !saved) {
+            return false;
+        }
+        if (kind != Kind.ALL && kind != Kind.SAVED && category != null
+                && !kindOf(category).equals(kind)) {
+            return false;
+        }
         if (venue == Venue.INDOOR && indoor != IndoorClassification.INDOOR) {
             return false;
         }
@@ -75,6 +112,19 @@ public final class AttractionFilter {
         return true;
     }
 
+    private static Kind kindOf(com.comp90018.storystep.domain.model.AttractionCategory category) {
+        switch (category.kind()) {
+            case FOOD:
+                return Kind.FOOD;
+            case DRINK:
+                return Kind.DRINK;
+            case SHOPPING:
+                return Kind.SHOPPING;
+            default:
+                return Kind.SIGHTS;
+        }
+    }
+
     @Override
     public boolean equals(Object other) {
         if (this == other) {
@@ -86,11 +136,12 @@ public final class AttractionFilter {
         AttractionFilter that = (AttractionFilter) other;
         return venue == that.venue
                 && unvisitedOnly == that.unvisitedOnly
-                && query.equals(that.query);
+                && query.equals(that.query)
+                && kind == that.kind;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(venue, unvisitedOnly, query);
+        return Objects.hash(venue, unvisitedOnly, query, kind);
     }
 }

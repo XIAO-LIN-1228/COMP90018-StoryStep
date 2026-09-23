@@ -65,6 +65,8 @@ public interface SessionDao {
             + "s.title AS title, "
             + "s.place_name AS placeName, "
             + "s.photo_files AS photoFiles, "
+            + "s.steps AS steps, "
+            + "s.ascent_meters AS ascentMeters, "
             + "(SELECT COUNT(*) FROM visits v WHERE v.session_id = s.id) AS visitCount "
             + "FROM sessions s WHERE s.finished != 0 "
             + "ORDER BY s.end_wall_clock_millis DESC, s.start_wall_clock_millis DESC, s.id ASC")
@@ -77,6 +79,10 @@ public interface SessionDao {
      * Writes the published record onto a finished session. Finished only: a walk still in
      * progress has nothing to publish yet, and the row count says whether anything was written.
      */
+    /** Writes what the walk's sensors counted; nulls mean the device could not count. */
+    @Query("UPDATE sessions SET steps = :steps, ascent_meters = :ascentMeters WHERE id = :sessionId")
+    int saveWalkTotals(String sessionId, Long steps, Double ascentMeters);
+
     @Query("UPDATE sessions SET title = :title, place_name = :placeName, photo_files = :photoFiles "
             + "WHERE id = :sessionId AND finished != 0")
     int publish(String sessionId, String title, String placeName, String photoFiles);

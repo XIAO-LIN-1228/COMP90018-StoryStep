@@ -99,6 +99,5 @@
         android:padding="10dp"
         android:src="@drawable/ic_bookmark_outline"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/story_ink_3" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

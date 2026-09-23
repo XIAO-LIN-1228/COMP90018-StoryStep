@@ -43,6 +43,15 @@ public final class JourneyPhotoStore {
     }
 
     /**
+     * What to load for a stored photo entry: the file under the session's directory, or the
+     * URL itself when the entry is one - the bundled sample walks point at Commons.
+     */
+    public static Object source(Context context, String sessionId, String entry) {
+        return entry.startsWith("http://") || entry.startsWith("https://")
+                ? entry : file(context, sessionId, entry);
+    }
+
+    /**
      * Copies each photo into the session's directory and returns the stored names, in order.
      * A photo that cannot be read is skipped rather than failing the batch. Blocking; call
      * from a background executor.
@@ -57,6 +66,32 @@ public final class JourneyPhotoStore {
             if (name != null) {
                 names.add(name);
             }
+        }
+        return names;
+    }
+
+    /**
+     * A file in the session's directory for the camera to write into, created empty. The
+     * caller passes its content URI to the camera and, if the capture succeeds, records the
+     * returned name with the walk's other photographs.
+     */
+    public static java.io.File newCapture(Context context, String sessionId) {
+        File directory = directory(context, sessionId);
+        //noinspection ResultOfMethodCallIgnored
+        directory.mkdirs();
+        return new File(directory, UUID.randomUUID().toString() + ".jpg");
+    }
+
+    /** The names of the photographs already in the session's directory, oldest first. */
+    public static List<String> names(Context context, String sessionId) {
+        File[] files = directory(context, sessionId).listFiles();
+        List<String> names = new ArrayList<>();
+        if (files == null) {
+            return names;
+        }
+        java.util.Arrays.sort(files, (a, b) -> Long.compare(a.lastModified(), b.lastModified()));
+        for (File file : files) {
+            names.add(file.getName());
         }
         return names;
     }
