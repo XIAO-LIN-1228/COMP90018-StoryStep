@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The launcher icon's own colours, fixed rather than themed: an icon must look the same on
+    every home screen, in light and dark alike, so it does not follow the app's night palette.
+-->
+<resources>
+    <color name="launcher_ground">#211D16</color>
+    <color name="launcher_mark">#E9A63A</color>
+</resources>
