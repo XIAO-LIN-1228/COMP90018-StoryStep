@@ -8,8 +8,8 @@ StoryStep is a context-aware Android tourism companion for COMP90018 (University
 
 Current state: the Java/XML app has real nearby discovery and map tiles, foreground location,
 movement and compass guidance, durable start/pause/resume/finish/discard, quality-aware arrival,
-story snapshots, saved places and journey history. Room is at schema version 9, including
-photographs and named finished journeys. OpenStreetMap Overpass supplies attractions; Wikidata
+story snapshots, saved places and journey history. Room is at schema version 10, including
+photographs and named finished journeys, and the steps and metres climbed a walk counted. OpenStreetMap Overpass supplies attractions; Wikidata
 and Wikipedia can enrich images/descriptions. Open-Meteo supplies cached weather. Both network
 repositories support area caches, request coalescing and labelled stale fallback.
 
@@ -54,6 +54,14 @@ Primary sensing capabilities:
 1. **Location/GPS** — nearby attractions, distance calculation, approximate route recording, arrival detection
 2. **Accelerometer** — movement-state estimation, device-orientation assistance
 3. **Magnetometer** — compass heading, direction to an attraction
+
+Optional capabilities, used when the device has them and silently absent otherwise — a missing one
+omits its figure rather than showing a zero:
+
+4. **Step counter** — steps taken during a walk (`ACTIVITY_RECOGNITION` from API 29)
+5. **Barometer** — metres climbed during a walk
+6. **Camera** — a photograph taken on the walk, written through a `FileProvider` into the walk's
+   own photo directory and published with it
 
 Explicitly outside the MVP — do not build these, and flag requests that drift into them:
 
@@ -135,7 +143,7 @@ Three constraints shape the code:
 
 - **Keep sensor, distance, bearing, and recommendation logic outside Activity classes.** Activities wire up and display; the computation lives in plain classes.
 - **Core calculations must be independently JVM-testable** as unit tests under `app/src/test`, with no Android framework dependency. Distance, bearing/heading, movement-state classification, and recommendation ranking are the primary unit-test targets.
-- **Degrade gracefully** on missing sensors (accelerometer or magnetometer absent), denied permissions, unavailable location, offline state, and network failure. Sensor availability varies per device; the app must show a sensible fallback rather than crash. Location is collected only during a user-initiated foreground exploration session — continuous background tracking is out of scope.
+- **Degrade gracefully** on missing sensors (any of the six absent), denied permissions, unavailable location, offline state, and network failure. Sensor availability varies per device; the app must show a sensible fallback rather than crash. Location is collected only during a user-initiated foreground exploration session — continuous background tracking is out of scope.
 
 `ui.MainActivity` applies `EdgeToEdge.enable()` and pads the root view by `systemBars` insets; it hosts a `NavHostFragment` driven by `res/navigation/nav_graph.xml`. New screens are Fragments added to that graph and should follow the same inset handling. Safe Args is deliberately not used — arguments are passed as a plain `Bundle`.
 

@@ -138,6 +138,11 @@ The third command requires a configured emulator or device. Use a proposed class
 
 Automated evidence is normally available under `app/build/reports/tests/`, `app/build/test-results/`, `app/build/reports/androidTests/` and `app/build/reports/lint-results-debug.html`. These outputs may be regenerated/ignored; attach a sanitized copy or stable CI artifact to the issue rather than claiming an ephemeral path is permanent evidence.
 
+The optional walk sensors added on 2026-09-23 (step counter, barometer, camera) are recorded in
+[EV-SENSORS-2026-09-23-01](verification/EV-SENSORS-2026-09-23-01.md). Their JVM arithmetic passes
+and the camera path was exercised on an emulator; the step count has never executed on any
+device, because no emulator reports a step counter.
+
 Minimum environment coverage:
 
 | Environment | Required purpose |
@@ -146,7 +151,10 @@ Minimum environment coverage:
 | API 31+ emulator/device | Approximate/precise, one-time permissions and settings downgrade |
 | API 37 emulator if available | Configured target behavior, edge-to-edge and regression |
 | Two physical Android devices | Outdoor location, accelerometer, magnetometer, rotation and lifecycle; record actual model/API/sensor availability |
-| Controlled missing-capability sources | No accelerometer/magnetometer, stale fix and unreliable heading even if both phones have sensors |
+| A device with a step counter | Steps counted on a real walk. **No emulator reports `TYPE_STEP_COUNTER`**, so this figure has no emulator path at all and its absence on the emulator is not evidence of a fault |
+| A device with a barometer | Metres climbed over a real rise. Emulators expose `TYPE_PRESSURE` with synthetic values, which exercises the code path but proves nothing about the figure |
+| A device camera | Taking a photograph on a walk and finding it attached when the walk is published; the emulator's synthetic scene exercises the `FileProvider` path only |
+| Controlled missing-capability sources | No accelerometer/magnetometer, no step counter, no barometer, no camera app; stale fix and unreliable heading even if both phones have sensors. Each optional figure must be omitted rather than shown as zero |
 | Controlled network | Success, timeout, throttling, malformed response, warm offline and empty offline |
 
 An unavailable device/API image is a recorded test gap. Missing hardware on one physical phone is a valid fallback test, but another device must demonstrate the sensing capability itself. Do not substitute simulator events for all physical tests.
