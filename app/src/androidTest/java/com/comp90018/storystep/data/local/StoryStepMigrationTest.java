@@ -477,4 +477,28 @@ public class StoryStepMigrationTest {
                 + "WHERE steps IS NULL AND ascent_meters IS NULL"));
         version10.close();
     }
+
+    @Test
+    public void migratingToElevenLeavesEveryPlaceWithoutPracticalFacts() throws IOException {
+        SupportSQLiteDatabase version10 = helper.createDatabase(TEST_DATABASE, 10);
+        ContentValues place = new ContentValues();
+        place.put("id", "old-arts");
+        place.put("name", "Old Arts Building");
+        place.put("category", "university_landmark");
+        place.put("description", "A clocktower.");
+        place.put("indoor", "outdoor");
+        place.put("latitude", -37.79810);
+        place.put("longitude", 144.95910);
+        place.put("provenance", "seed");
+        place.put("fetched_at_millis", 0L);
+        version10.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
+        version10.close();
+
+        SupportSQLiteDatabase version11 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 11, true, StoryStepMigrations.MIGRATION_10_11);
+        assertEquals(1, count(version11, "SELECT COUNT(*) FROM attractions "
+                + "WHERE opening_hours IS NULL AND phone IS NULL AND website IS NULL "
+                + "AND wheelchair IS NULL AND fee IS NULL"));
+        version11.close();
+    }
 }

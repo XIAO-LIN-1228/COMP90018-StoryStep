@@ -108,6 +108,7 @@ public class AttractionDetailFragment extends Fragment {
         } else {
             descriptionView.setText(R.string.attraction_no_description);
         }
+        bindFacts(attraction.getFacts());
         String attribution = getString(AttributionText.attributionFor(attraction.getProvenance()));
         // A saved copy is shown when the place is no longer in the cache. The line says which one
         // the user is reading: the snapshot was taken when they saved it, and the real record may
@@ -173,6 +174,65 @@ public class AttractionDetailFragment extends Fragment {
      * attraction that failed to load. Its label changes with its state — an icon alone tells a
      * screen reader nothing about which way pressing it goes.
      */
+    /**
+     * The practical facts, one row each, in the order a visitor asks them: when is it open,
+     * can I get in, what does it cost, how do I reach it. The whole block goes when the
+     * source recorded none of them, which is most places.
+     */
+    private void bindFacts(com.comp90018.storystep.domain.model.PlaceFacts facts) {
+        View heading = requireView().findViewById(R.id.detail_facts_heading);
+        android.widget.LinearLayout rows = requireView().findViewById(R.id.detail_facts);
+        rows.removeAllViews();
+
+        addFact(rows, R.drawable.ic_clock, R.string.detail_hours_label,
+                OpeningHoursText.format(facts.getOpeningHours()), null);
+        Integer access = OpeningHoursText.accessLabel(facts.getWheelchair());
+        addFact(rows, R.drawable.ic_access, R.string.detail_access_label,
+                access == null ? null : getString(access), null);
+        addFact(rows, R.drawable.ic_ticket, R.string.detail_fee_label,
+                OpeningHoursText.feeLabel(facts.getFee(), getString(R.string.detail_fee_free),
+                        getString(R.string.detail_fee_charged)), null);
+        addFact(rows, R.drawable.ic_phone, R.string.detail_phone_label, facts.getPhone(),
+                facts.getPhone() == null ? null : android.net.Uri.parse(
+                        "tel:" + facts.getPhone().replaceAll("[^+0-9]", "")));
+        addFact(rows, R.drawable.ic_link, R.string.detail_website_label, facts.getWebsite(),
+                facts.getWebsite() == null ? null : android.net.Uri.parse(facts.getWebsite()));
+
+        boolean any = rows.getChildCount() > 0;
+        heading.setVisibility(any ? View.VISIBLE : View.GONE);
+        rows.setVisibility(any ? View.VISIBLE : View.GONE);
+    }
+
+    /** Adds one row, or nothing when the fact was not recorded. A link row opens it outside. */
+    private void addFact(android.widget.LinearLayout rows, int icon, int label, String value,
+                         android.net.Uri open) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        View row = getLayoutInflater().inflate(R.layout.view_place_fact, rows, false);
+        ((android.widget.ImageView) row.findViewById(R.id.fact_icon)).setImageResource(icon);
+        ((TextView) row.findViewById(R.id.fact_label)).setText(label);
+        TextView text = row.findViewById(R.id.fact_value);
+        text.setText(value);
+        if (open != null) {
+            text.setTextColor(androidx.core.content.ContextCompat.getColor(
+                    requireContext(), R.color.story_signal_ink));
+            android.util.TypedValue ripple = new android.util.TypedValue();
+            requireContext().getTheme().resolveAttribute(
+                    android.R.attr.selectableItemBackground, ripple, true);
+            row.setBackgroundResource(ripple.resourceId);
+            row.setOnClickListener(v -> {
+                try {
+                    startActivity(new android.content.Intent(
+                            android.content.Intent.ACTION_VIEW, open));
+                } catch (android.content.ActivityNotFoundException nothingHandlesIt) {
+                    // Nothing on the phone opens it; the number or address is still readable.
+                }
+            });
+        }
+        rows.addView(row);
+    }
+
     private void renderSaveButton(AttractionDetailUiState state) {
         renderPlanButton();
         boolean loaded = state.getStatus() == AttractionDetailUiState.Status.CONTENT

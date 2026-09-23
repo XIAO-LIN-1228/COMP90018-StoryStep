@@ -121,14 +121,26 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/space_12" />
 
-                <!-- Where the place data came from. OpenStreetMap's licence requires it on screen. -->
+                <!--
+                    What a visitor needs before going: hours, contact, access, entry. Absent
+                    for most places, so the whole block goes when there is nothing in it.
+                -->
                 <TextView
-                    android:id="@+id/detail_attribution"
-                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:id="@+id/detail_facts_heading"
+                    style="@style/TextAppearance.StoryStep.Headline"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_12"
-                    android:textColor="@color/story_ink_3" />
+                    android:layout_marginTop="@dimen/space_32"
+                    android:text="@string/detail_good_to_know"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/detail_facts"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_8"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -154,6 +166,20 @@
                         android:layout_marginStart="@dimen/space_12"
                         android:text="@string/detail_story_locked" />
                 </LinearLayout>
+
+                <!--
+                    Where the place data came from. OpenStreetMap's licence requires it on
+                    screen; at the foot, small and quiet, it is credited without competing
+                    with the place it credits.
+                -->
+                <TextView
+                    android:id="@+id/detail_attribution"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/space_16"
+                    android:fontFamily="@font/bricolage"
+                    android:textColor="@color/story_ink_3"
+                    android:textSize="11sp" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -369,9 +369,27 @@ public final class StoryStepMigrations {
         }
     };
 
+    /**
+     * Version 11: the practical facts about a place. All nullable, because most places have
+     * none of them recorded and an empty string would be a claim that they were.
+     */
+    public static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+        @Override
+        public void migrate(@NonNull SupportSQLiteDatabase database) {
+            for (String table : new String[]{"attractions", "saved_attractions"}) {
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `opening_hours` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `phone` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `website` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `wheelchair` TEXT");
+                database.execSQL("ALTER TABLE `" + table + "` ADD COLUMN `fee` TEXT");
+            }
+        }
+    };
+
     public static Migration[] all() {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
-                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10};
+                MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
+                MIGRATION_10_11};
     }
 }

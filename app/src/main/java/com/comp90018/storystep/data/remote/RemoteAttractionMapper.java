@@ -133,7 +133,31 @@ public final class RemoteAttractionMapper {
                 location,
                 AttractionProvenance.OPENSTREETMAP,
                 sourceRef(element.tags),
-                OsmImageUrls.fromTags(element.tags));
+                OsmImageUrls.fromTags(element.tags),
+                0,
+                facts(element.tags));
+    }
+
+    /**
+     * The practical facts OpenStreetMap records when somebody bothered to: opening hours,
+     * contact, access, entry fee. Absent far more often than present, and taken exactly as
+     * tagged - the UI tidies them for reading rather than this mapper reinterpreting them.
+     *
+     * <p>{@code contact:*} is the newer convention for the same facts, so each is read from
+     * the plain tag first and the contact-namespaced one after.
+     */
+    private static com.comp90018.storystep.domain.model.PlaceFacts facts(Map<String, String> tags) {
+        return new com.comp90018.storystep.domain.model.PlaceFacts(
+                trimmedTag(tags, "opening_hours"),
+                either(tags, "phone", "contact:phone"),
+                either(tags, "website", "contact:website"),
+                trimmedTag(tags, "wheelchair"),
+                trimmedTag(tags, "fee"));
+    }
+
+    private static String either(Map<String, String> tags, String first, String second) {
+        String value = trimmedTag(tags, first);
+        return value != null ? value : trimmedTag(tags, second);
     }
 
     /**

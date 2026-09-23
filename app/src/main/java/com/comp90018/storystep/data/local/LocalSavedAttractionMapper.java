@@ -41,6 +41,12 @@ public final class LocalSavedAttractionMapper {
         entity.sourceRef = attraction.getSourceRef();
         entity.imageUrl = attraction.getImageUrl();
         entity.popularity = attraction.getPopularity();
+        com.comp90018.storystep.domain.model.PlaceFacts facts = attraction.getFacts();
+        entity.openingHours = facts.getOpeningHours();
+        entity.phone = facts.getPhone();
+        entity.website = facts.getWebsite();
+        entity.wheelchair = facts.getWheelchair();
+        entity.fee = facts.getFee();
         return entity;
     }
 
@@ -55,7 +61,10 @@ public final class LocalSavedAttractionMapper {
                 AttractionProvenanceCodec.fromCode(entity.provenance),
                 entity.sourceRef,
                 entity.imageUrl,
-                entity.popularity);
+                entity.popularity,
+                new com.comp90018.storystep.domain.model.PlaceFacts(
+                        entity.openingHours, entity.phone, entity.website,
+                        entity.wheelchair, entity.fee));
         return new SavedAttraction(attraction, entity.savedAtMillis);
     }
 
