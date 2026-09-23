@@ -265,26 +265,46 @@ public class PlaceMapView extends FrameLayout {
             map.getOverlays().remove(line);
         }
         routeLines.clear();
-        int ink = ContextCompat.getColor(getContext(), R.color.story_ink);
+        int brand = ContextCompat.getColor(getContext(), R.color.story_signal);
+        int casing = ContextCompat.getColor(getContext(), R.color.story_surface);
         for (List<GeoPoint> segment : segments) {
             if (segment.size() < 2) {
                 continue;
             }
-            Polyline line = new Polyline(map);
             List<org.osmdroid.util.GeoPoint> points = new ArrayList<>(segment.size());
             for (GeoPoint p : segment) {
                 points.add(toOsm(p));
             }
-            line.setPoints(points);
-            line.getOutlinePaint().setColor(ink);
-            line.getOutlinePaint().setStrokeWidth(dp(4));
-            line.getOutlinePaint().setStrokeCap(android.graphics.Paint.Cap.ROUND);
-            line.setInfoWindow(null);
-            routeLines.add(line);
-            // Routes sit under the markers so the pins stay tappable.
-            map.getOverlays().add(0, line);
+            // Two lines, as a map draws a road: a white casing under a brand-coloured stroke,
+            // so the route reads over parks, buildings and the map's own streets alike. Round
+            // caps and joins keep the corners from spiking where a path turns sharply.
+            routeLines.add(stroke(points, casing, 9f, false));
+            routeLines.add(stroke(points, brand, 5.5f, true));
+        }
+        // Added after the loop, casing first within each pair, and all of them under the pins.
+        for (int i = routeLines.size() - 1; i >= 0; i--) {
+            map.getOverlays().add(0, routeLines.get(i));
         }
         map.invalidate();
+    }
+
+    /** One line of the route: the casing beneath, or the coloured stroke over it. */
+    private Polyline stroke(List<org.osmdroid.util.GeoPoint> points, int colour, float widthDp,
+                            boolean shadowed) {
+        Polyline line = new Polyline(map);
+        line.setPoints(points);
+        android.graphics.Paint paint = line.getOutlinePaint();
+        paint.setColor(colour);
+        paint.setStrokeWidth(dp(widthDp));
+        paint.setStrokeCap(android.graphics.Paint.Cap.ROUND);
+        paint.setStrokeJoin(android.graphics.Paint.Join.ROUND);
+        paint.setAntiAlias(true);
+        if (shadowed) {
+            // A hairline shadow lifts the route off the paper without darkening the colour.
+            paint.setShadowLayer(dp(2f), 0, dp(0.5f), 0x33000000);
+        }
+        line.setInfoWindow(null);
+        return line;
     }
 
     /** Frames a finished route so every recorded point is in view. Static: no user marker. */
