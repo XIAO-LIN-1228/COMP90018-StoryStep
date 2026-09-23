@@ -35,6 +35,7 @@ public class StoryFragment extends Fragment {
     private TextView storyView;
     private ImageView heroView;
     private TextView attributionView;
+    private String themeSourceUrl;
 
     @Nullable
     @Override
@@ -68,6 +69,28 @@ public class StoryFragment extends Fragment {
                 ? null
                 : arguments.getString(JourneysFragment.ARG_SESSION_ID);
         viewModel.loadIfNeeded(attractionId, sessionId);
+        com.comp90018.storystep.ui.theme.ThemeViewModel themeModel =
+                new ViewModelProvider(this, ViewModelFactory.from(this))
+                        .get(com.comp90018.storystep.ui.theme.ThemeViewModel.class);
+        themeModel.showSession(sessionId);
+        view.findViewById(R.id.story_theme).setOnClickListener(v -> {
+            Bundle args = new Bundle();
+            if (sessionId != null) { args.putString(com.comp90018.storystep.ui.theme.ThemeFragment.ARG_SESSION_ID, sessionId); }
+            NavHostFragment.findNavController(this).navigate(R.id.themeFragment, args);
+        });
+        themeModel.getState().observe(getViewLifecycleOwner(), state -> {
+            view.findViewById(R.id.story_theme).setVisibility(state.progress != null ? View.VISIBLE : View.GONE);
+            themeSourceUrl = null;
+            if (state.progress != null && attractionId != null) {
+                for (com.comp90018.storystep.domain.theme.ThemeStop stop : state.progress.theme.stops) {
+                    if (stop.id.equals(attractionId)) {
+                        themeSourceUrl = stop.sourceUrl;
+                    }
+                }
+            }
+            StoryUiState current = viewModel.getUiState().getValue();
+            if (current != null) { render(current); }
+        });
     }
 
     private void render(StoryUiState state) {
@@ -87,9 +110,10 @@ public class StoryFragment extends Fragment {
                 : getString(R.string.story_no_content));
         int credit = state.getProvenance() == null ? R.string.story_source_unrecorded
                 : com.comp90018.storystep.ui.AttributionText.attributionFor(state.getProvenance());
+        String source = themeSourceUrl == null ? getString(credit) : getString(R.string.theme_source, themeSourceUrl);
         attributionView.setText(state.isArchived()
-                ? getString(R.string.story_snapshot_credit, getString(credit), getString(R.string.story_saved_snapshot))
-                : getString(credit));
+                ? getString(R.string.story_snapshot_credit, source, getString(R.string.story_saved_snapshot))
+                : source);
         if (state.getAttractionId() != null) {
             heroView.setImageResource(AttractionArtwork.heroDrawableFor(state.getAttractionId()));
         }

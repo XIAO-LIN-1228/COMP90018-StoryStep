@@ -78,6 +78,7 @@ public class AppContainer {
             new com.comp90018.storystep.application.WalkPlanner();
     private final com.comp90018.storystep.data.remote.WalkRouteSource walkRouteSource;
     private final CacheRetentionSweeper cacheRetentionSweeper;
+    private final com.comp90018.storystep.domain.repository.ThemeRepository themeRepository;
 
     private final Executor mainExecutor;
     private final ExecutorService ioExecutor;
@@ -173,7 +174,10 @@ public class AppContainer {
                 clock);
         this.sessionStore = new RoomSessionStore(
                 new RoomTransactions(database), database.sessionDao(), database.routePointDao(),
-                database.visitDao(), clock, ioExecutor, mainExecutor);
+                database.visitDao(), clock, ioExecutor, mainExecutor, database.themeDao());
+        this.themeRepository = new com.comp90018.storystep.data.repository.RoomThemeRepository(
+                new RoomTransactions(database), database.themeDao(), database.sessionDao(),
+                database.visitDao(), ioExecutor, mainExecutor);
         this.historyRepository = historyRepository != null
                 ? historyRepository
                 : new RoomHistoryRepository(
@@ -329,6 +333,10 @@ public class AppContainer {
 
     public Clock getClock() {
         return clock;
+    }
+
+    public com.comp90018.storystep.domain.repository.ThemeRepository getThemeRepository() {
+        return themeRepository;
     }
 
     /**

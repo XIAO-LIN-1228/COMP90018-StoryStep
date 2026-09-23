@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 10,
-    "identityHash": "74882d94a8dea55943d08593ae71dd10",
+    "identityHash": "82ba92649a7f64c7a5a48cde458255ec",
     "entities": [
       {
         "tableName": "attractions",
@@ -93,7 +93,7 @@
       },
       {
         "tableName": "sessions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `state` TEXT, `pause_reason` TEXT, `start_wall_clock_millis` INTEGER NOT NULL, `end_wall_clock_millis` INTEGER NOT NULL, `active_duration_millis` INTEGER NOT NULL, `distance_meters` REAL NOT NULL, `segment` INTEGER NOT NULL, `segment_count` INTEGER NOT NULL, `finished` INTEGER NOT NULL, `last_checkpoint_wall_clock_millis` INTEGER NOT NULL, `destination_id` TEXT, `destination_name` TEXT, `destination_category` TEXT, `destination_description` TEXT, `destination_indoor` TEXT, `destination_latitude` REAL NOT NULL, `destination_longitude` REAL NOT NULL, `destination_provenance` TEXT, `destination_source_ref` TEXT, `weather_area_key` TEXT, `weather_condition` TEXT, `weather_temperature_celsius` REAL NOT NULL, `weather_observed_at_millis` INTEGER NOT NULL, `weather_fetched_at_millis` INTEGER NOT NULL, `movement_state` TEXT, `movement_stationary_millis` INTEGER NOT NULL, `movement_moving_millis` INTEGER NOT NULL, `interrupted` INTEGER NOT NULL, `title` TEXT, `place_name` TEXT, `photo_files` TEXT, `steps` INTEGER, `ascent_meters` REAL, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `state` TEXT, `pause_reason` TEXT, `start_wall_clock_millis` INTEGER NOT NULL, `end_wall_clock_millis` INTEGER NOT NULL, `active_duration_millis` INTEGER NOT NULL, `distance_meters` REAL NOT NULL, `segment` INTEGER NOT NULL, `segment_count` INTEGER NOT NULL, `finished` INTEGER NOT NULL, `last_checkpoint_wall_clock_millis` INTEGER NOT NULL, `destination_id` TEXT, `destination_name` TEXT, `destination_category` TEXT, `destination_description` TEXT, `destination_indoor` TEXT, `destination_latitude` REAL NOT NULL, `destination_longitude` REAL NOT NULL, `destination_provenance` TEXT, `destination_source_ref` TEXT, `weather_area_key` TEXT, `weather_condition` TEXT, `weather_temperature_celsius` REAL NOT NULL, `weather_observed_at_millis` INTEGER NOT NULL, `weather_fetched_at_millis` INTEGER NOT NULL, `movement_state` TEXT, `movement_stationary_millis` INTEGER NOT NULL, `movement_moving_millis` INTEGER NOT NULL, `interrupted` INTEGER NOT NULL, `title` TEXT, `place_name` TEXT, `photo_files` TEXT, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -285,18 +285,6 @@
             "fieldPath": "photoFiles",
             "columnName": "photo_files",
             "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "steps",
-            "columnName": "steps",
-            "affinity": "INTEGER",
-            "notNull": false
-          },
-          {
-            "fieldPath": "ascentMeters",
-            "columnName": "ascent_meters",
-            "affinity": "REAL",
             "notNull": false
           }
         ],
@@ -673,12 +661,101 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "theme_runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` TEXT NOT NULL, `definition_json` TEXT NOT NULL, PRIMARY KEY(`session_id`), FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "definitionJson",
+            "columnName": "definition_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "theme_stops",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` TEXT NOT NULL, `stop_id` TEXT NOT NULL, `skipped` INTEGER NOT NULL, `answer` INTEGER, PRIMARY KEY(`session_id`, `stop_id`), FOREIGN KEY(`session_id`) REFERENCES `theme_runs`(`session_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stopId",
+            "columnName": "stop_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skipped",
+            "columnName": "skipped",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "answer",
+            "columnName": "answer",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_id",
+            "stop_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "theme_runs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "session_id"
+            ]
+          }
+        ]
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '74882d94a8dea55943d08593ae71dd10')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '82ba92649a7f64c7a5a48cde458255ec')"
     ]
   }
 }

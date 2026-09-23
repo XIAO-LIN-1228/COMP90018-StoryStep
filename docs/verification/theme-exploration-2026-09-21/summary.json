@@ -1,0 +1,28 @@
+{
+  "date": "2026-09-21",
+  "branch": "feature/theme-exploration",
+  "base_commit": "b2ef81ddb39599aef68e10297f4e26ab6ec0972f",
+  "jvm": {
+    "tests": 780,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "android": {
+    "api": 36,
+    "avd": "StoryStepThemeApi36",
+    "tests": 73,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "additional_ui_runs": [
+    "normal-font landscape: 2 passed",
+    "offline, landscape, font scale 1.5: 2 passed"
+  ],
+  "lint": {
+    "errors": 0,
+    "warnings": 63
+  },
+  "debug_apk_sha256": "D1F019E6418D06AC0008A5B84626411A1DED2090ED275BD62142BCD151F3CEE8"
+}

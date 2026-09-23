@@ -1,5 +1,11 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
+2026-09-21 theme extension: [plan and test matrix](theme-exploration-plan.md),
+[actual execution evidence](verification/EV-THEME-EXPLORATION-2026-09-21.md). This adds a
+versioned three-stop theme, transactional creation, arrival-derived progress, skip/undo, optional
+questions, pause/recovery and complete/partial results. Treat the field-device checks separately
+from JVM, SQLite and emulator evidence; older entries below remain historical.
+
 Latest teammate A update: REQ-21/22 and visible prototype cleanup are implemented on the
 2026-09-20 branch. See [current evidence](verification/EV-REQ21-REQ22-2026-09-20-01.md).
 Older commit/branch references below are historical and have not been globally re-audited.

@@ -334,6 +334,24 @@ public class StoryStepMigrationTest {
         version6.close();
     }
 
+    @Test public void migratingNineToTenKeepsFinishedAndInterruptedJourneysAndAddsEmptyThemes() throws IOException {
+        SupportSQLiteDatabase old = helper.createDatabase(TEST_DATABASE, 9);
+        for (String reason : new String[] {null, "PROCESS_INTERRUPTED"}) {
+            ContentValues row = sessionValues(reason == null ? "finished" : "active", reason);
+            row.put("weather_temperature_celsius", 0.0); row.put("weather_observed_at_millis", 0L);
+            row.put("weather_fetched_at_millis", 0L); row.put("movement_stationary_millis", 0L);
+            row.put("movement_moving_millis", 0L); row.put("interrupted", reason == null ? 0 : 1);
+            row.put("destination_indoor", "outdoor"); row.put("title", "Existing walk");
+            old.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, row);
+        }
+        old.close();
+        SupportSQLiteDatabase current = helper.runMigrationsAndValidate(TEST_DATABASE, 10, true, StoryStepMigrations.MIGRATION_9_10);
+        assertEquals(2, count(current, "SELECT COUNT(*) FROM sessions WHERE title = 'Existing walk'"));
+        assertEquals(1, count(current, "SELECT COUNT(*) FROM sessions WHERE finished = 0 AND pause_reason = 'PROCESS_INTERRUPTED'"));
+        assertEquals(0, count(current, "SELECT COUNT(*) FROM theme_runs"));
+        assertEquals(0, count(current, "SELECT COUNT(*) FROM theme_stops")); current.close();
+    }
+
     private static ContentValues sessionValues(String id, String pauseReason) {
         ContentValues session = new ContentValues();
         session.put("id", id);
@@ -457,9 +475,13 @@ public class StoryStepMigrationTest {
         version9.close();
     }
 
+    /**
+     * Version 11 adds what the walk's sensors counted. Renumbered from 9-to-10 on merging: the
+     * themed-walk tables reached main first, and a version number means exactly one schema.
+     */
     @Test
-    public void migratingToTenLeavesEveryWalkWithoutStepsOrClimb() throws IOException {
-        SupportSQLiteDatabase version9 = helper.createDatabase(TEST_DATABASE, 9);
+    public void migratingToElevenLeavesEveryWalkWithoutStepsOrClimb() throws IOException {
+        SupportSQLiteDatabase version10 = helper.createDatabase(TEST_DATABASE, 10);
         ContentValues session = sessionValues("finished-walk", null);
         session.put("weather_temperature_celsius", 0.0);
         session.put("weather_observed_at_millis", 0L);
@@ -468,19 +490,19 @@ public class StoryStepMigrationTest {
         session.put("movement_moving_millis", 0L);
         session.put("interrupted", 0);
         session.put("destination_indoor", "outdoor");
-        version9.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
-        version9.close();
-
-        SupportSQLiteDatabase version10 = helper.runMigrationsAndValidate(
-                TEST_DATABASE, 10, true, StoryStepMigrations.MIGRATION_9_10);
-        assertEquals(1, count(version10, "SELECT COUNT(*) FROM sessions "
-                + "WHERE steps IS NULL AND ascent_meters IS NULL"));
+        version10.insert("sessions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, session);
         version10.close();
+
+        SupportSQLiteDatabase version11 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 11, true, StoryStepMigrations.MIGRATION_10_11);
+        assertEquals(1, count(version11, "SELECT COUNT(*) FROM sessions "
+                + "WHERE steps IS NULL AND ascent_meters IS NULL"));
+        version11.close();
     }
 
     @Test
-    public void migratingToElevenLeavesEveryPlaceWithoutPracticalFacts() throws IOException {
-        SupportSQLiteDatabase version10 = helper.createDatabase(TEST_DATABASE, 10);
+    public void migratingToTwelveLeavesEveryPlaceWithoutPracticalFacts() throws IOException {
+        SupportSQLiteDatabase version11 = helper.createDatabase(TEST_DATABASE, 11);
         ContentValues place = new ContentValues();
         place.put("id", "old-arts");
         place.put("name", "Old Arts Building");
@@ -491,14 +513,14 @@ public class StoryStepMigrationTest {
         place.put("longitude", 144.95910);
         place.put("provenance", "seed");
         place.put("fetched_at_millis", 0L);
-        version10.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
-        version10.close();
+        version11.insert("attractions", android.database.sqlite.SQLiteDatabase.CONFLICT_ABORT, place);
+        version11.close();
 
-        SupportSQLiteDatabase version11 = helper.runMigrationsAndValidate(
-                TEST_DATABASE, 11, true, StoryStepMigrations.MIGRATION_10_11);
-        assertEquals(1, count(version11, "SELECT COUNT(*) FROM attractions "
+        SupportSQLiteDatabase version12 = helper.runMigrationsAndValidate(
+                TEST_DATABASE, 12, true, StoryStepMigrations.MIGRATION_11_12);
+        assertEquals(1, count(version12, "SELECT COUNT(*) FROM attractions "
                 + "WHERE opening_hours IS NULL AND phone IS NULL AND website IS NULL "
                 + "AND wheelchair IS NULL AND fee IS NULL"));
-        version11.close();
+        version12.close();
     }
 }

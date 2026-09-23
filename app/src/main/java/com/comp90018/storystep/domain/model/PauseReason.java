@@ -9,6 +9,9 @@ package com.comp90018.storystep.domain.model;
  */
 public enum PauseReason {
 
+    /** The user explicitly paused an exploration while keeping its progress. */
+    USER_REQUESTED,
+
     /** The app went to the background or the screen locked. Foreground-only collection ends here. */
     APP_NOT_VISIBLE,
 
@@ -33,6 +36,6 @@ public enum PauseReason {
      * user to restore access first, so offering a plain Resume for them would just fail.
      */
     public boolean isResolvedByReturningToApp() {
-        return this == APP_NOT_VISIBLE || this == PROCESS_INTERRUPTED;
+        return this == APP_NOT_VISIBLE || this == PROCESS_INTERRUPTED || this == USER_REQUESTED;
     }
 }

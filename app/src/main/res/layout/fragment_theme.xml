@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="20dp" android:paddingBottom="110dp">
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_back"
+            style="@style/Widget.StoryStep.Button.Secondary" android:layout_width="wrap_content"
+            android:layout_height="wrap_content" android:text="@string/detail_back" />
+        <TextView android:id="@+id/theme_title" style="@style/TextAppearance.StoryStep.PageTitle"
+            android:layout_width="match_parent" android:layout_height="wrap_content" />
+        <TextView android:id="@+id/theme_description" style="@style/TextAppearance.StoryStep.Body"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" />
+        <TextView android:id="@+id/theme_progress" style="@style/TextAppearance.StoryStep.Title"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            android:accessibilityLiveRegion="polite" />
+        <TextView android:id="@+id/theme_status" style="@style/TextAppearance.StoryStep.Body"
+            android:layout_width="match_parent" android:layout_height="wrap_content" android:accessibilityLiveRegion="polite" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_retry"
+            style="@style/Widget.StoryStep.Button.Secondary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/nearby_retry" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_start"
+            style="@style/Widget.StoryStep.Button.Primary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/theme_start" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_directions"
+            style="@style/Widget.StoryStep.Button.Primary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/theme_directions" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_pause"
+            style="@style/Widget.StoryStep.Button.Secondary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/theme_pause" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_finish"
+            style="@style/Widget.StoryStep.Button.Secondary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/theme_finish" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/theme_results"
+            style="@style/Widget.StoryStep.Button.Secondary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:text="@string/theme_results" />
+        <LinearLayout android:id="@+id/theme_stops" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:orientation="vertical" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

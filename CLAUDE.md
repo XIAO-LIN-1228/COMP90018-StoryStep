@@ -8,19 +8,20 @@ StoryStep is a context-aware Android tourism companion for COMP90018 (University
 
 Current state: the Java/XML app has real nearby discovery and map tiles, foreground location,
 movement and compass guidance, durable start/pause/resume/finish/discard, quality-aware arrival,
-story snapshots, saved places and journey history. Room is at schema version 10, including
-photographs and named finished journeys, and the steps and metres climbed a walk counted. OpenStreetMap Overpass supplies attractions; Wikidata
+story snapshots, saved places and journey history. Room is at schema version 12, including
+photographs, named finished journeys, theme snapshots/stop progress, and the steps and metres
+climbed a walk counted. OpenStreetMap Overpass supplies attractions; Wikidata
 and Wikipedia can enrich images/descriptions. Open-Meteo supplies cached weather. Both network
 repositories support area caches, request coalescing and labelled stale fallback.
 
-On the teammate A branch, `domain.recommendation.RecommendationEngine` implements the initial
+`domain.recommendation.RecommendationEngine` implements the initial
 REQ-21 weights and deterministic reason codes. Nearby exposes Recommended/Nearby, preserves
 search/filter state and selection, and reacts to weather, local time, saves and visits. Invalid,
 wrong-area and stale weather is neutral. Profile shows real local counts and capability checks;
 the obsolete Memory editor is removed and photographs remain in finished-journey details. See
 `docs/decisions/D-07-recommendation-baseline.md` and the 2026-09-20 evidence for exact policy and
-validation limits. REQ-20.2 retry/backoff, saved-detail cache fallback and backup exclusions remain
-teammate B work. Physical-device, accessibility and multi-version acceptance remain outstanding;
+validation limits. REQ-20.2 retry/backoff, saved-detail cache fallback and backup exclusions are
+present in the current baseline. Physical-device, accessibility and multi-version acceptance remain outstanding;
 implementation and JVM tests do not establish those results.
 
 `README.md` is the requirements/scope document and is the source of truth for
@@ -48,6 +49,10 @@ Core features:
 - Visit history and saved attractions
 - Weather integration
 - Meaningful Internet or cloud connectivity
+- User-authorized theme exploration (2026-09-21): curated ordered stations, explicit destination
+  selection, arrival-unlocked stories and optional questions, skip/undo, pause/recovery and
+  complete/partial history results. See `docs/theme-exploration-plan.md`; voice stories remain a
+  separate unimplemented extension. Theme arrivals derive from the existing session visits.
 
 Primary sensing capabilities:
 

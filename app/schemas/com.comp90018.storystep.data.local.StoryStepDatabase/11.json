@@ -2,11 +2,11 @@
   "formatVersion": 1,
   "database": {
     "version": 11,
-    "identityHash": "9eaf5220af47c8fc8c86f07e3e62aa66",
+    "identityHash": "7e930c1c679b35631424881022d64e5c",
     "entities": [
       {
         "tableName": "attractions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `category` TEXT, `description` TEXT, `indoor` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `provenance` TEXT, `fetched_at_millis` INTEGER NOT NULL, `source_ref` TEXT, `image_url` TEXT, `opening_hours` TEXT, `phone` TEXT, `website` TEXT, `wheelchair` TEXT, `fee` TEXT, `popularity` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `name` TEXT, `category` TEXT, `description` TEXT, `indoor` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `provenance` TEXT, `fetched_at_millis` INTEGER NOT NULL, `source_ref` TEXT, `image_url` TEXT, `popularity` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`id`))",
         "fields": [
           {
             "fieldPath": "id",
@@ -71,36 +71,6 @@
           {
             "fieldPath": "imageUrl",
             "columnName": "image_url",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "openingHours",
-            "columnName": "opening_hours",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "phone",
-            "columnName": "phone",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "website",
-            "columnName": "website",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "wheelchair",
-            "columnName": "wheelchair",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "fee",
-            "columnName": "fee",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -543,7 +513,7 @@
       },
       {
         "tableName": "saved_attractions",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`attraction_id` TEXT NOT NULL, `name` TEXT, `category` TEXT, `description` TEXT, `indoor` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `saved_at_millis` INTEGER NOT NULL, `provenance` TEXT, `source_ref` TEXT, `image_url` TEXT, `opening_hours` TEXT, `phone` TEXT, `website` TEXT, `wheelchair` TEXT, `fee` TEXT, `popularity` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`attraction_id`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`attraction_id` TEXT NOT NULL, `name` TEXT, `category` TEXT, `description` TEXT, `indoor` TEXT, `latitude` REAL NOT NULL, `longitude` REAL NOT NULL, `saved_at_millis` INTEGER NOT NULL, `provenance` TEXT, `source_ref` TEXT, `image_url` TEXT, `popularity` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`attraction_id`))",
         "fields": [
           {
             "fieldPath": "attractionId",
@@ -608,36 +578,6 @@
           {
             "fieldPath": "imageUrl",
             "columnName": "image_url",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "openingHours",
-            "columnName": "opening_hours",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "phone",
-            "columnName": "phone",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "website",
-            "columnName": "website",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "wheelchair",
-            "columnName": "wheelchair",
-            "affinity": "TEXT",
-            "notNull": false
-          },
-          {
-            "fieldPath": "fee",
-            "columnName": "fee",
             "affinity": "TEXT",
             "notNull": false
           },
@@ -733,12 +673,101 @@
         },
         "indices": [],
         "foreignKeys": []
+      },
+      {
+        "tableName": "theme_runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` TEXT NOT NULL, `definition_json` TEXT NOT NULL, PRIMARY KEY(`session_id`), FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "definitionJson",
+            "columnName": "definition_json",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "sessions",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "theme_stops",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`session_id` TEXT NOT NULL, `stop_id` TEXT NOT NULL, `skipped` INTEGER NOT NULL, `answer` INTEGER, PRIMARY KEY(`session_id`, `stop_id`), FOREIGN KEY(`session_id`) REFERENCES `theme_runs`(`session_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "sessionId",
+            "columnName": "session_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stopId",
+            "columnName": "stop_id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skipped",
+            "columnName": "skipped",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "answer",
+            "columnName": "answer",
+            "affinity": "INTEGER",
+            "notNull": false
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "session_id",
+            "stop_id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": [
+          {
+            "table": "theme_runs",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "session_id"
+            ],
+            "referencedColumns": [
+              "session_id"
+            ]
+          }
+        ]
       }
     ],
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '9eaf5220af47c8fc8c86f07e3e62aa66')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7e930c1c679b35631424881022d64e5c')"
     ]
   }
 }

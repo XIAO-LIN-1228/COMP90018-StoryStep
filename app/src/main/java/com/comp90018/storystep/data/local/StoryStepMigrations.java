@@ -358,10 +358,27 @@ public final class StoryStepMigrations {
     };
 
     /**
-     * Version 10: what the walk's own sensors counted. Both nullable, because most devices
-     * report neither and a zero would be a claim the walk was flat and still.
+     * Version 10: a themed walk's definition and the stops it has answered or skipped.
      */
     public static final Migration MIGRATION_9_10 = new Migration(9, 10) {
+        @Override public void migrate(@NonNull SupportSQLiteDatabase database) {
+            database.execSQL("CREATE TABLE IF NOT EXISTS `theme_runs` ("
+                    + "`session_id` TEXT NOT NULL, `definition_json` TEXT NOT NULL, "
+                    + "PRIMARY KEY(`session_id`), FOREIGN KEY(`session_id`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+            database.execSQL("CREATE TABLE IF NOT EXISTS `theme_stops` ("
+                    + "`session_id` TEXT NOT NULL, `stop_id` TEXT NOT NULL, `skipped` INTEGER NOT NULL, `answer` INTEGER, "
+                    + "PRIMARY KEY(`session_id`, `stop_id`), FOREIGN KEY(`session_id`) REFERENCES `theme_runs`(`session_id`) ON UPDATE NO ACTION ON DELETE CASCADE)");
+        }
+    };
+
+    /**
+     * Version 11: what the walk's own sensors counted. Both nullable, because most devices
+     * report neither and a zero would be a claim the walk was flat and still.
+     *
+     * <p>Written against version 10 as 9-to-10 on its own branch; renumbered on merging, because
+     * the themed-walk tables reached main first and a version number means one schema.
+     */
+    public static final Migration MIGRATION_10_11 = new Migration(10, 11) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             database.execSQL("ALTER TABLE `sessions` ADD COLUMN `steps` INTEGER");
@@ -370,10 +387,10 @@ public final class StoryStepMigrations {
     };
 
     /**
-     * Version 11: the practical facts about a place. All nullable, because most places have
+     * Version 12: the practical facts about a place. All nullable, because most places have
      * none of them recorded and an empty string would be a claim that they were.
      */
-    public static final Migration MIGRATION_10_11 = new Migration(10, 11) {
+    public static final Migration MIGRATION_11_12 = new Migration(11, 12) {
         @Override
         public void migrate(@NonNull SupportSQLiteDatabase database) {
             for (String table : new String[]{"attractions", "saved_attractions"}) {
@@ -390,6 +407,6 @@ public final class StoryStepMigrations {
         return new Migration[]{
                 MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6,
                 MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10,
-                MIGRATION_10_11};
+                MIGRATION_10_11, MIGRATION_11_12};
     }
 }

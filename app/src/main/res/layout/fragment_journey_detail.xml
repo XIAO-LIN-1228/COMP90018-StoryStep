@@ -95,6 +95,11 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/journey_theme" style="@style/Widget.StoryStep.Button.Secondary"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/theme_view_progress" android:visibility="gone" />
+
             <!--
                 Publishing, offered once: name the walk, add a few photographs, publish. Hidden
                 as soon as the walk has a name, so a walk seen again is simply a walk.
