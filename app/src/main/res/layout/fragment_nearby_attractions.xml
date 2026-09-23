@@ -400,34 +400,6 @@
                 android:layout_marginTop="88dp"
                 android:text="@string/nearby_retry"
                 android:visibility="gone" />
-
-            <!-- The one action, floating over the list's foot. -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginBottom="86dp"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/session_button"
-                    style="@style/Widget.StoryStep.Button.Primary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:elevation="@dimen/floating_elevation"
-                    android:minHeight="@dimen/minimum_touch_target"
-                    android:text="@string/nearby_start_exploring" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/stop_button"
-                    style="@style/Widget.StoryStep.Button.Secondary"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_8"
-                    android:minHeight="@dimen/minimum_touch_target"
-                    android:text="@string/nearby_stop_exploring"
-                    android:visibility="gone" />
-            </LinearLayout>
         </FrameLayout>
 
         <!-- The place-data credit the licence requires, shown when the map's own is hidden. -->

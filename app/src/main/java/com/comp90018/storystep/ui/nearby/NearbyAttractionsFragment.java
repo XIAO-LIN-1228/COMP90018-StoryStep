@@ -133,8 +133,6 @@ public class NearbyAttractionsFragment extends Fragment
     private int peekHeight;
     private boolean listMode;
     private NearbyUiState.SessionPhase currentSessionPhase = NearbyUiState.SessionPhase.IDLE;
-    private MaterialButton sessionButton;
-    private MaterialButton stopButton;
     private View permissionNotice;
     private TextView permissionNoticeMessage;
     private MaterialButton permissionNoticeAction;
@@ -246,8 +244,6 @@ public class NearbyAttractionsFragment extends Fragment
         bindFilterControls();
         sectionTitle = view.findViewById(R.id.nearby_title);
         seeAllButton = view.findViewById(R.id.see_all_button);
-        sessionButton = view.findViewById(R.id.session_button);
-        stopButton = view.findViewById(R.id.stop_button);
         permissionNotice = view.findViewById(R.id.permission_notice);
         permissionNoticeMessage = view.findViewById(R.id.permission_notice_message);
         permissionNoticeAction = view.findViewById(R.id.permission_notice_action);
@@ -296,8 +292,6 @@ public class NearbyAttractionsFragment extends Fragment
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         nearbyBackButton.setOnClickListener(v -> setListMode(false));
-        sessionButton.setOnClickListener(v -> onSessionButtonClicked());
-        stopButton.setOnClickListener(v -> viewModel.onStopRequested());
         viewModel.loadIfNeeded();
     }
 
@@ -546,32 +540,13 @@ public class NearbyAttractionsFragment extends Fragment
      * launch, so anything shown only on an empty list would never be seen at all — which is what
      * previously kept the purpose explanation from ever reaching the user.
      */
+    /**
+     * Explore finds places; it does not start, pause or stop a walk - Start owns that, and a
+     * walk under way is picked back up there. The phase is still tracked because the permission
+     * notice and the list's own messages are worded differently while one is running.
+     */
     private void renderSessionControls(NearbyUiState.SessionPhase phase) {
         currentSessionPhase = phase;
-        switch (phase) {
-            case ACTIVE:
-                sessionButton.setText(R.string.nearby_stop_exploring);
-                break;
-            case PAUSED_BACKGROUND:
-            case PAUSED_ACCESS_LOST:
-                sessionButton.setText(R.string.nearby_resume_exploring);
-                break;
-            case STARTING:
-                sessionButton.setText(R.string.nearby_starting);
-                break;
-            case STOPPING:
-                sessionButton.setText(R.string.nearby_stopping);
-                break;
-            case IDLE:
-            default:
-                sessionButton.setText(R.string.nearby_start_exploring);
-                break;
-        }
-        // Inert rather than hidden while a transition is in flight: a control that vanishes under
-        // the user's finger is worse than one that briefly does nothing.
-        sessionButton.setEnabled(!phase.isBusy());
-        // A paused session must be endable without resuming it first.
-        stopButton.setVisibility(phase.isPaused() ? View.VISIBLE : View.GONE);
     }
 
     private void renderPermissionNotice(NearbyUiState.Status status,

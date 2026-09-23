@@ -1,3 +1,17 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
-    <path android:fillColor="@color/story_ink" android:pathData="M17,3H7a2,2 0,0 0,-2 2v16l7,-3 7,3V5a2,2 0,0 0,-2 -2zM17,18l-5,-2.18L7,18V5h10z" />
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Not kept: a drawn ribbon rather than a filled one. Rounded corners and a 2dp stroke so it
+    reads as the same hand as the rest of the chrome instead of a stock Material glyph.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:fillColor="#00000000"
+        android:pathData="M7.2,3.2h9.6a1.6,1.6 0 0,1 1.6,1.6v15.1a0.8,0.8 0 0,1 -1.2,0.7l-5.2,-3a0.8,0.8 0 0,0 -0.8,0l-5.2,3a0.8,0.8 0 0,1 -1.2,-0.7V4.8a1.6,1.6 0 0,1 1.6,-1.6z"
+        android:strokeColor="@color/story_ink_2"
+        android:strokeWidth="1.9"
+        android:strokeLineJoin="round" />
 </vector>

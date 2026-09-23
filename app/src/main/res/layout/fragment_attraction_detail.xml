@@ -228,8 +228,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/detail_save"
             android:padding="13dp"
-            android:src="@drawable/ic_bookmark_outline"
-            app:tint="@color/story_ink" />
+            android:src="@drawable/ic_bookmark_outline" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/detail_start_button"
