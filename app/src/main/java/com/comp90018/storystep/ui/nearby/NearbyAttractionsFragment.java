@@ -109,7 +109,6 @@ public class NearbyAttractionsFragment extends Fragment
     private com.comp90018.storystep.ui.widget.PlaceMapView homeMap;
     @Nullable private com.google.android.material.bottomsheet.BottomSheetBehavior<View> sheet;
     private View homeMapCard;
-    private View continueJourneyCard;
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
@@ -229,7 +228,6 @@ public class NearbyAttractionsFragment extends Fragment
             NavHostFragment.findNavController(this)
                     .navigate(R.id.action_nearby_to_detail, arguments);
         });
-        continueJourneyCard = view.findViewById(R.id.continue_journey_card);
         homeHeader = view.findViewById(R.id.home_header);
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
         TouchTargets.expand(nearbyBackButton);
@@ -298,9 +296,6 @@ public class NearbyAttractionsFragment extends Fragment
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
         nearbyBackButton.setOnClickListener(v -> setListMode(false));
-        view.findViewById(R.id.resume_journey_button).setOnClickListener(v ->
-                NavHostFragment.findNavController(this)
-                        .navigate(R.id.action_nearby_to_session_recovery));
         sessionButton.setOnClickListener(v -> onSessionButtonClicked());
         stopButton.setOnClickListener(v -> viewModel.onStopRequested());
         viewModel.loadIfNeeded();
@@ -577,7 +572,6 @@ public class NearbyAttractionsFragment extends Fragment
         sessionButton.setEnabled(!phase.isBusy());
         // A paused session must be endable without resuming it first.
         stopButton.setVisibility(phase.isPaused() ? View.VISIBLE : View.GONE);
-        updateContinueJourneyCard();
     }
 
     private void renderPermissionNotice(NearbyUiState.Status status,
@@ -707,7 +701,6 @@ public class NearbyAttractionsFragment extends Fragment
                     ? com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
                     : com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED);
         }
-        updateContinueJourneyCard();
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
         originLabel.setVisibility(View.GONE);
@@ -726,25 +719,6 @@ public class NearbyAttractionsFragment extends Fragment
                 ? R.string.order_nearby : R.string.order_recommended);
         seeAllButton.setText(R.string.home_see_all);
         seeAllButton.setVisibility(View.GONE);
-
-        View fragmentView = getView();
-        if (fragmentView == null) {
-            return;
-        }
-        View sectionHeader = fragmentView.findViewById(R.id.nearby_section_header);
-        ViewGroup.LayoutParams rawParams = sectionHeader.getLayoutParams();
-        if (rawParams instanceof androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) {
-            androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
-                    (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) rawParams;
-            params.topToBottom = enabled ? R.id.filter_group : R.id.continue_journey_card;
-            sectionHeader.setLayoutParams(params);
-        }
-    }
-
-    /** The recovery card represents a real resumable session, never a permanent demo fixture. */
-    private void updateContinueJourneyCard() {
-        boolean resumable = currentSessionPhase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND;
-        continueJourneyCard.setVisibility(!listMode && resumable ? View.VISIBLE : View.GONE);
     }
 
     /**

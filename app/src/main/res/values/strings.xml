@@ -415,6 +415,9 @@
     <string name="profile_group_about">About</string>
     <string name="settings_title">Settings</string>
     <string name="plan_title">Plan a walk</string>
+    <string name="plan_walk_running">A walk is under way.</string>
+    <string name="plan_walk_paused">Your walk is paused — location is not being recorded.</string>
+    <string name="plan_go_to_walk">Go to it</string>
     <string name="detail_good_to_know">Good to know</string>
     <string name="detail_hours_label">Opening hours</string>
     <string name="detail_phone_label">Phone</string>

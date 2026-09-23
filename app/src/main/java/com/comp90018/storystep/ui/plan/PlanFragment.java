@@ -87,7 +87,32 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         view.findViewById(R.id.plan_add).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_nearby));
         startButton.setOnClickListener(v -> startWalking());
+        view.findViewById(R.id.plan_in_progress_action).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_exploration));
         planner.addObserver(this);
+    }
+
+    /**
+     * A walk already running or paused, shown above the plan: planning is where walking begins,
+     * so it is where a walk in progress is picked back up. Without this there is no route to an
+     * unfinished walk at all, and one would sit in the database blocking the next.
+     */
+    private void showWalkInProgress() {
+        View view = getView();
+        if (view == null) {
+            return;
+        }
+        com.comp90018.storystep.domain.model.SessionSummary summary =
+                container().getExplorationCoordinator().summary();
+        com.comp90018.storystep.domain.model.SessionState state =
+                summary == null ? null : summary.getState();
+        boolean running = state != null && state.hasSession();
+        view.findViewById(R.id.plan_in_progress).setVisibility(running ? View.VISIBLE : View.GONE);
+        if (running) {
+            ((TextView) view.findViewById(R.id.plan_in_progress_text)).setText(
+                    state == com.comp90018.storystep.domain.model.SessionState.PAUSED
+                            ? R.string.plan_walk_paused : R.string.plan_walk_running);
+        }
     }
 
     @Override
@@ -217,6 +242,7 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
     @Override
     public void onResume() {
         super.onResume();
+        showWalkInProgress();
         map.onResume();
     }
 

@@ -69,6 +69,62 @@
             android:layout_marginTop="10dp"
             android:background="@drawable/bg_sheet_handle" />
 
+        <!--
+            A walk already under way. Planning is where walking begins, so this is where a walk
+            left running or paused is picked back up; it is the only route to it, and without
+            it an unfinished walk would sit in the database with no way back to it.
+        -->
+        <LinearLayout
+            android:id="@+id/plan_in_progress"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/page_horizontal_margin"
+            android:layout_marginTop="@dimen/space_12"
+            android:layout_marginEnd="@dimen/page_horizontal_margin"
+            android:background="@drawable/bg_stale_banner"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/space_12"
+            android:paddingTop="8dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="8dp"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_start_walk"
+                app:tint="@color/story_signal" />
+
+            <TextView
+                android:id="@+id/plan_in_progress_text"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_12"
+                android:layout_weight="1"
+                android:fontFamily="@font/bricolage_medium"
+                android:textColor="@color/story_on_ink"
+                android:textSize="13.5sp"
+                tools:text="Your walk is paused — location is not being recorded." />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/plan_in_progress_action"
+                style="@style/Widget.StoryStep.Button.Primary"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/space_8"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="0dp"
+                android:minHeight="38dp"
+                android:paddingStart="@dimen/space_16"
+                android:paddingEnd="@dimen/space_16"
+                android:text="@string/plan_go_to_walk"
+                android:textSize="13.5sp" />
+        </LinearLayout>
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
