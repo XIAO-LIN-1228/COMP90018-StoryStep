@@ -277,6 +277,14 @@ public class ExplorationFragment extends Fragment {
         destinationNameView.setText(state.getDestinationName() == null
                 ? getString(R.string.exploration_no_destination)
                 : state.getDestinationName());
+        // Which stop of the plan, when a plan is being walked.
+        TextView progress = requireView().findViewById(R.id.exploration_plan_progress);
+        int[] at = ((com.comp90018.storystep.StoryStepApplication) requireActivity().getApplication())
+                .getAppContainer().getExplorationCoordinator().planProgress();
+        progress.setVisibility(at == null ? View.GONE : View.VISIBLE);
+        if (at != null) {
+            progress.setText(getString(R.string.plan_stop_of, at[0], at[1]));
+        }
         durationView.setText(formatDuration(state.getActiveDurationMillis()));
         stateChip.setText(stateLabel(state));
 

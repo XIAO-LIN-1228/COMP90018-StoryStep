@@ -72,7 +72,9 @@ public class AttractionDetailFragment extends Fragment {
         view.findViewById(R.id.detail_back_button).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigateUp());
         saveButton.setOnClickListener(v -> viewModel.onSaveToggleRequested());
-        view.findViewById(R.id.detail_start_button).setOnClickListener(v -> showStartConfirmation());
+        // The place goes into the walk being planned rather than starting one of its own: the
+        // Start tab is where a walk begins, and one place is rarely the whole of it.
+        view.findViewById(R.id.detail_start_button).setOnClickListener(v -> addToWalk());
 
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
         viewModel.getSaveFailed().observe(getViewLifecycleOwner(), this::reportSaveFailure);
@@ -172,6 +174,7 @@ public class AttractionDetailFragment extends Fragment {
      * screen reader nothing about which way pressing it goes.
      */
     private void renderSaveButton(AttractionDetailUiState state) {
+        renderPlanButton();
         boolean loaded = state.getStatus() == AttractionDetailUiState.Status.CONTENT
                 && state.getAttraction() != null;
         saveButton.setVisibility(loaded ? View.VISIBLE : View.GONE);
@@ -189,6 +192,48 @@ public class AttractionDetailFragment extends Fragment {
         }
         Toast.makeText(requireContext(), R.string.detail_save_failed, Toast.LENGTH_SHORT).show();
         viewModel.consumeSaveFailure();
+    }
+
+    /**
+     * Puts the place into the walk being planned, and says so. Already in the walk, or the walk
+     * already full, are both ordinary answers rather than failures.
+     */
+    private void addToWalk() {
+        AttractionDetailUiState state = viewModel.getUiState().getValue();
+        Attraction attraction = state == null ? null : state.getAttraction();
+        if (attraction == null) {
+            return;
+        }
+        com.comp90018.storystep.application.WalkPlanner planner =
+                ((com.comp90018.storystep.StoryStepApplication) requireActivity().getApplication())
+                        .getAppContainer().getWalkPlanner();
+        com.comp90018.storystep.domain.plan.WalkPlan before = planner.plan();
+        if (before.contains(attraction.getId())) {
+            Toast.makeText(requireContext(), R.string.detail_in_walk, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (before.isFull()) {
+            Toast.makeText(requireContext(), getString(R.string.plan_full,
+                    com.comp90018.storystep.domain.plan.WalkPlan.MAX_STOPS),
+                    Toast.LENGTH_SHORT).show();
+            return;
+        }
+        planner.add(attraction);
+        Toast.makeText(requireContext(), R.string.plan_added, Toast.LENGTH_SHORT).show();
+        renderPlanButton();
+    }
+
+    /** The action says whether the place is already in the walk. */
+    private void renderPlanButton() {
+        AttractionDetailUiState state = viewModel.getUiState().getValue();
+        Attraction attraction = state == null ? null : state.getAttraction();
+        com.google.android.material.button.MaterialButton button =
+                requireView().findViewById(R.id.detail_start_button);
+        boolean inWalk = attraction != null
+                && ((com.comp90018.storystep.StoryStepApplication) requireActivity().getApplication())
+                        .getAppContainer().getWalkPlanner().plan().contains(attraction.getId());
+        button.setText(inWalk ? R.string.detail_in_walk : R.string.detail_add_to_walk);
+        button.setEnabled(!inWalk);
     }
 
     private void showStartConfirmation() {

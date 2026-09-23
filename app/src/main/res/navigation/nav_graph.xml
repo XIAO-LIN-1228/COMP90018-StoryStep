@@ -41,6 +41,19 @@
     </fragment>
 
     <fragment
+        android:id="@+id/planFragment"
+        android:name="com.comp90018.storystep.ui.plan.PlanFragment"
+        android:label="@string/plan_title"
+        tools:layout="@layout/fragment_plan">
+        <action android:id="@+id/action_plan_to_nearby" app:destination="@id/nearbyAttractionsFragment" />
+        <action android:id="@+id/action_plan_to_detail" app:destination="@id/attractionDetailFragment" />
+        <action
+            android:id="@+id/action_plan_to_exploration"
+            app:destination="@id/explorationFragment"
+            app:popUpTo="@id/planFragment" />
+    </fragment>
+
+    <fragment
         android:id="@+id/journeysFragment"
         android:name="com.comp90018.storystep.ui.journey.JourneysFragment"
         android:label="@string/nav_journeys"

@@ -73,6 +73,9 @@ public class AppContainer {
     private final SavedAttractionRepository savedAttractionRepository;
     private final WeatherRepository weatherRepository;
     private final ExplorationCoordinator explorationCoordinator;
+    /** The walk being planned; process-scoped so it survives navigation between screens. */
+    private final com.comp90018.storystep.application.WalkPlanner walkPlanner =
+            new com.comp90018.storystep.application.WalkPlanner();
     private final CacheRetentionSweeper cacheRetentionSweeper;
 
     private final Executor mainExecutor;
@@ -211,6 +214,8 @@ public class AppContainer {
                 // repository every screen uses, so the capture is a cache read rather than an
                 // extra request.
                 weatherRepository);
+        // The coordinator follows the plan when there is one: arriving moves it to the next stop.
+        this.explorationCoordinator.setPlanner(walkPlanner);
     }
 
     /**
@@ -266,6 +271,10 @@ public class AppContainer {
      * {@link LocationSource}: a screen that could register its own would be a second, invisible
      * subscription running alongside the session's.
      */
+    public com.comp90018.storystep.application.WalkPlanner getWalkPlanner() {
+        return walkPlanner;
+    }
+
     public ExplorationCoordinator getExplorationCoordinator() {
         return explorationCoordinator;
     }

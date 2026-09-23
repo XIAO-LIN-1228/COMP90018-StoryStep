@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- One stop in the plan: its number, its name and distance, and the controls to move or drop it. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/page_horizontal_margin"
+    android:paddingTop="8dp"
+    android:paddingEnd="@dimen/space_8"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/plan_stop_order"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/bg_stop_number"
+        android:fontFamily="@font/bricolage_bold"
+        android:gravity="center"
+        android:textColor="@color/story_signal_ink"
+        android:textSize="14sp"
+        tools:text="1" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/space_12"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/plan_stop_name"
+            style="@style/TextAppearance.StoryStep.Title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="15sp"
+            tools:text="Old Arts Building" />
+
+        <TextView
+            android:id="@+id/plan_stop_meta"
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/story_ink_3"
+            tools:text="284 m from the last stop · University landmark" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/plan_stop_up"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/plan_move_up"
+        android:padding="7dp"
+        android:rotation="270"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="@color/story_ink_3" />
+
+    <ImageButton
+        android:id="@+id/plan_stop_down"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/plan_move_down"
+        android:padding="7dp"
+        android:rotation="90"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="@color/story_ink_3" />
+
+    <ImageButton
+        android:id="@+id/plan_stop_remove"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/plan_remove"
+        android:padding="9dp"
+        android:src="@drawable/ic_close"
+        app:tint="@color/story_ink_3" />
+</LinearLayout>

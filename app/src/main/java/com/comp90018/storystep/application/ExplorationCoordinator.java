@@ -221,6 +221,12 @@ public final class ExplorationCoordinator {
      */
     private final WeatherRepository weather;
 
+    /**
+     * The walk being followed, when there is one. Optional: a walk started from a single place
+     * has no plan, and the coordinator behaves exactly as it did before plans existed.
+     */
+    @androidx.annotation.Nullable private com.comp90018.storystep.application.WalkPlanner planner;
+
     /** The observation recorded for this session, or null when none has been captured yet. */
     private WeatherSnapshot capturedWeather;
 
@@ -283,6 +289,31 @@ public final class ExplorationCoordinator {
     // --- observers ---------------------------------------------------------------------------
 
     /** Registers {@code observer} and immediately gives it the current session state. */
+    /** Tells the coordinator which walk is being followed, so arriving advances it. */
+    public void setPlanner(@androidx.annotation.Nullable
+                           com.comp90018.storystep.application.WalkPlanner planner) {
+        this.planner = planner;
+    }
+
+    /** The stop the plan expects next, or null when there is no plan or the walk is done. */
+    @androidx.annotation.Nullable
+    public com.comp90018.storystep.domain.model.Attraction nextPlannedStop() {
+        if (planner == null || destination == null) {
+            return null;
+        }
+        return planner.plan().after(destination.getId());
+    }
+
+    /** Which stop of how many the walk is on, or null when it is not following a plan. */
+    @androidx.annotation.Nullable
+    public int[] planProgress() {
+        if (planner == null || destination == null) {
+            return null;
+        }
+        int at = planner.plan().indexOf(destination.getId());
+        return at < 0 ? null : new int[]{at + 1, planner.plan().size()};
+    }
+
     public void addObserver(Observer observer) {
         if (observer == null) {
             throw new IllegalArgumentException("observer must not be null");
@@ -866,13 +897,32 @@ public final class ExplorationCoordinator {
         if (sessionId == null || destination == null) {
             return;
         }
+        String arrivedAt = destination.getId();
         storeVisit(new Visit(
                 sessionId,
-                destination.getId(),
+                arrivedAt,
                 clock.wallClockMillis(),
                 destination.getName(),
                 destination.getDescription(),
                 true));
+        advancePlan(arrivedAt);
+    }
+
+    /**
+     * Moves a planned walk on to its next stop once this one is reached.
+     *
+     * <p>Only when the walk is being walked to a plan and the stop just reached is the one the
+     * plan expected. The last stop leaves the destination where it is: the walk is done, and
+     * clearing it would blank the screen at the moment the user arrives.
+     */
+    private void advancePlan(String arrivedAt) {
+        if (planner == null) {
+            return;
+        }
+        com.comp90018.storystep.domain.model.Attraction next = planner.plan().after(arrivedAt);
+        if (next != null) {
+            selectDestination(next);
+        }
     }
 
     /**

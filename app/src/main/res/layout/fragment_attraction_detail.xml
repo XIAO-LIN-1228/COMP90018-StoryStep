@@ -194,6 +194,6 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:minHeight="50dp"
-            android:text="@string/detail_start_exploration" />
+            android:text="@string/detail_add_to_walk" />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

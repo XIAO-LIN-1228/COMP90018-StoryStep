@@ -44,6 +44,8 @@ public class PlaceMapView extends FrameLayout {
         @Nullable public final com.comp90018.storystep.domain.model.AttractionCategory.Kind kind;
         /** Kept places wear the star when the map is showing what is kept. */
         public final boolean starred;
+        /** A planned stop's position in the walk, 1-based; zero for a place that is not one. */
+        public final int order;
 
         public Place(String id, String name, GeoPoint location) {
             this(id, name, location, null, false);
@@ -52,11 +54,23 @@ public class PlaceMapView extends FrameLayout {
         public Place(String id, String name, GeoPoint location,
                      @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
                      boolean starred) {
+            this(id, name, location, kind, starred, 0);
+        }
+
+        /** A stop in a planned walk: the pin carries its number instead of a glyph. */
+        public static Place stop(String id, String name, GeoPoint location, int order) {
+            return new Place(id, name, location, null, false, order);
+        }
+
+        private Place(String id, String name, GeoPoint location,
+                      @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
+                      boolean starred, int order) {
             this.id = id;
             this.name = name;
             this.location = location;
             this.kind = kind;
             this.starred = starred;
+            this.order = order;
         }
     }
 
@@ -169,7 +183,7 @@ public class PlaceMapView extends FrameLayout {
         List<PinOverlay.Pin> pins = new ArrayList<>(places.size());
         for (Place place : places) {
             pins.add(new PinOverlay.Pin(place.id, toOsm(place.location),
-                    labelledPin(place.name, place.kind, place.starred)));
+                    labelledPin(place.name, place.kind, place.starred, place.order)));
         }
         pinOverlay.setPins(pins);
         map.invalidate();
@@ -325,7 +339,8 @@ public class PlaceMapView extends FrameLayout {
     private android.graphics.Bitmap labelledPin(
             String name,
             @Nullable com.comp90018.storystep.domain.model.AttractionCategory.Kind kind,
-            boolean starred) {
+            boolean starred,
+            int order) {
         float density = getResources().getDisplayMetrics().density;
         int disc = Math.round(30 * density);
         PinOverlay.discPx = disc;
@@ -352,6 +367,23 @@ public class PlaceMapView extends FrameLayout {
         canvas.drawCircle(cx, cy + density, disc / 2f, paint);
         paint.setColor(ContextCompat.getColor(getContext(), R.color.story_surface));
         canvas.drawCircle(cx, cy, disc / 2f, paint);
+        if (order > 0) {
+            // A planned stop: the brand disc with its number, so the order reads off the map.
+            paint.setColor(ContextCompat.getColor(getContext(), R.color.story_signal));
+            canvas.drawCircle(cx, cy, disc / 2f - 2.5f * density, paint);
+            android.text.TextPaint number = new android.text.TextPaint(
+                    android.graphics.Paint.ANTI_ALIAS_FLAG);
+            number.setTextSize(13f * density);
+            number.setTypeface(androidx.core.content.res.ResourcesCompat.getFont(
+                    getContext(), R.font.bricolage_bold));
+            number.setColor(ContextCompat.getColor(getContext(), R.color.story_signal_ink));
+            String label2 = String.valueOf(order);
+            float width2 = number.measureText(label2);
+            canvas.drawText(label2, cx - width2 / 2f,
+                    cy - (number.getFontMetrics().ascent + number.getFontMetrics().descent) / 2f,
+                    number);
+            return finishPin(bitmap, canvas, text, label, cx, disc, gap, textWidth, density);
+        }
         int glyph = starred ? R.drawable.ic_kind_saved
                 : kind == null ? 0
                 : kind == com.comp90018.storystep.domain.model.AttractionCategory.Kind.FOOD
@@ -378,6 +410,19 @@ public class PlaceMapView extends FrameLayout {
             }
         }
 
+        return finishPin(bitmap, canvas, text, label, cx, disc, gap, textWidth, density);
+    }
+
+    /** Draws the name under a pin's disc and returns the finished bitmap. */
+    private android.graphics.Bitmap finishPin(android.graphics.Bitmap bitmap,
+                                              android.graphics.Canvas canvas,
+                                              android.text.TextPaint text,
+                                              String label,
+                                              float cx,
+                                              int disc,
+                                              int gap,
+                                              float textWidth,
+                                              float density) {
         // Halo first, then the ink, so the name reads over roads and labels.
         float baseline = disc + gap - text.getFontMetrics().ascent;
         android.text.TextPaint halo = new android.text.TextPaint(text);
