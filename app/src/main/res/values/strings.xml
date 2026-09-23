@@ -116,10 +116,8 @@
         <item quantity="one">Map showing %1$d nearby place. The same places are listed below.</item>
         <item quantity="other">Map showing %1$d nearby places. The same places are listed below.</item>
     </plurals>
-    <string name="home_continue_title">Continue your journey</string>
-    <string name="home_journey_name">University Heritage Walk</string>
-    <string name="home_journey_progress">3 of 6 stories discovered</string>
-    <string name="home_journey_meta">1.8 km  ·  32 min</string>
+    <string name="journey_detail_title">Your walk</string>
+    <string name="home_walk_paused">Your walk is paused — location is not being recorded.</string>
     <string name="home_resume">Resume</string>
     <string name="home_nearby">Nearby stories</string>
     <string name="home_see_all">See all</string>

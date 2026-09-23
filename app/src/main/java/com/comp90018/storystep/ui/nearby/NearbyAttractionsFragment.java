@@ -109,7 +109,7 @@ public class NearbyAttractionsFragment extends Fragment
     private com.comp90018.storystep.ui.widget.PlaceMapView homeMap;
     @Nullable private com.google.android.material.bottomsheet.BottomSheetBehavior<View> sheet;
     private View homeMapCard;
-    private MaterialCardView continueJourneyCard;
+    private View continueJourneyCard;
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
@@ -617,14 +617,8 @@ public class NearbyAttractionsFragment extends Fragment
                 action = v -> openLocationSettings();
                 break;
             default:
-                if (phase == NearbyUiState.SessionPhase.PAUSED_BACKGROUND) {
-                    // Explains why the totals stopped moving. Without it, returning to the app
-                    // looks like the session silently died.
-                    message = R.string.nearby_session_paused_background;
-                    actionLabel = R.string.nearby_resume_exploring;
-                    action = v -> resumeIfAccessAllows();
-                    break;
-                }
+                // A paused walk is not a permission problem, and it has its own line below;
+                // saying it twice in a paragraph filled the resting sheet and hid the places.
                 permissionNotice.setVisibility(View.GONE);
                 permissionNoticeAction.setOnClickListener(null);
                 return;
