@@ -43,7 +43,7 @@
     <color name="story_ink_wash">#E9E6DC</color>
     <color name="story_ink_2">#6B655A</color>
     <color name="story_ink_3">#948D80</color>
-    <color name="story_disabled">#B5AFA3</color>
+    <color name="story_disabled">#1FA79B84</color>
 
     <!-- The one accent: an unread story -->
     <!--

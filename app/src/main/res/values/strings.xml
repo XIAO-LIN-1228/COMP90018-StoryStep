@@ -425,7 +425,8 @@
     <string name="plan_stop_count_plural">%1$d stops</string>
     <string name="plan_stops_heading">Your stops</string>
     <string name="plan_clear">Clear</string>
-    <string name="plan_empty">Add the places you want to visit. StoryStep puts them in a sensible order and shows the walk between them — it points the way, it does not give turn-by-turn directions.</string>
+    <string name="plan_empty_title">Nowhere to go yet</string>
+    <string name="plan_empty">Add a few places and StoryStep will order them and draw the walk between them.</string>
     <string name="plan_add_stop">Add a place</string>
     <string name="plan_start">Start walking</string>
     <string name="plan_full">A walk holds up to %1$d stops.</string>

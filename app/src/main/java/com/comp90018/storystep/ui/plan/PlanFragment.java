@@ -44,7 +44,7 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
     private RecyclerView list;
     private PlanStopAdapter adapter;
     private TextView subtitle;
-    private TextView empty;
+    private View empty;
     private TextView clear;
     private View startButton;
 
@@ -98,6 +98,7 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         adapter.setStops(plan.getStops(), origin);
         boolean any = !plan.isEmpty();
         empty.setVisibility(any ? View.GONE : View.VISIBLE);
+        list.setVisibility(any ? View.VISIBLE : View.GONE);
         clear.setVisibility(any ? View.VISIBLE : View.GONE);
         startButton.setEnabled(any);
         subtitle.setText(any ? summary(plan) : getString(R.string.plan_subtitle_empty));

@@ -100,17 +100,46 @@
                 android:visibility="gone" />
         </LinearLayout>
 
-        <!-- Nothing planned yet: what this screen is for, in one line. -->
-        <TextView
+        <!--
+            Nothing planned yet. The empty state takes the space the list will, so the sheet
+            does not open on a paragraph with a void beneath it.
+        -->
+        <LinearLayout
             android:id="@+id/plan_empty"
-            style="@style/TextAppearance.StoryStep.Prose"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:paddingStart="@dimen/page_horizontal_margin"
-            android:paddingTop="@dimen/space_8"
-            android:paddingEnd="@dimen/page_horizontal_margin"
-            android:text="@string/plan_empty"
-            android:textColor="@color/story_ink_3" />
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/space_32"
+            android:paddingEnd="@dimen/space_32"
+            android:paddingBottom="@dimen/space_24">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:background="@drawable/bg_stat_icon"
+                android:contentDescription="@null"
+                android:padding="17dp"
+                android:src="@drawable/ic_kind_sights"
+                app:tint="@color/story_signal_ink" />
+
+            <TextView
+                style="@style/TextAppearance.StoryStep.Headline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/space_16"
+                android:text="@string/plan_empty_title" />
+
+            <TextView
+                style="@style/TextAppearance.StoryStep.Prose"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:gravity="center"
+                android:text="@string/plan_empty"
+                android:textColor="@color/story_ink_3" />
+        </LinearLayout>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/plan_stops"
@@ -132,15 +161,37 @@
             android:paddingEnd="@dimen/page_horizontal_margin"
             android:paddingBottom="88dp">
 
-            <com.google.android.material.button.MaterialButton
+            <!--
+                A dashed slot rather than a second solid button: it reads as room for another
+                stop, and leaves Start as the only filled action on the screen.
+            -->
+            <LinearLayout
                 android:id="@+id/plan_add"
-                style="@style/Widget.StoryStep.Button.Secondary"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/primary_button_height"
-                android:text="@string/plan_add_stop"
-                app:icon="@drawable/ic_kind_sights"
-                app:iconGravity="textStart"
-                app:iconTint="@color/story_ink" />
+                android:background="@drawable/bg_add_pill"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="26dp"
+                    android:layout_height="26dp"
+                    android:background="@drawable/bg_stat_icon"
+                    android:contentDescription="@null"
+                    android:padding="4dp"
+                    android:src="@drawable/ic_plus" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:fontFamily="@font/bricolage_bold"
+                    android:text="@string/plan_add_stop"
+                    android:textColor="@color/story_signal_ink"
+                    android:textSize="@dimen/text_body" />
+            </LinearLayout>
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/plan_start"
