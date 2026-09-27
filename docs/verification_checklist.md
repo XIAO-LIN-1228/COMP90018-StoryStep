@@ -1,5 +1,11 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
+2026-09-27 attraction-coverage extension on `feature/attraction-coverage`:
+[automated evidence](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md). Trusted fallback names,
+six additional provider types, conservative classification and source-identity deduplication are
+covered by JVM tests. APK/Lint builds pass; live-provider and physical-device checks remain
+NOT_RUN.
+
 2026-09-27 popularity-ranking extension on `feature/popularity-ranking`:
 [automated evidence](verification/EV-POPULARITY-RANKING-2026-09-27.md). Existing Wikidata
 sitelink counts now provide a logarithmic recommendation adjustment capped at +0.05; missing data
