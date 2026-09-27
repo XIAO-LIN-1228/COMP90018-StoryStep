@@ -31,6 +31,14 @@ See the [theme execution and test plan](docs/theme-exploration-plan.md) and
 Coordinates guide users approximately; current access and real GPS approach performance require
 field verification. Theme selection does not promise open buildings or a computed walking route.
 
+The local `feature/voice-story` branch adds optional story narration. A user can start, pause and
+continue Android TextToSpeech from an unlocked story, choose 0.75x, 1x or 1.25x speed, and keep
+reading the complete text when no compatible voice is installed. A persisted arrival also produces
+one brief vibration when its prompt first appears. Narration never starts automatically, stops when
+the story screen leaves the foreground and repeats the current sentence after a pause so no words
+are silently skipped. Device voice availability, vibration and TalkBack still require physical
+acceptance; see [voice-story evidence](docs/verification/EV-VOICE-STORY-2026-09-27.md).
+
 See the [teammate A evidence](docs/verification/EV-REQ21-REQ22-2026-09-20-01.md) for commands,
 results and unexecuted checks. Older plan/ledger entries describe earlier commits and must not be
 used to infer that an already implemented feature needs rebuilding.

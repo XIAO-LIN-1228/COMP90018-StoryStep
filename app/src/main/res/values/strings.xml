@@ -215,6 +215,19 @@
     <string name="story_no_content">No story is available for this place yet.</string>
     <string name="story_loading">Loading the story…</string>
     <string name="story_discovered">Discovered today</string>
+    <string name="story_voice_listen">Listen to this story</string>
+    <string name="story_voice_pause">Pause narration</string>
+    <string name="story_voice_continue">Continue narration</string>
+    <string name="story_voice_preparing">Preparing this device’s voice…</string>
+    <string name="story_voice_ready">Ready to listen. Narration starts only when you choose it.</string>
+    <string name="story_voice_playing">Reading the story aloud.</string>
+    <string name="story_voice_paused">Paused. Continuing repeats the current sentence.</string>
+    <string name="story_voice_unavailable">Voice is unavailable on this device. The full story remains available to read.</string>
+    <string name="story_voice_error">The story could not be spoken. You can still read it.</string>
+    <string name="story_voice_speed">Narration speed</string>
+    <string name="story_voice_speed_slow">0.75×</string>
+    <string name="story_voice_speed_normal">1×</string>
+    <string name="story_voice_speed_fast">1.25×</string>
     <string name="skip">Skip</string>
 
     <!-- Journey summary and history -->

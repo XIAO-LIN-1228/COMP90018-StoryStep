@@ -51,8 +51,11 @@ Core features:
 - Meaningful Internet or cloud connectivity
 - User-authorized theme exploration (2026-09-21): curated ordered stations, explicit destination
   selection, arrival-unlocked stories and optional questions, skip/undo, pause/recovery and
-  complete/partial history results. See `docs/theme-exploration-plan.md`; voice stories remain a
-  separate unimplemented extension. Theme arrivals derive from the existing session visits.
+  complete/partial history results. See `docs/theme-exploration-plan.md`. The local
+  `feature/voice-story` branch adds user-initiated TextToSpeech narration with pause/continue,
+  three speech rates, readable fallback and a one-shot haptic cue after a persisted arrival.
+  Physical-device TTS, vibration and accessibility acceptance remain outstanding. Theme arrivals
+  derive from the existing session visits.
 
 Primary sensing capabilities:
 

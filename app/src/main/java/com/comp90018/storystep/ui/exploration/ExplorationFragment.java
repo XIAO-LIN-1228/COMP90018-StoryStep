@@ -16,6 +16,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.guidance.CardinalDirection;
 import com.comp90018.storystep.domain.model.PauseReason;
+import com.comp90018.storystep.platform.haptics.AndroidArrivalHaptics;
+import com.comp90018.storystep.platform.haptics.ArrivalHaptics;
 import com.comp90018.storystep.platform.location.LocationSource;
 import com.comp90018.storystep.ui.CardinalAnnouncer;
 import com.comp90018.storystep.ui.DirectionLabels;
@@ -97,6 +99,7 @@ public class ExplorationFragment extends Fragment {
     private MaterialButton arrivalLaterButton;
     private TextView visitSaveFailedNotice;
     private MaterialButton retryVisitButton;
+    private ArrivalHaptics arrivalHaptics;
 
     @Nullable
     @Override
@@ -109,6 +112,7 @@ public class ExplorationFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        arrivalHaptics = new AndroidArrivalHaptics(requireContext());
         themeModel = new ViewModelProvider(this, ViewModelFactory.from(this))
                 .get(com.comp90018.storystep.ui.theme.ThemeViewModel.class);
         TextView themeButton = view.findViewById(R.id.exploration_theme);
@@ -384,6 +388,9 @@ public class ExplorationFragment extends Fragment {
         boolean visible = state.isArrivalBannerVisible();
         arrivalBanner.setVisibility(visible ? View.VISIBLE : View.GONE);
         if (visible) {
+            if (viewModel.claimArrivalFeedback()) {
+                arrivalHaptics.pulse();
+            }
             String name = state.getArrivedAttractionName();
             arrivalBannerText.setText(getString(R.string.exploration_arrival_banner_format,
                     name == null ? getString(R.string.exploration_no_destination) : name));

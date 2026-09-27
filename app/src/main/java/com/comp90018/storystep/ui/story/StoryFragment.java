@@ -14,11 +14,15 @@ import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 
 import com.comp90018.storystep.R;
+import com.comp90018.storystep.platform.speech.AndroidTextToSpeechEngine;
 import com.comp90018.storystep.ui.AttractionArtwork;
 import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.journey.JourneysFragment;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.snackbar.Snackbar;
 
 /**
  * Renders the story revealed for one attraction.
@@ -36,6 +40,11 @@ public class StoryFragment extends Fragment {
     private ImageView heroView;
     private TextView attributionView;
     private String themeSourceUrl;
+    private View voiceControls;
+    private MaterialButton voiceToggle;
+    private TextView voiceStatus;
+    private StorySpeechController speechController;
+    private boolean hasSpeakableStory;
 
     @Nullable
     @Override
@@ -52,6 +61,35 @@ public class StoryFragment extends Fragment {
         storyView = view.findViewById(R.id.story_body);
         heroView = view.findViewById(R.id.story_hero);
         attributionView = view.findViewById(R.id.story_attribution);
+        voiceControls = view.findViewById(R.id.story_voice_controls);
+        voiceToggle = view.findViewById(R.id.story_voice_toggle);
+        voiceStatus = view.findViewById(R.id.story_voice_status);
+
+        speechController = new StorySpeechController(
+                new AndroidTextToSpeechEngine(requireContext()),
+                new StorySpeechController.Listener() {
+                    @Override
+                    public void onStateChanged(StorySpeechController.State state, float rate) {
+                        renderSpeechState(state);
+                    }
+
+                    @Override
+                    public void onSpeechError() {
+                        if (isAdded() && getView() != null) {
+                            Snackbar.make(requireView(), R.string.story_voice_error,
+                                    Snackbar.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+        voiceToggle.setOnClickListener(v -> speechController.togglePlayback());
+        Chip slow = view.findViewById(R.id.story_voice_speed_slow);
+        Chip normal = view.findViewById(R.id.story_voice_speed_normal);
+        Chip fast = view.findViewById(R.id.story_voice_speed_fast);
+        slow.setOnClickListener(v -> speechController.setRate(0.75f));
+        normal.setOnClickListener(v -> speechController.setRate(1.0f));
+        fast.setOnClickListener(v -> speechController.setRate(1.25f));
+        normal.setChecked(true);
+        renderSpeechState(speechController.getState());
 
         TouchTargets.expand(view.findViewById(R.id.story_back));
         view.findViewById(R.id.story_back).setOnClickListener(v ->
@@ -95,6 +133,9 @@ public class StoryFragment extends Fragment {
 
     private void render(StoryUiState state) {
         attributionView.setVisibility(state.isLoading() ? View.GONE : View.VISIBLE);
+        hasSpeakableStory = !state.isLoading() && state.hasStory();
+        voiceControls.setVisibility(hasSpeakableStory ? View.VISIBLE : View.GONE);
+        speechController.setStory(hasSpeakableStory ? state.getStory() : null);
         if (state.isLoading()) {
             placeNameView.setText(R.string.story_toolbar_title);
             storyView.setText(R.string.story_loading);
@@ -117,5 +158,62 @@ public class StoryFragment extends Fragment {
         if (state.getAttractionId() != null) {
             heroView.setImageResource(AttractionArtwork.heroDrawableFor(state.getAttractionId()));
         }
+    }
+
+    private void renderSpeechState(StorySpeechController.State state) {
+        if (voiceToggle == null) {
+            return;
+        }
+        int toggleLabel;
+        int statusLabel;
+        boolean enabled = hasSpeakableStory;
+        switch (state) {
+            case INITIALIZING:
+                toggleLabel = R.string.story_voice_listen;
+                statusLabel = R.string.story_voice_preparing;
+                enabled = false;
+                break;
+            case PLAYING:
+                toggleLabel = R.string.story_voice_pause;
+                statusLabel = R.string.story_voice_playing;
+                break;
+            case PAUSED:
+                toggleLabel = R.string.story_voice_continue;
+                statusLabel = R.string.story_voice_paused;
+                break;
+            case UNAVAILABLE:
+                toggleLabel = R.string.story_voice_listen;
+                statusLabel = R.string.story_voice_unavailable;
+                enabled = false;
+                break;
+            case READY:
+            default:
+                toggleLabel = R.string.story_voice_listen;
+                statusLabel = R.string.story_voice_ready;
+                break;
+        }
+        voiceToggle.setText(toggleLabel);
+        voiceToggle.setEnabled(enabled);
+        voiceStatus.setText(statusLabel);
+    }
+
+    @Override
+    public void onStop() {
+        if (speechController != null) {
+            speechController.pause();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (speechController != null) {
+            speechController.shutdown();
+            speechController = null;
+        }
+        voiceToggle = null;
+        voiceStatus = null;
+        voiceControls = null;
+        super.onDestroyView();
     }
 }
