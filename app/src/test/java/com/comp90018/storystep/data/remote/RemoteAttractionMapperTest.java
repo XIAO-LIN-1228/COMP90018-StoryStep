@@ -330,6 +330,29 @@ public class RemoteAttractionMapperTest {
     }
 
     @Test
+    public void aSharedSourceIdentityDeduplicatesDifferentLocalizedNames() {
+        RemoteAttractionMapper.Mapped mapped = RemoteAttractionMapper.toDomain(response(Arrays.asList(
+                node(1L, -37.80320, 144.97170,
+                        tags("name", "Museum", "wikidata", "Q123")),
+                way(2L, -37.80325, 144.97175,
+                        tags("name", "Museo", "wikidata", "Q123")))));
+
+        assertEquals(1, mapped.getAttractions().size());
+        assertEquals("osm:way/2", mapped.getAttractions().get(0).getId());
+    }
+
+    @Test
+    public void differentSourceIdentitiesAreNotMergedByIdentityAlone() {
+        RemoteAttractionMapper.Mapped mapped = RemoteAttractionMapper.toDomain(response(Arrays.asList(
+                node(1L, -37.8000, 144.9600,
+                        tags("name", "First", "wikidata", "Q1")),
+                node(2L, -37.8001, 144.9601,
+                        tags("name", "Second", "wikidata", "Q2")))));
+
+        assertEquals(2, mapped.getAttractions().size());
+    }
+
+    @Test
     public void twoDistinctPlacesSharingANameAreBothKept() {
         // Same name, different suburbs: "Memorial Park" is not rare, and merging them would hide
         // one of two real places.

@@ -345,9 +345,11 @@ public final class RemoteAttractionMapper {
      *
      * <p>Two passes, because there are two ways a duplicate arrives. The same qualified id twice is
      * a plain repeat. The harder case is one landmark mapped as both a node and a building way:
-     * different ids, same name, a few metres apart. Those are matched by name and proximity, and
-     * the way or relation is preferred over the node — an area is the better record, and its
-     * centre is a more honest coordinate than a marker someone dropped near a door.
+     * different ids, same source identity or the same name a few metres apart. A shared Wikidata
+     * or Wikipedia reference is explicit provider evidence even when localized names differ.
+     * Otherwise records are matched by name and proximity. The way or relation is preferred over
+     * the node — an area is the better record, and its centre is a more honest coordinate than a
+     * marker someone dropped near a door.
      *
      * <p>Insertion order is otherwise preserved; the repository sorts by distance afterwards.
      */
@@ -372,6 +374,10 @@ public final class RemoteAttractionMapper {
     private static int indexOfSamePlace(List<Attraction> kept, Attraction candidate) {
         for (int index = 0; index < kept.size(); index++) {
             Attraction other = kept.get(index);
+            if (other.getSourceRef() != null
+                    && other.getSourceRef().equals(candidate.getSourceRef())) {
+                return index;
+            }
             if (!other.getName().equalsIgnoreCase(candidate.getName())) {
                 continue;
             }
