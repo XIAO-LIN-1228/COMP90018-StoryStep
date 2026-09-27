@@ -18,6 +18,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.IndoorClassification;
+import com.comp90018.storystep.domain.opening.OpeningHoursEvaluator;
+import com.comp90018.storystep.domain.opening.OpeningStatus;
 import com.comp90018.storystep.ui.AttributionText;
 import com.comp90018.storystep.ui.CategoryLabels;
 import com.comp90018.storystep.ui.AttractionArtwork;
@@ -25,6 +27,8 @@ import com.comp90018.storystep.ui.TouchTargets;
 import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+import java.time.ZonedDateTime;
 
 /**
  * Details of one attraction. The identifier arrives as a plain Bundle argument; Safe Args is
@@ -184,8 +188,14 @@ public class AttractionDetailFragment extends Fragment {
         android.widget.LinearLayout rows = requireView().findViewById(R.id.detail_facts);
         rows.removeAllViews();
 
+        ZonedDateTime now = ZonedDateTime.now();
+        OpeningStatus openingStatus = OpeningHoursEvaluator.evaluate(facts.getOpeningHours(),
+                now.getDayOfWeek(), now.getHour() * 60 + now.getMinute());
         addFact(rows, R.drawable.ic_clock, R.string.detail_hours_label,
-                OpeningHoursText.format(facts.getOpeningHours()), null);
+                OpeningHoursText.formatWithStatus(facts.getOpeningHours(), openingStatus,
+                        getString(R.string.detail_open_now),
+                        getString(R.string.detail_closed_now),
+                        getString(R.string.detail_hours_uncertain)), null);
         Integer access = OpeningHoursText.accessLabel(facts.getWheelchair());
         addFact(rows, R.drawable.ic_access, R.string.detail_access_label,
                 access == null ? null : getString(access), null);

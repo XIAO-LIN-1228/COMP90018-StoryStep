@@ -1,6 +1,8 @@
 package com.comp90018.storystep.ui.nearby;
 
-import java.util.Calendar;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -688,12 +690,14 @@ public class NearbyAttractionsViewModel extends ViewModel
                 candidates.add(attraction);
             }
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(clock.wallClockMillis());
+        long nowMillis = clock.wallClockMillis();
+        ZonedDateTime localNow = Instant.ofEpochMilli(nowMillis)
+                .atZone(ZoneId.systemDefault());
         List<RecommendationEngine.RankedAttraction> ranked = recommendations.rank(
                 candidates, currentOrigin, radiusMeters,
                 RecommendationEngine.usableWeather(recommendationWeather, currentOrigin,
-                        clock.wallClockMillis()), calendar.get(Calendar.HOUR_OF_DAY),
+                        nowMillis), localNow.getHour(), localNow.getDayOfWeek(),
+                localNow.getHour() * 60 + localNow.getMinute(),
                 savedKnown ? savedIds : null, visitedKnown ? visitedIds : null,
                 ordering.getValue(), TOP_PLACES);
         List<AttractionListItem> items = new ArrayList<>();

@@ -1,5 +1,7 @@
 package com.comp90018.storystep.ui.detail;
 
+import com.comp90018.storystep.domain.opening.OpeningStatus;
+
 import java.util.Locale;
 
 /**
@@ -10,8 +12,8 @@ import java.util.Locale;
  * recognise is shown as it was tagged, because a half-understood rule shown as a confident
  * sentence would be worse than the original.
  *
- * <p>Deliberately no "open now": deciding that needs the whole grammar, and being told a place
- * is open when it is shut is the kind of wrong answer a walker would act on.
+ * <p>Current status is supplied by the conservative domain evaluator. The original readable rule
+ * is always retained so a visitor can see what the source recorded.
  */
 public final class OpeningHoursText {
 
@@ -53,6 +55,28 @@ public final class OpeningHoursText {
             out.append(line);
         }
         return out.length() == 0 ? null : out.toString();
+    }
+
+    /** Adds the explicit current-status result without replacing the source's recorded hours. */
+    public static String formatWithStatus(String openingHours, OpeningStatus status,
+            String open, String closed, String uncertain) {
+        String hours = format(openingHours);
+        if (hours == null) {
+            return null;
+        }
+        String label;
+        switch (status == null ? OpeningStatus.UNKNOWN : status) {
+            case OPEN:
+                label = open;
+                break;
+            case CLOSED:
+                label = closed;
+                break;
+            default:
+                label = uncertain;
+                break;
+        }
+        return label + "\n" + hours;
     }
 
     /** "Step-free access", "Partly step-free", "No step-free access", or null when unrecorded. */

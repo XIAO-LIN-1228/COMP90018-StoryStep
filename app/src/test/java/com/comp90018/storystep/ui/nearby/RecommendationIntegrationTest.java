@@ -202,6 +202,24 @@ public class RecommendationIntegrationTest {
         assertEquals(1, places.requests);
     }
 
+    @Test public void localOpeningStatusReordersRecommendedButNotNearby() {
+        places.data = Arrays.asList(
+                Attraction.seeded("closed", "Closed", AttractionCategory.MUSEUM, "",
+                        IndoorClassification.UNKNOWN, ORIGIN).withFacts(
+                                new PlaceFacts("Su 09:00-11:00", null, null, null, null)),
+                Attraction.seeded("open", "Open", AttractionCategory.MUSEUM, "",
+                        IndoorClassification.UNKNOWN, ORIGIN).withFacts(
+                                new PlaceFacts("Su 11:00-13:00", null, null, null, null)));
+        NearbyAttractionsViewModel model = model();
+        assertEquals("open", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons()
+                .contains(Reason.OPEN_NOW));
+        model.setOrdering(Mode.NEARBY);
+        assertEquals("closed", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons().isEmpty());
+        assertEquals(1, places.requests);
+    }
+
     @Test public void cachedAttractionLabelsSurviveContextChangesAndPermissionRecovery() {
         places.freshness = com.comp90018.storystep.domain.attraction.AttractionFreshness.STALE;
         NearbyAttractionsViewModel model = model();

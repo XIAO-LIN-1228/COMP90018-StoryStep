@@ -6,7 +6,7 @@ import com.comp90018.storystep.domain.recommendation.RecommendationEngine.Reason
 import java.util.ArrayList;
 import java.util.List;
 
-/** Localized explanations of the positive components actually used in the score. */
+/** Localized explanations of the components actually used in the score. */
 public final class RecommendationText {
     private RecommendationText() { }
 
@@ -23,6 +23,8 @@ public final class RecommendationText {
                 case INDOOR_EVENING: labels.add(resources.getString(R.string.recommendation_evening)); break;
                 case SAVED: labels.add(resources.getString(R.string.recommendation_saved)); break;
                 case UNVISITED: labels.add(resources.getString(R.string.recommendation_unvisited)); break;
+                case OPEN_NOW: labels.add(resources.getString(R.string.recommendation_open)); break;
+                case CLOSED_NOW: labels.add(resources.getString(R.string.recommendation_closed)); break;
             }
         }
         return String.join(" · ", labels);
