@@ -1,5 +1,11 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
+2026-09-27 opening-status extension on `feature/opening-status`:
+[automated evidence](verification/EV-OPENING-STATUS-2026-09-27.md). Common fully parsed schedules
+now produce an explicit detail status and a bounded recommendation adjustment; complex or partial
+rules remain unknown. JVM tests and APK/Lint builds pass. Device, TalkBack and 200% font checks
+remain NOT_RUN.
+
 2026-09-21 theme extension: [plan and test matrix](theme-exploration-plan.md),
 [actual execution evidence](verification/EV-THEME-EXPLORATION-2026-09-21.md). This adds a
 versioned three-stop theme, transactional creation, arrival-derived progress, skip/undo, optional
@@ -23,7 +29,7 @@ fallback, the D-06 retention half of NFR-04.4 and the code-side accessibility wo
 rows that claimed REQ-20.2 retry/backoff and backup exclusion were open when the code had them.
 No device, emulator or TalkBack run: every AT-xxB row and NFR-05 remain NOT_RUN.
 
-Prepared: 2026-08-31. Last updated: 2026-09-20 (pre-release gap round). Requirements: [development plan](development_plan.md).
+Prepared: 2026-08-31. Last updated: 2026-09-27 (opening-status extension). Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
