@@ -2,7 +2,9 @@ package com.comp90018.storystep.domain.recommendation;
 
 import static org.junit.Assert.*;
 import com.comp90018.storystep.domain.model.*;
+import com.comp90018.storystep.domain.opening.OpeningStatus;
 import com.comp90018.storystep.domain.weather.*;
+import java.time.DayOfWeek;
 import java.util.*;
 import org.junit.Test;
 
@@ -55,6 +57,41 @@ public class RecommendationEngineTest {
                 }
             }
         }
+    }
+
+    @Test public void reliableOpeningStatusHasSmallBoundedEffectAndExplicitReason() {
+        double unknown = engine.score(100, 1000, IndoorClassification.UNKNOWN, null,
+                null, false, true, OpeningStatus.UNKNOWN).total;
+        RecommendationEngine.Score open = engine.score(100, 1000,
+                IndoorClassification.UNKNOWN, null, null, false, true, OpeningStatus.OPEN);
+        RecommendationEngine.Score closed = engine.score(100, 1000,
+                IndoorClassification.UNKNOWN, null, null, false, true, OpeningStatus.CLOSED);
+        assertEquals(unknown + RecommendationEngine.OPENING_ADJUSTMENT, open.total, 1e-9);
+        assertEquals(unknown - RecommendationEngine.OPENING_ADJUSTMENT, closed.total, 1e-9);
+        assertTrue(open.reasons.contains(RecommendationEngine.Reason.OPEN_NOW));
+        assertTrue(closed.reasons.contains(RecommendationEngine.Reason.CLOSED_NOW));
+        assertEquals(1, engine.score(0, 1000, IndoorClassification.INDOOR,
+                WeatherCondition.RAIN, 20, true, false, OpeningStatus.OPEN).total, 0);
+    }
+
+    @Test public void recommendedUsesOpeningStatusButNearbyRemainsDistanceOnly() {
+        Attraction closed = place("a-closed", IndoorClassification.UNKNOWN, ORIGIN)
+                .withFacts(new PlaceFacts("Su 09:00-11:00", null, null, null, null));
+        Attraction unknown = place("b-unknown", IndoorClassification.UNKNOWN, ORIGIN)
+                .withFacts(new PlaceFacts("PH off", null, null, null, null));
+        Attraction open = place("c-open", IndoorClassification.UNKNOWN, ORIGIN)
+                .withFacts(new PlaceFacts("Su 11:00-13:00", null, null, null, null));
+        List<Attraction> candidates = Arrays.asList(closed, unknown, open);
+        List<RecommendationEngine.RankedAttraction> recommended = engine.rank(candidates,
+                ORIGIN, 1000, null, 12, DayOfWeek.SUNDAY, 12 * 60,
+                null, null, RecommendationEngine.Mode.RECOMMENDED, 30);
+        assertEquals("c-open", recommended.get(0).attraction.getId());
+        assertEquals("b-unknown", recommended.get(1).attraction.getId());
+        assertEquals("a-closed", recommended.get(2).attraction.getId());
+        List<RecommendationEngine.RankedAttraction> nearby = engine.rank(candidates,
+                ORIGIN, 1000, null, 12, DayOfWeek.SUNDAY, 12 * 60,
+                null, null, RecommendationEngine.Mode.NEARBY, 30);
+        assertEquals("a-closed", nearby.get(0).attraction.getId());
     }
 
     @Test public void timeBoundariesArePreferencesNotOpeningClaims() {

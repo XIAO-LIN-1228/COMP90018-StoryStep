@@ -6,12 +6,15 @@ import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.IndoorClassification;
 import com.comp90018.storystep.domain.model.WeatherCondition;
 import com.comp90018.storystep.domain.model.WeatherSnapshot;
+import com.comp90018.storystep.domain.opening.OpeningHoursEvaluator;
+import com.comp90018.storystep.domain.opening.OpeningStatus;
 import com.comp90018.storystep.domain.weather.WeatherAreaBucket;
 import com.comp90018.storystep.domain.weather.WeatherFreshness;
 import com.comp90018.storystep.domain.weather.WeatherFreshnessPolicy;
 import com.comp90018.storystep.domain.weather.WeatherResult;
 
 import java.util.ArrayList;
+import java.time.DayOfWeek;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -20,13 +23,17 @@ import java.util.Set;
 /** Deterministic REQ-21 policy. These initial weights are a testable baseline, not field tuning. */
 public final class RecommendationEngine {
     public enum Mode { RECOMMENDED, NEARBY }
-    public enum Reason { DISTANCE, INDOOR_WET, OUTDOOR_DAY, INDOOR_EVENING, SAVED, UNVISITED }
+    public enum Reason {
+        DISTANCE, INDOOR_WET, OUTDOOR_DAY, INDOOR_EVENING, SAVED, UNVISITED,
+        OPEN_NOW, CLOSED_NOW
+    }
 
     public static final double DISTANCE_WEIGHT = 0.45;
     public static final double WEATHER_WEIGHT = 0.25;
     public static final double TIME_WEIGHT = 0.10;
     public static final double SAVED_WEIGHT = 0.10;
     public static final double UNVISITED_WEIGHT = 0.10;
+    public static final double OPENING_ADJUSTMENT = 0.05;
     private static final double NEUTRAL = 0.5;
 
     public static final class Score {
@@ -55,6 +62,15 @@ public final class RecommendationEngine {
     public List<RankedAttraction> rank(List<Attraction> candidates, GeoPoint origin,
             double radiusMeters, WeatherCondition weather, Integer localHour,
             Set<String> saved, Set<String> visited, Mode mode, int limit) {
+        return rank(candidates, origin, radiusMeters, weather, localHour, null, null,
+                saved, visited, mode, limit);
+    }
+
+    /** Rank with a complete local moment so recorded opening hours can be evaluated. */
+    public List<RankedAttraction> rank(List<Attraction> candidates, GeoPoint origin,
+            double radiusMeters, WeatherCondition weather, Integer localHour,
+            DayOfWeek localDay, Integer localMinute,
+            Set<String> saved, Set<String> visited, Mode mode, int limit) {
         List<RankedAttraction> ranked = new ArrayList<>();
         if (candidates == null || origin == null || limit <= 0) {
             return ranked;
@@ -64,9 +80,13 @@ public final class RecommendationEngine {
                 continue;
             }
             double distance = GeoCalculator.distanceMeters(origin, attraction.getLocation());
+            OpeningStatus opening = localMinute == null
+                    ? OpeningStatus.UNKNOWN
+                    : OpeningHoursEvaluator.evaluate(attraction.getFacts().getOpeningHours(),
+                            localDay, localMinute);
             Score score = score(distance, radiusMeters, attraction.getIndoor(), weather, localHour,
                     saved == null ? null : saved.contains(attraction.getId()),
-                    visited == null ? null : visited.contains(attraction.getId()));
+                    visited == null ? null : visited.contains(attraction.getId()), opening);
             if (score != null) {
                 ranked.add(new RankedAttraction(attraction, distance, score));
             }
@@ -83,6 +103,14 @@ public final class RecommendationEngine {
     /** Invalid/out-of-radius distance is excluded, never assigned a misleading finite score. */
     public Score score(double distance, double radius, IndoorClassification indoor,
             WeatherCondition weather, Integer hour, Boolean saved, Boolean visited) {
+        return score(distance, radius, indoor, weather, hour, saved, visited,
+                OpeningStatus.UNKNOWN);
+    }
+
+    /** Base recommendation score with a bounded adjustment for reliable opening status. */
+    public Score score(double distance, double radius, IndoorClassification indoor,
+            WeatherCondition weather, Integer hour, Boolean saved, Boolean visited,
+            OpeningStatus opening) {
         if (!Double.isFinite(distance) || distance < 0 || !Double.isFinite(radius)
                 || radius <= 0 || distance > radius) {
             return null;
@@ -115,11 +143,20 @@ public final class RecommendationEngine {
         if (Boolean.FALSE.equals(visited)) {
             reasons.add(Reason.UNVISITED);
         }
+        double openingAdjustment = 0;
+        if (opening == OpeningStatus.OPEN) {
+            openingAdjustment = OPENING_ADJUSTMENT;
+            reasons.add(Reason.OPEN_NOW);
+        } else if (opening == OpeningStatus.CLOSED) {
+            openingAdjustment = -OPENING_ADJUSTMENT;
+            reasons.add(Reason.CLOSED_NOW);
+        }
         double savedScore = saved == null ? NEUTRAL : saved ? 1 : 0;
         double unvisitedScore = visited == null ? NEUTRAL : visited ? 0 : 1;
-        return new Score(DISTANCE_WEIGHT * distanceScore + WEATHER_WEIGHT * weatherScore
+        double total = DISTANCE_WEIGHT * distanceScore + WEATHER_WEIGHT * weatherScore
                 + TIME_WEIGHT * timeScore + SAVED_WEIGHT * savedScore
-                + UNVISITED_WEIGHT * unvisitedScore, reasons);
+                + UNVISITED_WEIGHT * unvisitedScore + openingAdjustment;
+        return new Score(Math.max(0, Math.min(1, total)), reasons);
     }
 
     /** Re-evaluated as time passes; old-area, stale, unknown and future data are neutral. */
