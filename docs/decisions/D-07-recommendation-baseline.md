@@ -15,6 +15,9 @@ an initial product policy, not evidence of recommendation quality or physical-de
 - A fully parsed current opening status applies a bounded post-score adjustment: open +0.05,
   closed -0.05, and unknown 0. The result remains clamped to 0–1. Closed places are demoted,
   never hidden. The initial weighted baseline above is otherwise unchanged.
+- Wikidata sitelink count is a bounded recognition proxy, not a rating or live visitor count.
+  Zero is unavailable and neutral. Positive counts use `log1p(min(count, 100)) / log1p(100)`
+  multiplied by 0.05, so extreme global recognition cannot dominate local walking context.
 - The opening-hours evaluator intentionally supports only `24/7`, weekday lists/ranges, simple
   time ranges, split hours, `24:00` endings and overnight ranges. Missing, malformed, holiday,
   seasonal, conditional or partly understood rules are unknown rather than assumed closed.
@@ -23,7 +26,7 @@ an initial product policy, not evidence of recommendation quality or physical-de
   always neutral. This conservative observation-age check avoids scoring with old provider data.
 - Score ties break by distance, then stable attraction ID. Nearby mode uses distance then ID.
 - Search/venue/unvisited filters apply to the entire loaded candidate set before ranking.
-  The top 30 limit applies after ranking; Wikidata popularity is not a scoring component.
+  The top 30 limit applies after ranking. Nearby mode remains distance-only.
 - Positive reason codes come from the same calculation as the score; missing context never
   generates a positive weather, saved or unvisited claim.
 - Opening and closed reason codes come from the same conservative status evaluation. Nearby mode

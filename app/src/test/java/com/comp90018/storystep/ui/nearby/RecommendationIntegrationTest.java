@@ -220,6 +220,22 @@ public class RecommendationIntegrationTest {
         assertEquals(1, places.requests);
     }
 
+    @Test public void wikidataPopularityReordersRecommendedButNotNearby() {
+        places.data = Arrays.asList(
+                Attraction.seeded("known", "Known", AttractionCategory.MUSEUM, "",
+                        IndoorClassification.UNKNOWN, ORIGIN),
+                Attraction.seeded("popular", "Popular", AttractionCategory.MUSEUM, "",
+                        IndoorClassification.UNKNOWN, ORIGIN).withWikidata(null, 100));
+        NearbyAttractionsViewModel model = model();
+        assertEquals("popular", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons()
+                .contains(Reason.POPULAR));
+        model.setOrdering(Mode.NEARBY);
+        assertEquals("known", first(model));
+        assertTrue(model.getUiState().getValue().getItems().get(0).getReasons().isEmpty());
+        assertEquals(1, places.requests);
+    }
+
     @Test public void cachedAttractionLabelsSurviveContextChangesAndPermissionRecovery() {
         places.freshness = com.comp90018.storystep.domain.attraction.AttractionFreshness.STALE;
         NearbyAttractionsViewModel model = model();
