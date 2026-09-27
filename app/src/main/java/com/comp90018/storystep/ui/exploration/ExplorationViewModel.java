@@ -51,6 +51,7 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     private GuidanceSnapshot guidance = GuidanceSnapshot.unavailable();
     private Visit pendingStory;
     private boolean visitSaveFailed;
+    private final ArrivalFeedbackGate arrivalFeedbackGate = new ArrivalFeedbackGate();
 
     public ExplorationViewModel(ExplorationCoordinator coordinator) {
         this(coordinator, new HandlerTicker());
@@ -69,6 +70,17 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
 
     public LiveData<ExplorationUiState> getUiState() {
         return uiState;
+    }
+
+    /**
+     * Claims the transient arrival cue for the current persisted visit.
+     *
+     * <p>The gate lives in the ViewModel so view recreation cannot vibrate again for a banner the
+     * user has already seen. The durable visit remains the source of truth for the story itself.
+     */
+    public boolean claimArrivalFeedback() {
+        return pendingStory != null && arrivalFeedbackGate.claim(
+                pendingStory.getSessionId(), pendingStory.getAttractionId());
     }
 
     // --- user commands -----------------------------------------------------------------------
