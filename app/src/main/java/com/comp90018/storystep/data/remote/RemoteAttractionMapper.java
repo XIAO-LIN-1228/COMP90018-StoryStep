@@ -262,7 +262,8 @@ public final class RemoteAttractionMapper {
                     ? AttractionCategory.PUBLIC_ART
                     : AttractionCategory.HISTORICAL_BUILDING;
         }
-        if ("park".equals(leisure) || "garden".equals(leisure) || "viewpoint".equals(tourism)) {
+        if ("park".equals(leisure) || "garden".equals(leisure)
+                || "nature_reserve".equals(leisure) || "viewpoint".equals(tourism)) {
             return AttractionCategory.PARK;
         }
         return AttractionCategory.CULTURAL_SITE;
@@ -284,14 +285,18 @@ public final class RemoteAttractionMapper {
         String building = tag(tags, "building");
 
         if ("park".equals(leisure) || "garden".equals(leisure)
+                || "nature_reserve".equals(leisure)
                 || "viewpoint".equals(tourism) || "artwork".equals(tourism)
+                || "zoo".equals(tourism) || "theme_park".equals(tourism)
                 || "memorial".equals(historic) || "monument".equals(historic)
                 || "no".equals(indoorTag)) {
             return IndoorClassification.OUTDOOR;
         }
         if ("yes".equals(indoorTag)
                 || "museum".equals(tourism) || "gallery".equals(tourism)
+                || "aquarium".equals(tourism)
                 || "theatre".equals(amenity) || "arts_centre".equals(amenity)
+                || "library".equals(amenity) || "music_venue".equals(amenity)
                 || "restaurant".equals(amenity) || "cafe".equals(amenity)
                 || "bar".equals(amenity) || "pub".equals(amenity)
                 || "food_court".equals(amenity) || tag(tags, "shop") != null

@@ -158,6 +158,22 @@ public class RemoteAttractionMapperTest {
     }
 
     @Test
+    public void additionalVerifiedTypesUseExistingHonestCategories() {
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "aquarium")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "zoo")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "theme_park")));
+        assertEquals(AttractionCategory.PARK,
+                categoryOf(tags("name", "A", "leisure", "nature_reserve")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "amenity", "library")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "amenity", "music_venue")));
+    }
+
+    @Test
     public void theHistoricReadingWinsOverTheGenericAttractionOne() {
         assertEquals(AttractionCategory.HISTORICAL_BUILDING,
                 categoryOf(tags("name", "Royal Exhibition Building",
@@ -185,6 +201,14 @@ public class RemoteAttractionMapperTest {
                 indoorOf(tags("name", "A", "leisure", "park")));
         assertEquals(IndoorClassification.OUTDOOR,
                 indoorOf(tags("name", "A", "historic", "memorial")));
+        assertEquals(IndoorClassification.OUTDOOR,
+                indoorOf(tags("name", "A", "tourism", "zoo")));
+        assertEquals(IndoorClassification.OUTDOOR,
+                indoorOf(tags("name", "A", "leisure", "nature_reserve")));
+        assertEquals(IndoorClassification.INDOOR,
+                indoorOf(tags("name", "A", "tourism", "aquarium")));
+        assertEquals(IndoorClassification.INDOOR,
+                indoorOf(tags("name", "A", "amenity", "library")));
     }
 
     @Test

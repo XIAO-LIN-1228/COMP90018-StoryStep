@@ -19,7 +19,7 @@ import java.util.Objects;
  * <pre>
  * [out:json][timeout:25];
  * (
- *   nwr["tourism"~"^(museum|gallery|artwork|attraction|viewpoint)$"](around:3800,-37.7950,144.9650);
+ *   nwr["tourism"~"^(museum|gallery|artwork|attraction|viewpoint|aquarium|zoo|theme_park)$"](around:3800,-37.7950,144.9650);
  *   nwr["historic"](around:3800,-37.7950,144.9650);
  *   ...
  * );
@@ -76,10 +76,10 @@ public final class OverpassQueryBuilder {
         StringBuilder query = new StringBuilder(768);
         query.append("[out:json][timeout:").append(SERVER_TIMEOUT_SECONDS).append("];\n");
         query.append("(\n");
-        appendClause(query, "\"tourism\"~\"^(museum|gallery|artwork|attraction|viewpoint)$\"", around);
+        appendClause(query, "\"tourism\"~\"^(museum|gallery|artwork|attraction|viewpoint|aquarium|zoo|theme_park)$\"", around);
         appendClause(query, "\"historic\"", around);
-        appendClause(query, "\"leisure\"~\"^(park|garden)$\"", around);
-        appendClause(query, "\"amenity\"~\"^(theatre|arts_centre)$\"", around);
+        appendClause(query, "\"leisure\"~\"^(park|garden|nature_reserve)$\"", around);
+        appendClause(query, "\"amenity\"~\"^(theatre|arts_centre|library|music_venue)$\"", around);
         query.append(");\n");
         query.append("out center ").append(limit).append(";\n");
         // Food, drink and shopping, named: the map's chips show them by kind. Named only,
