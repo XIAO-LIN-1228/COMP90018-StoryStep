@@ -115,6 +115,24 @@ public class RemoteAttractionMapperTest {
                 node(1L, -37.8, 144.9, tags("name", "   "))));
     }
 
+    @Test
+    public void providerSuppliedAlternativeNamesKeepARealPlaceDiscoverable() {
+        assertEquals("English name", RemoteAttractionMapper.toDomain(
+                node(1L, -37.8, 144.9, tags("name:en", "English name"))).getName());
+        assertEquals("Official name", RemoteAttractionMapper.toDomain(
+                node(2L, -37.8, 144.9, tags("official_name", "Official name"))).getName());
+        assertEquals("Short name", RemoteAttractionMapper.toDomain(
+                node(3L, -37.8, 144.9, tags("short_name", "Short name"))).getName());
+    }
+
+    @Test
+    public void primaryNameWinsOverEveryFallback() {
+        Attraction attraction = RemoteAttractionMapper.toDomain(node(1L, -37.8, 144.9,
+                tags("name", "Primary", "name:en", "English", "official_name", "Official",
+                        "short_name", "Short")));
+        assertEquals("Primary", attraction.getName());
+    }
+
     // --- category ------------------------------------------------------------------------------
 
     @Test

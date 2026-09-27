@@ -116,7 +116,7 @@ public final class RemoteAttractionMapper {
         if (id == null) {
             return null;
         }
-        String name = trimmedTag(element.tags, "name");
+        String name = displayName(element.tags);
         if (name == null) {
             return null;
         }
@@ -136,6 +136,27 @@ public final class RemoteAttractionMapper {
                 OsmImageUrls.fromTags(element.tags),
                 0,
                 facts(element.tags));
+    }
+
+    /**
+     * A trustworthy label the provider actually supplied.
+     *
+     * <p>OSM normally uses {@code name}, but some real records carry only an English, official or
+     * short name. Keeping those improves coverage without inventing a destination label. A record
+     * with none of these still cannot be presented safely and is rejected.
+     */
+    @Nullable
+    private static String displayName(Map<String, String> tags) {
+        String name = trimmedTag(tags, "name");
+        if (name != null) {
+            return name;
+        }
+        String english = trimmedTag(tags, "name:en");
+        if (english != null) {
+            return english;
+        }
+        String official = trimmedTag(tags, "official_name");
+        return official != null ? official : trimmedTag(tags, "short_name");
     }
 
     /**
