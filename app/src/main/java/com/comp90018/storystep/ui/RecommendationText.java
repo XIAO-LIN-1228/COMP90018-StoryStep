@@ -25,6 +25,7 @@ public final class RecommendationText {
                 case UNVISITED: labels.add(resources.getString(R.string.recommendation_unvisited)); break;
                 case OPEN_NOW: labels.add(resources.getString(R.string.recommendation_open)); break;
                 case CLOSED_NOW: labels.add(resources.getString(R.string.recommendation_closed)); break;
+                case POPULAR: labels.add(resources.getString(R.string.recommendation_popular)); break;
             }
         }
         return String.join(" · ", labels);

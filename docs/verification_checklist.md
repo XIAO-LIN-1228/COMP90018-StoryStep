@@ -1,5 +1,11 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
+2026-09-27 popularity-ranking extension on `feature/popularity-ranking`:
+[automated evidence](verification/EV-POPULARITY-RANKING-2026-09-27.md). Existing Wikidata
+sitelink counts now provide a logarithmic recommendation adjustment capped at +0.05; missing data
+is neutral and Nearby remains distance-only. JVM tests and APK/Lint builds pass. Manual UI and
+accessibility checks remain NOT_RUN.
+
 2026-09-27 opening-status extension on `feature/opening-status`:
 [automated evidence](verification/EV-OPENING-STATUS-2026-09-27.md). Common fully parsed schedules
 now produce an explicit detail status and a bounded recommendation adjustment; complex or partial
