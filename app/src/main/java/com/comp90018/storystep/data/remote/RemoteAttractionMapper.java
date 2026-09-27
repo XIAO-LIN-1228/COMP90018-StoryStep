@@ -116,7 +116,7 @@ public final class RemoteAttractionMapper {
         if (id == null) {
             return null;
         }
-        String name = trimmedTag(element.tags, "name");
+        String name = displayName(element.tags);
         if (name == null) {
             return null;
         }
@@ -136,6 +136,27 @@ public final class RemoteAttractionMapper {
                 OsmImageUrls.fromTags(element.tags),
                 0,
                 facts(element.tags));
+    }
+
+    /**
+     * A trustworthy label the provider actually supplied.
+     *
+     * <p>OSM normally uses {@code name}, but some real records carry only an English, official or
+     * short name. Keeping those improves coverage without inventing a destination label. A record
+     * with none of these still cannot be presented safely and is rejected.
+     */
+    @Nullable
+    private static String displayName(Map<String, String> tags) {
+        String name = trimmedTag(tags, "name");
+        if (name != null) {
+            return name;
+        }
+        String english = trimmedTag(tags, "name:en");
+        if (english != null) {
+            return english;
+        }
+        String official = trimmedTag(tags, "official_name");
+        return official != null ? official : trimmedTag(tags, "short_name");
     }
 
     /**
@@ -241,7 +262,8 @@ public final class RemoteAttractionMapper {
                     ? AttractionCategory.PUBLIC_ART
                     : AttractionCategory.HISTORICAL_BUILDING;
         }
-        if ("park".equals(leisure) || "garden".equals(leisure) || "viewpoint".equals(tourism)) {
+        if ("park".equals(leisure) || "garden".equals(leisure)
+                || "nature_reserve".equals(leisure) || "viewpoint".equals(tourism)) {
             return AttractionCategory.PARK;
         }
         return AttractionCategory.CULTURAL_SITE;
@@ -263,14 +285,18 @@ public final class RemoteAttractionMapper {
         String building = tag(tags, "building");
 
         if ("park".equals(leisure) || "garden".equals(leisure)
+                || "nature_reserve".equals(leisure)
                 || "viewpoint".equals(tourism) || "artwork".equals(tourism)
+                || "zoo".equals(tourism) || "theme_park".equals(tourism)
                 || "memorial".equals(historic) || "monument".equals(historic)
                 || "no".equals(indoorTag)) {
             return IndoorClassification.OUTDOOR;
         }
         if ("yes".equals(indoorTag)
                 || "museum".equals(tourism) || "gallery".equals(tourism)
+                || "aquarium".equals(tourism)
                 || "theatre".equals(amenity) || "arts_centre".equals(amenity)
+                || "library".equals(amenity) || "music_venue".equals(amenity)
                 || "restaurant".equals(amenity) || "cafe".equals(amenity)
                 || "bar".equals(amenity) || "pub".equals(amenity)
                 || "food_court".equals(amenity) || tag(tags, "shop") != null
@@ -319,9 +345,11 @@ public final class RemoteAttractionMapper {
      *
      * <p>Two passes, because there are two ways a duplicate arrives. The same qualified id twice is
      * a plain repeat. The harder case is one landmark mapped as both a node and a building way:
-     * different ids, same name, a few metres apart. Those are matched by name and proximity, and
-     * the way or relation is preferred over the node — an area is the better record, and its
-     * centre is a more honest coordinate than a marker someone dropped near a door.
+     * different ids, same source identity or the same name a few metres apart. A shared Wikidata
+     * or Wikipedia reference is explicit provider evidence even when localized names differ.
+     * Otherwise records are matched by name and proximity. The way or relation is preferred over
+     * the node — an area is the better record, and its centre is a more honest coordinate than a
+     * marker someone dropped near a door.
      *
      * <p>Insertion order is otherwise preserved; the repository sorts by distance afterwards.
      */
@@ -346,6 +374,10 @@ public final class RemoteAttractionMapper {
     private static int indexOfSamePlace(List<Attraction> kept, Attraction candidate) {
         for (int index = 0; index < kept.size(); index++) {
             Attraction other = kept.get(index);
+            if (other.getSourceRef() != null
+                    && other.getSourceRef().equals(candidate.getSourceRef())) {
+                return index;
+            }
             if (!other.getName().equalsIgnoreCase(candidate.getName())) {
                 continue;
             }

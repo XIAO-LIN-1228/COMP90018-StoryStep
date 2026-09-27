@@ -52,10 +52,10 @@ Request (POST, form-encoded body field `data`):
 ```
 [out:json][timeout:25];
 (
-  nwr["tourism"~"^(museum|gallery|artwork|attraction|viewpoint)$"](around:3800,-37.7950,144.9650);
+  nwr["tourism"~"^(museum|gallery|artwork|attraction|viewpoint|aquarium|zoo|theme_park)$"](around:3800,-37.7950,144.9650);
   nwr["historic"](around:3800,-37.7950,144.9650);
-  nwr["leisure"~"^(park|garden)$"](around:3800,-37.7950,144.9650);
-  nwr["amenity"~"^(theatre|arts_centre)$"](around:3800,-37.7950,144.9650);
+  nwr["leisure"~"^(park|garden|nature_reserve)$"](around:3800,-37.7950,144.9650);
+  nwr["amenity"~"^(theatre|arts_centre|library|music_venue)$"](around:3800,-37.7950,144.9650);
 );
 out center 60;
 ```
@@ -92,7 +92,8 @@ Mapping into the app-owned `Attraction`:
 | `id` | `"osm:" + type + "/" + id` — e.g. `osm:way/26621235` |
 | `name` | `tags.name`; a record without one is rejected |
 | `location` | `lat`/`lon`, falling back to `center` for ways and relations |
-| `category` | `tourism=museum\|gallery`→MUSEUM; `tourism=artwork`→PUBLIC_ART; `historic=*`→HISTORICAL_BUILDING; `leisure=park\|garden`, `tourism=viewpoint`→PARK; otherwise CULTURAL_SITE |
+| `name` | `name`, then the provider-supplied `name:en`, `official_name`, or `short_name`; reject only when all are absent |
+| `category` | `tourism=museum\|gallery`→MUSEUM; `tourism=artwork`→PUBLIC_ART; `historic=*`→HISTORICAL_BUILDING; `leisure=park\|garden\|nature_reserve`, `tourism=viewpoint`→PARK; otherwise CULTURAL_SITE |
 | `indoor` | `indoor=yes`, `building=yes`, museum/gallery/theatre→INDOOR; park/garden/viewpoint/memorial→OUTDOOR; otherwise UNKNOWN |
 | `description` | `tags.description`, else `tags.inscription`, else empty. No text is synthesised |
 | `provenance` | `OPENSTREETMAP` |

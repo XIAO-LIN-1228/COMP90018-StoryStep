@@ -115,6 +115,24 @@ public class RemoteAttractionMapperTest {
                 node(1L, -37.8, 144.9, tags("name", "   "))));
     }
 
+    @Test
+    public void providerSuppliedAlternativeNamesKeepARealPlaceDiscoverable() {
+        assertEquals("English name", RemoteAttractionMapper.toDomain(
+                node(1L, -37.8, 144.9, tags("name:en", "English name"))).getName());
+        assertEquals("Official name", RemoteAttractionMapper.toDomain(
+                node(2L, -37.8, 144.9, tags("official_name", "Official name"))).getName());
+        assertEquals("Short name", RemoteAttractionMapper.toDomain(
+                node(3L, -37.8, 144.9, tags("short_name", "Short name"))).getName());
+    }
+
+    @Test
+    public void primaryNameWinsOverEveryFallback() {
+        Attraction attraction = RemoteAttractionMapper.toDomain(node(1L, -37.8, 144.9,
+                tags("name", "Primary", "name:en", "English", "official_name", "Official",
+                        "short_name", "Short")));
+        assertEquals("Primary", attraction.getName());
+    }
+
     // --- category ------------------------------------------------------------------------------
 
     @Test
@@ -137,6 +155,22 @@ public class RemoteAttractionMapperTest {
     public void anUnrecognisedTaggingFallsBackInsteadOfFailing() {
         assertEquals(AttractionCategory.CULTURAL_SITE,
                 categoryOf(tags("name", "A", "amenity", "theatre")));
+    }
+
+    @Test
+    public void additionalVerifiedTypesUseExistingHonestCategories() {
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "aquarium")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "zoo")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "tourism", "theme_park")));
+        assertEquals(AttractionCategory.PARK,
+                categoryOf(tags("name", "A", "leisure", "nature_reserve")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "amenity", "library")));
+        assertEquals(AttractionCategory.CULTURAL_SITE,
+                categoryOf(tags("name", "A", "amenity", "music_venue")));
     }
 
     @Test
@@ -167,6 +201,14 @@ public class RemoteAttractionMapperTest {
                 indoorOf(tags("name", "A", "leisure", "park")));
         assertEquals(IndoorClassification.OUTDOOR,
                 indoorOf(tags("name", "A", "historic", "memorial")));
+        assertEquals(IndoorClassification.OUTDOOR,
+                indoorOf(tags("name", "A", "tourism", "zoo")));
+        assertEquals(IndoorClassification.OUTDOOR,
+                indoorOf(tags("name", "A", "leisure", "nature_reserve")));
+        assertEquals(IndoorClassification.INDOOR,
+                indoorOf(tags("name", "A", "tourism", "aquarium")));
+        assertEquals(IndoorClassification.INDOOR,
+                indoorOf(tags("name", "A", "amenity", "library")));
     }
 
     @Test
@@ -285,6 +327,29 @@ public class RemoteAttractionMapperTest {
         assertEquals(1, mapped.getAttractions().size());
         assertEquals("the area is the better record", "osm:way/2",
                 mapped.getAttractions().get(0).getId());
+    }
+
+    @Test
+    public void aSharedSourceIdentityDeduplicatesDifferentLocalizedNames() {
+        RemoteAttractionMapper.Mapped mapped = RemoteAttractionMapper.toDomain(response(Arrays.asList(
+                node(1L, -37.80320, 144.97170,
+                        tags("name", "Museum", "wikidata", "Q123")),
+                way(2L, -37.80325, 144.97175,
+                        tags("name", "Museo", "wikidata", "Q123")))));
+
+        assertEquals(1, mapped.getAttractions().size());
+        assertEquals("osm:way/2", mapped.getAttractions().get(0).getId());
+    }
+
+    @Test
+    public void differentSourceIdentitiesAreNotMergedByIdentityAlone() {
+        RemoteAttractionMapper.Mapped mapped = RemoteAttractionMapper.toDomain(response(Arrays.asList(
+                node(1L, -37.8000, 144.9600,
+                        tags("name", "First", "wikidata", "Q1")),
+                node(2L, -37.8001, 144.9601,
+                        tags("name", "Second", "wikidata", "Q2")))));
+
+        assertEquals(2, mapped.getAttractions().size());
     }
 
     @Test
