@@ -3,6 +3,8 @@ package com.comp90018.storystep.ui.detail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import com.comp90018.storystep.domain.opening.OpeningStatus;
+
 import org.junit.Test;
 
 public class OpeningHoursTextTest {
@@ -31,6 +33,22 @@ public class OpeningHoursTextTest {
         assertNull(OpeningHoursText.format(null));
         assertNull(OpeningHoursText.format("   "));
         assertNull(OpeningHoursText.format(";;"));
+    }
+
+    @Test
+    public void currentStatusPrecedesButNeverReplacesRecordedHours() {
+        assertEquals("Open now\nMon–Fri 09:00–17:00",
+                OpeningHoursText.formatWithStatus("Mo-Fr 09:00-17:00", OpeningStatus.OPEN,
+                        "Open now", "Closed now", "Current status uncertain"));
+        assertEquals("Closed now\nMon–Fri 09:00–17:00",
+                OpeningHoursText.formatWithStatus("Mo-Fr 09:00-17:00", OpeningStatus.CLOSED,
+                        "Open now", "Closed now", "Current status uncertain"));
+        assertEquals("Current status uncertain\nMon–Fri 09:00–17:00\nPublic holidays off",
+                OpeningHoursText.formatWithStatus("Mo-Fr 09:00-17:00; PH off",
+                        OpeningStatus.UNKNOWN, "Open now", "Closed now",
+                        "Current status uncertain"));
+        assertNull(OpeningHoursText.formatWithStatus(null, OpeningStatus.UNKNOWN,
+                "Open now", "Closed now", "Current status uncertain"));
     }
 
     @Test
