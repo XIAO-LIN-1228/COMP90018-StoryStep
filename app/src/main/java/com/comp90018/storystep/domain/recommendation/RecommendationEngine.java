@@ -25,7 +25,7 @@ public final class RecommendationEngine {
     public enum Mode { RECOMMENDED, NEARBY }
     public enum Reason {
         DISTANCE, INDOOR_WET, OUTDOOR_DAY, INDOOR_EVENING, SAVED, UNVISITED,
-        OPEN_NOW, CLOSED_NOW
+        OPEN_NOW, CLOSED_NOW, POPULAR
     }
 
     public static final double DISTANCE_WEIGHT = 0.45;
@@ -34,6 +34,8 @@ public final class RecommendationEngine {
     public static final double SAVED_WEIGHT = 0.10;
     public static final double UNVISITED_WEIGHT = 0.10;
     public static final double OPENING_ADJUSTMENT = 0.05;
+    public static final double POPULARITY_MAX_ADJUSTMENT = 0.05;
+    public static final int POPULARITY_REFERENCE_SITELINKS = 100;
     private static final double NEUTRAL = 0.5;
 
     public static final class Score {
@@ -86,7 +88,8 @@ public final class RecommendationEngine {
                             localDay, localMinute);
             Score score = score(distance, radiusMeters, attraction.getIndoor(), weather, localHour,
                     saved == null ? null : saved.contains(attraction.getId()),
-                    visited == null ? null : visited.contains(attraction.getId()), opening);
+                    visited == null ? null : visited.contains(attraction.getId()), opening,
+                    attraction.getPopularity());
             if (score != null) {
                 ranked.add(new RankedAttraction(attraction, distance, score));
             }
@@ -111,6 +114,13 @@ public final class RecommendationEngine {
     public Score score(double distance, double radius, IndoorClassification indoor,
             WeatherCondition weather, Integer hour, Boolean saved, Boolean visited,
             OpeningStatus opening) {
+        return score(distance, radius, indoor, weather, hour, saved, visited, opening, 0);
+    }
+
+    /** Adds a bounded, log-scaled recognition signal from Wikidata sitelink coverage. */
+    public Score score(double distance, double radius, IndoorClassification indoor,
+            WeatherCondition weather, Integer hour, Boolean saved, Boolean visited,
+            OpeningStatus opening, int popularity) {
         if (!Double.isFinite(distance) || distance < 0 || !Double.isFinite(radius)
                 || radius <= 0 || distance > radius) {
             return null;
@@ -151,12 +161,28 @@ public final class RecommendationEngine {
             openingAdjustment = -OPENING_ADJUSTMENT;
             reasons.add(Reason.CLOSED_NOW);
         }
+        double popularityAdjustment = popularityAdjustment(popularity);
+        if (popularityAdjustment > 0) {
+            reasons.add(Reason.POPULAR);
+        }
         double savedScore = saved == null ? NEUTRAL : saved ? 1 : 0;
         double unvisitedScore = visited == null ? NEUTRAL : visited ? 0 : 1;
         double total = DISTANCE_WEIGHT * distanceScore + WEATHER_WEIGHT * weatherScore
                 + TIME_WEIGHT * timeScore + SAVED_WEIGHT * savedScore
-                + UNVISITED_WEIGHT * unvisitedScore + openingAdjustment;
+                + UNVISITED_WEIGHT * unvisitedScore + openingAdjustment
+                + popularityAdjustment;
         return new Score(Math.max(0, Math.min(1, total)), reasons);
+    }
+
+    /** Zero means unavailable and remains neutral; extreme counts cannot dominate local context. */
+    public static double popularityAdjustment(int sitelinks) {
+        if (sitelinks <= 0) {
+            return 0;
+        }
+        int bounded = Math.min(sitelinks, POPULARITY_REFERENCE_SITELINKS);
+        double normalized = Math.log1p(bounded)
+                / Math.log1p(POPULARITY_REFERENCE_SITELINKS);
+        return POPULARITY_MAX_ADJUSTMENT * normalized;
     }
 
     /** Re-evaluated as time passes; old-area, stale, unknown and future data are neutral. */

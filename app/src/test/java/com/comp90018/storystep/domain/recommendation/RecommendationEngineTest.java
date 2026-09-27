@@ -74,6 +74,33 @@ public class RecommendationEngineTest {
                 WeatherCondition.RAIN, 20, true, false, OpeningStatus.OPEN).total, 0);
     }
 
+    @Test public void popularityIsNeutralWhenMissingAndLogScaledWhenKnown() {
+        double unknown = RecommendationEngine.popularityAdjustment(0);
+        double one = RecommendationEngine.popularityAdjustment(1);
+        double ten = RecommendationEngine.popularityAdjustment(10);
+        double hundred = RecommendationEngine.popularityAdjustment(100);
+        assertEquals(0, RecommendationEngine.popularityAdjustment(-1), 0);
+        assertEquals(0, unknown, 0);
+        assertTrue(one > unknown);
+        assertTrue(ten > one);
+        assertTrue(hundred > ten);
+        assertEquals(RecommendationEngine.POPULARITY_MAX_ADJUSTMENT, hundred, 1e-9);
+        assertEquals(hundred, RecommendationEngine.popularityAdjustment(10_000), 1e-9);
+    }
+
+    @Test public void popularityAddsOnlyItsBoundedAdjustmentAndReason() {
+        RecommendationEngine.Score unknown = engine.score(500, 1000,
+                IndoorClassification.UNKNOWN, WeatherCondition.UNKNOWN, null, null, null,
+                OpeningStatus.UNKNOWN, 0);
+        RecommendationEngine.Score popular = engine.score(500, 1000,
+                IndoorClassification.UNKNOWN, WeatherCondition.UNKNOWN, null, null, null,
+                OpeningStatus.UNKNOWN, 100);
+        assertEquals(unknown.total + RecommendationEngine.POPULARITY_MAX_ADJUSTMENT,
+                popular.total, 1e-9);
+        assertFalse(unknown.reasons.contains(RecommendationEngine.Reason.POPULAR));
+        assertTrue(popular.reasons.contains(RecommendationEngine.Reason.POPULAR));
+    }
+
     @Test public void recommendedUsesOpeningStatusButNearbyRemainsDistanceOnly() {
         Attraction closed = place("a-closed", IndoorClassification.UNKNOWN, ORIGIN)
                 .withFacts(new PlaceFacts("Su 09:00-11:00", null, null, null, null));
@@ -107,7 +134,7 @@ public class RecommendationEngineTest {
                 engine.score(0, 1000, IndoorClassification.OUTDOOR, null, 24, null, null).total, 0);
     }
 
-    @Test public void scoringPrecedesLimitAndDoesNotMutateInputOrUsePopularity() {
+    @Test public void scoringPrecedesLimitAndDoesNotMutateInput() {
         List<Attraction> places = new ArrayList<>();
         for (int i = 0; i < 30; i++) {
             places.add(place("out" + i, IndoorClassification.OUTDOOR, ORIGIN).withWikidata(null, 500));
