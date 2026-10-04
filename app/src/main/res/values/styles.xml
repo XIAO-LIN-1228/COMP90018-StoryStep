@@ -232,7 +232,7 @@
         <item name="android:layout_width">@dimen/scrim_button_size</item>
         <item name="android:layout_height">@dimen/scrim_button_size</item>
         <item name="android:background">@drawable/bg_scrim_button</item>
-        <item name="android:padding">10dp</item>
+        <item name="android:padding">14dp</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="tint">@color/story_on_photo</item>
     </style>
