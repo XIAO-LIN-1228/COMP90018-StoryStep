@@ -90,6 +90,79 @@ Generated reports (local, not committed):
 
 ## Remaining work and next safe step
 
+### Environment inventory outside Gradle (collected after tests, 2026-10-05)
+
+Per user direction, Gradle-declared dependencies and build settings are not duplicated
+here. This snapshot describes the current workstation/AVD, not independently proven
+settings at the instant of the earlier successful run. These values describe the
+reference setup; they are not universal minimum requirements for teammates.
+
+| Component | Observed value |
+|---|---|
+| Host OS | Windows build 22631.5624, release 23H2; registry ProductName reports `Windows 10 Pro` (retained literally, not used to infer marketing edition) |
+| Shell | Windows PowerShell 5.1.22621.5624 |
+| Android Studio | AI-262.9437.185.2621.16467767; data directory AndroidStudio2026.2.1 |
+| IDE bundled runtime | JetBrains JBR 25.0.3, x86_64; separate from Gradle toolchain |
+| Android Platform Tools / ADB | 37.0.1-15733141 / ADB 1.0.41 |
+| Android Emulator | 37.2.12.0, build 16428233 |
+| AVD / primary ABI | Medium_Phone_API_37.0 / x86_64 |
+| System image package | system-images;android-37.0;google_apis_playstore;x86_64, revision 6, extension 22 |
+| Image identity | Android 17, CE2A.260420.019 / 15611780, security patch 2026-05-05 |
+| Image tags | google_apis_playstore, ai_glasses_compatible; Play Store enabled |
+| AVD resources | 10 virtual CPU cores; 2048 MB RAM; 10G data partition |
+| Graphics / boot configuration | GPU enabled, mode auto; fast boot enabled, no forced cold boot |
+| Display | 1080 x 2400; 420 dpi; font scale 1.0; night mode no |
+| Rotation | Auto-rotation setting 1; user_rotation 0; active orientation during tests not captured |
+| Language | Image default en-US; persist.sys.locale unset, active per-app override not verified |
+| Accessibility | enabled_accessibility_services unset at collection; no manual TalkBack acceptance |
+| Animation settings | Window and transition scale 1.0; animator duration setting unset (not assumed disabled) |
+| Configured simulated sensors | Accelerometer, GPS, magnetic field, orientation, pressure, light and proximity enabled |
+| Camera / audio | Rear virtualscene; front emulated; audio input enabled |
+| Storage context | Repository under a OneDrive directory; generated-folder ReadOnly incident documented below/above |
+
+Sources: Android Studio product-info.json/JBR release file, SDK image source.properties,
+AVD config.ini, Windows registry, ADB getprop/wm/settings and the earlier version query.
+No private account data, full desktop logs or personal emulator contents are committed.
+Host GPU driver/virtualization backend, active network/proxy conditions, voice data,
+app permission/data state and snapshot contents at test execution were not captured.
+Record them for subsequent tests where relevant; do not fabricate a retrospective
+environment match. Real-provider calls, audio and physical sensors remain separate gates.
+
+### Disabled IDE Run button follow-up
+
+- User reports Studio/emulator remain operational after the host error, but Run is
+  disabled; user confirmed `app` is selected.
+- Saved configuration exists and targets `StoryStep.app`; recent logs show indexing
+  completed. No post-dependency-change sync was observed in the inspected log.
+- Suggested File > Sync Project with Gradle Files, then recheck the device selector
+  and Run. Unsynced build changes are a hypothesis, not a confirmed diagnosis:
+  https://developer.android.com/build documents disabled run configurations in that state.
+- No IDE configuration was edited, caches invalidated or emulator data reset.
+  Awaiting user confirmation of sync outcome; host crash cause remains unresolved.
+
+### Host incident during subsequent environment collection
+
+- User requested recording environment dependencies outside Gradle configuration.
+  During that later collection, the user reported a Windows `crashpad_handler.exe`
+  application error, exception `0x80000003`, address `0x00007FF7A7CA7965`.
+- An `emulator.exe -version` query had just been executed. Temporal proximity is
+  recorded, but causation is not established. Paused further emulator executable
+  queries; no process was killed, no emulator data wiped and no source fix attempted.
+- Read-only process inspection found an Android SDK crashpad handler as well as
+  handlers belonging to other desktop applications. The dialog alone does not
+  identify which executable failed. Android Studio and the emulator QEMU process
+  were still present; process presence does not prove UI responsiveness.
+- An attempted recent Windows Application-event query yielded no usable record.
+  Root cause remains unresolved. This occurred after the successful 75-test run
+  and is not recorded as a StoryStep Android test failure.
+- Partial post-test snapshot: ADB 37.0.1-15733141; emulator 37.2.12.0, build 16428233;
+  ADB reported Windows 10.0.22631; PowerShell 5.1.22621.5624; connected device
+  `emulator-5554`, model `sdk_gphone64_x86_64`; ABI list `x86_64,arm64-v8a`;
+  image fingerprint `google/sdk_gphone64_x86_64/emu64xa:17/CE2A.260420.019/15611780:user/release-keys`;
+  screen 1080x2400, density 420 dpi, font scale 1.0. These are later observations,
+  not a contemporaneous snapshot of the completed test run. Full environment
+  documentation and Draft PR update remain pending.
+
 - Manual emulator E2E-01: nearby discovery, save, select target, start, simulated
   arrival, story, finish and persisted history. Then E2E-02 offline and E2E-04 recovery.
 - Inspect layouts affected by the shared button size; automated accessibility
