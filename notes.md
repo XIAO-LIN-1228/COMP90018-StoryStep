@@ -473,3 +473,56 @@ clean install. Record simulated location separately from physical sensing.
   that local image filenames are downloadable GitHub attachments.
 - Keep PR #30 in draft and use non-closing issue references. No application fix,
   merge or issue closure is authorized by this documentation handoff alone.
+
+### Published issue mapping and revised triage
+
+- User subsequently clarified that MAN-02 (approximately 20-second attraction
+  loading) is low priority and should remain documentation-only, without a GitHub
+  issue. This supersedes the five-issue proposal above. No MAN-02 issue was created.
+  Keep the observed delay and measurement limitations for future reference.
+- Other findings retain the originally agreed issue treatment:
+
+| Finding | GitHub record | Status at handoff |
+|---|---|---|
+| MAN-06 denied-start/Discard loop | [#31](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/issues/31) | Open bug; core-flow blocker |
+| MAN-05 planner action visibility | [#32](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/issues/32) | Open bug |
+| MAN-04 offline weather/reconnect | [#33](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/issues/33) | Open investigation; cause unconfirmed |
+| MAN-01 Not now affordance | [#34](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/issues/34) | Open usability enhancement |
+| MAN-02 initial loading estimate | This document only | Low priority; no issue per user |
+| MAN-03 missing-content fallback | This document only | Description passed; missing-image case not run |
+
+- Manual observations and screenshot ignore rule published in `c89975b`; PR #30
+  remains draft with non-closing references to the four issues. Local screenshots
+  have not been uploaded; issue descriptions disclose this evidence limitation.
+- Next session: address/retest #31 before resuming the blocked manual exploration
+  sequence. The force-stop recovery and history inspection remain NOT_RUN.
+
+### Exact resumption checkpoint — environment left running
+
+- User confirms the local environment has NOT been interrupted and is available
+  to continue at any time. Android Studio and the existing emulator session are
+  being retained. This is a user-confirmed handoff state, not a guarantee against
+  later sleep, process termination or changes by other work.
+- Branch: `test/api37-validation`; Draft PR #30. Code under manual test is represented
+  by `9cfa2dd`; later commits only update documentation and screenshot ignore rules.
+- Last completed action: M13b, selecting Discard after denied-location Start walking.
+  Last observed app screen is screenshot 8: Sun Ribbon, Not exploring, timer 0:00,
+  GPS No fix, Stop exploration. Back/Discard loops to the same dashboard (#31).
+- Network was restored before M10 and has not been reported disabled since.
+  Location permission remains Don't allow; neither Ask every time nor a manual
+  grant has been performed. Sun Ribbon was saved and added as the sole planned stop.
+- Do NOT assume a clean install, fresh emulator, ended session or successful discard.
+  No app-data clear, uninstall, emulator wipe, force stop or Settings permission
+  grant was performed as part of this checkpoint. Task-dismissal relaunches earlier
+  in the test are recorded separately. No new code fix for #31 is installed.
+- Next safe action: resume from the existing screen and confirm it still matches
+  screenshot 8. Preserve the denied-permission reproduction for diagnosing #31.
+  Do not repeat the already-proven Back/Discard loop as another test.
+- If proceeding with the previously suggested recovery, explicitly record Force
+  stop -> launcher reopen -> Saved/Journeys inspection as NEW actions. They remain
+  NOT_RUN, including checking for an unintended zero-duration journey. Manual grant
+  and positive-path exploration remain pending and must not be called a fix for #31.
+- Continue the one-step-at-a-time question/feedback workflow and append observations
+  here. Screenshots remain local in ignored `docs/test screenshot/` (1-8 available);
+  not all supplied files have been inspected. Do not change unrelated PostgreSQL
+  services or ports for this Android task.
