@@ -84,6 +84,9 @@ Generated reports (local, not committed):
   the assessment changes and check/retarget the test PR to main before final merge.
 - Do not merge automatically. Store the resulting Draft PR URL in this session's
   handoff and continue appending future validation results here.
+- Published repair/evidence commit `9cfa2dd` and created
+  [Draft PR #30](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/30).
+  Upstream is `origin/test/api37-validation`; no merge was performed.
 
 ## Remaining work and next safe step
 
