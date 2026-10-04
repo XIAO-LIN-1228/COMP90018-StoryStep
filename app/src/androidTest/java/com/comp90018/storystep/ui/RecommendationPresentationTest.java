@@ -35,16 +35,21 @@ public class RecommendationPresentationTest {
         }
     }
 
-    @Test public void profileShowsCapabilityResultsAndNoMemoryEditorIsReachable() {
+    @Test public void profileOpensSettingsWithCapabilityResultsAndNoMemoryEditorIsReachable() {
         try (ActivityScenario<MainActivity> scenario = ActivityScenario.launch(MainActivity.class)) {
             scenario.onActivity(activity -> {
                 NavHostFragment host = host(activity);
                 host.getNavController().navigate(R.id.profileFragment);
                 host.getChildFragmentManager().executePendingTransactions();
-                String status = ((TextView) activity.findViewById(R.id.profile_sensor_status)).getText().toString();
+                assertNotNull(activity.findViewById(R.id.profile_saves_count));
+                assertTrue(activity.findViewById(R.id.profile_settings).performClick());
+                host.getChildFragmentManager().executePendingTransactions();
+                assertEquals(R.id.settingsFragment, host.getNavController().getCurrentDestination().getId());
+                TextView sensorStatus = activity.findViewById(R.id.profile_sensor_status);
+                assertNotNull("Settings must display sensor capabilities", sensorStatus);
+                String status = sensorStatus.getText().toString();
                 assertTrue(status.contains("Accelerometer:"));
                 assertTrue(status.contains("Magnetometer:"));
-                assertNotNull(activity.findViewById(R.id.profile_saves_count));
                 assertEquals(0, activity.getResources().getIdentifier("memoryFragment", "id", activity.getPackageName()));
             });
         }

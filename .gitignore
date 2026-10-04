@@ -23,3 +23,6 @@ local.properties
 
 # Local implementation-handoff notes, deliberately kept out of the repository
 /docs/claude_code_handoff.md
+
+# Local manual-test screenshots; observations are recorded in notes.md.
+/docs/test screenshot/
