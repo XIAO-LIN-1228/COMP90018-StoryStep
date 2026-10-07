@@ -158,5 +158,6 @@ Three constraints shape the code:
 ## Conventions
 
 - Feature work happens on branches (`feature/`, `fix/`, `docs/`, `test/`, `refactor/`) merged via PR — not directly on `main`.
-- Do not commit API keys or service credentials (weather API, cloud/Firebase). `local.properties` is gitignored and is the place for local SDK paths and keys.
+- Do not commit API keys or service credentials (weather API, cloud/Firebase). `local.properties` is gitignored and is the place for local SDK paths and keys. `PLACES_API_KEY` is read from there into `BuildConfig`; every network path that needs a key must degrade to "feature off" when it is absent, never fail the build or the fetch.
+- Photographs come from free, reusable sources first (OpenStreetMap, Wikidata, Wikipedia, Wikimedia Commons). Google Places is an optional last resort behind a key; its photographs are never stored, only the photo handle, and the photographer's attribution travels with the image. Do not add image sources that are scraped rather than offered through an API.
 - All project documentation and code comments in English.

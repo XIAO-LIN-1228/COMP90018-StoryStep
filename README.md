@@ -137,6 +137,31 @@ Sensor availability is checked at runtime. The app continues functioning gracefu
 is unavailable: an optional figure is omitted rather than shown as zero, because a zero would
 claim the walk was flat or still when the truth is that the phone could not tell.
 
+### Photographs
+
+Places are pictured from free sources first, in this order, each tried only for places the one
+before could not picture: the OpenStreetMap `image` tag, Wikidata's P18, the English Wikipedia
+article's lead image, every photographed Wikidata item in the area, Wikimedia Commons files
+geotagged near the place, and Commons files whose title carries the place's name.
+
+That reaches landmarks well and everyday places badly: of 137 places cached around Parkville,
+35 have a photograph this way, and almost none of the cafes, shops or small sculptures do,
+because nobody has published a reusable photograph of them.
+
+**Google Places is an optional last resort** for the rest. It is off unless a key is present:
+
+1. Create a key in the [Google Cloud console](https://console.cloud.google.com/) with the
+   **Places API (New)** enabled.
+2. Put it in `local.properties`, which is gitignored and must stay that way:
+   `PLACES_API_KEY=your-key-here`
+3. Rebuild. Without the key the app never calls Google and the step is skipped entirely.
+
+Two of Google's terms shape the implementation and must not be quietly dropped: the photograph
+itself is never stored — only the photo's handle, from which a URL is built when a screen asks —
+and the photographer's attribution travels with the photograph. At roughly 137 places a fetch
+and a 24-hour area cache, the cost sits inside Google's monthly free credit, but it is a
+billable account and that is a decision for the team, not a default.
+
 ## Internet and Cloud Features
 
 Internet or cloud connectivity may be used to:

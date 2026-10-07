@@ -1,6 +1,22 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
 }
+
+/**
+ * The Google Places key, read from local.properties, which is gitignored.
+ *
+ * <p>Absent by default and absent on every machine that has not been given one, which is the
+ * point: the build works without it and the app simply does not ask Google for photographs.
+ * A key must never be committed - see the conventions in CLAUDE.md.
+ */
+val placesApiKey: String = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        file.inputStream().use { load(it) }
+    }
+}.getProperty("PLACES_API_KEY", "")
 
 android {
     namespace = "com.comp90018.storystep"
@@ -17,6 +33,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
+        buildConfigField("String", "PLACES_API_KEY", "\"$placesApiKey\"")
+
         // Room writes the schema of every version here. The JSON files are committed so that
         // MigrationTestHelper can build an old database and migrate it, which is the only way to
         // prove a migration preserves user-owned history.
@@ -32,6 +50,10 @@ android {
         getByName("androidTest") {
             assets.srcDir("$projectDir/schemas")
         }
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

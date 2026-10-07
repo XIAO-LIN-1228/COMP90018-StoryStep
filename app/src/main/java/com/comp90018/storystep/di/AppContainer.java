@@ -138,7 +138,13 @@ public class AppContainer {
                                 ApiClientFactory.createCommonsService(
                                         isDebuggable(this.applicationContext)),
                                 ApiClientFactory.createWikidataQueryService(
-                                        isDebuggable(this.applicationContext)))),
+                                        isDebuggable(this.applicationContext)),
+                                // Null unless a key was put in local.properties; see
+                                // ApiClientFactory.createPlacesService.
+                                ApiClientFactory.createPlacesService(
+                                        isDebuggable(this.applicationContext),
+                                        com.comp90018.storystep.BuildConfig.PLACES_API_KEY),
+                                com.comp90018.storystep.BuildConfig.PLACES_API_KEY)),
                         new AndroidConnectivityMonitor(this.applicationContext),
                         AttractionFreshnessPolicy.defaultPolicy(),
                         clock,

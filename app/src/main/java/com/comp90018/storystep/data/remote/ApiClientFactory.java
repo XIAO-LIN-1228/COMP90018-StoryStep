@@ -92,6 +92,17 @@ public final class ApiClientFactory {
         return createRetrofit(WikidataApiService.BASE_URL, debug).create(WikidataApiService.class);
     }
 
+    /**
+     * Google Places, or null when no key was given. Null is the normal case: the key lives in
+     * local.properties, which is not committed, so a checkout without one simply never asks.
+     */
+    public static PlacesApiService createPlacesService(boolean debug, String apiKey) {
+        if (apiKey == null || apiKey.trim().isEmpty()) {
+            return null;
+        }
+        return createRetrofit(PlacesApiService.BASE_URL, debug).create(PlacesApiService.class);
+    }
+
     public static ValhallaApiService createValhallaService(boolean debug) {
         return createRetrofit(ValhallaApiService.BASE_URL, debug).create(ValhallaApiService.class);
     }

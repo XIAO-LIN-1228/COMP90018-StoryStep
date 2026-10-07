@@ -47,6 +47,8 @@ public final class OverpassAttractionSource implements AttractionSource {
     @androidx.annotation.Nullable private final WikipediaApiService wikipedia;
     @androidx.annotation.Nullable private final CommonsApiService commons;
     @androidx.annotation.Nullable private final WikidataQueryService wikidataQuery;
+    @androidx.annotation.Nullable private final PlacesApiService places;
+    private String placesApiKey = "";
 
     /** How far from a place's coordinate a geotagged photograph may be and still be of it. */
     private static final int NEARBY_PHOTO_RADIUS_M = 80;
@@ -69,6 +71,16 @@ public final class OverpassAttractionSource implements AttractionSource {
      * artwork rather than spending a minute being told no.
      */
     private static final int NAME_SEARCH_GIVE_UP_AFTER = 4;
+
+    /** Only what this app reads, because Places bills by the fields asked for. */
+    private static final String PLACES_FIELD_MASK =
+            "places.id,places.displayName,places.photos";
+
+    /** How far around a place Google may look for it; a name plus a suburb is ambiguous. */
+    private static final double PLACES_BIAS_RADIUS_M = 300;
+
+    /** A bound on the bill: one request per place, and never more than this many in one fetch. */
+    private static final int MAX_PLACES_LOOKUPS = 80;
 
     /** Summaries are fetched one article at a time, so a few go out together. */
     private static final int SUMMARY_PARALLELISM = 6;
@@ -124,6 +136,28 @@ public final class OverpassAttractionSource implements AttractionSource {
         this.wikipedia = wikipedia;
         this.commons = commons;
         this.wikidataQuery = wikidataQuery;
+        this.places = null;
+    }
+
+    /**
+     * With Google Places as the last resort, for the cafes, shops and small sculpture nobody has
+     * published a reusable photograph of. Optional and usually absent: the key lives in
+     * local.properties and is not committed, so a checkout without one never asks Google.
+     */
+    public OverpassAttractionSource(OverpassApiService service,
+                                    @androidx.annotation.Nullable WikidataApiService wikidata,
+                                    @androidx.annotation.Nullable WikipediaApiService wikipedia,
+                                    @androidx.annotation.Nullable CommonsApiService commons,
+                                    @androidx.annotation.Nullable WikidataQueryService wikidataQuery,
+                                    @androidx.annotation.Nullable PlacesApiService places,
+                                    String placesApiKey) {
+        this.service = Objects.requireNonNull(service, "service");
+        this.wikidata = wikidata;
+        this.wikipedia = wikipedia;
+        this.commons = commons;
+        this.wikidataQuery = wikidataQuery;
+        this.places = places;
+        this.placesApiKey = placesApiKey == null ? "" : placesApiKey;
     }
 
     @Override
@@ -177,9 +211,9 @@ public final class OverpassAttractionSource implements AttractionSource {
                     AttractionUnavailableException.Reason.MALFORMED);
         }
 
-        return withNamedPhotographs(withNearbyPhotographs(
+        return withPurchasedPhotographs(withNamedPhotographs(withNearbyPhotographs(
                 withAreaPhotographs(withPhotographs(mapped.getAttractions()), center, radiusMeters),
-                center, radiusMeters));
+                center, radiusMeters)), radiusMeters);
     }
 
     private static long retryAfterMillis(Response<?> response) {
@@ -467,6 +501,52 @@ public final class OverpassAttractionSource implements AttractionSource {
         }
         for (java.util.Map.Entry<Integer, String> entry : found.entrySet()) {
             enriched.set(entry.getKey(), enriched.get(entry.getKey()).withImageUrl(entry.getValue()));
+        }
+        return enriched;
+    }
+
+    /**
+     * The last resort, and the only paid one: ask Google Places for a photograph of each place
+     * still without one. Silent and skipped entirely when no key was given, which is the normal
+     * case for a checkout - the key lives in local.properties and is never committed.
+     *
+     * <p>What is stored is the photo's <b>handle</b>, not the photograph and not a URL: Google's
+     * terms do not allow the image to be kept, and a stored URL would be a stored key as well.
+     * The URL is built when a screen asks for it; see {@link PlacesPhotos#urlFor}.
+     *
+     * <p>A text search answers with its best guess for any query, so a result counts only when
+     * the name Google matched really is the name asked for.
+     */
+    private List<Attraction> withPurchasedPhotographs(List<Attraction> attractions,
+                                                      double radiusMeters) {
+        if (places == null || placesApiKey.isEmpty()) {
+            return attractions;
+        }
+        List<Attraction> enriched = new java.util.ArrayList<>(attractions);
+        int asked = 0;
+        for (int i = 0; i < enriched.size() && asked < MAX_PLACES_LOOKUPS; i++) {
+            Attraction place = enriched.get(i);
+            if (place.getImageUrl() != null || place.getName() == null
+                    || place.getLocation() == null) {
+                continue;
+            }
+            asked++;
+            try {
+                retrofit2.Response<PlacesSearchDto> response = places.searchText(
+                        placesApiKey, PLACES_FIELD_MASK,
+                        PlacesSearchRequest.near(place.getName(), place.getLocation(),
+                                Math.min(radiusMeters, PLACES_BIAS_RADIUS_M))).execute();
+                if (!response.isSuccessful()) {
+                    continue;
+                }
+                String photoName = PlacesPhotos.photoName(response.body(), place.getName());
+                if (photoName != null) {
+                    enriched.set(i, place.withImageUrl(
+                            PlacesPhotos.urlFor(photoName, placesApiKey)));
+                }
+            } catch (java.io.IOException | RuntimeException ignored) {
+                // No photograph; the drawn artwork for its kind stands in.
+            }
         }
         return enriched;
     }
