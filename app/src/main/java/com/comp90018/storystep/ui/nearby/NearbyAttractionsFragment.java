@@ -54,8 +54,8 @@ import java.util.List;
  * belong to the coordinator behind the ViewModel, which is why rotating the screen or navigating
  * away no longer disturbs a running session.
  *
- * <p>Nothing is requested at launch. Collection begins only when the user presses the exploration
- * control, and the coordinator ends it as soon as the app stops being visible.
+ * <p>With permission, home discovery collects location while this screen is visible. Its
+ * subscription is independent of journey recording and stops when the screen is hidden.
  */
 public class NearbyAttractionsFragment extends Fragment
         implements AttractionAdapter.OnAttractionSelected, AttractionAdapter.OnSaveToggled {
@@ -175,7 +175,13 @@ public class NearbyAttractionsFragment extends Fragment
         homeMapCard = view.findViewById(R.id.home_map_card);
         View recenter = view.findViewById(R.id.recenter_button);
         TouchTargets.expand(recenter);
-        recenter.setOnClickListener(v -> homeMap.recenter());
+        recenter.setOnClickListener(v -> {
+            if (viewModel.getMapOrigin().getValue() != null) {
+                homeMap.recenter();
+            } else if (withAccess()) {
+                startHomeLocation();
+            }
+        });
         listCredit = view.findViewById(R.id.list_credit);
         View placesSheet = view.findViewById(R.id.places_sheet);
         sheet = com.google.android.material.bottomsheet.BottomSheetBehavior.from(placesSheet);
@@ -271,6 +277,7 @@ public class NearbyAttractionsFragment extends Fragment
                     ? R.string.order_nearby : R.string.order_recommended);
         });
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        homeMap.centerOn(com.comp90018.storystep.data.repository.SampleAttractions.DEMO_ORIGIN);
         viewModel.getMapOrigin().observe(getViewLifecycleOwner(), homeMap::setOrigin);
         viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
         viewModel.getUnlockProgress().observe(getViewLifecycleOwner(), progress -> {
@@ -312,11 +319,13 @@ public class NearbyAttractionsFragment extends Fragment
         // is what stops the screen from offering actions that would silently do nothing.
         viewModel.onLocationAccessChanged(currentAccess());
         viewModel.onVisible();
+        startHomeLocation();
         contextHandler.post(contextTick);
     }
 
     @Override
     public void onStop() {
+        viewModel.stopHomeLocation();
         contextHandler.removeCallbacks(contextTick);
         super.onStop();
     }
@@ -405,15 +414,19 @@ public class NearbyAttractionsFragment extends Fragment
         permissionLauncher.launch(LOCATION_PERMISSIONS);
     }
 
+    private void startHomeLocation() {
+        viewModel.startHomeLocation(
+                new com.comp90018.storystep.platform.location.AndroidLocationSource(requireContext()),
+                currentAccess());
+    }
+
     private void onPermissionResult() {
         // The per-permission booleans are not consulted directly: a re-check goes through the same
         // policy as every other path, so granted, approximate-only and denied are classified once.
         LocationAccess access = currentAccess();
         viewModel.onLocationAccessRequested(access);
         if (access.isGranted()) {
-            // The user asked for a session by pressing the control; granting is the last thing
-            // that was missing, so continue rather than making them press it again.
-            onSessionButtonClicked();
+            startHomeLocation();
         }
     }
 
@@ -455,8 +468,8 @@ public class NearbyAttractionsFragment extends Fragment
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         // The provenance line is folded into the sheet's one-line footer (list_credit); here it
         // only keeps the stale banner in step. The freshness notice still matters on its own.
-        provenanceLine(state);
-        originLabel.setVisibility(View.GONE);
+        originLabel.setText(provenanceLine(state));
+        originLabel.setVisibility(View.VISIBLE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -563,14 +576,9 @@ public class NearbyAttractionsFragment extends Fragment
                 action = v -> requestLocationPermissions();
                 break;
             case WAITING_FOR_FIX:
-                if (!phase.isPaused()) {
-                    permissionNotice.setVisibility(View.GONE);
-                    permissionNoticeAction.setOnClickListener(null);
-                    return;
-                }
-                message = R.string.nearby_session_paused_background;
-                actionLabel = R.string.nearby_resume_exploring;
-                action = v -> resumeIfAccessAllows();
+                message = R.string.nearby_waiting_for_fix;
+                actionLabel = R.string.nearby_retry;
+                action = v -> startHomeLocation();
                 break;
             case PERMISSION_DENIED:
                 message = R.string.nearby_permission_denied;
@@ -680,7 +688,7 @@ public class NearbyAttractionsFragment extends Fragment
         }
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        originLabel.setVisibility(View.GONE);
+        originLabel.setVisibility(View.VISIBLE);
         listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
         // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
         // bar as well as the floating action; expanded, the credit line already does that.

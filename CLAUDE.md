@@ -151,7 +151,7 @@ Three constraints shape the code:
 
 - **Keep sensor, distance, bearing, and recommendation logic outside Activity classes.** Activities wire up and display; the computation lives in plain classes.
 - **Core calculations must be independently JVM-testable** as unit tests under `app/src/test`, with no Android framework dependency. Distance, bearing/heading, movement-state classification, and recommendation ranking are the primary unit-test targets.
-- **Degrade gracefully** on missing sensors (any of the six absent), denied permissions, unavailable location, offline state, and network failure. Sensor availability varies per device; the app must show a sensible fallback rather than crash. Location is collected only during a user-initiated foreground exploration session — continuous background tracking is out of scope.
+- **Degrade gracefully** on missing sensors (any of the six absent), denied permissions, unavailable location, offline state, and network failure. Sensor availability varies per device; the app must show a sensible fallback rather than crash. Location is collected while the home discovery screen is visible with permission or during a user-initiated foreground exploration session — continuous background tracking is out of scope.
 
 `ui.MainActivity` applies `EdgeToEdge.enable()` and pads the root view by `systemBars` insets; it hosts a `NavHostFragment` driven by `res/navigation/nav_graph.xml`. New screens are Fragments added to that graph and should follow the same inset handling. Safe Args is deliberately not used — arguments are passed as a plain `Bundle`.
 
