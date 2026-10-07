@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in artwork for a place with no photograph. A tree: a park or garden.
+     A wide canvas with the glyph centred, so a centre-cropped square thumbnail and a wide hero
+     both keep the glyph at the same share of the frame. Colours follow the theme tokens, so the
+     night palette applies without a second file. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="100dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="@color/story_surface_sunk"
+        android:pathData="M0,0h320v200h-320z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="@color/kind_sights"
+        android:pathData="M160,44a56,56 0,1 1,0 112a56,56 0,1 1,0 -112z" />
+    <group
+        android:scaleX="2.5"
+        android:scaleY="2.5"
+        android:translateX="130"
+        android:translateY="70">
+        <path
+            android:fillColor="@color/kind_sights"
+            android:pathData="M12,2.5l5.5,7h-2.6l3.6,5h-3.2l3.2,4.5H13v2.5h-2V19H5.5l3.2,-4.5H5.5l3.6,-5H6.5z" />
+    </group>
+</vector>

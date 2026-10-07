@@ -108,6 +108,16 @@ public final class ApiClientFactory {
         return createRetrofit(WikipediaApiService.BASE_URL, debug).create(WikipediaApiService.class);
     }
 
+    /**
+     * The client photographs are downloaded with. Same User-Agent as the API calls: Wikimedia's
+     * upload servers throttle or refuse the platform's anonymous default, which left places with
+     * a perfectly good photo URL showing the placeholder. No logging, because image URLs are not
+     * worth a log line each.
+     */
+    public static OkHttpClient createImageClient() {
+        return createHttpClient(false, DEFAULT_TIMEOUT_SECONDS);
+    }
+
     private static OkHttpClient createHttpClient(boolean debug, long timeoutSeconds) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectTimeout(timeoutSeconds, TimeUnit.SECONDS)

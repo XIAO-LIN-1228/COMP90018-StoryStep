@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in artwork for a place with no photograph. A cup with a straw: a cafe or bar.
+     A wide canvas with the glyph centred, so a centre-cropped square thumbnail and a wide hero
+     both keep the glyph at the same share of the frame. Colours follow the theme tokens, so the
+     night palette applies without a second file. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="100dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="@color/story_surface_sunk"
+        android:pathData="M0,0h320v200h-320z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="@color/kind_drink"
+        android:pathData="M160,44a56,56 0,1 1,0 112a56,56 0,1 1,0 -112z" />
+    <group
+        android:scaleX="2.5"
+        android:scaleY="2.5"
+        android:translateX="130"
+        android:translateY="70">
+        <path
+            android:fillColor="@color/kind_drink"
+            android:pathData="M6,7h12l-1.4,13.2c-0.1,1 -0.9,1.8 -1.9,1.8H9.3c-1,0 -1.8,-0.8 -1.9,-1.8zM5,4h14v2H5zM13.2,2.2l3.6,-1.2l0.5,1.5L13.7,3.7z" />
+    </group>
+</vector>

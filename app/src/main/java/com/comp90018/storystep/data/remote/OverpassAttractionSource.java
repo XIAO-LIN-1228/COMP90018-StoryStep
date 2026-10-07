@@ -396,7 +396,7 @@ public final class OverpassAttractionSource implements AttractionSource {
                 }
             }
         } catch (java.io.IOException | RuntimeException ignored) {
-            // The per-place pass below still gets its chance.
+            // No Commons photographs; the place keeps its category illustration.
         }
         return enriched;
     }

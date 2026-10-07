@@ -48,6 +48,10 @@ osmdroid = { group = "org.osmdroid", name = "osmdroid-android", version.ref = "o
 # Photographs of fetched places, from the URLs OpenStreetMap records for them. Java-first,
 # caches to disk, and degrades to the placeholder on any failure.
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+# Routes Glide's downloads through OkHttp so image requests carry the app's User-Agent;
+# Wikimedia's upload servers throttle the platform's anonymous default.
+glide-okhttp3 = { group = "com.github.bumptech.glide", name = "okhttp3-integration", version.ref = "glide" }
+glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
 # Local HTTP server for the weather contract tests: proves the Retrofit stack parses a real
 # response off a real socket without depending on the provider being reachable from CI.
 okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttp" }
