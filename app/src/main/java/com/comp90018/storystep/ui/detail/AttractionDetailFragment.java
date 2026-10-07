@@ -123,7 +123,7 @@ public class AttractionDetailFragment extends Fragment {
         // Only three photographs ship with the app, and a fetched place almost never has
         // one. A 248dp placeholder for "no photo" is dead space on most real screens, so the
         // hero simply collapses; the pills and prose above and below it already carry the page.
-        int hero = AttractionArtwork.heroDrawableFor(attraction.getId());
+        int hero = AttractionArtwork.heroDrawableFor(attraction.getId(), attraction.getCategory());
         int heroHeight = getResources().getDimensionPixelSize(R.dimen.hero_photo_height);
         if (attraction.getImageUrl() != null) {
             imageView.getLayoutParams().height = heroHeight;

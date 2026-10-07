@@ -122,7 +122,7 @@ public class AttractionAdapter
             reason.setVisibility(intro.isEmpty() ? View.GONE : View.VISIBLE);
             // A fetched photograph when the source has one; the bundled artwork or the placeholder
             // otherwise. Glide caches to disk, so a row scrolled back into view costs nothing.
-            int fallback = AttractionArtwork.drawableFor(item.getId());
+            int fallback = AttractionArtwork.drawableFor(item.getId(), item.getCategory());
             if (item.getImageUrl() != null) {
                 com.bumptech.glide.Glide.with(image)
                         .load(item.getImageUrl())

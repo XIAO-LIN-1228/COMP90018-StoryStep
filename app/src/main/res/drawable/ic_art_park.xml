@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Two trees on grass: a park or garden. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M8.4,2.2l4.6,6.2h-2.3l3.1,4.3h-2.6l2.6,3.6H9.3V19H7.5v-2.7H2.9l2.6,-3.6H2.9L6,8.4H3.7zM17.6,7.4l3.8,5.1h-1.9l2.3,3.1h-3.3V19h-1.8v-3.4h-3.3l2.3,-3.1h-1.9zM2,20.4h20V22H2z" />
+</vector>

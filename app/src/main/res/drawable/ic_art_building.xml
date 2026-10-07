@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A clocktower front: a historic building. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android" android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,1.6l4.2,3.6v2.3H7.8V5.2zM8.6,9h6.8v13H13.2v-4.2h-2.4V22H8.6zM12,10.3a2.4,2.4 0 1,0 0,4.8a2.4,2.4 0 1,0 0,-4.8zM2.8,12.4h4.2V22H2.8zM17,12.4h4.2V22H17z" />
+</vector>

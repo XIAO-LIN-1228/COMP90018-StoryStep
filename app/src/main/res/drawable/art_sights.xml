@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Drawn artwork for a place nobody has photographed. Not a photograph and not pretending to be
+    one: a tinted ground carrying the kind's own mark, so a list reads as a set of places rather
+    than a column of grey holes, and nothing on screen claims to be a picture of this place.
+
+    Ground and mark live in one vector rather than a layer-list, because a layer-list cannot
+    tint the mark it draws and each kind wears its own colour.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="@color/art_sights_ground"
+        android:pathData="M0,0h48v48h-48z" />
+    <group
+        android:translateX="12"
+        android:translateY="12">
+        <path
+            android:fillColor="@color/art_sights_mark"
+            android:pathData="M12,2.5l5.5,7h-2.6l3.6,5h-3.2l3.2,4.5H13v2.5h-2V19H5.5l3.2,-4.5H5.5l3.6,-5H6.5z" />
+    </group>
+</vector>

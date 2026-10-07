@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Grounds for the drawn category artwork. One per kind of place, all drawn from the same warm
+    family as the page so a list of them reads as one set rather than a row of stickers.
+-->
+<resources>
+    <color name="art_sights_ground">#E4EBDF</color>
+    <color name="art_sights_mark">#5B8A5A</color>
+    <color name="art_museum_ground">#E7E4F0</color>
+    <color name="art_museum_mark">#6E6291</color>
+    <color name="art_art_ground">#F3E3EC</color>
+    <color name="art_art_mark">#A8558A</color>
+    <color name="art_park_ground">#DFEBE0</color>
+    <color name="art_park_mark">#4E8757</color>
+    <color name="art_food_ground">#F6E3D8</color>
+    <color name="art_food_mark">#B55F33</color>
+    <color name="art_drink_ground">#F3E8D5</color>
+    <color name="art_drink_mark">#996A2E</color>
+    <color name="art_shopping_ground">#F2E2EE</color>
+    <color name="art_shopping_mark">#9A4F80</color>
+    <color name="art_building_ground">#EDE8DE</color>
+    <color name="art_building_mark">#7A6A4E</color>
+</resources>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The same set, dimmed to sit on the night ground without glowing. -->
+<resources>
+    <color name="art_sights_ground">#2A322A</color>
+    <color name="art_sights_mark">#86B383</color>
+    <color name="art_museum_ground">#2D2A36</color>
+    <color name="art_museum_mark">#A196C4</color>
+    <color name="art_art_ground">#362A31</color>
+    <color name="art_art_mark">#D083B4</color>
+    <color name="art_park_ground">#27322A</color>
+    <color name="art_park_mark">#7CB184</color>
+    <color name="art_food_ground">#372C25</color>
+    <color name="art_food_mark">#DE8C5E</color>
+    <color name="art_drink_ground">#352E22</color>
+    <color name="art_drink_mark">#C79A55</color>
+    <color name="art_shopping_ground">#342A32</color>
+    <color name="art_shopping_mark">#C57CA9</color>
+    <color name="art_building_ground">#302C24</color>
+    <color name="art_building_mark">#B0A080</color>
+</resources>

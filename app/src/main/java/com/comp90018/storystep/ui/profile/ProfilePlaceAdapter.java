@@ -54,7 +54,8 @@ final class ProfilePlaceAdapter extends ListAdapter<SavedAttraction, ProfilePlac
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         SavedAttraction place = getItem(position);
         holder.name.setText(place.getAttraction().getName());
-        int fallback = AttractionArtwork.drawableFor(place.getId());
+        int fallback = AttractionArtwork.drawableFor(place.getId(),
+                place.getAttraction().getCategory());
         String url = place.getAttraction().getImageUrl();
         if (url == null) {
             Glide.with(holder.photo).clear(holder.photo);
