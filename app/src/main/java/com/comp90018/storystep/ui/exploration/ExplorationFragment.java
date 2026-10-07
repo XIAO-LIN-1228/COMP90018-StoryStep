@@ -514,6 +514,13 @@ public class ExplorationFragment extends Fragment {
 
     /** Finish saves the journey; Discard removes it. Both stop collection immediately. */
     private void showStopDialog() {
+        if (!container().getExplorationCoordinator().summary().getState().hasSession()) {
+            // A failed start has no record to finish or discard. Back must still work.
+            if (!NavHostFragment.findNavController(this).popBackStack()) {
+                NavHostFragment.findNavController(this).navigate(R.id.planFragment);
+            }
+            return;
+        }
         new MaterialAlertDialogBuilder(requireContext())
                 .setTitle(R.string.exploration_stop_title)
                 .setMessage(R.string.exploration_stop_message)
