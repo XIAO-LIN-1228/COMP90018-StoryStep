@@ -460,6 +460,10 @@
     <string name="plan_empty">Add a few places and StoryStep will order them and draw the walk between them.</string>
     <string name="plan_add_stop">Add a place</string>
     <string name="plan_start">Start walking</string>
+    <string name="plan_starting">Starting your walk…</string>
+    <string name="plan_start_failed">Could not start your walk. Nothing is being recorded. Try again.</string>
+    <string name="plan_location_permission">Allow location to start this walk and show your distance and direction. Location is used only while you explore in the foreground. You can cancel and keep planning.</string>
+    <string name="plan_location_services">Turn on device location, then return and tap Start walking.</string>
     <string name="plan_full">A walk holds up to %1$d stops.</string>
     <string name="plan_move_up">Move earlier</string>
     <string name="plan_move_down">Move later</string>

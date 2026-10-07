@@ -17,6 +17,7 @@ import com.comp90018.storystep.ui.journey.JourneyDetailViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
+import com.comp90018.storystep.ui.plan.PlanStartViewModel;
 import com.comp90018.storystep.ui.profile.PrivacyDataViewModel;
 import com.comp90018.storystep.ui.saved.SavedViewModel;
 import com.comp90018.storystep.ui.story.StoryViewModel;
@@ -65,6 +66,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
         }
         if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
             return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator());
+        }
+        if (modelClass.isAssignableFrom(PlanStartViewModel.class)) {
+            return (T) new PlanStartViewModel(appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(JourneyDetailViewModel.class)) {
             return (T) new JourneyDetailViewModel(appContainer.getHistoryRepository());
