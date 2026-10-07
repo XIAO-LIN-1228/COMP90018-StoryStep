@@ -330,13 +330,17 @@ public class OverpassAttractionSourceTest {
                 new GeoPoint(-37.7963, 144.9614), 1000, 50);
 
         assertNull(places.get(0).getImageUrl());
-        // Commons throttles geosearch hard, so there is no per-place follow-up.
-        assertEquals(2, server.getRequestCount());
+        // Commons throttles geosearch hard, so there is no per-place geosearch follow-up; the
+        // one extra request is the name search, the last keyless thing left to try.
+        assertEquals(3, server.getRequestCount());
         server.takeRequest();
         String area = server.takeRequest().getPath();
         assertTrue(area, area.contains("ggslimit=500"));
         assertTrue(area, area.contains("ggscoord=-37.796300%7C144.961400"));
         assertTrue(area, area.contains("ggsradius=1000"));
+        String named = server.takeRequest().getPath();
+        assertTrue(named, named.contains("list=search"));
+        assertTrue(named, named.contains("Some+Memorial") || named.contains("Some%20Memorial"));
     }
 
     @Test

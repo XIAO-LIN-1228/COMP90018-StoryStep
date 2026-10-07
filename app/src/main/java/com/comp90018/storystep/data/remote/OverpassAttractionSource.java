@@ -51,6 +51,25 @@ public final class OverpassAttractionSource implements AttractionSource {
     /** How far from a place's coordinate a geotagged photograph may be and still be of it. */
     private static final int NEARBY_PHOTO_RADIUS_M = 80;
 
+    /** One request per place, so the name search is bounded rather than per-place unbounded. */
+    private static final int MAX_NAME_SEARCHES = 45;
+
+    /**
+     * Pause between name searches. Wikimedia answers a burst with 429s - six at a time had four
+     * in five refused - so these go one at a time, unhurried. The fetch is already behind a
+     * 24-hour area cache, so the extra minute is paid once a day at most. A refused search is
+     * simply a place without a photograph, which is what it was already.
+     */
+    private static final long NAME_SEARCH_PAUSE_MILLIS = 900L;
+
+    /**
+     * Give up after this many refusals in a row. Wikimedia's search allowance is a bucket of
+     * about ten: the eleventh request onwards is refused until it refills, and no pause short
+     * enough to be worth waiting for avoids it. Stopping leaves the rest to their drawn
+     * artwork rather than spending a minute being told no.
+     */
+    private static final int NAME_SEARCH_GIVE_UP_AFTER = 4;
+
     /** Summaries are fetched one article at a time, so a few go out together. */
     private static final int SUMMARY_PARALLELISM = 6;
 
@@ -158,9 +177,9 @@ public final class OverpassAttractionSource implements AttractionSource {
                     AttractionUnavailableException.Reason.MALFORMED);
         }
 
-        return withNearbyPhotographs(
+        return withNamedPhotographs(withNearbyPhotographs(
                 withAreaPhotographs(withPhotographs(mapped.getAttractions()), center, radiusMeters),
-                center, radiusMeters);
+                center, radiusMeters));
     }
 
     private static long retryAfterMillis(Response<?> response) {
@@ -397,6 +416,57 @@ public final class OverpassAttractionSource implements AttractionSource {
             }
         } catch (java.io.IOException | RuntimeException ignored) {
             // The per-place pass below still gets its chance.
+        }
+        return enriched;
+    }
+
+    /**
+     * The last keyless pass: for each place still without a picture, ask Commons for files whose
+     * title carries its name. Reaches what nothing geotagged - a plaque, a shopfront, a memorial
+     * photographed and uploaded without a coordinate.
+     *
+     * <p>One at a time with a pause: Wikimedia refuses a burst, and six in parallel had four in
+     * five answered with 429. Capped as well, because this is one request per place and the
+     * places left are the long tail. A search answers with something for almost any query, so
+     * the title is checked against the place's own name before it is believed; see
+     * {@link CommonsPhotos#pickNamed}.
+     */
+    private List<Attraction> withNamedPhotographs(List<Attraction> attractions) {
+        if (commons == null) {
+            return attractions;
+        }
+        List<Attraction> enriched = new java.util.ArrayList<>(attractions);
+        java.util.Map<Integer, String> found = new java.util.concurrent.ConcurrentHashMap<>();
+        int searched = 0;
+        int refusals = 0;
+        for (int i = 0; i < enriched.size() && searched < MAX_NAME_SEARCHES; i++) {
+            Attraction place = enriched.get(i);
+            if (place.getImageUrl() != null || place.getName() == null) {
+                continue;
+            }
+            searched++;
+            try {
+                retrofit2.Response<CommonsSearchDto> response =
+                        commons.searchFiles(place.getName() + " filetype:bitmap").execute();
+                if (response.isSuccessful()) {
+                    refusals = 0;
+                    String url = CommonsPhotos.pickNamed(response.body(), place.getName());
+                    if (url != null) {
+                        found.put(i, url);
+                    }
+                } else if (++refusals >= NAME_SEARCH_GIVE_UP_AFTER) {
+                    break;
+                }
+                Thread.sleep(NAME_SEARCH_PAUSE_MILLIS);
+            } catch (InterruptedException interrupted) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (java.io.IOException | RuntimeException ignored) {
+                // No photograph; the drawn artwork for its kind stands in.
+            }
+        }
+        for (java.util.Map.Entry<Integer, String> entry : found.entrySet()) {
+            enriched.set(entry.getKey(), enriched.get(entry.getKey()).withImageUrl(entry.getValue()));
         }
         return enriched;
     }

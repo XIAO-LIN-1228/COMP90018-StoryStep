@@ -24,6 +24,17 @@ public interface CommonsApiService {
     Call<CommonsGeosearchDto> area(@Query("ggscoord") String latPipeLon,
                                    @Query("ggsradius") int radiusMetres);
 
+    /**
+     * Files whose page text matches the words of a place's name. The last keyless resort for a
+     * place nothing geotagged: a plaque or a shopfront is often uploaded with the name in its
+     * title and no coordinate at all, so geosearch never sees it.
+     *
+     * <p>A text search will answer with something for almost any query, so the caller checks the
+     * returned title against the place's own name before believing it.
+     */
+    @GET("w/api.php?action=query&list=search&srnamespace=6&srlimit=6&format=json")
+    Call<CommonsSearchDto> searchFiles(@Query("srsearch") String query);
+
     /** Files (namespace 6) near {@code lat|lon}, with size, type and a scaled URL for each. */
     @GET("w/api.php?action=query&generator=geosearch&ggsnamespace=6&ggslimit=20"
             + "&prop=imageinfo&iiprop=url|size|mime&iiurlwidth=1280&format=json")

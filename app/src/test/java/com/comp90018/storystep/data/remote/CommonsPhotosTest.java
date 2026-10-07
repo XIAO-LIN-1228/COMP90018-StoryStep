@@ -117,4 +117,29 @@ public class CommonsPhotosTest {
         assertTrue(!CommonsPhotos.namesSomethingElse("University Cenotaph", "File:Melbourne 2019.jpg"));
         assertTrue(CommonsPhotos.namesSomethingElse("University Cenotaph", "File:The Old Arts Building.jpg"));
     }
+
+    @Test
+    public void aSearchResultCountsOnlyWhenItsTitleIsReallyThePlacesName() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+        CommonsSearchDto found = gson.fromJson("{\"query\":{\"search\":["
+                + "{\"title\":\"File:Prince Alfred Hotel, Carlton.jpg\"}]}}", CommonsSearchDto.class);
+        assertEquals("https://commons.wikimedia.org/wiki/Special:FilePath/"
+                        + "Prince_Alfred_Hotel%2C_Carlton.jpg?width=1280",
+                CommonsPhotos.pickNamed(found, "Prince Alfred Hotel"));
+
+        // A text search answers with something for almost any query; a library that is not this
+        // library must not be shown as it.
+        CommonsSearchDto wrong = gson.fromJson("{\"query\":{\"search\":["
+                + "{\"title\":\"File:State Library Victoria reading room.jpg\"}]}}",
+                CommonsSearchDto.class);
+        assertNull(CommonsPhotos.pickNamed(wrong, "Southbank Library"));
+
+        // Maps and plans are no more wanted here than in the geosearch results.
+        CommonsSearchDto plan = gson.fromJson("{\"query\":{\"search\":["
+                + "{\"title\":\"File:Prince Alfred Hotel floor plan.svg\"}]}}", CommonsSearchDto.class);
+        assertNull(CommonsPhotos.pickNamed(plan, "Prince Alfred Hotel"));
+
+        assertNull(CommonsPhotos.pickNamed(null, "Anything"));
+        assertNull(CommonsPhotos.pickNamed(found, null));
+    }
 }

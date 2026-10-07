@@ -204,6 +204,34 @@ public final class CommonsPhotos {
         return false;
     }
 
+    /**
+     * The first searched file whose title really is this place's, or null.
+     *
+     * <p>A text search answers with something for nearly any query - "Southbank Library" returns
+     * libraries that are not it - so a result counts only when its title shares the place's
+     * distinctive words and carries none of its own, the same test the geosearch results face.
+     */
+    @Nullable
+    public static String pickNamed(@Nullable CommonsSearchDto response, @Nullable String placeName) {
+        if (response == null || response.query == null || response.query.search == null
+                || placeName == null) {
+            return null;
+        }
+        for (CommonsSearchDto.Result result : response.query.search) {
+            if (result == null || result.title == null) {
+                continue;
+            }
+            String title = result.title;
+            if (NOT_A_PHOTOGRAPH.matcher(title).find()) {
+                continue;
+            }
+            if (sharesAWord(placeName, title) && !namesSomethingElse(placeName, title)) {
+                return OsmImageUrls.fromCommonsTag(title);
+            }
+        }
+        return null;
+    }
+
     /** {@code lat|lon} as geosearch wants it, to six decimals. */
     public static String coordinate(double latitude, double longitude) {
         return String.format(Locale.ROOT, "%.6f|%.6f", latitude, longitude);
