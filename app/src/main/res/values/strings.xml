@@ -203,7 +203,24 @@
     <string name="direction_west">west</string>
     <string name="direction_north_west">north-west</string>
     <string name="direction_towards">Head %1$s</string>
-    <string name="direction_no_compass">%1$s of you · no compass on this device</string>
+    <string name="direction_no_compass">%1$s of you · compass unavailable</string>
+    <string name="exploration_compass_heading">Facing %1$s · %2$d°</string>
+    <string name="exploration_compass_waiting">Compass unavailable</string>
+    <string name="exploration_compass_help">Waiting for a reliable heading</string>
+    <string name="exploration_compass_true_north">Compass · true north</string>
+    <string name="exploration_no_target">Choose a place for distance and direction</string>
+    <string name="exploration_at_target">At your destination</string>
+    <string name="exploration_map_waiting">Waiting for GPS</string>
+    <string name="exploration_map_position">Your location · ±%1$d m</string>
+    <string name="exploration_map_paused">Paused · last recorded location</string>
+    <string name="exploration_recenter">Show my location</string>
+    <string name="exploration_map_north">N ↑</string>
+    <string name="exploration_map_north_description">Map faces north</string>
+    <string name="exploration_photos_title">Capture a moment</string>
+    <string name="exploration_photos_hint">Photos stay with this journey</string>
+    <string name="exploration_route_legend">Dashed: planned · Solid: walked</string>
+    <string name="exploration_route_estimate_legend">Dashed: straight-line plan · Solid: walked</string>
+    <string name="exploration_trail_legend">Solid: your recorded trail</string>
 
     <string name="exploration_stop_title">Finish this exploration?</string>
     <string name="exploration_stop_message">Your progress and discovered stories will be saved on this device.</string>

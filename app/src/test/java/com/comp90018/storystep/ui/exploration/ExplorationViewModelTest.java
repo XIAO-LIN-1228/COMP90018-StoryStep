@@ -290,6 +290,62 @@ public class ExplorationViewModelTest {
 
     // --- helpers -------------------------------------------------------------------------------
 
+    @Test
+    public void compassWorksDuringAFreeWalkWithoutADestination() {
+        FakeHeadingSource heading = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, heading, FixedDeclinationSource.melbourne()));
+        becomeUsable();
+        coordinator.requestStart();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        heading.emit(79.0f);
+
+        assertTrue(state().hasHeading());
+        assertEquals(90.0, state().getHeadingDegrees(), 0.1);
+        assertFalse(state().hasDirectionArrow());
+        assertFalse(state().hasCardinal());
+        assertEquals(ORIGIN, viewModel.getMapState().getValue().getPosition());
+    }
+
+    @Test
+    public void aSilentCompassExpiresOnTheDisplayTickWithoutAnotherSensorEvent() {
+        FakeHeadingSource heading = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, heading, FixedDeclinationSource.melbourne()));
+        startTowardsMuseum();
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        heading.emit(0.0f);
+        assertTrue(state().hasHeading());
+        assertTrue(state().hasDirectionArrow());
+
+        clock.advance(6_000L);
+        ticker.tick();
+
+        assertFalse(state().hasHeading());
+        assertFalse(state().hasDirectionArrow());
+        assertTrue(state().hasCardinal());
+        assertEquals(ORIGIN, viewModel.getMapState().getValue().getPosition());
+    }
+
+    @Test
+    public void locationUpdatesMoveTheMapButHeadingAndTimerTicksDoNotRebuildTheTrail() {
+        FakeHeadingSource heading = new FakeHeadingSource();
+        useCoordinator(new SensingSources(null, heading, FixedDeclinationSource.melbourne()));
+        startTowardsMuseum();
+        final int[] mapUpdates = {0};
+        viewModel.getMapState().observeForever(map -> mapUpdates[0]++);
+        locationSource.emit(sampleAt(ORIGIN, 5.0f, 1_000L));
+        int afterFix = mapUpdates[0];
+        heading.emit(0.0f);
+        ticker.tick();
+        assertEquals(afterFix, mapUpdates[0]);
+
+        clock.advance(10_000L);
+        GeoPoint next = new GeoPoint(-37.79620, 144.96140);
+        locationSource.emit(sampleAt(next, 5.0f, 11_000L));
+        assertEquals(next, viewModel.getMapState().getValue().getPosition());
+        assertEquals(2, viewModel.getMapState().getValue().getSegments().get(0).size());
+        assertEquals(afterFix + 1, mapUpdates[0]);
+    }
+
     /**
      * Rebuilds the coordinator and the ViewModel with a different sensing configuration.
      *
