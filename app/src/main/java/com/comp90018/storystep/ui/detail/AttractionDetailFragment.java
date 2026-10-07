@@ -132,8 +132,8 @@ public class AttractionDetailFragment extends Fragment {
             photoCredit.setVisibility(View.VISIBLE);
             com.bumptech.glide.Glide.with(imageView)
                     .load(attraction.getImageUrl())
-                    .placeholder(R.drawable.bg_photo_placeholder)
-                    .error(R.drawable.bg_photo_placeholder)
+                    .placeholder(AttractionArtwork.categoryDrawable(attraction.getCategory()))
+                    .error(AttractionArtwork.categoryDrawable(attraction.getCategory()))
                     .centerCrop()
                     .into(imageView);
         } else if (hero == R.drawable.bg_photo_placeholder) {
