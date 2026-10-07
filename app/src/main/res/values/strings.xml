@@ -11,10 +11,10 @@
     <string name="nearby_list_description">List of nearby attractions</string>
 
     <!-- Where the listed distances are measured from -->
-    <string name="nearby_origin_reference_area">Distances from the demo area, not your location. Start exploring to use your position.</string>
+    <string name="nearby_origin_reference_area">Location not acquired. Browsing the demo area; distances are measured from that area.</string>
     <string name="nearby_origin_live_precise">Distances from your current location.</string>
     <string name="nearby_origin_live_approximate">Approximate distances: you granted approximate location only.</string>
-    <string name="nearby_origin_live_paused">Distances from where you last were. Paused, so they are no longer updating.</string>
+    <string name="nearby_origin_live_paused">Distances from your last known location; waiting for a current position.</string>
 
     <!-- Exploration control and location access -->
     <string name="nearby_recenter">Back to my location</string>

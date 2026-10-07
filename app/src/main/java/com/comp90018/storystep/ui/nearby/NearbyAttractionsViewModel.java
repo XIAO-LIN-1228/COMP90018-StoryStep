@@ -42,14 +42,9 @@ import java.util.Set;
 /**
  * Screen state for the nearby list.
  *
- * <p>Before a session starts, the list is measured from a fixed reference area and labelled as
- * such. Once the coordinator publishes accepted samples it follows the user. Distances are
- * recomputed from the retained domain objects on every sample, but the repository is re-queried
- * only after meaningful movement, so walking does not produce a query per fix.
- *
- * <p>It does not own the location subscription and does not filter samples; the coordinator does
- * both, so the same session is shared with every other screen. The Fragment renders what this class
- * publishes and performs no geographic calculation.
+ * <p>Foreground home discovery owns a location subscription independent of journey recording.
+ * Until a device fix arrives, the reference area is only a labelled browsing fallback.
+ * Accepted positions update distances; meaningful movement triggers a repository query.
  */
 public class NearbyAttractionsViewModel extends ViewModel
         implements ExplorationCoordinator.Observer, SavedAttractionRepository.Observer {
@@ -66,6 +61,64 @@ public class NearbyAttractionsViewModel extends ViewModel
     private final double radiusMeters;
     private final ExplorationCoordinator coordinator;
     private final Clock clock;
+    private LocationSource homeLocationSource;
+    private int homeLocationGeneration;
+
+    /** Foreground discovery has its own subscription and never records a journey. */
+    public void startHomeLocation(LocationSource source, LocationAccess access) {
+        stopHomeLocation();
+        mapOrigin.setValue(null);
+        if (!access.isGranted()) {
+            returnToReferenceArea();
+            publishAccessProblem(access);
+            return;
+        }
+        liveLabel = access == LocationAccess.APPROXIMATE
+                ? NearbyUiState.OriginLabel.LIVE_APPROXIMATE : NearbyUiState.OriginLabel.LIVE_PRECISE;
+        homeLocationSource = source;
+        final int generation = ++homeLocationGeneration;
+        // Discovery accepts coarse fixes but still rejects stale and out-of-order observations.
+        final com.comp90018.storystep.domain.geo.LocationSampleFilter filter =
+                new com.comp90018.storystep.domain.geo.LocationSampleFilter(
+                        new com.comp90018.storystep.domain.geo.LocationQualityPolicy(
+                                access == LocationAccess.APPROXIMATE ? 3000.0 : 100.0,
+                                15_000L, 0.0, 100.0));
+        homeLocationUnavailable(LocationSource.Reason.NO_RECENT_FIX);
+        source.startUpdates(new LocationSource.Listener() {
+            @Override public void onLocationChanged(LocationSample sample) {
+                if (generation != homeLocationGeneration) { return; }
+                if (sample.getOrigin() == com.comp90018.storystep.domain.model.LocationOrigin.DEVICE
+                        && filter.offer(sample, clock.monotonicMillis()).isAccepted()) {
+                    applySample(sample);
+                }
+            }
+            @Override public void onLocationUnavailable(LocationSource.Reason reason) {
+                if (generation == homeLocationGeneration) { homeLocationUnavailable(reason); }
+            }
+        });
+    }
+
+    public void stopHomeLocation() {
+        ++homeLocationGeneration;
+        if (homeLocationSource != null) {
+            homeLocationSource.stopUpdates();
+            homeLocationSource = null;
+        }
+        if (originLabel != NearbyUiState.OriginLabel.REFERENCE_AREA) {
+            originLabel = NearbyUiState.OriginLabel.LIVE_PAUSED;
+        }
+        mapOrigin.setValue(null);
+        republishWithCurrentPhase();
+    }
+
+    private void homeLocationUnavailable(LocationSource.Reason reason) {
+        if (originLabel != NearbyUiState.OriginLabel.REFERENCE_AREA) {
+            originLabel = NearbyUiState.OriginLabel.LIVE_PAUSED;
+        }
+        mapOrigin.setValue(null);
+        publishLocationUnavailable(reason);
+    }
+
     private final RecommendationEngine recommendations = new RecommendationEngine();
     private final MutableLiveData<Mode> ordering = new MutableLiveData<>(Mode.RECOMMENDED);
     private WeatherResult recommendationWeather;
@@ -151,7 +204,7 @@ public class NearbyAttractionsViewModel extends ViewModel
         this(repository, savedAttractions, referenceOrigin, radiusMeters, coordinator, history,
                 new Clock() {
                     public long wallClockMillis() { return System.currentTimeMillis(); }
-                    public long monotonicMillis() { return System.nanoTime() / 1_000_000L; }
+                    public long monotonicMillis() { return android.os.SystemClock.elapsedRealtime(); }
                 });
     }
 
@@ -175,7 +228,7 @@ public class NearbyAttractionsViewModel extends ViewModel
                     ? NearbyUiState.OriginLabel.LIVE_APPROXIMATE : NearbyUiState.OriginLabel.LIVE_PRECISE;
             originLabel = liveLabel;
         }
-        mapOrigin.setValue(currentOrigin);
+        mapOrigin.setValue(originLabel == NearbyUiState.OriginLabel.REFERENCE_AREA ? null : currentOrigin);
         coordinator.addObserver(this);
         savedAttractions.addObserver(this);
         // The immediate observer replay can be an unloaded repository's empty placeholder.
@@ -291,6 +344,11 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     @Override
     protected void onCleared() {
+        ++homeLocationGeneration;
+        if (homeLocationSource != null) {
+            homeLocationSource.stopUpdates();
+            homeLocationSource = null;
+        }
         ++requestGeneration;
         ++visitedGeneration;
         ++savedVersion;
@@ -393,7 +451,7 @@ public class NearbyAttractionsViewModel extends ViewModel
         } else if (access == LocationAccess.APPROXIMATE) {
             liveLabel = NearbyUiState.OriginLabel.LIVE_APPROXIMATE;
         }
-        if (sessionPhase == NearbyUiState.SessionPhase.ACTIVE) {
+        if (mapOrigin.getValue() != null && sessionPhase == NearbyUiState.SessionPhase.ACTIVE) {
             originLabel = liveLabel;
         }
         // The coordinator decides whether this ends a running session; it owns that transition.
@@ -488,9 +546,13 @@ public class NearbyAttractionsViewModel extends ViewModel
         }
         NearbyUiState.SessionPhase previous = sessionPhase;
         sessionPhase = phase;
+        if (homeLocationSource != null) {
+            republishWithCurrentPhase();
+            return;
+        }
 
         if (phase == NearbyUiState.SessionPhase.ACTIVE) {
-            originLabel = liveLabel;
+            if (mapOrigin.getValue() != null) { originLabel = liveLabel; }
             // Nothing is published here: the first accepted sample, or a waiting state from the
             // coordinator, is what actually changes the list.
             republishWithCurrentPhase();
@@ -514,6 +576,11 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     @Override
     public void onSample(LocationSample sample) {
+        if (homeLocationSource != null) { return; }
+        applySample(sample);
+    }
+
+    private void applySample(LocationSample sample) {
         GeoPoint acceptedOrigin = sample.getPosition();
         boolean firstFix = lastQueryOrigin == null;
         boolean relabel = originLabel != liveLabel;
@@ -536,6 +603,11 @@ public class NearbyAttractionsViewModel extends ViewModel
 
     @Override
     public void onLocationUnavailable(LocationSource.Reason reason) {
+        if (homeLocationSource != null) { return; }
+        publishLocationUnavailable(reason);
+    }
+
+    private void publishLocationUnavailable(LocationSource.Reason reason) {
         switch (reason) {
             case PERMISSION_DENIED:
                 publishBlocked(NearbyUiState.Status.PERMISSION_DENIED);
@@ -548,7 +620,7 @@ public class NearbyAttractionsViewModel extends ViewModel
                 // there is no list to relabel, and publishing here would show a false "no results"
                 // instead of the waiting state.
                 liveLabel = NearbyUiState.OriginLabel.LIVE_APPROXIMATE;
-                originLabel = liveLabel;
+                if (mapOrigin.getValue() != null) { originLabel = liveLabel; }
                 if (loadedAttractions.isEmpty()) {
                     publishBlocked(NearbyUiState.Status.WAITING_FOR_FIX);
                 } else {
@@ -590,7 +662,7 @@ public class NearbyAttractionsViewModel extends ViewModel
     private void returnToReferenceArea() {
         originLabel = NearbyUiState.OriginLabel.REFERENCE_AREA;
         currentOrigin = referenceOrigin;
-        mapOrigin.setValue(referenceOrigin);
+        mapOrigin.setValue(null);
         lastQueryOrigin = null;
         query(referenceOrigin);
     }
