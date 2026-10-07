@@ -249,6 +249,17 @@
     <string name="history_duration_minutes">%1$d min</string>
     <string name="history_duration_hours">%1$dh %2$dm</string>
     <string name="history_duration_under_a_minute">&lt;1 min</string>
+    <string name="history_date_today">Today</string>
+    <string name="history_date_yesterday">Yesterday</string>
+    <string name="history_date_tomorrow">Tomorrow</string>
+    <plurals name="history_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <plurals name="history_days_ahead">
+        <item quantity="one">In %1$d day</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
     <plurals name="journey_photo_count">
         <item quantity="one">%1$d photograph from this walk</item>
         <item quantity="other">%1$d photographs from this walk</item>
