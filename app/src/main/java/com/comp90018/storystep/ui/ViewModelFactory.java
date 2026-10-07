@@ -65,7 +65,9 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
-            return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator());
+            return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator(),
+                    appContainer.getWalkPlanner(), appContainer.getWalkRouteSource(),
+                    appContainer.getIoExecutor(), appContainer.getMainExecutor());
         }
         if (modelClass.isAssignableFrom(PlanStartViewModel.class)) {
             return (T) new PlanStartViewModel(appContainer.getExplorationCoordinator());

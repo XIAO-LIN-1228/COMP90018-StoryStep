@@ -45,6 +45,11 @@ public class ExplorationFragment extends Fragment {
     private TextView offlinePill;
     private com.comp90018.storystep.platform.connectivity.ConnectivityMonitor connectivity;
     private boolean remainingUnavailable;
+    private MaterialButton recenterButton;
+    private TextView locationStatusView;
+    private TextView compassHeadingView;
+    private TextView compassCaptionView;
+    private ImageView compassNeedle;
 
     /** Keeps the compass from narrating every tremor; see {@link CardinalAnnouncer}. */
     private final CardinalAnnouncer directionAnnouncer = new CardinalAnnouncer();
@@ -106,7 +111,22 @@ public class ExplorationFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_exploration, container, false);
+        View root = inflater.inflate(R.layout.fragment_exploration, container, false);
+        if (getResources().getConfiguration().orientation
+                == android.content.res.Configuration.ORIENTATION_LANDSCAPE) {
+            // Use the width of a short window, keeping both the map and full-height controls.
+            android.widget.LinearLayout body = root.findViewById(R.id.exploration_body);
+            body.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+            for (int i = 0; i < body.getChildCount(); i++) {
+                View child = body.getChildAt(i);
+                android.widget.LinearLayout.LayoutParams params =
+                        (android.widget.LinearLayout.LayoutParams) child.getLayoutParams();
+                params.width = 0;
+                params.height = ViewGroup.LayoutParams.MATCH_PARENT;
+                child.setLayoutParams(params);
+            }
+        }
+        return root;
     }
 
     @Override
@@ -124,6 +144,12 @@ public class ExplorationFragment extends Fragment {
                             state.progress.arrivedCount(), state.progress.theme.stops.size(), state.progress.skippedCount()));
         });
         map = view.findViewById(R.id.exploration_map);
+        recenterButton = view.findViewById(R.id.exploration_recenter);
+        recenterButton.setOnClickListener(v -> map.recenter());
+        locationStatusView = view.findViewById(R.id.exploration_location_status);
+        compassHeadingView = view.findViewById(R.id.exploration_compass_heading);
+        compassCaptionView = view.findViewById(R.id.exploration_compass_caption);
+        compassNeedle = view.findViewById(R.id.exploration_compass_needle);
         offlinePill = view.findViewById(R.id.exploration_offline);
         connectivity = new com.comp90018.storystep.platform.connectivity.AndroidConnectivityMonitor(
                 requireContext().getApplicationContext());
@@ -269,7 +295,7 @@ public class ExplorationFragment extends Fragment {
         }
     }
 
-    /** Says how many photographs the walk has, and nothing at all when it has none. */
+    /** Keeps the photo actions' purpose clear before and after the first photograph. */
     private void showPhotoCount() {
         View view = getView();
         String sessionId = walkId();
@@ -280,7 +306,10 @@ public class ExplorationFragment extends Fragment {
         int taken = sessionId == null ? 0
                 : com.comp90018.storystep.platform.media.JourneyPhotoStore
                         .names(requireContext(), sessionId).size();
-        count.setVisibility(taken == 0 ? View.GONE : View.VISIBLE);
+        count.setVisibility(View.VISIBLE);
+        if (taken == 0) {
+            count.setText(R.string.exploration_photos_hint);
+        }
         if (taken > 0) {
             count.setText(getString(taken == 1
                     ? R.string.exploration_photo_count
@@ -319,6 +348,9 @@ public class ExplorationFragment extends Fragment {
         boolean walking = state.getState() != null && state.getState().hasSession();
         requireView().findViewById(R.id.exploration_photo_row)
                 .setVisibility(walking ? View.VISIBLE : View.GONE);
+        boolean canAddPhotos = state.isCollecting() || state.isResumeVisible();
+        requireView().findViewById(R.id.exploration_camera_button).setEnabled(canAddPhotos);
+        requireView().findViewById(R.id.exploration_library_button).setEnabled(canAddPhotos);
         showPhotoCount();
         // Steps and climb: each column appears only when its sensor reported, and the row
         // only when at least one did.
@@ -344,6 +376,12 @@ public class ExplorationFragment extends Fragment {
                 : getString(R.string.exploration_accuracy_unavailable));
         movementView.setText(DirectionLabels.movementOf(state.getMovementState()));
         renderDirection(state);
+        renderCompass(state);
+        locationStatusView.setText(!state.hasAccuracy()
+                ? getString(R.string.exploration_map_waiting)
+                : state.isCollecting()
+                        ? getString(R.string.exploration_map_position, Math.round(state.getAccuracyMeters()))
+                        : getString(R.string.exploration_map_paused));
 
         // The durability warning replaces the standing notice rather than joining it: a second
         // line of small text under an unread one is a line nobody reads.
@@ -425,7 +463,11 @@ public class ExplorationFragment extends Fragment {
     private void renderDirection(ExplorationUiState state) {
         if (!state.hasCardinal()) {
             directionArrow.setVisibility(View.GONE);
-            directionView.setText(remainingUnavailable
+            directionView.setText(state.getDestinationName() == null
+                    ? R.string.exploration_no_target
+                    : state.hasRemainingDistance() && state.getRemainingDistanceMeters() == 0.0
+                    ? R.string.exploration_at_target
+                    : remainingUnavailable
                     ? R.string.exploration_remaining_unavailable
                     : R.string.exploration_direction_unavailable);
             announceDirection(null);
@@ -441,6 +483,23 @@ public class ExplorationFragment extends Fragment {
             directionView.setText(getString(R.string.direction_no_compass, cardinal));
         }
         announceDirection(state.getCardinal());
+    }
+
+    private void renderCompass(ExplorationUiState state) {
+        if (!state.hasHeading()) {
+            compassNeedle.setVisibility(View.INVISIBLE);
+            compassHeadingView.setText(R.string.exploration_compass_waiting);
+            compassCaptionView.setText(R.string.exploration_compass_help);
+            return;
+        }
+        double heading = state.getHeadingDegrees();
+        compassNeedle.setVisibility(View.VISIBLE);
+        // North turns left on the compass when the phone turns clockwise towards the east.
+        compassNeedle.setRotation((float) -heading);
+        compassHeadingView.setText(getString(R.string.exploration_compass_heading,
+                getString(DirectionLabels.cardinalOf(CardinalDirection.fromBearing(heading))),
+                Math.round(heading) % 360));
+        compassCaptionView.setText(R.string.exploration_compass_true_north);
     }
 
     /**
@@ -532,17 +591,25 @@ public class ExplorationFragment extends Fragment {
                 .show();
     }
 
-    private boolean framedWalk;
-
     private void renderMap(ExplorationMapState state) {
         map.setOrigin(state.getPosition());
         map.setDestination(state.getDestination());
         map.setRoute(state.getSegments());
-        // Frame the walk once, when both ends are known; after that the user owns the viewport.
-        if (!framedWalk && state.getPosition() != null && state.getDestination() != null) {
-            map.frameWalk(state.getPosition(), state.getDestination());
-            framedWalk = true;
+        com.comp90018.storystep.domain.plan.PlannedRoute planned = state.getPlannedRoute();
+        map.setPlannedRoute(planned == null ? java.util.Collections.emptyList() : planned.getPath());
+        java.util.List<PlaceMapView.Place> stops = new java.util.ArrayList<>();
+        for (int i = 0; i < state.getPlannedStops().size(); i++) {
+            com.comp90018.storystep.domain.model.Attraction stop = state.getPlannedStops().get(i);
+            stops.add(PlaceMapView.Place.stop(stop.getId(), stop.getName(), stop.getLocation(), i + 1));
         }
+        map.setPlaces(stops);
+        ((TextView) requireView().findViewById(R.id.exploration_route_legend)).setText(planned == null
+                ? R.string.exploration_trail_legend
+                : planned.followsStreets() ? R.string.exploration_route_legend
+                : R.string.exploration_route_estimate_legend);
+        recenterButton.setEnabled(state.getPosition() != null);
+        // Keep the first fix at walking zoom; a distant destination must not shrink the local
+        // trail to a speck. Panning remains user-controlled, with an explicit recenter action.
     }
 
     @Override

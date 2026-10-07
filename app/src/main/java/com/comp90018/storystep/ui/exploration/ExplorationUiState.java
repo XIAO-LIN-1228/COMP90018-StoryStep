@@ -277,6 +277,15 @@ public final class ExplorationUiState {
 
     // --- direction -----------------------------------------------------------------------------
 
+    /** Independent of the destination: the compass describes the phone's orientation. */
+    public boolean hasHeading() {
+        return guidance.hasHeading();
+    }
+
+    public double getHeadingDegrees() {
+        return guidance.getHeadingDegrees();
+    }
+
     /**
      * True when an arrow may be drawn.
      *

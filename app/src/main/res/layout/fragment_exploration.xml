@@ -9,15 +9,16 @@
     <LinearLayout
         android:id="@+id/exploration_header"
         android:layout_width="0dp"
-        android:layout_height="@dimen/app_bar_height"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/app_bar_height"
         android:background="@drawable/bg_brand_header"
         android:gravity="center_vertical"
         android:orientation="horizontal"
         android:paddingStart="0dp"
         android:paddingEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <ImageButton
             android:id="@+id/exploration_back"
@@ -37,7 +38,9 @@
             android:layout_weight="1"
             android:text="@string/exploration_no_destination"
             android:textColor="@color/story_on_header"
-            android:textSize="20sp" />
+            android:textSize="20sp"
+            android:maxLines="2"
+            android:ellipsize="end" />
 
         <TextView
             android:id="@+id/exploration_duration"
@@ -49,422 +52,540 @@
             android:textSize="16sp" />
     </LinearLayout>
 
-    <com.comp90018.storystep.ui.widget.PlaceMapView
-        android:id="@+id/exploration_map"
+    <LinearLayout
+        android:id="@+id/exploration_body"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintBottom_toTopOf="@id/exploration_guidance_card"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/exploration_header" />
-
-    <TextView
-        android:id="@+id/exploration_offline"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/space_12"
-        android:layout_marginEnd="@dimen/space_12"
-        android:background="@drawable/bg_stale_banner"
-        android:drawablePadding="6dp"
-        android:fontFamily="@font/bricolage_semibold"
-        android:paddingStart="12dp"
-        android:paddingTop="6dp"
-        android:paddingEnd="12dp"
-        android:paddingBottom="6dp"
-        android:text="@string/exploration_offline"
-        android:textColor="@color/story_on_ink"
-        android:textSize="@dimen/text_chip"
-        android:visibility="gone"
-        app:drawableStartCompat="@drawable/ic_info_outline"
-        app:drawableTint="@color/story_on_ink"
-        app:layout_constraintEnd_toEndOf="@id/exploration_map"
-        app:layout_constraintTop_toTopOf="@id/exploration_map" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/exploration_guidance_card"
-        style="@style/Widget.StoryStep.Card"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_margin="12dp"
-        app:layout_constrainedHeight="true"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/exploration_header"
-        app:layout_constraintVertical_bias="1">
+        app:layout_constraintBottom_toTopOf="@id/stop_exploration_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <!--
-            The guidance, the six statistics and the five controls are taller than a landscape
-            window and taller again at a large font scale. The card is bounded by the header
-            above it (constrainedHeight), and its content scrolls inside that bound, so Stop is
-            always reachable. The map above takes whatever space is left, down to none.
-        -->
-        <androidx.core.widget.NestedScrollView
+        <!-- Reserve map space independently of the scrollable dashboard. -->
+        <FrameLayout
+            android:id="@+id/exploration_map_area"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="0dp"
+            android:layout_weight="0.44">
+
+            <com.comp90018.storystep.ui.widget.PlaceMapView
+                android:id="@+id/exploration_map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
 
             <LinearLayout
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginStart="12dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="76dp"
+                android:orientation="vertical">
 
                 <TextView
-                    android:id="@+id/exploration_state_chip"
-                    android:accessibilityLiveRegion="polite"
+                    android:id="@+id/exploration_location_status"
                     style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/bg_soft_teal"
-                    android:paddingStart="10dp"
-                    android:paddingTop="6dp"
-                    android:paddingEnd="10dp"
-                    android:paddingBottom="6dp"
-                    android:text="@string/exploration_state_starting"
-                    android:textColor="@color/story_ink_pressed"
-                    android:textStyle="bold" />
+                    android:background="@drawable/bg_chip_filled"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:text="@string/exploration_map_waiting" />
 
-                <!-- Which stop of the planned walk this is; absent when there is no plan. -->
                 <TextView
-                    android:id="@+id/exploration_plan_progress"
+                    android:id="@+id/exploration_offline"
                     style="@style/TextAppearance.StoryStep.Supporting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_8"
-                    android:textColor="@color/story_ink_2"
-                    android:visibility="gone"
-                    tools:text="Stop 2 of 4" />
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_stale_banner"
+                    android:paddingHorizontal="12dp"
+                    android:paddingVertical="8dp"
+                    android:text="@string/exploration_offline"
+                    android:textColor="@color/story_on_ink"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Widget.StoryStep.Pill"
+                android:layout_gravity="top|end"
+                android:layout_margin="12dp"
+                android:contentDescription="@string/exploration_map_north_description"
+                android:text="@string/exploration_map_north" />
+
+            <TextView
+                android:id="@+id/exploration_route_legend"
+                style="@style/TextAppearance.StoryStep.Supporting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_marginStart="12dp"
+                android:layout_marginBottom="28dp"
+                android:layout_marginEnd="76dp"
+                android:background="@drawable/bg_chip_filled"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="6dp"
+                android:text="@string/exploration_trail_legend"
+                android:textSize="12sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/exploration_recenter"
+                style="@style/Widget.StoryStep.Button.Secondary"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="12dp"
+                android:contentDescription="@string/exploration_recenter"
+                android:enabled="false"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:padding="12dp"
+                app:cornerRadius="24dp"
+                app:icon="@drawable/ic_location_outline"
+                app:iconGravity="textStart"
+                app:iconPadding="0dp"
+                app:iconSize="24dp"
+                app:iconTint="@color/story_ink"
+                app:strokeColor="@color/story_outline"
+                app:strokeWidth="1dp" />
+        </FrameLayout>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/exploration_guidance_card"
+            style="@style/Widget.StoryStep.Card"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="0.56"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp">
+
+            <androidx.core.widget.NestedScrollView
+                android:id="@+id/exploration_dashboard_scroll"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal">
-
-                    <!--
-                        Decorative: the direction text beside it says the same thing in words, and a
-                        screen reader announcing a rotation angle would be noise, not information.
-                    -->
-                    <ImageView
-                        android:id="@+id/exploration_direction_arrow"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="12dp"
-                        android:importantForAccessibility="no"
-                        android:src="@drawable/ic_direction_arrow"
-                        android:visibility="gone" />
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:layout_width="match_parent"
-                            android:id="@+id/exploration_direction"
-                            android:text="@string/exploration_direction_unavailable" />
-
-                        <TextView
-                            style="@style/TextAppearance.StoryStep.Display"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:id="@+id/exploration_remaining"
-                            android:accessibilityLiveRegion="polite"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/exploration_remaining_unavailable"
-                            android:textSize="@dimen/text_display" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_16"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:text="@string/exploration_label_travelled" />
-
-                        <TextView
-                            android:id="@+id/exploration_travelled"
-                            style="@style/Widget.StoryStep.StatValue"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/exploration_travelled_zero" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:text="@string/exploration_label_movement" />
-
-                        <TextView
-                            android:id="@+id/exploration_movement"
-                            style="@style/Widget.StoryStep.StatValue"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/movement_unknown" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:text="@string/exploration_label_accuracy" />
-
-                        <TextView
-                            android:id="@+id/exploration_accuracy"
-                            style="@style/Widget.StoryStep.StatValue"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/exploration_accuracy_unavailable" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!--
-                    Steps and climb, from the phone's own counters. The whole row is hidden on a
-                    device that has neither, rather than showing two confident zeros.
-                -->
-                <LinearLayout
-                    android:id="@+id/exploration_fitness"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_16"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:id="@+id/exploration_steps_column"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:text="@string/exploration_label_steps" />
-
-                        <TextView
-                            android:id="@+id/exploration_steps"
-                            style="@style/Widget.StoryStep.StatValue"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/exploration_count_zero" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:id="@+id/exploration_climb_column"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
-
-                        <TextView
-                            style="@style/Widget.StoryStep.StatLabel"
-                            android:text="@string/exploration_label_climb" />
-
-                        <TextView
-                            android:id="@+id/exploration_climb"
-                            style="@style/Widget.StoryStep.StatValue"
-                            android:layout_marginTop="4dp"
-                            android:text="@string/exploration_travelled_zero" />
-                    </LinearLayout>
-
-                    <!-- Keeps the two columns on the same grid as the three above. -->
-                    <Space
-                        android:layout_width="0dp"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-                </LinearLayout>
-
-                <!--
-                    Weather is an independent optional section, not a column of the row above. It has
-                    its own source and its own failure, and it must be able to say "unavailable"
-                    without the travelled distance beside it going blank too.
-                -->
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/exploration_weather"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/weather_loading" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/exploration_theme" style="@style/Widget.StoryStep.Button.Secondary"
-                    android:layout_width="match_parent" android:layout_height="wrap_content"
-                    android:text="@string/theme_view_progress" android:visibility="gone" />
-
-                <TextView
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/exploration_notice"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/exploration_notice" />
-
-                <!--
-                    The arrival prompt lives on the dashboard rather than as a separate screen: the
-                    session is still running, and pushing a full-screen interstitial over a live walk
-                    would interrupt the very thing the user is doing.
-                -->
-                <LinearLayout
-                    android:id="@+id/arrival_banner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:background="@color/story_ink_wash"
                     android:orientation="vertical"
-                    android:padding="12dp"
-                    android:visibility="gone">
+                    android:padding="16dp">
 
                     <TextView
-                        android:id="@+id/arrival_banner_text"
+                        android:id="@+id/exploration_state_chip"
                         android:accessibilityLiveRegion="polite"
-                        style="@style/TextAppearance.StoryStep.Title"
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_soft_teal"
+                        android:paddingStart="10dp"
+                        android:paddingTop="6dp"
+                        android:paddingEnd="10dp"
+                        android:paddingBottom="6dp"
+                        android:text="@string/exploration_state_starting"
+                        android:textColor="@color/story_ink_pressed"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/exploration_compass_needle"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="12dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_compass_needle"
+                            android:visibility="invisible" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/exploration_compass_heading"
+                                style="@style/TextAppearance.StoryStep.Title"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/exploration_compass_waiting"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/exploration_compass_caption"
+                                style="@style/TextAppearance.StoryStep.Supporting"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/exploration_compass_help"
+                                android:textSize="12sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Which stop of the planned walk this is; absent when there is no plan. -->
+                    <TextView
+                        android:id="@+id/exploration_plan_progress"
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_8"
+                        android:textColor="@color/story_ink_2"
+                        android:visibility="gone"
+                        tools:text="Stop 2 of 4" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <!--
+                            Decorative: the direction text beside it says the same thing in words, and a
+                            screen reader announcing a rotation angle would be noise, not information.
+                        -->
+                        <ImageView
+                            android:id="@+id/exploration_direction_arrow"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="12dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_direction_arrow"
+                            android:visibility="gone" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:layout_width="match_parent"
+                                android:id="@+id/exploration_direction"
+                                android:text="@string/exploration_direction_unavailable" />
+
+                            <TextView
+                                style="@style/TextAppearance.StoryStep.Display"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:id="@+id/exploration_remaining"
+                                android:accessibilityLiveRegion="polite"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/exploration_remaining_unavailable"
+                                android:textSize="@dimen/text_display" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/exploration_photo_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/TextAppearance.StoryStep.Title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/exploration_photos_title"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/exploration_photo_count"
+                            style="@style/TextAppearance.StoryStep.Supporting"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:text="@string/exploration_photos_hint" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:baselineAligned="false"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/exploration_camera_button"
+                                style="@style/Widget.StoryStep.Button.Photo"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/exploration_take_photo"
+                                android:textColor="@color/story_on_ink"
+                                app:backgroundTint="@color/story_ink"
+                                app:icon="@drawable/ic_camera"
+                                app:iconTint="@color/story_on_ink"
+                                app:strokeWidth="0dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/exploration_library_button"
+                                style="@style/Widget.StoryStep.Button.Photo"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="12dp"
+                                android:layout_weight="1"
+                                android:text="@string/exploration_add_photo"
+                                app:icon="@drawable/ic_photo_library" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_16"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:text="@string/exploration_label_travelled" />
+
+                            <TextView
+                                android:id="@+id/exploration_travelled"
+                                style="@style/Widget.StoryStep.StatValue"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/exploration_travelled_zero" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:text="@string/exploration_label_movement" />
+
+                            <TextView
+                                android:id="@+id/exploration_movement"
+                                style="@style/Widget.StoryStep.StatValue"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/movement_unknown" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:text="@string/exploration_label_accuracy" />
+
+                            <TextView
+                                android:id="@+id/exploration_accuracy"
+                                style="@style/Widget.StoryStep.StatValue"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/exploration_accuracy_unavailable" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!--
+                        Steps and climb, from the phone's own counters. The whole row is hidden on a
+                        device that has neither, rather than showing two confident zeros.
+                    -->
+                    <LinearLayout
+                        android:id="@+id/exploration_fitness"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/space_16"
+                        android:baselineAligned="false"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <LinearLayout
+                            android:id="@+id/exploration_steps_column"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:text="@string/exploration_label_steps" />
+
+                            <TextView
+                                android:id="@+id/exploration_steps"
+                                style="@style/Widget.StoryStep.StatValue"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/exploration_count_zero" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/exploration_climb_column"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/Widget.StoryStep.StatLabel"
+                                android:text="@string/exploration_label_climb" />
+
+                            <TextView
+                                android:id="@+id/exploration_climb"
+                                style="@style/Widget.StoryStep.StatValue"
+                                android:layout_marginTop="4dp"
+                                android:text="@string/exploration_travelled_zero" />
+                        </LinearLayout>
+
+                        <!-- Keeps the two columns on the same grid as the three above. -->
+                        <Space
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+
+                    <!--
+                        Weather is an independent optional section, not a column of the row above. It has
+                        its own source and its own failure, and it must be able to say "unavailable"
+                        without the travelled distance beside it going blank too.
+                    -->
+                    <TextView
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/exploration_weather"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/weather_loading" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/exploration_theme" style="@style/Widget.StoryStep.Button.Secondary"
+                        android:layout_width="match_parent" android:layout_height="wrap_content"
+                        android:text="@string/theme_view_progress" android:visibility="gone" />
 
                     <TextView
                         style="@style/TextAppearance.StoryStep.Supporting"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="2dp"
-                        android:text="@string/exploration_arrival_supporting" />
+                        android:id="@+id/exploration_notice"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/exploration_notice" />
 
+                    <!--
+                        The arrival prompt lives on the dashboard rather than as a separate screen: the
+                        session is still running, and pushing a full-screen interstitial over a live walk
+                        would interrupt the very thing the user is doing.
+                    -->
                     <LinearLayout
+                        android:id="@+id/arrival_banner"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:background="@color/story_ink_wash"
+                        android:orientation="vertical"
+                        android:padding="12dp"
+                        android:visibility="gone">
+
+                        <TextView
+                            android:id="@+id/arrival_banner_text"
+                            android:accessibilityLiveRegion="polite"
+                            style="@style/TextAppearance.StoryStep.Title"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content" />
+
+                        <TextView
+                            style="@style/TextAppearance.StoryStep.Supporting"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/exploration_arrival_supporting" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:orientation="horizontal">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/arrival_view_story_button"
+                                style="@style/Widget.StoryStep.Button.Primary"
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/exploration_arrival_view_story" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/arrival_later_button"
+                                style="@style/Widget.StoryStep.Button.Secondary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:text="@string/not_now" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/visit_save_failed_notice"
+                        style="@style/TextAppearance.StoryStep.Supporting"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="@string/exploration_visit_save_failed"
+                        android:textColor="@color/story_error"
+                        android:visibility="gone" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/retry_visit_button"
+                        style="@style/Widget.StoryStep.Button.Secondary"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/arrival_view_story_button"
-                            style="@style/Widget.StoryStep.Button.Primary"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/exploration_arrival_view_story" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/arrival_later_button"
-                            style="@style/Widget.StoryStep.Button.Secondary"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="8dp"
-                            android:text="@string/not_now" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:id="@+id/visit_save_failed_notice"
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/exploration_visit_save_failed"
-                    android:textColor="@color/story_error"
-                    android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/retry_visit_button"
-                    style="@style/Widget.StoryStep.Button.Secondary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/exploration_retry_visit"
-                    android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/resume_exploration_button"
-                    style="@style/Widget.StoryStep.Button.Primary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/exploration_resume"
-                    android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/retry_save_button"
-                    style="@style/Widget.StoryStep.Button.Primary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="@string/exploration_retry_save"
-                    android:visibility="gone" />
-
-                <!--
-                    A picture of where you are, taken on the walk and kept with it: the shutter
-                    here, the library for anything already on the phone. Both land in the walk's
-                    own photo directory and appear when it is published.
-                -->
-                <LinearLayout
-                    android:id="@+id/exploration_photo_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:baselineAligned="false"
-                    android:orientation="horizontal">
+                        android:text="@string/exploration_retry_visit"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/exploration_camera_button"
-                        style="@style/Widget.StoryStep.Button.Secondary"
-                        android:layout_width="0dp"
+                        android:id="@+id/resume_exploration_button"
+                        style="@style/Widget.StoryStep.Button.Primary"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/exploration_take_photo"
-                        app:icon="@drawable/ic_camera"
-                        app:iconGravity="textStart" />
+                        android:layout_marginTop="12dp"
+                        android:text="@string/exploration_resume"
+                        android:visibility="gone" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/exploration_library_button"
-                        style="@style/Widget.StoryStep.Button.Secondary"
-                        android:layout_width="0dp"
+                        android:id="@+id/retry_save_button"
+                        style="@style/Widget.StoryStep.Button.Primary"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="8dp"
-                        android:layout_weight="1"
-                        android:text="@string/exploration_add_photo"
-                        app:icon="@drawable/ic_add_photo"
-                        app:iconGravity="textStart" />
+                        android:layout_marginTop="12dp"
+                        android:text="@string/exploration_retry_save"
+                        android:visibility="gone" />
+
+
                 </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
 
-                <TextView
-                    android:id="@+id/exploration_photo_count"
-                    style="@style/TextAppearance.StoryStep.Supporting"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
-                    android:gravity="center"
-                    android:textColor="@color/story_ink_3"
-                    android:visibility="gone" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/stop_exploration_button"
-                    style="@style/Widget.StoryStep.Button.Secondary"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/exploration_stop"
-                    android:textColor="@color/story_error"
-                    app:strokeColor="@color/story_error" />
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
-    </com.google.android.material.card.MaterialCardView>
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/stop_exploration_button"
+        style="@style/Widget.StoryStep.Button.Secondary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="12dp"
+        android:layout_marginVertical="8dp"
+        android:text="@string/exploration_stop"
+        android:textColor="@color/story_error"
+        app:strokeColor="@color/story_outline"
+        app:strokeWidth="1dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

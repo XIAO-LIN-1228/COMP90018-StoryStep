@@ -107,6 +107,7 @@ public class PlaceMapView extends FrameLayout {
     private final MapView map;
     private final PinOverlay pinOverlay = new PinOverlay();
     private final List<Polyline> routeLines = new ArrayList<>();
+    @Nullable private Polyline plannedRouteLine;
     private final Drawable destinationIcon;
     private final Drawable userIcon;
 
@@ -283,7 +284,27 @@ public class PlaceMapView extends FrameLayout {
         }
         // Added after the loop, casing first within each pair, and all of them under the pins.
         for (int i = routeLines.size() - 1; i >= 0; i--) {
-            map.getOverlays().add(0, routeLines.get(i));
+            map.getOverlays().add(plannedRouteLine == null ? 0 : 1, routeLines.get(i));
+        }
+        map.invalidate();
+    }
+
+    /** A dashed preview below the solid recorded trail; never joined to recorded points. */
+    public void setPlannedRoute(List<GeoPoint> path) {
+        if (plannedRouteLine != null) {
+            map.getOverlays().remove(plannedRouteLine);
+            plannedRouteLine = null;
+        }
+        if (path.size() >= 2) {
+            List<org.osmdroid.util.GeoPoint> points = new ArrayList<>(path.size());
+            for (GeoPoint point : path) {
+                points.add(toOsm(point));
+            }
+            plannedRouteLine = stroke(points,
+                    ContextCompat.getColor(getContext(), R.color.story_ink_2), 3.5f, false);
+            plannedRouteLine.getOutlinePaint().setPathEffect(new android.graphics.DashPathEffect(
+                    new float[]{dp(9f), dp(7f)}, 0));
+            map.getOverlays().add(0, plannedRouteLine);
         }
         map.invalidate();
     }

@@ -5,6 +5,11 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.comp90018.storystep.application.ExplorationCoordinator;
+import com.comp90018.storystep.application.WalkPlanner;
+import com.comp90018.storystep.data.remote.WalkRouteSource;
+import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.domain.plan.PlannedRoute;
+import com.comp90018.storystep.domain.plan.WalkPlan;
 import com.comp90018.storystep.domain.guidance.GuidanceSnapshot;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.LocationSample;
@@ -13,6 +18,9 @@ import com.comp90018.storystep.domain.model.RouteSnapshot;
 import com.comp90018.storystep.domain.model.SessionSummary;
 import com.comp90018.storystep.domain.model.Visit;
 import com.comp90018.storystep.platform.location.LocationSource;
+
+import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /**
  * Renders the process-wide exploration session for the dashboard.
@@ -25,7 +33,8 @@ import com.comp90018.storystep.platform.location.LocationSource;
  * always read back from the session itself, which means a paused session simply stops changing
  * rather than needing the timer to be cancelled in the right order.
  */
-public class ExplorationViewModel extends ViewModel implements ExplorationCoordinator.Observer {
+public class ExplorationViewModel extends ViewModel implements ExplorationCoordinator.Observer,
+        WalkPlanner.Observer {
 
     /** How often the duration is redrawn. Display only; nothing is persisted at this rate. */
     static final long TICK_INTERVAL_MILLIS = 1_000L;
@@ -40,6 +49,14 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
 
     private final ExplorationCoordinator coordinator;
     private final Ticker ticker;
+    private final WalkPlanner planner;
+    private final WalkRouteSource routeSource;
+    private final Executor ioExecutor;
+    private final Executor mainExecutor;
+    private WalkPlan displayedPlan = WalkPlan.EMPTY;
+    private GeoPoint planOrigin;
+    private PlannedRoute plannedRoute;
+    private int routeGeneration;
     private final MutableLiveData<ExplorationUiState> uiState = new MutableLiveData<>();
     private final MutableLiveData<ExplorationMapState> mapState = new MutableLiveData<>();
 
@@ -48,7 +65,6 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     private LocationSource.Reason unavailableReason;
     private MovementSnapshot movement = MovementSnapshot.unavailable();
     private boolean checkpointFailed;
-    private GuidanceSnapshot guidance = GuidanceSnapshot.unavailable();
     private Visit pendingStory;
     private boolean visitSaveFailed;
     private final ArrivalFeedbackGate arrivalFeedbackGate = new ArrivalFeedbackGate();
@@ -57,10 +73,27 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         this(coordinator, new HandlerTicker());
     }
 
+    public ExplorationViewModel(ExplorationCoordinator coordinator, WalkPlanner planner,
+                               WalkRouteSource routeSource, Executor ioExecutor, Executor mainExecutor) {
+        this(coordinator, new HandlerTicker(), planner, routeSource, ioExecutor, mainExecutor);
+    }
+
     ExplorationViewModel(ExplorationCoordinator coordinator, Ticker ticker) {
+        this(coordinator, ticker, null, null, Runnable::run, Runnable::run);
+    }
+
+    ExplorationViewModel(ExplorationCoordinator coordinator, Ticker ticker, WalkPlanner planner,
+                         WalkRouteSource routeSource, Executor ioExecutor, Executor mainExecutor) {
         this.coordinator = coordinator;
         this.ticker = ticker;
+        this.planner = planner;
+        this.routeSource = routeSource;
+        this.ioExecutor = ioExecutor;
+        this.mainExecutor = mainExecutor;
         coordinator.addObserver(this);
+        if (planner != null) {
+            planner.addObserver(this);
+        }
         ticker.start(this::publish, TICK_INTERVAL_MILLIS);
     }
 
@@ -138,6 +171,8 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     public void onDestinationChanged(Attraction changed) {
         destination = changed;
         publish();
+        updatePlannedRoute();
+        publishMap();
     }
 
     @Override
@@ -150,6 +185,8 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
     public void onRouteChanged(RouteSnapshot changed) {
         route = changed;
         publish();
+        updatePlannedRoute();
+        publishMap();
     }
 
     @Override
@@ -160,7 +197,6 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
 
     @Override
     public void onGuidanceChanged(GuidanceSnapshot changed) {
-        guidance = changed;
         publish();
     }
 
@@ -193,14 +229,62 @@ public class ExplorationViewModel extends ViewModel implements ExplorationCoordi
         // whole job is to show a duration that grows without the session having changed.
         uiState.setValue(ExplorationUiState.from(coordinator.summary(), destination, route,
                 unavailableReason, coordinator.hasStopSaveFailed(), checkpointFailed, movement,
-                guidance, pendingStory, visitSaveFailed,
+                coordinator.guidanceSnapshot(), pendingStory, visitSaveFailed,
                 coordinator.stepsWalked(), coordinator.ascentMetres()));
+    }
+
+    /** Heading and timer ticks must not rebuild the complete route overlay. */
+    private void publishMap() {
         mapState.setValue(ExplorationMapState.from(
-                destination == null ? null : destination.getLocation(), route));
+                destination == null ? null : destination.getLocation(), route,
+                plannedRoute, displayedPlan.getStops()));
+    }
+
+    @Override public void onPlanChanged(WalkPlan ignored) {
+        updatePlannedRoute();
+        publishMap();
+    }
+
+    private void updatePlannedRoute() {
+        WalkPlan next = destination == null ? WalkPlan.EMPTY
+                : planner != null && planner.plan().contains(destination.getId())
+                        ? planner.plan() : WalkPlan.EMPTY.with(destination);
+        // The first accepted point anchors this walk. Do not reroute on every GPS reading.
+        GeoPoint origin = route.getPoints().isEmpty() ? null : route.getPoints().get(0).getPosition();
+        if (next.equals(displayedPlan) && Objects.equals(origin, planOrigin)) {
+            return;
+        }
+        displayedPlan = next;
+        planOrigin = origin;
+        int generation = ++routeGeneration;
+        plannedRoute = next.isEmpty() ? null : PlannedRoute.straight(next, origin);
+        if (next.isEmpty() || origin == null || routeSource == null) {
+            return;
+        }
+        ioExecutor.execute(() -> {
+            PlannedRoute result;
+            try {
+                result = routeSource.walkThrough(next.path(origin));
+            } catch (RuntimeException unavailable) {
+                result = null;
+            }
+            PlannedRoute answer = result;
+            mainExecutor.execute(() -> {
+                if (generation != routeGeneration || answer == null) {
+                    return;
+                }
+                plannedRoute = answer;
+                publishMap();
+            });
+        });
     }
 
     @Override
     protected void onCleared() {
+        routeGeneration++;
+        if (planner != null) {
+            planner.removeObserver(this);
+        }
         ticker.stop();
         coordinator.removeObserver(this);
         super.onCleared();

@@ -129,6 +129,24 @@
         <item name="elevation">@dimen/card_elevation</item>
     </style>
 
+    <style name="Widget.StoryStep.Button.Photo" parent="Widget.StoryStep.Button.Secondary">
+        <item name="android:minHeight">88dp</item>
+        <item name="android:minWidth">48dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="android:paddingHorizontal">12dp</item>
+        <item name="android:paddingVertical">14dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="cornerRadius">18dp</item>
+        <item name="backgroundTint">@color/story_ground</item>
+        <item name="strokeColor">@color/story_outline</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="iconGravity">textTop</item>
+        <item name="iconSize">24dp</item>
+        <item name="iconPadding">8dp</item>
+        <item name="iconTint">@color/story_ink</item>
+    </style>
+
     <!-- The kind chips over the map: white pills, a coloured glyph, the wash when chosen. -->
     <style name="Widget.StoryStep.KindChip" parent="Widget.Material3.Chip.Assist">
         <item name="android:layout_width">wrap_content</item>

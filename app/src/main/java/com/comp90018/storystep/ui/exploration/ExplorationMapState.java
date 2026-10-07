@@ -5,6 +5,8 @@ import androidx.annotation.Nullable;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.model.RoutePoint;
 import com.comp90018.storystep.domain.model.RouteSnapshot;
+import com.comp90018.storystep.domain.model.Attraction;
+import com.comp90018.storystep.domain.plan.PlannedRoute;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,16 +24,26 @@ public final class ExplorationMapState {
     @Nullable private final GeoPoint position;
     @Nullable private final GeoPoint destination;
     private final List<List<GeoPoint>> segments;
+    @Nullable private final PlannedRoute plannedRoute;
+    private final List<Attraction> plannedStops;
 
     private ExplorationMapState(@Nullable GeoPoint position,
                                 @Nullable GeoPoint destination,
-                                List<List<GeoPoint>> segments) {
+                                List<List<GeoPoint>> segments,
+                                @Nullable PlannedRoute plannedRoute, List<Attraction> plannedStops) {
         this.position = position;
         this.destination = destination;
         this.segments = segments;
+        this.plannedRoute = plannedRoute;
+        this.plannedStops = Collections.unmodifiableList(new ArrayList<>(plannedStops));
     }
 
     public static ExplorationMapState from(@Nullable GeoPoint destination, RouteSnapshot route) {
+        return from(destination, route, null, Collections.emptyList());
+    }
+
+    public static ExplorationMapState from(@Nullable GeoPoint destination, RouteSnapshot route,
+                                           @Nullable PlannedRoute plannedRoute, List<Attraction> stops) {
         List<List<GeoPoint>> segments = new ArrayList<>();
         int currentSegment = -1;
         List<GeoPoint> current = null;
@@ -47,7 +59,7 @@ public final class ExplorationMapState {
                 ? null
                 : route.getLastSample().getPosition();
         return new ExplorationMapState(position, destination,
-                Collections.unmodifiableList(segments));
+                Collections.unmodifiableList(segments), plannedRoute, stops);
     }
 
     @Nullable
@@ -62,5 +74,13 @@ public final class ExplorationMapState {
 
     public List<List<GeoPoint>> getSegments() {
         return segments;
+    }
+
+    @Nullable public PlannedRoute getPlannedRoute() {
+        return plannedRoute;
+    }
+
+    public List<Attraction> getPlannedStops() {
+        return plannedStops;
     }
 }

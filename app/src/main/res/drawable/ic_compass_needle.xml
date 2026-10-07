@@ -1,0 +1,9 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp" android:height="40dp"
+    android:viewportWidth="40" android:viewportHeight="40">
+    <path android:fillColor="@color/story_ground"
+        android:strokeColor="@color/story_outline" android:strokeWidth="1"
+        android:pathData="M20,20 m-19,0 a19,19 0,1 1,38 0 a19,19 0,1 1,-38 0" />
+    <path android:fillColor="@color/story_ink" android:pathData="M20,5 L25,21 L20,18 L15,21 Z" />
+    <path android:fillColor="@color/story_ink_3" android:pathData="M20,35 L25,21 L20,24 L15,21 Z" />
+</vector>
