@@ -10,7 +10,7 @@ of approval. No section is final. Resolve PENDING items and remove authoring/sta
 annotations before approved PDF export; never remove an evidence gap by implying a pass.
 Section 5 must fit ten rendered pages, including its tables and figures; pagination
 has not yet been verified. Detailed test requests remain in the
-[team handoff](report_evidence_handoff_zh.md), rather than being repeated throughout.
+local-only team handoff at docs/tempdoc/report_evidence_handoff_zh.md (not published to Git), rather than being repeated throughout.
 
 ## Cover page
 

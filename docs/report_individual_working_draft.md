@@ -36,7 +36,7 @@ algorithms; interface and interaction; verification/performance/dynamic response
 and innovation/potential value. Retain a compact mapping for all 19 criteria and
 cross-reference Material evidence rather than repeating it. Preserve the distinct
 requirements and evidence gaps while reducing duplication, within ten rendered
-pages for the justification section. The decision is recorded in notes.md.
+pages for the justification section. The decision is recorded in local-only docs/tempdoc/notes.md.
 Structural direction is approved; no report prose is thereby finalized. This
 recording step does not reorganize or remove the existing drafts.
 
@@ -89,7 +89,7 @@ engaging encounter with an unfamiliar area.
 
 Authoring boundary: this subsection describes the target experience, not a delivered
 feature checklist or measured benefit. Departure-window advice has an existing
-concept design in notes.md (Candidate A); the user confirmed on 2026-10-07 that its
+concept design in the archived session notes linked below (Candidate A); the user confirmed on 2026-10-07 that its
 implementation will progress alongside this report. Include it in the intended
 contribution discussion, with completion and validation pending. Durable pre-trip
 plan saving must be checked separately from existing
@@ -140,7 +140,7 @@ A subsequent environment snapshot recorded Google Play x86_64 image revision 6 /
 extension 22, a 1080 x 2400 display, 420 dpi and font scale 1.0. Those later readings
 must not be described as an independently captured snapshot at test execution.
 Host and tool details, and the second machine's separately recorded results, are
-in notes.md. Do not combine the two machines' results into one execution record.
+in the archived session notes linked below. Do not combine the two machines' results into one execution record.
 
 Local SDK paths belong in ignored local.properties. They vary by machine and are
 not supplied as portable repository settings. Final-version values and clean-package
@@ -265,7 +265,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 
 Progress: `need review`. Approval: **NOT APPROVED**.
 
-The reference run recorded in EV-API37-INSTRUMENTATION-2026-10-05.md and notes.md
+The reference run recorded in EV-API37-INSTRUMENTATION-2026-10-05.md and the archived session notes linked below
 has the following outcomes. These are historical observations, not claims about
 an untested final submission commit.
 
@@ -305,7 +305,7 @@ new run. Result: NOT RECORDED.]
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
-Historical manual emulator feedback in notes.md records successful onboarding via
+Historical manual emulator feedback in the archived session notes records successful onboarding via
 Not now, nearby map/list display and bookmark persistence. It also records slow
 initial attraction loading, incomplete content, the denied-start/Discard loop,
 planner control visibility and weather-refresh concerns. These are observations
@@ -357,8 +357,8 @@ subsequent 75-test run passed; accessibility checks were not suppressed. These f
 support a description of the validation/repair process. They do not independently
 establish code readability, complete accessibility or all user flows.
 
-Evidence: [dated verification](verification/EV-API37-INSTRUMENTATION-2026-10-05.md),
-[session notes](../notes.md), [PR #30](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/30).
+Evidence: [dated verification](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/62a51f43b03adeda1a5ffc6d503504bee53dafcc/docs/verification/EV-API37-INSTRUMENTATION-2026-10-05.md),
+[session notes](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/b85692e46d14859833f383e49634379c475b364f/notes.md), [PR #30](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/30).
 
 ### 5.6 Implementation - Quality — DRAFT, NOT APPROVED
 
@@ -604,8 +604,8 @@ does not establish market-wide uniqueness or superiority. Departure advice requi
 implementation and validation evidence before completed-feature wording is used;
 no comfort improvement or educational outcome has been measured here. Curated
 questions are not generated for arbitrary selected places. Supporting code and
-comparison sources: [research record](novelty_comparison_research.md); concept:
-[Candidate A in session notes](../notes.md). Reconcile final delivery and citations
+comparison sources: [research record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/b85692e46d14859833f383e49634379c475b364f/docs/novelty_comparison_research.md); concept:
+[Candidate A in session notes](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/b85692e46d14859833f383e49634379c475b364f/notes.md). Reconcile final delivery and citations
 before submission; unresolved manual-test issues remain recorded separately.
 
 ### 5.17 Innovation - Surprise — DRAFT, NOT APPROVED
@@ -673,7 +673,7 @@ coordination of sensing, information processing, decision rules and state persis
 within a mobile exploration workflow.
 
 Authoring/evidence boundary: implementation evidence is recorded in the
-[code/comparison research](novelty_comparison_research.md), including
+[code/comparison research](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/b85692e46d14859833f383e49634379c475b364f/docs/novelty_comparison_research.md), including
 `ArrivalDetector`, `ExplorationCoordinator`, `RecommendationEngine`, the cached
 repositories and the Valhalla integration. This is not a claim of learned
 personalization, globally optimal routing, complete offline navigation or fault-free
