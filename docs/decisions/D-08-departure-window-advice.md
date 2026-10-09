@@ -45,7 +45,7 @@ Heat, wind and air quality are out of scope.
 | Time display | Phone's current timezone; each row is labelled by its interval, e.g. "14:00–15:00". |
 
 This page's percentages are Open-Meteo's own PoP (its multi-model ensemble). The advice uses
-ICON-EPS member counts over a whole walk, so the two pages can legitimately show different
+the average of three models' member counts over a whole walk, so the two pages can show different
 numbers; the advice page states its source (§4.5).
 
 ## 4. Departure-window advice
@@ -66,7 +66,7 @@ numbers; the advice page states its source (§4.5).
 - If D exceeds **8 hours**, a dialog explains the walk is too long for advice and no request is
   made. Changing the stay time re-checks.
 
-Spatial resolution: ICON-EPS is ~26 km and the weather area is a 0.05° cell, while a planned
+Spatial resolution: the ensembles are ~25 km and the weather area is a 0.05° cell, while a planned
 walk spans a few kilometres, so one forecast point for the whole walk is appropriate. This is a
 statement about model resolution, not about precision.
 
@@ -78,51 +78,71 @@ statement about model resolution, not about precision.
 - A candidate is kept only if its whole trip ends inside the fetched data. The advice request
   fetches 34 hours (§6.1), which keeps every candidate for D ≤ 8 h.
 
-### 4.3 Chance of rain during the trip: ensemble member counting
+### 4.3 Chance of rain during the trip: three-model ensemble member counting
 
-Source: Open-Meteo Ensemble API, ICON-EPS global (`models=icon_seamless`, verified identical to
-`icon_global` for Melbourne), `hourly=precipitation,is_day`. It returns 40 precipitation
-columns — `precipitation` plus `precipitation_member01`…`39` — which together are the 40 ICON-EPS
-members (none is an extra control run).
+Source: Open-Meteo Ensemble API, one request for three global ensembles,
+`models=icon_seamless,ecmwf_ifs025,gfs025`, `hourly=precipitation,is_day`:
 
-For each candidate:
+| Model | Response suffix | Members | Native step |
+|---|---|---|---|
+| ICON-EPS (DWD) | `_icon_seamless_eps` | 40 | 1 h |
+| ECMWF IFS ENS 0.25° | `_ecmwf_ifs025_ensemble` | 51 | 3 h |
+| NCEP GEFS 0.25° | `_ncep_gefs025` | 31 | 3 h |
+
+Within each model, for each candidate:
 
 ```
-wet(member, bucket) = reported hourly precipitation >= 0.2 mm
-P(rain during trip) = (members wet in any bucket overlapping the trip) / N
+wet(member, unit)   = unit total >= 0.2 mm       unit = hour (ICON) or 3-hour block (ECMWF, GEFS)
+share(model)        = members wet in any unit the trip touches / members in the model
+P(rain during trip) = mean of share(model) over the models used      (equal weight)
 ```
 
+- **Why three models.** On 2026-10-10 ICON-EPS gave systematically lower wet shares than the
+  other two at every wet location sampled (single-hour maxima: Singapore 30% vs ECMWF 96% / GEFS
+  100%; Wellington 40% vs 90% / 55%; Perth 10% vs 39% / 39%; Sydney 8% vs 35% / 3%). One
+  snapshot, not verified against observations, so it shows disagreement rather than which model
+  is right. Single-model ensembles are known to be over-confident; averaging models is the
+  standard remedy. Equal weight per model keeps ECMWF's 51 members from outvoting the others.
+- **Three-hour models.** Open-Meteo spreads a 3-hour total evenly over its hours (verified:
+  identical values in the rows ending 01:00, 02:00, 03:00 UTC). Such a model is judged per block:
+  the block total (mean of its rows present × 3, which also handles a block cut by the start of
+  the data) must reach 0.2 mm, and a trip touching any part of the block counts the whole block.
+  This makes those two models coarser in time; ICON keeps hourly timing.
 - Values are reported at 0.1 mm resolution, so ≥ 0.2 mm is the same as "> 0.1 mm". 0.2 mm is
   the Bureau of Meteorology's "any rain" amount and close to the NWS measurable-precipitation
   threshold (0.01 in ≈ 0.25 mm); it also avoids counting models' trace drizzle.
-- A bucket overlaps if any part of it intersects the trip; it then counts fully. Only "Now"
-  starts mid-bucket, so only "Now" is affected, conservatively by at most one bucket.
-- N = number of precipitation columns present (discovered by name prefix, not a fixed 40).
+- An hour (ICON) overlaps if any part of it intersects the trip; it then counts fully. Only
+  "Now" starts mid-hour.
+- Members are discovered by column name (`precipitation` / `precipitation_memberNN` plus the
+  model suffix), not a fixed count. A model with fewer than 10 members, or a missing value in an
+  hour any departure needs, is left out; the rest still advise. If no model remains: error.
 - No independence or correlation assumption is needed: each member is one consistent scenario
   across time. Deriving event probability from ensemble relative frequency is standard practice
   and related to the approach of the NOAA National Blend of Models (which additionally
   calibrates; this design does not).
 - Displayed as "about X% chance of rain during the walk", rounded to a whole percent.
 
-Limitations stated on the page's info text and in the report: raw ensembles are uncalibrated
-and tend to be under-dispersive; with 40 members probabilities move in steps of 2.5%.
+Limitations stated on the page's info text and in the report: raw ensembles are uncalibrated;
+three-hour models blur timing within a block; a 0.1 mm-rounded hourly share of a 3-hour total
+slightly favours "wet" at the threshold.
 
 There is **no fallback method**. If the ensemble cannot be used (§8), the page shows an error
 with Retry.
 
 ### 4.4 Daylight
 
-- `is_day` comes from the same ensemble request. A bucket is treated as daylight when `is_day`
-  at its end timestamp is 1 (an hourly approximation of sunrise/sunset).
+- `is_day` comes from the same ensemble request (`is_day_icon_seamless_eps`; any model's column
+  if that one is absent). An hour is treated as daylight when `is_day` at its end timestamp is 1
+  (an hourly approximation of sunrise/sunset).
 - A candidate whose trip overlaps any night bucket is still listed, labelled "After dark".
 - The best candidate is chosen among daylight-only candidates; only if there are none is it
   chosen among all candidates, with a note.
 
 ### 4.5 Ranking and presentation
 
-- Ranking for "best": daylight first, then fewest wet members (raw count, not the rounded
-  percent), then earlier departure.
-- If the daylight candidates differ by fewer than 2 wet members, the page says there is no
+- Ranking for "best": daylight first, then lowest probability (unrounded), then earlier
+  departure.
+- If the daylight candidates differ by less than 5 percentage points, the page says there is no
   meaningful difference, and the earliest daylight candidate is highlighted.
 - All candidates are listed in time order and the list scrolls to the highlighted row. Rows
   reuse the forecast page's row layout. No numeric score.
@@ -137,8 +157,8 @@ with Retry.
 
 - "Not advisable" threshold: 60%. If every daylight candidate is ≥ 60%, the relatively best
   one is still highlighted with a note that rain is likely throughout and an umbrella is advised.
-- The page footnote names the source: "ICON-EPS ensemble via Open-Meteo, chance of ≥ 0.2 mm in
-  any hour of your walk".
+- The page footnote names the source and the models actually used: "Average of ICON, ECMWF and
+  GFS ensembles via Open-Meteo: chance of ≥ 0.2 mm during your walk".
 
 NWS defines these terms for a 12-hour period and BoM's wording for a day (BoM calls 40–60%
 "medium"); applying them to a walk of a few hours is a product choice. It is acceptable for
@@ -154,7 +174,7 @@ umbrella or cancelling a walk was found; HKO's advice to consider postponing out
 |---|---|
 | `domain.forecast` | `HourlyForecast`, `EnsemblePrecipitation`, `DepartureAdvisor`, `DepartureAdvice`, `Candidate`, `RainBand`. Pure Java. |
 | `domain.repository` | `ForecastRepository`, `ForecastUnavailableException` (next to `WeatherUnavailableException`). |
-| `data.remote` | `ForecastApiService` (hourly), `EnsembleApiService` (new base URL), DTO + mapper for the hourly response; the ensemble `hourly` object is parsed as a `JsonObject` because member keys are dynamic. Two source seams and two small retrying wrappers reusing `NetworkRetryPolicy` and `Sleeper`. |
+| `data.remote` | `ForecastApiService` (hourly), `EnsembleApiService` (new base URL), DTO + mapper for the hourly response; the ensemble `hourly` object is parsed as a `JsonObject` because member keys are dynamic. One generic `ForecastSource<T>` seam and one generic retrying wrapper reusing `NetworkRetryPolicy` and `Sleeper`. |
 | `data.repository` | `TimedAreaCache<T>`: in-memory, keyed by weather area and request kind, 30-minute lifetime. A separate class is justified because `CachedWeatherRepository` is tied to Room and stale fallback. No coalescing (one request per page open is enough). |
 | `di` | A dedicated single-thread executor for forecast work, so retry sleeps cannot stall the shared 2-thread I/O pool used by Room, attractions, weather and routing. |
 | `ui` | Forecast page Fragment + ViewModel; advice Fragment + ViewModel; shared row layout/adapter. Bundle values are passed to ViewModels through an `init(...)` call, matching `ViewModelFactory`'s no-argument construction. |
@@ -208,23 +228,24 @@ GET https://api.open-meteo.com/v1/forecast
 ```
 GET https://ensemble-api.open-meteo.com/v1/ensemble
     ?latitude={cellLat}&longitude={cellLon}
-    &hourly=precipitation,is_day&models=icon_seamless
+    &hourly=precipitation,is_day&models=icon_seamless,ecmwf_ifs025,gfs025
     &forecast_hours=34
     &timezone=GMT&timeformat=unixtime
 ```
 
 ```json
-{ "hourly": { "time": [1791583200, ...],
-              "precipitation": [0.0, ...],
-              "precipitation_member01": [0.0, ...],
-              ...
-              "precipitation_member39": [0.1, ...],
-              "is_day": [1, 1, ..., 0, ...] } }
+{ "hourly": { "time": [1791586800, ...],
+              "precipitation_icon_seamless_eps": [0.0, ...],
+              "precipitation_member01_icon_seamless_eps": [0.0, ...],  ... member39
+              "is_day_icon_seamless_eps": [1, 1, ..., 0, ...],
+              "precipitation_ecmwf_ifs025_ensemble": [...], ... member50, "is_day_ecmwf_ifs025_ensemble": [...],
+              "precipitation_ncep_gefs025": [...],           ... member30, "is_day_ncep_gefs025": [...] } }
 ```
 
 Verified on 2026-10-10 for Melbourne:
 
-- 40 precipitation columns, `is_day` as one column, no nulls within 34 hours.
+- ICON 40, ECMWF 51 and GEFS 31 precipitation columns, one `is_day` per model, no nulls
+  within 34 hours; about 33 KB uncompressed.
 - The first `time` is the start of the current UTC hour. Open-Meteo documents precipitation and
   PoP as referring to the **preceding hour**, so row `t` covers `(t − 3600, t]`. The forecast
   page drops rows whose hour has ended and shows the next 24.
@@ -246,17 +267,17 @@ interface ForecastRepository {
     void ensemble(GeoPoint origin, RepositoryCallback<EnsemblePrecipitation> callback);
 }
 
-// data.remote — blocking seams, no Retrofit types (same pattern as WeatherSource)
-interface HourlyForecastSource {
-    HourlyForecast fetch(GeoPoint cellCentre, long fetchedAtMillis) throws ForecastUnavailableException;
-}
-interface EnsembleSource {
-    EnsemblePrecipitation fetch(GeoPoint cellCentre, long fetchedAtMillis) throws ForecastUnavailableException;
+// data.remote — one blocking seam, no Retrofit types (same pattern as WeatherSource);
+// RetrofitHourlyForecastSource and RetrofitEnsembleSource implement it, and
+// RetryingForecastSource<T> wraps either with NetworkRetryPolicy.
+interface ForecastSource<T> {
+    T fetch(GeoPoint cellCentre, long fetchedAtMillis) throws ForecastUnavailableException;
 }
 
 // domain.forecast (pure Java)
 final class HourlyForecast        { List<Hour> hours; long fetchedAtMillis; }   // Hour: endEpochSecond, Integer probability, WeatherCondition condition
-final class EnsemblePrecipitation { long[] endEpochSeconds; double[][] memberMm; /* [member][hour] */ boolean[] isDay; long fetchedAtMillis; }
+final class EnsemblePrecipitation { long[] endEpochSeconds; List<Model> models; boolean[] isDay; long fetchedAtMillis; }
+//   Model: String name; int blockHours (1 or 3); double[][] memberMm /* [member][hour], NaN = missing */
 
 final class DepartureAdvisor {
     static final long MAX_TRIP_MILLIS = 8 * 3_600_000L;
@@ -266,12 +287,13 @@ final class DepartureAdvisor {
 }
 final class DepartureAdvice {
     List<Candidate> candidates;   // time order, "Now" first
+    List<String> models;          // models actually used
     int bestIndex;
     boolean noMeaningfulDifference;
     boolean allNotAdvisable;      // every daylight candidate >= 60%
     boolean noDaylightCandidate;
 }
-final class Candidate { long startMillis; boolean now; int wetMembers; int members; boolean daylight; RainBand band; }
+final class Candidate { long startMillis; boolean now; double probability; boolean daylight; /* percent, band derived */ }
 enum RainBand { LOW, POSSIBLE, LIKELY, EXPECTED }   // 0-29, 30-59, 60-79, 80-100
 ```
 
@@ -303,10 +325,12 @@ data that parses but cannot be used.
 4. Otherwise `Loading`; `ForecastRepository.ensemble(origin)` (same cache/offline/retry path
    as §7.1 step 3).
 5. `DepartureAdvisor.advise(now, D, ensemble)`:
-   1. Validate: N ≥ 10 and no nulls in the rows the candidates need; otherwise `UNUSABLE`.
+   1. Keep each model with ≥ 10 members and no nulls in the rows the candidates need; if
+      none remains, `UNUSABLE`.
    2. Candidates: Now, then each full hour after now up to now + 24 h, kept if the trip ends
       inside the data.
-   3. Count wet members per candidate (§4.3); mark daylight (§4.4); assign bands.
+   3. Per model, count wet members per candidate (hour or 3-hour block, §4.3); average the
+      models' shares; mark daylight (§4.4); assign bands.
    4. Choose best (§4.5); set the flags.
 6. Emit `Content(advice)`: the list with the best highlighted and scrolled to, "After dark"
    labels, the no-difference / all-poor / no-daylight notes, and the source footnote.
@@ -332,7 +356,8 @@ difference is usually small and is not corrected.
 | 429 | Retried once after the server delay clamped to 1–5 s; then "Forecast service is busy" + Retry |
 | Other 4xx, incl. 400 `{"error":true}` | Not retried; generic error + Retry; the `reason` is logged |
 | Malformed JSON, missing `time`, length mismatch, unsorted or non-hourly times | `MALFORMED`, not retried; generic error + Retry |
-| Ensemble: fewer than 10 member columns, or any null in needed rows | `UNUSABLE`, not retried; "Rain advice is unavailable right now" + Retry |
+| One model: fewer than 10 members, or any null in needed rows | That model is left out; the footnote lists the models used |
+| No model usable | `UNUSABLE`, not retried; "Rain advice is unavailable right now" + Retry |
 | Forecast page: null PoP or weather code in a row | That field shows "–"; the row stays |
 | Trip > 8 h | Dialog before any request; stay selector stays usable |
 | Plan empty | Button disabled |
@@ -356,7 +381,9 @@ data.
    - daylight preference, "After dark", no-daylight case;
    - ties on raw counts and the < 2-member no-difference rule; all-poor flag;
    - 8-hour limit; 34-hour data keeps all candidates for D = 8 h;
-   - `UNUSABLE` on N < 10 and on nulls;
+   - three-hour block alignment and block totals, including a block cut by the data start;
+   - equal model weighting; a model left out for nulls or too few members; `UNUSABLE` when
+     none remains;
    - timezone/DST conversion for display.
 2. **Remote**: services, hourly DTO mapping, ensemble `JsonObject` parsing with recorded JSON,
    retrying wrappers and reason mapping.
@@ -368,7 +395,9 @@ data.
 
 ## 10. Open points
 
-- Free-tier weighting of 40 member columns (negligible with caching).
+- Free-tier weighting of ~122 member columns across three models (Open-Meteo counts large
+  requests as several calls; still negligible with a 30-minute cache).
+- Which model is closest to observed rain is not verified; equal weighting is a design choice.
 - Ensemble probabilities are uncalibrated; calibration needs historical forecast–observation
   pairs and is out of scope.
 - `is_day` at the bucket end approximates sunrise/sunset to within an hour.

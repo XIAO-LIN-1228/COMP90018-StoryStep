@@ -10,6 +10,7 @@ import com.comp90018.storystep.domain.repository.ForecastUnavailableException;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -69,7 +70,9 @@ public class DepartureAdvisorTest {
         }
 
         EnsemblePrecipitation build() {
-            return new EnsemblePrecipitation(ends, mm, day, NOW);
+            return new EnsemblePrecipitation(ends,
+                    Collections.singletonList(new EnsemblePrecipitation.Model("icon", 1, mm)),
+                    day, NOW);
         }
     }
 
@@ -84,6 +87,11 @@ public class DepartureAdvisorTest {
             }
         }
         throw new AssertionError("no departure at " + start);
+    }
+
+    /** Wet members of a single 40-member model, read back from the probability. */
+    private static int members(DepartureAdvice.Candidate candidate) {
+        return (int) Math.round(candidate.getProbability() * 40);
     }
 
     private static void assertUnusable(Runnable call) {
@@ -123,8 +131,8 @@ public class DepartureAdvisorTest {
 
         DepartureAdvice advice = advisor.advise(NOW, HOUR, ensemble);
 
-        assertEquals(1, startingAt(advice, NEXT_HOUR).getWetMembers());
-        assertEquals(0, startingAt(advice, NEXT_HOUR + HOUR).getWetMembers());
+        assertEquals(1, members(startingAt(advice, NEXT_HOUR)));
+        assertEquals(0, members(startingAt(advice, NEXT_HOUR + HOUR)));
     }
 
     @Test
@@ -135,8 +143,7 @@ public class DepartureAdvisorTest {
                 .wet(1, NEXT_HOUR + 2 * HOUR, 1.0)
                 .build();
 
-        assertEquals(0, startingAt(advisor.advise(NOW, HOUR, ensemble), NEXT_HOUR)
-                .getWetMembers());
+        assertEquals(0, members(startingAt(advisor.advise(NOW, HOUR, ensemble), NEXT_HOUR)));
     }
 
     @Test
@@ -146,7 +153,7 @@ public class DepartureAdvisorTest {
 
         DepartureAdvice advice = advisor.advise(NOW, 10 * MINUTE, ensemble);
 
-        assertEquals(1, advice.getCandidates().get(0).getWetMembers());
+        assertEquals(1, members(advice.getCandidates().get(0)));
     }
 
     @Test
@@ -156,8 +163,7 @@ public class DepartureAdvisorTest {
                 .wet(1, NEXT_HOUR + HOUR, 0.2)
                 .build();
 
-        assertEquals(1, startingAt(advisor.advise(NOW, HOUR, ensemble), NEXT_HOUR)
-                .getWetMembers());
+        assertEquals(1, members(startingAt(advisor.advise(NOW, HOUR, ensemble), NEXT_HOUR)));
     }
 
     @Test
@@ -167,8 +173,7 @@ public class DepartureAdvisorTest {
                 .wet(0, NEXT_HOUR + 2 * HOUR, 1.0)
                 .build();
 
-        assertEquals(1, startingAt(advisor.advise(NOW, 2 * HOUR, ensemble), NEXT_HOUR)
-                .getWetMembers());
+        assertEquals(1, members(startingAt(advisor.advise(NOW, 2 * HOUR, ensemble), NEXT_HOUR)));
     }
 
     /**
@@ -191,7 +196,7 @@ public class DepartureAdvisorTest {
         for (int hour = 1; hour <= 3; hour++) {
             int wetThatHour = 0;
             for (int m = 0; m < 10; m++) {
-                if (ensemble.millimetres(m, fixture.row(NEXT_HOUR + hour * HOUR)) >= 0.2) {
+                if (fixture.mm[m][fixture.row(NEXT_HOUR + hour * HOUR)] >= 0.2) {
                     wetThatHour++;
                 }
             }
@@ -209,8 +214,7 @@ public class DepartureAdvisorTest {
         DepartureAdvice.Candidate walk = startingAt(
                 advisor.advise(NOW, HOUR, fixture.build()), NEXT_HOUR);
 
-        assertEquals(13, walk.getWetMembers());
-        assertEquals(40, walk.getMembers());
+        assertEquals(13, members(walk));
         assertEquals(33, walk.getPercent());
         assertEquals(RainBand.POSSIBLE, walk.getBand());
     }
@@ -268,7 +272,7 @@ public class DepartureAdvisorTest {
 
         DepartureAdvice.Candidate midnight = startingAt(advice, NEXT_HOUR + HOUR);
         assertFalse(midnight.isDaylight());
-        assertEquals(0, midnight.getWetMembers());
+        assertEquals(0, members(midnight));
         assertTrue(advice.getBest().isDaylight());
         assertFalse(advice.isNoDaylightCandidate());
     }
@@ -400,5 +404,108 @@ public class DepartureAdvisorTest {
         } catch (IllegalArgumentException expected) {
             // The caller is expected to check isTooLong first.
         }
+    }
+
+    // --- Several models ---------------------------------------------------------------------
+
+    private static EnsemblePrecipitation.Model model(String name, int blockHours, double[][] mm) {
+        return new EnsemblePrecipitation.Model(name, blockHours, mm);
+    }
+
+    private static EnsemblePrecipitation withModels(EnsemblePrecipitation.Model... models) {
+        Fixture shape = fixture();
+        return new EnsemblePrecipitation(shape.ends, Arrays.asList(models), shape.day, NOW);
+    }
+
+    /** 01:00, 02:00 and 03:00 rows: the three-hour block 00:00-03:00 UTC. */
+    private static final long BLOCK_START = NEXT_HOUR + HOUR;
+
+    @Test
+    public void aThreeHourModelIsJudgedByItsBlockTotal() {
+        // A tenth of a millimetre in each hour is dry hour by hour, but the block holds 0.3 mm.
+        Fixture three = new Fixture(10, 34);
+        for (int i = 1; i <= 3; i++) {
+            three.wet(0, BLOCK_START + i * HOUR, 0.1);
+        }
+        EnsemblePrecipitation ensemble = withModels(model("ecmwf", 3, three.mm));
+
+        DepartureAdvice advice = advisor.advise(NOW, HOUR, ensemble);
+
+        // Leaving at 02:00 for an hour touches only 02:00-03:00, but that is inside the block.
+        assertEquals(10, startingAt(advice, BLOCK_START + 2 * HOUR).getPercent());
+        assertEquals(10, startingAt(advice, BLOCK_START).getPercent());
+        assertEquals(0, startingAt(advice, BLOCK_START + 3 * HOUR).getPercent());
+        // The same rows read hourly would be dry throughout.
+        EnsemblePrecipitation hourly = withModels(model("icon", 1, three.mm));
+        assertEquals(0, startingAt(advisor.advise(NOW, HOUR, hourly), BLOCK_START + 2 * HOUR)
+                .getPercent());
+    }
+
+    @Test
+    public void aBlockCutByTheStartOfTheDataIsReadFromTheHoursPresent() {
+        // Data starting at 23:00 holds two of the three hours of the 21:00-00:00 block.
+        long[] ends = new long[33];
+        for (int h = 0; h < ends.length; h++) {
+            ends[h] = FIRST_END_SECOND + (h + 1) * 3_600L;
+        }
+        double[][] mm = new double[10][33];
+        mm[0][0] = 0.1;
+        mm[0][1] = 0.1;
+        boolean[] day = new boolean[33];
+        Arrays.fill(day, true);
+        EnsemblePrecipitation ensemble = new EnsemblePrecipitation(ends,
+                Collections.singletonList(model("gefs", 3, mm)), day, NOW);
+
+        DepartureAdvice advice = advisor.advise(NOW, 10 * MINUTE, ensemble);
+
+        assertEquals(10, advice.getCandidates().get(0).getPercent());
+    }
+
+    @Test
+    public void modelsCountEquallyWhateverTheirSize() {
+        Fixture icon = new Fixture(40, 34);
+        for (int m = 0; m < 40; m++) {
+            icon.wet(m, NEXT_HOUR + HOUR, 1.0);
+        }
+        Fixture ecmwf = new Fixture(10, 34);
+        EnsemblePrecipitation ensemble = withModels(
+                model("icon", 1, icon.mm), model("ecmwf", 3, ecmwf.mm));
+
+        DepartureAdvice.Candidate walk = startingAt(
+                advisor.advise(NOW, HOUR, ensemble), NEXT_HOUR);
+
+        // Pooling the 50 members would give 80%; equal weight gives the midpoint.
+        assertEquals(50, walk.getPercent());
+    }
+
+    @Test
+    public void aModelWithAMissingValueIsLeftOutAndTheRestStillAdvise() {
+        Fixture good = new Fixture(40, 34);
+        for (int m = 0; m < 10; m++) {
+            good.wet(m, NEXT_HOUR + HOUR, 1.0);
+        }
+        Fixture broken = new Fixture(10, 34).wet(3, NEXT_HOUR + 5 * HOUR, Double.NaN);
+        EnsemblePrecipitation ensemble = withModels(
+                model("icon", 1, good.mm), model("gefs", 3, broken.mm));
+
+        DepartureAdvice advice = advisor.advise(NOW, HOUR, ensemble);
+
+        assertEquals(Collections.singletonList("icon"), advice.getModels());
+        assertEquals(25, startingAt(advice, NEXT_HOUR).getPercent());
+    }
+
+    @Test
+    public void aModelWithTooFewMembersIsLeftOut() {
+        Fixture small = new Fixture(DepartureAdvisor.MIN_MEMBERS - 1, 34);
+        for (int m = 0; m < small.mm.length; m++) {
+            small.wet(m, NEXT_HOUR + HOUR, 1.0);
+        }
+        EnsemblePrecipitation ensemble = withModels(
+                model("icon", 1, new Fixture(40, 34).mm), model("tiny", 1, small.mm));
+
+        DepartureAdvice advice = advisor.advise(NOW, HOUR, ensemble);
+
+        assertEquals(Collections.singletonList("icon"), advice.getModels());
+        assertEquals(0, startingAt(advice, NEXT_HOUR).getPercent());
     }
 }

@@ -14,15 +14,13 @@ public final class DepartureAdvice {
 
         private final long startMillis;
         private final boolean now;
-        private final int wetMembers;
-        private final int members;
+        private final double probability;
         private final boolean daylight;
 
-        Candidate(long startMillis, boolean now, int wetMembers, int members, boolean daylight) {
+        Candidate(long startMillis, boolean now, double probability, boolean daylight) {
             this.startMillis = startMillis;
             this.now = now;
-            this.wetMembers = wetMembers;
-            this.members = members;
+            this.probability = probability;
             this.daylight = daylight;
         }
 
@@ -35,13 +33,12 @@ public final class DepartureAdvice {
             return now;
         }
 
-        /** Ensemble members with rain in some hour of the walk; what ranking uses. */
-        public int getWetMembers() {
-            return wetMembers;
-        }
-
-        public int getMembers() {
-            return members;
+        /**
+         * Chance of rain at some point during the walk, 0 to 1: the average over the models used
+         * of each model's share of wet members. What ranking uses.
+         */
+        public double getProbability() {
+            return probability;
         }
 
         /** Whether every hour of the walk is in daylight. */
@@ -49,9 +46,9 @@ public final class DepartureAdvice {
             return daylight;
         }
 
-        /** Chance of rain at some point during the walk, rounded to a whole percent. */
+        /** {@link #getProbability()} rounded to a whole percent. */
         public int getPercent() {
-            return (int) Math.round(100.0 * wetMembers / members);
+            return (int) Math.round(100.0 * probability);
         }
 
         public RainBand getBand() {
@@ -60,14 +57,17 @@ public final class DepartureAdvice {
     }
 
     private final List<Candidate> candidates;
+    private final List<String> models;
     private final int bestIndex;
     private final boolean noMeaningfulDifference;
     private final boolean allNotAdvisable;
     private final boolean noDaylightCandidate;
 
-    DepartureAdvice(List<Candidate> candidates, int bestIndex, boolean noMeaningfulDifference,
-                    boolean allNotAdvisable, boolean noDaylightCandidate) {
+    DepartureAdvice(List<Candidate> candidates, List<String> models, int bestIndex,
+                    boolean noMeaningfulDifference, boolean allNotAdvisable,
+                    boolean noDaylightCandidate) {
         this.candidates = Collections.unmodifiableList(new ArrayList<>(candidates));
+        this.models = Collections.unmodifiableList(new ArrayList<>(models));
         this.bestIndex = bestIndex;
         this.noMeaningfulDifference = noMeaningfulDifference;
         this.allNotAdvisable = allNotAdvisable;
@@ -78,6 +78,11 @@ public final class DepartureAdvice {
         return candidates;
     }
 
+    /** The models whose members were counted, for the page's source note. */
+    public List<String> getModels() {
+        return models;
+    }
+
     public int getBestIndex() {
         return bestIndex;
     }
@@ -86,7 +91,7 @@ public final class DepartureAdvice {
         return candidates.get(bestIndex);
     }
 
-    /** The choices differ by fewer than two members, so the earliest is shown as best. */
+    /** The choices differ by less than five percentage points, so the earliest is shown as best. */
     public boolean isNoMeaningfulDifference() {
         return noMeaningfulDifference;
     }

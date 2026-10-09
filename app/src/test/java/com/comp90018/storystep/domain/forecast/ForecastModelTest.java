@@ -9,6 +9,7 @@ import com.comp90018.storystep.domain.model.WeatherCondition;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /** Shape rules for the two forecast series and the rain bands. */
@@ -104,23 +105,45 @@ public class ForecastModelTest {
     @Test(expected = IllegalArgumentException.class)
     public void aMemberOfTheWrongLengthIsRejected() {
         new EnsemblePrecipitation(new long[] {FIRST_END_SECOND, FIRST_END_SECOND + 3_600L},
-                new double[][] {{0.0}}, new boolean[] {true, true}, 0L);
+                Collections.singletonList(new EnsemblePrecipitation.Model("m", 1,
+                        new double[][] {{0.0}})),
+                new boolean[] {true, true}, 0L);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void anEmptySeriesIsRejected() {
-        new EnsemblePrecipitation(new long[0], new double[0][], new boolean[0], 0L);
+        new EnsemblePrecipitation(new long[0],
+                Collections.singletonList(new EnsemblePrecipitation.Model("m", 1, new double[0][])),
+                new boolean[0], 0L);
     }
 
     @Test
     public void theEnsembleIsCopiedNotShared() {
         double[][] mm = {{0.0}};
         EnsemblePrecipitation ensemble = new EnsemblePrecipitation(
-                new long[] {FIRST_END_SECOND}, mm, new boolean[] {true}, 0L);
+                new long[] {FIRST_END_SECOND},
+                Collections.singletonList(new EnsemblePrecipitation.Model("m", 1, mm)),
+                new boolean[] {true}, 0L);
 
         mm[0][0] = 5.0;
 
-        assertEquals(0.0, ensemble.millimetres(0, 0), 0.0);
+        assertEquals(0.0, ensemble.getModels().get(0).millimetres(0, 0), 0.0);
         assertEquals(FIRST_END_SECOND * 1000L, ensemble.coverageEndMillis());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void onlyHourlyAndThreeHourModelsAreSupported() {
+        new EnsemblePrecipitation.Model("m", 6, new double[0][]);
+    }
+
+    @Test
+    public void threeHourBlocksEndOnMultiplesOfThreeUtcHours() {
+        // FIRST_END_SECOND is 22:00 UTC; 22:00 and 00:00 share the 21:00-00:00 block.
+        long at22 = FIRST_END_SECOND;
+        assertEquals(HourlyBuckets.block(at22, 3), HourlyBuckets.block(at22 + 2 * 3_600L, 3));
+        assertEquals(HourlyBuckets.block(at22, 3) + 1, HourlyBuckets.block(at22 + 3 * 3_600L, 3));
+        long block = HourlyBuckets.block(at22, 3);
+        assertEquals((FIRST_END_SECOND - 3_600L) * 1000L, HourlyBuckets.blockStartMillis(block, 3));
+        assertEquals((FIRST_END_SECOND + 2 * 3_600L) * 1000L, HourlyBuckets.blockEndMillis(block, 3));
     }
 }
