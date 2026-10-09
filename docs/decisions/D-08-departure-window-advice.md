@@ -175,7 +175,7 @@ umbrella or cancelling a walk was found; HKO's advice to consider postponing out
 | `domain.forecast` | `HourlyForecast`, `EnsemblePrecipitation`, `DepartureAdvisor`, `DepartureAdvice`, `Candidate`, `RainBand`. Pure Java. |
 | `domain.repository` | `ForecastRepository`, `ForecastUnavailableException` (next to `WeatherUnavailableException`). |
 | `data.remote` | `ForecastApiService` (hourly), `EnsembleApiService` (new base URL), DTO + mapper for the hourly response; the ensemble `hourly` object is parsed as a `JsonObject` because member keys are dynamic. One generic `ForecastSource<T>` seam and one generic retrying wrapper reusing `NetworkRetryPolicy` and `Sleeper`. |
-| `data.repository` | `TimedAreaCache<T>`: in-memory, keyed by weather area and request kind, 30-minute lifetime. A separate class is justified because `CachedWeatherRepository` is tied to Room and stale fallback. No coalescing (one request per page open is enough). |
+| `data.repository` | `CachedForecastRepository` with one `TimedAreaCache<T>` per forecast kind: in-memory, keyed by weather area, 30-minute lifetime; a value stamped in the future (clock moved back) counts as expired. A separate class is justified because `CachedWeatherRepository` is tied to Room and stale fallback. No coalescing (one request per page open is enough). |
 | `di` | A dedicated single-thread executor for forecast work, so retry sleeps cannot stall the shared 2-thread I/O pool used by Room, attractions, weather and routing. |
 | `ui` | Forecast page Fragment + ViewModel; advice Fragment + ViewModel; shared row layout/adapter. Bundle values are passed to ViewModels through an `init(...)` call, matching `ViewModelFactory`'s no-argument construction. |
 
