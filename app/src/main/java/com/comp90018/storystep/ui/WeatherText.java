@@ -112,7 +112,8 @@ public final class WeatherText {
         return resources.getString(R.string.weather_age_hours, (int) (age / HOUR_MILLIS));
     }
 
-    private static int conditionLabel(WeatherCondition condition) {
+    /** The word for a condition; also used by the hourly forecast rows. */
+    public static int conditionLabel(WeatherCondition condition) {
         switch (condition) {
             case CLEAR:
                 return R.string.weather_clear;

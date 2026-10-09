@@ -100,6 +100,19 @@ public class WeatherViewModel extends ViewModel implements ExplorationCoordinato
         super.onCleared();
     }
 
+    /**
+     * The point the card's weather is for: the live fix, or the reference origin before one. The
+     * hourly forecast page is opened for this same point so the two always describe one area.
+     */
+    public GeoPoint getCurrentOrigin() {
+        return currentOrigin;
+    }
+
+    /** Whether the card is showing live or reference-area weather. */
+    public WeatherUiState.AreaLabel getAreaLabel() {
+        return areaLabel;
+    }
+
     public LiveData<WeatherUiState> getUiState() {
         return uiState;
     }

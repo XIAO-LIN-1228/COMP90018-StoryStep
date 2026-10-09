@@ -112,6 +112,8 @@ public class NearbyAttractionsFragment extends Fragment
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
+    /** The weather line and the hourly link beside it, shown and hidden together. */
+    private View weatherRow;
     private TextView weatherReading;
     private WeatherViewModel weatherViewModel;
     private TextView homeTitle;
@@ -238,6 +240,7 @@ public class NearbyAttractionsFragment extends Fragment
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
         TouchTargets.expand(nearbyBackButton);
         weatherCard = view.findViewById(R.id.weather_card);
+        weatherRow = view.findViewById(R.id.weather_row);
         weatherReading = view.findViewById(R.id.weather_reading);
         homeTitle = view.findViewById(R.id.home_title);
         searchContainer = view.findViewById(R.id.search_container);
@@ -297,6 +300,7 @@ public class NearbyAttractionsFragment extends Fragment
         weatherViewModel.getContextWeather().observe(getViewLifecycleOwner(), viewModel::onWeatherChanged);
         // Tapping the card retries, which is the only recovery a user has for a failed fetch.
         weatherCard.setOnClickListener(v -> weatherViewModel.load());
+        view.findViewById(R.id.weather_hourly_link).setOnClickListener(v -> openHourlyForecast());
         weatherViewModel.load();
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
@@ -674,10 +678,22 @@ public class NearbyAttractionsFragment extends Fragment
         weatherCard.setClickable(state.isRetryable());
     }
 
+    /** Opens the hourly forecast for the same point and area label the weather card shows. */
+    private void openHourlyForecast() {
+        com.comp90018.storystep.domain.model.GeoPoint origin = weatherViewModel.getCurrentOrigin();
+        if (origin == null) {
+            return;
+        }
+        NavHostFragment.findNavController(this).navigate(R.id.action_nearby_to_forecast,
+                com.comp90018.storystep.ui.forecast.ForecastFragment.arguments(origin,
+                        weatherViewModel.getAreaLabel()
+                                == WeatherUiState.AreaLabel.REFERENCE_AREA));
+    }
+
     private void setListMode(boolean enabled) {
         listMode = enabled;
         nearbyBackButton.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        weatherCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        weatherRow.setVisibility(enabled ? View.GONE : View.VISIBLE);
         homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
         // The map stays; the sheet rises to fill the screen for the full list and rests again
         // for browsing. Either state is one drag from the other.

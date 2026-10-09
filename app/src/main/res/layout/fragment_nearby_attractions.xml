@@ -63,23 +63,48 @@
                 android:text="@string/app_name" />
         </LinearLayout>
 
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/weather_card"
+        <!-- The weather line and, beside it, the way into the hourly forecast (D-08). -->
+        <LinearLayout
+            android:id="@+id/weather_row"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
-            app:cardBackgroundColor="@android:color/transparent"
-            app:cardElevation="0dp"
-            app:strokeWidth="0dp">
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/weather_card"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="@android:color/transparent"
+                app:cardElevation="0dp"
+                app:strokeWidth="0dp">
+
+                <TextView
+                    android:id="@+id/weather_reading"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/weather_loading"
+                    android:textColor="@color/story_ink_2" />
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
-                android:id="@+id/weather_reading"
+                android:id="@+id/weather_hourly_link"
                 style="@style/TextAppearance.StoryStep.Supporting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/weather_loading"
-                android:textColor="@color/story_ink_2" />
-        </com.google.android.material.card.MaterialCardView>
+                android:background="?attr/selectableItemBackground"
+                android:contentDescription="@string/forecast_hourly_link_description"
+                android:gravity="center_vertical"
+                android:minWidth="@dimen/minimum_touch_target"
+                android:minHeight="@dimen/minimum_touch_target"
+                android:paddingStart="@dimen/space_12"
+                android:paddingEnd="@dimen/space_8"
+                android:text="@string/forecast_hourly_link"
+                android:textColor="@color/story_ink"
+                android:textStyle="bold" />
+        </LinearLayout>
 
         <!--
             The kinds of place, as chips over the map: kept, sights, food, drinks, shopping.

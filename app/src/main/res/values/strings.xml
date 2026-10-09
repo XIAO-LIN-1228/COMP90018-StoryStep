@@ -523,4 +523,21 @@
     <string name="kind_shopping">Shopping</string>
     <string name="profile_recent_walks">Recent walks</string>
     <string name="profile_saved_places">Saved places</string>
+
+    <!-- Hourly forecast and departure advice (D-08) -->
+    <string name="forecast_hourly_link">Hourly ›</string>
+    <string name="forecast_hourly_link_description">Hourly chance of rain</string>
+    <string name="forecast_title">Next 24 hours</string>
+    <string name="forecast_area_live">Chance of rain near you, hour by hour</string>
+    <string name="forecast_area_reference">Chance of rain in the reference area, hour by hour</string>
+    <string name="forecast_interval">%1$s–%2$s</string>
+    <string name="forecast_percent">%1$d%%</string>
+    <string name="forecast_missing">–</string>
+    <string name="forecast_loading">Loading forecast</string>
+    <string name="forecast_retry">Try again</string>
+    <string name="forecast_source">Chance of more than 0.1 mm in each hour. Forecast: Open-Meteo</string>
+    <string name="forecast_error_offline">You\'re offline. Check your connection and try again.</string>
+    <string name="forecast_error_busy">The forecast service is busy. Try again in a moment.</string>
+    <string name="forecast_error_generic">Forecast unavailable right now.</string>
+    <string name="advice_error_unusable">Rain advice is unavailable right now.</string>
 </resources>
