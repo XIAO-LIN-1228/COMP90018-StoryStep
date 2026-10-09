@@ -1,4 +1,4 @@
-# 分支：docs/project-report。然后重新pull
+# 分支：docs/project-report
 
 19:45StoryStep — Consolidated Report
 
