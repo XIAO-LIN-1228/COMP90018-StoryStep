@@ -85,6 +85,17 @@ public class WalkPlanTest {
     }
 
     @Test
+    public void walkingLeavesOutTheStay() {
+        WalkPlan plan = WalkPlan.of(Arrays.asList(
+                place("a", -37.8000, 144.9614), place("b", -37.8100, 144.9614)));
+        long walking = Math.round(plan.distanceMeters(ORIGIN) / WalkPlan.WALKING_SPEED_MPS * 1000);
+        assertEquals(walking, plan.walkingMillis(ORIGIN));
+        assertEquals(plan.durationMillis(ORIGIN) - 2 * WalkPlan.DWELL_MILLIS_PER_STOP,
+                plan.walkingMillis(ORIGIN));
+        assertEquals(0, WalkPlan.EMPTY.walkingMillis(ORIGIN));
+    }
+
+    @Test
     public void theWalkKnowsWhereItStartsAndWhatComesNext() {
         WalkPlan plan = WalkPlan.of(Arrays.asList(
                 place("a", -37.798, 144.959), place("b", -37.797, 144.964)));

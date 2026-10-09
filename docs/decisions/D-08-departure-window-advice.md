@@ -255,7 +255,7 @@ interface EnsembleSource {
 }
 
 // domain.forecast (pure Java)
-final class HourlyForecast        { long[] endEpochSeconds; Integer[] probability; Integer[] weatherCode; long fetchedAtMillis; }
+final class HourlyForecast        { List<Hour> hours; long fetchedAtMillis; }   // Hour: endEpochSecond, Integer probability, WeatherCondition condition
 final class EnsemblePrecipitation { long[] endEpochSeconds; double[][] memberMm; /* [member][hour] */ boolean[] isDay; long fetchedAtMillis; }
 
 final class DepartureAdvisor {
