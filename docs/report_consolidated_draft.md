@@ -31,6 +31,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 | Student name                            | Student number | University email | GitHub handle |
 | --------------------------------------- | -------------- | ---------------- | ------------- |
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
+| Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
 | [PENDING: remaining members] | | | |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
@@ -94,6 +95,7 @@ baseline discussed in this report.
 | Java | The verified wrapper launcher used OpenJDK 22.0.2; the checked-in daemon criteria select JDK 25. Android Studio bundles JBR 25.0.2. Application source/target compatibility is Java 11. |
 | Application | Java/XML; package `com.comp90018.storystep`; minimum API 26; compile/target API 37 |
 | Historical emulator | Pixel_8, API 36, used for the presentation checks in [R2, R4]; not rerun for this build check |
+| Supplementary Windows setup | Windows PowerShell; IntelliJ IDEA 2024.3.2.2; Eclipse Temurin JDK 25.0.4; local Android SDK; OPPO X9 Pro physical phone |
 
 A phone running API 26 or later is required to run the app; GPS, accelerometer and
 magnetometer are recommended for the complete sensing demonstration. Steps and
@@ -203,10 +205,22 @@ a clean machine was not tested. Windows execution, tests and Lint were not rerun
 in this check. The installed IDE version was inspected, but this was a terminal
 build and does not supply the Android Studio Console screenshot required below.
 
-[PENDING-INSTALL: No phone or emulator was connected during this verification.
-Supply the physical phone model, Android/API version, installation/first-run result
-and permission choices. Repeat the build and walkthrough against the actual final
-code ZIP, whose submitted revision has not yet been fixed.]
+Penghua He also verified the project on Windows. IntelliJ IDEA 2024.3.2.2 was
+configured with Eclipse Temurin JDK 25.0.4, and the checked-in wrapper was run from
+the repository root on 7 October 2026:
+
+```powershell
+.\gradlew.bat testDebugUnitTest assembleDebug lintDebug --console=plain
+```
+
+The run returned **BUILD SUCCESSFUL**. Of 48 actionable tasks, 16 were executed and
+32 were up-to-date; the generated unit-test reports contained 858 tests with no
+failures. The debug APK was installed on an OPPO X9 Pro through USB debugging and
+launched successfully. The installed application continued to run independently
+after the USB cable was disconnected.
+
+The fresh macOS archive build above was command-line only; the installation and
+physical-phone evidence comes from the separate Windows and OPPO run.
 
 ### 3.3 Compilation evidence
 
@@ -227,6 +241,7 @@ is not claimed complete, and commit counts do not determine contributions.]
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | GitHub: [rHuan4422](https://github.com/rHuan4422) | **Contextual recommendations:** implemented deterministic scoring, recommendation reasons, Recommended/Nearby modes and updates from changing context. **Profile and reliability:** replaced fixed statistics, removed the unfinished Memory editor and fixed saved-context recovery. **Theme exploration:** implemented the three-stop workflow, arrival-unlocked stories/questions, skip/undo, persistent progress, recovery and complete/partial results. **Verification:** added regression tests and documented JVM, emulator, build and Lint results. | **Recommendations/Profile:** [PR #20](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/20); commits [eed454c](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/eed454c4ecea010a6b40a4e0775e85fcd6b0c852), [816fb16](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/816fb1624bf3dcf12bdbc0657a07f8d8c242aa98), [a4b6256](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/a4b62563c28c8b7ace7cf4d5bb5e934a82c803ed), [9cfbe2f](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/9cfbe2fc709717945509cd4d9c1927d6330225e4); [review and test evidence](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/9cfbe2fc709717945509cd4d9c1927d6330225e4/docs/verification/EV-TEAM-A-REVIEW-2026-09-20.md). **Theme exploration:** [PR #24](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/24); commit [c212cfb](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/c212cfb8806df26847445bb390b6ae7c98801791); [implementation plan](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/c212cfb8806df26847445bb390b6ae7c98801791/docs/theme-exploration-plan.md) and [verification evidence](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/c212cfb8806df26847445bb390b6ae7c98801791/docs/verification/EV-THEME-EXPLORATION-2026-09-21.md). | Responsible for the listed implementation, fixes, tests and documentation, with Codex assistance. Integrated with shared discovery, sensing, session and history infrastructure. Full-suite test totals include teammates' tests; physical-device field acceptance is not claimed. |
 | Lin Xiao (GitHub: [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228)) | **Foundation and sensing:** established the layered Java/XML architecture, foreground location and permission handling, session lifecycle, route-distance recording, movement classification and compass guidance. **Persistence and stories:** implemented Room-backed session recovery, quality-aware arrival and stored story snapshots, saved attractions and journey history. **Remote data:** integrated Open-Meteo weather and Overpass attraction discovery with area caching, freshness checks and stale fallback. **Refinement:** added saved-detail fallback, cache retention and accessibility improvements; repaired planner start recovery, date localisation, exploration map/photo controls, compass presentation and attraction image loading. **Verification:** added domain, repository and UI regression tests and recorded build, Lint and emulator evidence. | Foundation/location/session/sensing: [#2](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/2), [#3](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/3), [#4](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/4), [#6](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/6), [#7](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/7). Persistence/arrival/saves/history: [#8](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/8), [#9](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/9), [#10](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/10), [#12](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/12). Weather/attractions: [#11](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/11), [#13](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/13). Refinements: [#21](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/21), [#35](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/35), [#36](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/36), [#37](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/37), [#38](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/38). | Responsible for the listed implementations, tests and evidence within the shared application. Later UI, recommendation, theme and reliability work includes teammates' contributions. Test-suite totals are shared project results; physical-device acceptance is not claimed. |
+| Penghua He (GitHub: [Penghua-He](https://github.com/Penghua-He)) | **Reliability and data handling:** implemented bounded retry, backoff and rate-limit handling for attraction and weather requests, journey-photo cleanup and backup exclusions. **Stories and feedback:** added narration with pause/continue, speech-rate controls, readable fallback and one-shot feedback after persisted arrivals. **Recommendations and coverage:** added conservative opening-status evaluation, bounded popularity weighting, additional attraction types, trusted fallback names and source-identity deduplication. **Location refinement:** separated home discovery from journey recording and prevented reference coordinates from appearing as the user's location. **Verification:** added regression tests and verification records for these changes. | [PR #19](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/19), [PR #26](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/26), [PR #27](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/27), [PR #28](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/28), [PR #29](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/29); commits [b6bed78](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/b6bed7893d18c679227921f57a8680a1550640f9), [2a56a3e](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/2a56a3e), [6eb8b89](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/6eb8b89), [ce81182](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/ce81182), [a59f6b0](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/a59f6b0), [ebebeaf](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/ebebeaf53e9ec704f75a4873dfd2c0770c162ecd). | Individually responsible for the listed incremental features, fixes and related tests, integrated with the team's existing data, recommendation, exploration and persistence infrastructure. |
 
 ## 5. System design and evaluation
 
@@ -357,6 +372,23 @@ build's results remain to be supplied.
 | Physical walkthrough             | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations]                    |
 | Loading and interaction timing   | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained usable]        |
 | Responses to changing conditions | [PENDING-DYNAMIC-BEHAVIOR: movement/heading and offline/reconnect observations with timestamps]                         |
+
+Penghua He's completed feature-branch verification records are summarised below.
+The counts are results from separate revisions and are not combined.
+
+| Date / revision | Command | Environment | Actual result | Evidence |
+| --- | --- | --- | --- | --- |
+| 27 September 2026 / `feature/voice-story` | `./gradlew test assembleDebug lint` | Gradle JVM/build/Lint | 827 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; build successful | [Voice-story record](verification/EV-VOICE-STORY-2026-09-27.md) |
+| 27 September 2026 / `feature/opening-status` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 838 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Opening-status record](verification/EV-OPENING-STATUS-2026-09-27.md) |
+| 27 September 2026 / `feature/popularity-ranking` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 841 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Popularity-ranking record](verification/EV-POPULARITY-RANKING-2026-09-27.md) |
+| 27 September 2026 / `feature/attraction-coverage` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 846 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Attraction-coverage record](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md) |
+| 7 October 2026 / `fix/home-location`, committed as `ebebeaf` | `.\\gradlew.bat testDebugUnitTest assembleDebug lintDebug --console=plain` | Windows, Temurin JDK 25.0.4 | 858 JVM tests with 0 failures; build and Lint successful; 16 tasks executed and 32 up-to-date | Generated reports at `app/build/reports/tests/testDebugUnitTest/index.html` and `app/build/reports/lint-results-debug.html` |
+
+An OPPO X9 Pro was used to install and launch the debug application through USB
+debugging and to exercise the application on a physical phone. The onboarding screen
+rendered on the device, and the installed app remained available after USB
+disconnection. The tester subsequently confirmed that the issues encountered during
+this physical-device session had been resolved.
 
 Historical records establish a baseline. An earlier API 37 run recorded 75/75
 instrumented tests after corrections [R5]. October 7 records report 854 JVM tests
