@@ -175,6 +175,20 @@ public class RemoteForecastMapperTest {
     }
 
     @Test
+    public void daylightIsReadPerHourAndUnknownWhenAbsent() {
+        HourlyForecastDto dto = new com.google.gson.Gson().fromJson("{\"hourly\":{"
+                + "\"time\":[1791586800,1791590400],\"precipitation_probability\":[0,0],"
+                + "\"weather_code\":[0,0],\"is_day\":[1,0]}}", HourlyForecastDto.class);
+
+        HourlyForecast forecast = RemoteForecastMapper.toHourly(dto, 0L);
+
+        assertEquals(Boolean.TRUE, forecast.getHours().get(0).getDaylight());
+        assertEquals(Boolean.FALSE, forecast.getHours().get(1).getDaylight());
+        assertNull(RemoteForecastMapper.toHourly(dto("[1791586800]", "[0]", "[0]"), 0L)
+                .getHours().get(0).getDaylight());
+    }
+
+    @Test
     public void missingHourlyValuesStayMissing() {
         HourlyForecast forecast = RemoteForecastMapper.toHourly(
                 dto("[1791586800]", "[null]", "[null]"), 0L);

@@ -39,7 +39,7 @@ Heat, wind and air quality are out of scope.
 | Entry | A text link "Hourly ›" right of the home weather reading (`weather_hourly_link` in a new `weather_row` wrapping `weather_card`), 48 dp touch target. The card itself still refreshes weather on tap. The row hides with the card in list mode. |
 | Location | Exactly what the weather card uses: its current origin and area label. If the card shows the reference area (no live fix), the page shows the same "reference area" label. No permission prompt or separate GPS handling. |
 | Horizon | Next 24 hours as one list; no date switching. |
-| Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". |
+| Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". The request also asks for `is_day`; clear and cloudy hours at night use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
 | Source | Open-Meteo standard forecast (`/v1/forecast`, `hourly=`), separate from the current-weather request. |
 | Failure | Existing retry policy, then an error with Retry. No stale fallback on this page. |
 | Time display | Phone's current timezone; each row is labelled by its interval, e.g. "14:00–15:00". |
@@ -214,7 +214,7 @@ requested as UTC Unix seconds.
 ```
 GET https://api.open-meteo.com/v1/forecast
     ?latitude={cellLat}&longitude={cellLon}
-    &hourly=precipitation_probability,weather_code
+    &hourly=precipitation_probability,weather_code,is_day
     &forecast_hours=26
     &timezone=GMT&timeformat=unixtime
 ```

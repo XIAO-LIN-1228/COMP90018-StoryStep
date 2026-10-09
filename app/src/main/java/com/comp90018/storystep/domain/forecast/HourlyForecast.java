@@ -21,12 +21,19 @@ public final class HourlyForecast {
         private final long endEpochSecond;
         private final Integer precipitationProbability;
         private final WeatherCondition condition;
+        private final Boolean daylight;
 
         public Hour(long endEpochSecond, Integer precipitationProbability,
                     WeatherCondition condition) {
+            this(endEpochSecond, precipitationProbability, condition, null);
+        }
+
+        public Hour(long endEpochSecond, Integer precipitationProbability,
+                    WeatherCondition condition, Boolean daylight) {
             this.endEpochSecond = endEpochSecond;
             this.precipitationProbability = precipitationProbability;
             this.condition = condition;
+            this.daylight = daylight;
         }
 
         /** When the hour this row describes ends; Open-Meteo's own timestamp. */
@@ -50,6 +57,14 @@ public final class HourlyForecast {
         /** The condition, or null when the provider gave no code for this hour. */
         public WeatherCondition getCondition() {
             return condition;
+        }
+
+        /**
+         * Whether the hour's end is in daylight, or null when unknown. Only chooses a day or night
+         * icon; the provider's weather code is the same by day and by night.
+         */
+        public Boolean getDaylight() {
+            return daylight;
         }
     }
 

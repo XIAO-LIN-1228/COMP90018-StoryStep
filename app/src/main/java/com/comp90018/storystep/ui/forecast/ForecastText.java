@@ -23,16 +23,21 @@ public final class ForecastText {
                 HistoryText.formatTime(startMillis), HistoryText.formatTime(endMillis));
     }
 
+    /**
+     * @param daylight whether the hour is in daylight; null when unknown, which shows the day
+     *                 icon. Only clear and cloudy differ by night.
+     */
     @DrawableRes
-    public static int icon(WeatherCondition condition) {
+    public static int icon(WeatherCondition condition, Boolean daylight) {
         if (condition == null) {
             return R.drawable.ic_weather_unknown;
         }
+        boolean night = Boolean.FALSE.equals(daylight);
         switch (condition) {
             case CLEAR:
-                return R.drawable.ic_weather_clear;
+                return night ? R.drawable.ic_weather_clear_night : R.drawable.ic_weather_clear;
             case CLOUDY:
-                return R.drawable.ic_weather_cloudy;
+                return night ? R.drawable.ic_weather_cloudy_night : R.drawable.ic_weather_cloudy;
             case RAIN:
                 return R.drawable.ic_weather_rain;
             case SNOW:

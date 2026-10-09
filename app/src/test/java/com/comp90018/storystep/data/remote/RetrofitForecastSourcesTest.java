@@ -62,8 +62,8 @@ public class RetrofitForecastSourcesTest {
         assertTrue(path, path.startsWith("/v1/forecast?"));
         assertTrue(path, path.contains("latitude=-37.825"));
         assertTrue(path, path.contains("longitude=144.975"));
-        assertTrue(path, path.contains("hourly=precipitation_probability%2Cweather_code")
-                || path.contains("hourly=precipitation_probability,weather_code"));
+        assertTrue(path, path.contains("hourly=precipitation_probability%2Cweather_code%2Cis_day")
+                || path.contains("hourly=precipitation_probability,weather_code,is_day"));
         assertTrue(path, path.contains("forecast_hours=26"));
         assertTrue(path, path.contains("timezone=GMT"));
         assertTrue(path, path.contains("timeformat=unixtime"));

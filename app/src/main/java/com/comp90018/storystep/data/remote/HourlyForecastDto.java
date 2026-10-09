@@ -14,7 +14,8 @@ import java.util.List;
  *   "hourly": {
  *     "time": [1791586800, 1791590400, ...],
  *     "precipitation_probability": [0, 10, ...],
- *     "weather_code": [0, 2, ...]
+ *     "weather_code": [0, 2, ...],
+ *     "is_day": [1, 0, ...]
  *   }
  * }
  * </pre>
@@ -41,5 +42,9 @@ public class HourlyForecastDto {
         @SerializedName("weather_code")
         @Nullable
         public List<Integer> weatherCode;
+
+        @SerializedName("is_day")
+        @Nullable
+        public List<Integer> isDay;
     }
 }

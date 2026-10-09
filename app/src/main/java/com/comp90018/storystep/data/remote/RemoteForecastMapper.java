@@ -64,8 +64,10 @@ final class RemoteForecastMapper {
         List<Long> time = dto.hourly.time;
         List<Integer> probability = dto.hourly.precipitationProbability;
         List<Integer> codes = dto.hourly.weatherCode;
+        List<Integer> isDay = dto.hourly.isDay;
         if ((probability != null && probability.size() != time.size())
-                || (codes != null && codes.size() != time.size())) {
+                || (codes != null && codes.size() != time.size())
+                || (isDay != null && isDay.size() != time.size())) {
             return null;
         }
         List<HourlyForecast.Hour> hours = new ArrayList<>(time.size());
@@ -75,9 +77,11 @@ final class RemoteForecastMapper {
                 return null;
             }
             Integer code = codes == null ? null : codes.get(i);
+            Integer day = isDay == null ? null : isDay.get(i);
             hours.add(new HourlyForecast.Hour(end,
                     probability == null ? null : probability.get(i),
-                    code == null ? null : RemoteWeatherMapper.toCondition(code)));
+                    code == null ? null : RemoteWeatherMapper.toCondition(code),
+                    day == null ? null : day == 1));
         }
         try {
             return new HourlyForecast(hours, fetchedAtMillis);

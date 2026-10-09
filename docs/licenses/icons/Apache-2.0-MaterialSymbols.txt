@@ -10,6 +10,8 @@ Files and their source icons (unmodified Android VectorDrawable XML):
   app/src/main/res/drawable/ic_weather_rain.xml     <- rainy
   app/src/main/res/drawable/ic_weather_snow.xml     <- weather_snowy
   app/src/main/res/drawable/ic_weather_unknown.xml  <- question_mark
+  app/src/main/res/drawable/ic_weather_clear_night.xml   <- bedtime
+  app/src/main/res/drawable/ic_weather_cloudy_night.xml  <- partly_cloudy_night
 
 ------------------------------------------------------------------------------
 

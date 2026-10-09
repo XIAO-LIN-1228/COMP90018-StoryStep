@@ -19,7 +19,7 @@ public interface ForecastApiService {
     /** Root for every call on this interface; Retrofit requires the trailing slash. */
     String BASE_URL = "https://api.open-meteo.com/";
 
-    String HOURLY_FIELDS = "precipitation_probability,weather_code";
+    String HOURLY_FIELDS = "precipitation_probability,weather_code,is_day";
 
     /**
      * Enough rows for 24 upcoming hours: the first row is the hour that ended at the start of the
