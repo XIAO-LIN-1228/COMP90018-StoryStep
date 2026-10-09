@@ -1,4 +1,4 @@
-# StoryStep — Consolidated Report
+<img width="2074" height="514" alt="image" src="https://github.com/user-attachments/assets/b963cfad-8f81-4f73-b484-70fee9fe6c93" /># StoryStep — Consolidated Report
 
 Revision: 2026-10-09. Progress: `on editing`. Approval: **NOT APPROVED**.
 
@@ -129,8 +129,9 @@ supporting evidence. Keep the full breakdown to one rendered page. In-progress w
 is not claimed complete, and commit counts do not determine contributions.]
 
 | Member | Completed contribution | Evidence | Individual/shared responsibility |
-| --- | --- | --- | --- |
+| GitHub: [rHuan4422](https://github.com/rHuan4422 | **Contextual recommendations:** implemented deterministic scoring, recommendation reasons, Recommended/Nearby modes and updates from changing context. **Profile and reliability:** replaced fixed statistics, removed the unfinished Memory editor and fixed saved-context recovery. **Theme exploration:** implemented the three-stop workflow, arrival-unlocked stories/questions, skip/undo, persistent progress, recovery and complete/partial results. **Verification:** added regression tests and documented JVM, emulator, build and Lint results. | Recommendations/Profile:** [PR #20][pr20]; commits [eed454c][scoring], [816fb16][integration], [a4b6256][profile], [9cfbe2f][review]; [review and test evidence][reviewdoc]. **Theme exploration:** [PR #24][pr24]; commit [c212cfb][theme]; [implementation plan][themeplan] and [verification evidence][themeevidence]. | Responsible for the listed implementation, fixes, tests and documentation, with Codex assistance. Integrated with shared discovery, sensing, session and history infrastructure. Full-suite test totals include teammates' tests; physical-device field acceptance is not claimed. |
 | [To be completed by members] | | | |
+
 
 ## 5. System design and evaluation
 
