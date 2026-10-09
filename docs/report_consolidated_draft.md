@@ -132,207 +132,185 @@ is not claimed complete, and commit counts do not determine contributions.]
 | --- | --- | --- | --- |
 | [To be completed by members] | | | |
 
-## 5. Design, implementation and evaluation
+## 5. System design and evaluation
 
 Progress: `on editing`. Approval: **NOT APPROVED**.
 
-The following five themes cover the rubric without repeating the same mechanism
-under separate headings. The map also locates the four required material criteria.
+StoryStep connects information about nearby places with the experience of visiting
+them. Its architecture separates external data and persistent records from the
+sensing and decision rules that drive exploration. The following sections explain
+these mechanisms, the user journey they support, and the evidence available for
+assessing their behavior. The implementation reviewed is main at `ede3f7e` [R1];
+test results apply to the individual revisions identified below.
 
-| Rubric criterion | Where addressed / evidence |
-| --- | --- |
-| Report & Video | Sections 1–7; video and timestamps in Section 2 |
-| Screenshot | Section 3.3 |
-| Commit log | [PENDING-COMMIT-ARCHIVE: export for submitted code and record ZIP name] |
-| Itemised contributions | Section 4, one page |
-| Quality | 5.1 |
-| Sensors | 5.2; physical evidence in 5.4 |
-| Connectivity | 5.2; recovery evidence in 5.4 |
-| Responsiveness | 5.4, measured runtime behavior |
-| Technical depth | 5.2, sensing and decision mechanisms |
-| Appeal | 5.3, visual design evidence |
-| Guidelines | 5.3, platform/accessibility measures |
-| Flow | 5.3, navigation and recovery |
-| Language | 5.3, explanations and consistency |
-| Reactiveness | 5.4, responses to sensor/external changes |
-| Novelty | 5.5, specific integration and comparison |
-| Surprise | 5.5, arrival-linked discovery |
-| Tech Knowledge | 5.2 and 5.5, integrated computing concepts |
-| Cross-Disciplinary | 5.5, interpretation and observation |
-| Impact | 5.5, potential value and evidence limits |
+[PENDING-BASELINE: reconcile implementation and verification with the submitted build.]
 
-Implementation discussion is based on inspected remote main `ede3f7e` [R1].
-Historical test records below apply to their stated revisions, not automatically to
-that commit or the eventual submission. [PENDING-BASELINE: update final evidence map.]
-
-### 5.1 Software design and implementation quality
+### 5.1 System architecture and data handling
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
-StoryStep separates presentation, application coordination, domain computations,
-repositories and platform adapters. Plain-Java classes such as MovementClassifier,
-ArrivalPolicy and CircularSmoother isolate algorithms from Android lifecycle code;
-AndroidSensorHub owns platform subscriptions. This supports deterministic tests
-while keeping real sensor behavior a separate validation responsibility.
+The application separates presentation, application coordination, domain calculations,
+repositories and platform adapters. Plain-Java classes isolate computational rules
+from Android lifecycle code, while adapters such as AndroidSensorHub manage platform
+subscriptions. This allows deterministic logic tests without treating simulated
+inputs as evidence of physical sensor behavior.
 
-State handling connects actions to durable results. PlanStartViewModel retains a
-pending start across recreation and signals readiness only when a session exists.
-Arrival processing saves a visit before exposing its story. Room schema version 12
-exports schemas and registers explicit migrations rather than destructive migration.
-These mechanisms support recoverable records and make failure paths explicit.
+Repositories combine remote information with local storage. Overpass supplies nearby
+places, Wikimedia sources enrich descriptions and images, Open-Meteo supplies current
+weather, and Valhalla supplies pedestrian routes. Map tiles provide the geographic
+display. Requests for the same area can be coalesced, and cached observations are
+classified by freshness before being returned or used as labelled fallback data.
+Content gaps and failed requests remain possible; caching does not provide complete
+offline navigation. Route requests contain the supplied route coordinates, even
+though weather and place queries use area-based locations.
 
-The design is not evidence of uniform code quality or complete correctness. Review
-found a stale version-10 database comment above the version-12 annotation, and recorded
-Lint runs still contain warnings. [PENDING-QUALITY: owners to confirm final review,
-warning disposition and applicable migration-test results.]
+Persistent state provides continuity between actions and their visible results.
+An arrival is stored before its story becomes available. PlanStartViewModel retains
+pending start state across recreation and signals readiness after a session exists.
+Room schema version 12 exports schemas and registers explicit migrations to preserve
+stored data rather than relying on destructive migration. Saved places and completed
+journeys persist; the unstarted walking plan remains in memory.
 
-### 5.2 Sensing, external data and core algorithms
+[PENDING-IMPLEMENTATION-REVIEW: confirm final configuration, migration evidence and
+remaining Lint warnings. Review also found a stale version-10 database comment above
+its version-12 annotation; reconcile documentation with delivered code.]
+
+### 5.2 Exploration and departure decisions
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
-Location supports discovery, recorded movement and arrival. Accelerometer input
-supports movement estimation; accelerometer and magnetometer readings support
-orientation, with true-heading conversion and circular smoothing. Optional step and
-pressure adapters supply walk metrics when available, and camera integration attaches
-photographs. Missing capabilities are represented as unavailable. Main includes
-foreground home discovery separately from journey recording; acquiring location is
-not restricted to an already-started journey.
-
-Arrival detection combines spatial uncertainty with temporal evidence. The inspected
-policy requires distance plus accuracy within 50 metres, accuracy within 25 metres,
-and at least three accepted fixes spanning ten seconds, with fifteen-second gap and
-sample-age limits. Movement classification removes a time-dependent gravity estimate,
-measures magnitude variation over two-second windows and uses hysteresis plus
-agreement across two windows. Heading smoothing operates on sine/cosine components,
-avoiding the discontinuity between 359 and 1 degrees. These are substantive sensing
-mechanisms, but their starting parameters are not field-validated accuracy guarantees.
-
-Overpass supplies nearby places, Wikimedia sources enrich descriptions/images,
-Open-Meteo supplies current weather and Valhalla supplies pedestrian routes; map
-tiles provide the geographic display. Cached repositories classify freshness,
-coalesce requests and provide labelled fallback behavior. Route requests contain
-their supplied coordinates: coarse weather/place queries do not imply that every
-request avoids precise positions. Cached content is not complete offline navigation.
-
+Users choose destinations, while the app supplies context for comparing them.
 Recommendation ranking combines distance, weather, time, saved and unvisited factors
-with deterministic reasons; unsuitable weather data is neutral. This is a rule-based
-policy, not learned personalization. Stop ordering uses a nearest-neighbour heuristic;
-street-path computation is delegated to Valhalla rather than claimed as a new routing
-algorithm or globally optimal plan. Together, these mechanisms integrate sensing,
-geospatial computation, data-quality handling and persistent state for a user task.
+with deterministic explanations. Unsuitable weather data is neutral. This fixed-rule
+policy does not learn an interest profile. Selected stops are ordered using a
+nearest-neighbour heuristic, after which Valhalla provides a street walking path;
+the ordering does not guarantee a globally shortest itinerary.
 
-[PENDING-DEPARTURE-IMPLEMENTATION: add the delivered forecast-window algorithm/API,
-duration aggregation, explanation and boundary-test evidence once implemented.
-The current concept does not establish completed technical depth or a custom backend.]
+During exploration, location supports recorded movement and arrival decisions.
+The inspected arrival policy requires distance plus reported accuracy within 50 metres,
+accuracy within 25 metres, and at least three accepted fixes spanning ten seconds.
+Fifteen-second gap and sample-age limits prevent old or disconnected samples from
+being treated as a continuous stay. These parameters are starting values whose
+physical performance still requires field evidence.
 
-### 5.3 Interface design and interaction
+Movement estimation removes a time-dependent gravity estimate and measures variation
+in acceleration magnitude over two-second windows. Separate thresholds and agreement
+across two windows reduce rapid changes of state near the decision boundary. Heading
+processing combines orientation readings with true-heading conversion and smooths
+sine/cosine components, avoiding the discontinuity between 359 and 1 degrees. Optional
+step and pressure adapters provide walk metrics when available; absent capabilities
+are shown as unavailable. These inputs serve different purposes rather than all
+jointly determining arrival. Foreground home discovery also acquires location
+separately from journey recording.
+
+Departure-window advice is intended to extend destination and ordering decisions to
+when to leave. Its design compares precipitation probability, apparent temperature
+and wind over a chosen walking duration, then explains the relative suitability of
+upcoming departure windows. This remains a planned extension, not verified delivery
+or a guarantee of comfort or safety.
+
+[PENDING-DEPARTURE-IMPLEMENTATION: add the delivered algorithm/API, duration aggregation,
+timezone and missing-data handling, and boundary-test results once available.]
+
+### 5.3 User experience design
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
-Explore, Plan, Journeys and Profile form the main navigation, with saved places and
-settings reachable through Profile. Detail, exploration and history screens connect
-selection with visiting and recollection. Arrival prompts offer View story or Later;
-theme questions remain optional. The revised planner puts Add and Start outside the
-sliding content, checks access and waits for session creation before navigation.
-Cancellation preserves planning, and no-session Back does not discard a nonexistent
-journey. These are intended to keep actions and recovery understandable [R2].
+Explore, Plan, Journeys and Profile organise the main user journey. Visitors move
+from nearby discovery to attraction details and planning, then to exploration and
+stored history. Saved places and settings are reachable through Profile. Arrival
+prompts offer View story or Later, and questions in the curated theme are optional,
+allowing users to decide how much interpretation to engage with during a walk.
+
+The planner keeps Add and Start outside its sliding content so users do not need to
+expand the sheet to find the main actions. It checks location access and waits for
+session creation before navigating. Cancellation preserves planning, and Back from
+a no-session exploration state does not offer to discard a nonexistent journey [R2].
+These choices connect navigation to the underlying state and provide a route back
+when an action cannot be completed.
 
 MainActivity applies system-bar insets and delegates tab destination handling to
-NavigationUI. Material controls, a shared 48dp touch-target resource, expandable
-button heights and selected live-region status updates provide concrete platform
-integration. Automated accessibility checks do not establish useful spoken labels
-or reading order. The planner record still identifies bottom-tab clipping at 200%
-font scale, so general large-text compliance is not claimed [R2].
+NavigationUI. Shared resources define 48dp touch targets; selected controls expand
+with text and status updates use live regions. The recorded planner checks still
+show bottom-tab clipping at 200% font scale, and automated checks do not establish
+spoken-label quality or TalkBack reading order [R2].
 
-English strings distinguish missing values and recoverable actions, including waiting
-for a location fix and retrying an arrival save. The fallback route is labelled a
-straight-line plan. English date formatting was corrected for non-English device
-settings, with targeted automated evidence [R3]. Permission wording still needs
-reconciliation with home discovery: “during an active exploration” may imply a
-narrower location lifecycle than the implementation. Weather labels and Not now
-prominence also need final-build confirmation.
+Interface text distinguishes missing measurements and recoverable actions, including
+waiting for a location fix and retrying an arrival save. A fallback route is labelled
+as a straight-line plan. English date formatting was corrected for non-English device
+settings [R3]. Permission wording needs to match both home discovery and journey
+recording: “during an active exploration” may suggest a narrower lifecycle. Weather
+labels and the prominence of Not now also need final-build confirmation.
 
-[PENDING-APPEAL: insert selected final screenshots and an agreed explanation of
-typography, colour, spacing and map/content hierarchy. Do not invent aesthetic
-preferences. PENDING-UI: supply final walkthrough, font/TalkBack and language results;
-retain observed limitations rather than declaring full guideline compliance.]
+[PENDING-VISUAL-DESIGN: add selected final screenshots and an agreed account of visual
+hierarchy, typography, colour and spacing. PENDING-UI: supply the final walkthrough,
+large-font, TalkBack and language observations; retain unresolved limitations.]
 
-### 5.4 Verification, runtime performance and dynamic response
+### 5.4 Verification results and limitations
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
 Verification combines pure-Java tests, instrumented presentation checks and manual
-device observation. They answer different questions: deterministic fixtures can
-exercise failure paths and rendering, while hardware and end-to-end behavior require
-device evidence. The final submission's results are not yet established here.
+device observation. Deterministic fixtures exercise rules, failure paths and rendering;
+physical sensing and complete user journeys need device evidence. The final submitted
+build's results remain to be supplied.
 
 | Evidence | Result and scope |
 | --- | --- |
-| Final submitted build | [PENDING-FINAL-TESTS: commit, environment, commands, executed/cached tasks, counts, failures/skips, Lint and artifacts] |
-| Physical core walkthrough | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations] |
-| Runtime responsiveness | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained responsive] |
-| Dynamic response | [PENDING-REACTIVENESS: actual movement/heading and offline/reconnect behavior with timestamps] |
+| Submitted build | [PENDING-FINAL-TESTS: commit, environment, commands, executed/cached tasks, counts, failures/skips, Lint and artifacts] |
+| Physical walkthrough | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations] |
+| Loading and interaction timing | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained usable] |
+| Responses to changing conditions | [PENDING-DYNAMIC-BEHAVIOR: movement/heading and offline/reconnect observations with timestamps] |
 
-Historical evidence provides a baseline, not final acceptance. The earlier API 37
-run recorded 75/75 instrumented tests after corrections [R5]. October 7 records
-report 854 JVM tests and four planner presentation cases at each of two font scales
-[R2], 854 JVM tests and four locale cases [R3], then 862 JVM tests and three exploration
-cases at each scale [R4]. The latter runs used API 36; all three records report
-successful builds and Lint with zero errors and 113 warnings. Counts overlap and
-are not summed. Exploration fixtures were synthetic, and later home-location and
-photo changes require evidence beyond those results.
+Historical records establish a baseline. An earlier API 37 run recorded 75/75
+instrumented tests after corrections [R5]. October 7 records report 854 JVM tests
+and four planner presentation cases at each of two font scales [R2], 854 JVM tests
+and four locale cases [R3], then 862 JVM tests and three exploration cases at each
+scale [R4]. The latter device runs used API 36 and reported successful builds with
+zero Lint errors and 113 warnings. Counts overlap and are not summed. Exploration
+inputs were synthetic; subsequent home-location and photo changes require evidence
+beyond these historical results.
 
-A representative correction illustrates the validation process: denied planned-walk
-starts previously led to an idle exploration/exit problem. The revised flow gates
-navigation on session creation and keeps recovery on the planner; focused tests
-cover denial, delayed/failed writes and no-session Back [R2]. Actual system-dialog
-and final-phone acceptance remain separate. Full debugging history stays in the
-source records rather than being reproduced here.
+One repair illustrates how tests informed implementation. Denied planned-walk starts
+had led to an idle exploration/exit problem. The revised flow gates navigation on
+session creation and retains recovery on the planner. Focused tests cover denial,
+delayed or failed writes and no-session Back [R2]; real system-dialog and final-phone
+acceptance remain separate. The detailed failure history is retained in that record.
 
-Responsiveness concerns delays while operating the app; Reactiveness concerns changes
-driven by sensor or external input. Neither follows from build time or test count.
-Historical manual feedback observed slow initial content loading and weather-refresh
-concerns; it is not a controlled latency benchmark. Real sensing accuracy, final
-camera/gallery round trips, TalkBack and broader device coverage remain unestablished
-by the reviewed records [R4, R6]. Final limitations must reflect supplied evidence,
-including failed and unexecuted cases, rather than assuming fixes passed.
+Two questions remain distinct: how long an action takes, and whether the interface
+updates correctly when position, heading or network conditions change. Build times
+and test totals answer neither. Historical manual feedback identified slow initial
+content loading and weather-refresh concerns, but did not constitute a controlled
+latency benchmark. Real sensing accuracy, final camera/gallery round trips, TalkBack
+and broader device coverage remain unestablished by the reviewed records [R4, R6].
+These gaps must be resolved or retained as limitations of the submitted evaluation.
 
-### 5.5 Innovation and potential value
+### 5.5 Design contribution and application value
 
 Progress: `need review`. Approval: **NOT APPROVED**.
 
-StoryStep's proposed novelty is a specific integration of visitor decisions and
-place interpretation. It connects autonomous selection and contextual planning with
-content accessed after arrival and local records of exploration. This is not a claim
-to invent itinerary planning, weather assistance or GPS stories: Wanderlog, komoot
-and izi.TRAVEL already document related capabilities [R7–R9]. The comparison supports
-a bounded account of the project's design, not market-wide uniqueness.
+StoryStep is designed around the transition from deciding where to go to understanding
+what is encountered there. It connects autonomous place selection and contextual
+planning with arrival-linked interpretation and local exploration records. Related
+products already offer itinerary planning, route weather or GPS stories, including
+Wanderlog, komoot and izi.TRAVEL [R7–R9]. The contribution is this particular visitor
+experience, rather than a claim to have invented those individual capabilities.
 
-Arrival unlocks extend a familiar map interaction into discovery. In the three-stop
-Parkville theme, a visit reveals a story and an optional question about visible
-features such as a tower or arches. Retained station progress is intended to encourage
-interest in collecting place experiences and discovering the next story. This frames
-Surprise as a designed extension of navigation, not a measured emotional response;
-no points, badges or leaderboard are claimed.
+In the three-stop Parkville theme, arrival reveals a story and an optional question
+about visible features such as a tower or arches. Progress accumulates as places are
+visited, inviting users to discover another story and build a collection of place
+experiences. This extends a map destination into an observation activity without
+requiring points, badges or a leaderboard. Architectural and botanical content links
+the digital interaction to the physical setting and its history [R10]. Whether this
+actually increases motivation or learning has not been measured.
 
-The same interaction connects computing with heritage interpretation and observation.
-Location provides the participation condition while sourced architectural and botanical
-content directs attention to the real setting [R10]. This illustrates cross-disciplinary
-application; it does not establish an educational effect. The sensing, data and
-persistence integration in Section 5.2 supplies the computing-knowledge basis.
-
-Departure-window advice extends the intended decision sequence to when to leave.
-Its concept compares upcoming weather over a chosen walking duration using precipitation
-probability, apparent temperature and wind, with explanations for relative suitability.
-Implementation and validation are pending; it is not a safety or comfort guarantee.
-It remains part of the planned contribution, to be reconciled with final delivery.
-
-The potential impact is to reduce the effort of organising an unfamiliar local outing
-and encourage attention to places encountered. These are plausible aims, not measured
-reductions in planning time or gains in engagement, satisfaction or learning. Saved
-places and journey history support revisiting discoveries; content gaps, forecast
-uncertainty and device limitations constrain the experience. Without user evaluation,
-the report retains potential-value wording rather than claiming demonstrated benefit.
+The departure-advice concept would complement that experience by helping users choose
+when to begin, as described in Section 5.2. Together, the intended benefits are less
+effort in organising an unfamiliar outing and greater attention to places encountered.
+Saved places and journey history also support returning to earlier discoveries.
+Content coverage, forecast uncertainty and device capabilities constrain those benefits.
+Without user evaluation, they remain potential value rather than demonstrated gains
+in planning efficiency, satisfaction or understanding.
 
 ## 6. AI and other assistance acknowledgement
 
