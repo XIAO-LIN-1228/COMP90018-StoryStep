@@ -82,6 +82,16 @@ public final class ApiClientFactory {
         return createRetrofit(WeatherApiService.BASE_URL, debug).create(WeatherApiService.class);
     }
 
+    /** The hourly forecast client (forecast page). Same provider and root as the weather client. */
+    public static ForecastApiService createForecastService(boolean debug) {
+        return createRetrofit(ForecastApiService.BASE_URL, debug).create(ForecastApiService.class);
+    }
+
+    /** The ensemble client (departure advice). Open-Meteo serves ensembles from its own host. */
+    public static EnsembleApiService createEnsembleService(boolean debug) {
+        return createRetrofit(EnsembleApiService.BASE_URL, debug).create(EnsembleApiService.class);
+    }
+
     /** The attraction client. Its root is fixed by the provider, so callers do not choose one. */
     public static OverpassApiService createOverpassService(boolean debug) {
         return createRetrofit(OverpassApiService.BASE_URL, debug, OVERPASS_TIMEOUT_SECONDS)
