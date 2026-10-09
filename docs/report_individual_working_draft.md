@@ -291,6 +291,59 @@ require inspection and validation as implementation progresses; no deployed cust
 backend is claimed. This draft does not establish physical sensor accuracy or new
 test results and remains subject to explicit user approval.
 
+### 5.19 Innovation - Cross-Disciplinary — DRAFT, NOT APPROVED
+
+StoryStep connects mobile computing with local heritage interpretation and
+observation-based learning. Its curated Parkville theme combines location-triggered
+access with short accounts of campus architecture and botany. Questions ask users
+to observe features in front of them, such as the Old Quad's arches or the System
+Garden's surviving tower. The physical setting therefore becomes part of the
+interaction: location establishes arrival, while the content directs attention
+to the site's history and visible details. Retained station progress also applies
+a collection-oriented interaction design, intended to encourage further discovery
+without making optional questions a requirement for recording a visit.
+
+The departure-window concept adds an application of weather information to tourism
+planning. It proposes interpreting precipitation probability, apparent temperature
+and wind across an intended walk, then presenting explained timing alternatives.
+This connects environmental information with a practical visitor decision rather
+than treating weather as a separate display. Together, the theme and timing advice
+link computational mechanisms to understanding places and planning an outing.
+
+Authoring/evidence boundary: `ThemeCatalog`, `ThemeFragment` and
+`RoomThemeRepository` support the implemented theme description; the catalog retains
+links to university sources for its content. Observation and collection are design
+approaches here, not claims of a validated educational or psychological intervention.
+Departure advice remains subject to implementation inspection and validation, and
+no scientifically validated human-comfort model is claimed. Final references must
+retain the content sources. This subsection is DRAFT, NOT APPROVED.
+
+### 5.20 Innovation - Impact — DRAFT, NOT APPROVED
+
+StoryStep aims to help tourists unfamiliar with an area turn uncertain intentions
+into a manageable local outing. Bringing nearby places, contextual recommendations
+and walking plans together may reduce the effort of identifying destinations and
+organising a visit. Users retain their own choices, while explanations provide
+context for deciding which places suit the outing. Arrival-linked stories and
+optional observation questions offer opportunities to notice and understand local
+features that might otherwise be passed without attention. Saved places and
+completed-journey records support returning to earlier discoveries and reviewing
+past exploration.
+
+Departure-window advice is intended to extend this support to the timing of a walk,
+helping users compare forecast conditions across its expected duration. Its potential
+benefit is a more informed departure choice, not guaranteed comfort or safety. The
+project's intended impact is therefore practical and experiential: supporting
+planning decisions while encouraging a closer engagement with unfamiliar surroundings.
+
+Authoring/evidence boundary: these are potential benefits, not measured outcomes.
+The recorded automated tests do not establish reduced planning time, improved
+learning, greater engagement or user satisfaction. Responsible members' user and
+field evaluations are needed to assess those outcomes. Content coverage, forecast
+uncertainty, device capabilities and unresolved manual-test issues limit the current
+experience; departure advice also requires delivery evidence. No health, economic
+or environmental benefit is inferred. This subsection is DRAFT, NOT APPROVED.
+
 ## 4. Individual contributions — BLANK, NOT APPROVED
 
 [Each member fills and confirms their own completed contributions and evidence.
@@ -317,13 +370,14 @@ Other members must supply their tool use; this session is not a complete team re
 | OpenAI Codex | Inspected arrival-gated theme behavior and drafted Section 5.17 from the agreed collection-motivation and departure-advice discussion | User review required; Surprise prose not approved |
 | OpenAI Codex | Drafted Section 5.18 from the agreed technical-integration outline and earlier code inspection, separating delivered mechanisms from departure-advice design | User review required; Tech Knowledge prose not approved |
 | [Other tools: members to supply] | [Concrete uses and affected material] | [Actual review to be supplied] |
+| OpenAI Codex | Drafted Sections 5.19 and 5.20 from prior code inspection and design discussion, distinguishing intended benefits from measured outcomes | User review required; both subsections not approved |
 
 No model version, reviewer signoff or validation activity may be invented. A missing
 Co-authored-by trailer does not replace the report's required AI disclosure.
 
 ## Evaluative sections — DISCUSSION ONLY, NOT APPROVED
 
-Overview, Novelty, Surprise and Tech Knowledge have unapproved drafts above. Remaining sections
+Overview and Innovation Sections 5.16-5.20 have unapproved drafts above. Remaining sections
 require discussion one at a time: agree the intended claim, identify evidence, then
 draft for explicit approval.
 
@@ -338,8 +392,8 @@ draft for explicit approval.
 | 5.16 Novelty | Draft above; includes designed departure advice with implementation/validation pending; wording awaiting approval |
 | 5.17 Surprise | Draft above; arrival unlocks and collection motivation, plus progressing departure advice; wording awaiting approval |
 | 5.18 Tech Knowledge | Draft above; sensing, external-data quality, decision support and persistence; departure implementation evidence pending; wording awaiting approval |
-| 5.19 Cross-Disciplinary | Which external discipline is applied, with what source and implementation evidence? |
-| 5.20 Impact | Which benefit is plausible, and which benefit has actually been measured? |
+| 5.19 Cross-Disciplinary | Draft above; heritage interpretation, on-site observation and weather-informed tourism planning; awaiting review |
+| 5.20 Impact | Draft above; potential planning and exploration benefits, with outcomes unmeasured; awaiting review |
 
 ## Required material and references — PLACEHOLDERS, NOT APPROVED
 

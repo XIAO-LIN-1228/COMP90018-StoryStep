@@ -888,3 +888,20 @@ existing API to manufacture a full-stack claim. No contribution score is guarant
   no functional/configuration edits, tests, staging, commit or push.
 - Next safe step: review the draft or discuss 5.19 Cross-Disciplinary; no automatic
   finalization and no prose for that next section without discussion.
+
+### Report resumed: Sections 5.19 and 5.20 (2026-10-09)
+
+- User requested saving the feature branch, switching to the report branch and
+  drafting both sections. Saved /localMd/ ignore rule on the feature branch as
+  `138ce43`; localMd/note.md remains local and ignored through .git/info/exclude
+  on the report branch as well.
+- Backed up the original anomalous index, .gitignore and local feature note under
+  `C:/Users/Jam/AppData/Local/Temp/storystep-before-report-efd31a85aafd4aedb905160f65d844e2`.
+  Rebuilt the index from the saved feature HEAD without changing working files,
+  then switched successfully to `docs/project-report`.
+- Drafted 5.19 around heritage interpretation, observation and weather-informed
+  planning; drafted 5.20 around potential planning and exploration benefits.
+  Both remain DRAFT, NOT APPROVED, with no measured educational/engagement/comfort
+  benefit or completed departure-feature claim. Updated AI assistance inventory.
+- No app changes or tests; report edits not committed or pushed. Next step: user
+  review of the two drafts and later reconciliation with feature delivery evidence.
