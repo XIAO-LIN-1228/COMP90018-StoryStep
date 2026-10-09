@@ -1,5 +1,3 @@
-<img width="2074" height="514" alt="image" src="https://github.com/user-attachments/assets/b963cfad-8f81-4f73-b484-70fee9fe6c93" /># StoryStep — Consolidated Report
-
 Revision: 2026-10-09. Progress: `on editing`. Approval: **NOT APPROVED**.
 
 Authoring note: this is the formal-structure working version, not an approved final
