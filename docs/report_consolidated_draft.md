@@ -1,3 +1,7 @@
+# 分支：docs/project-report。然后重新pull
+
+19:45StoryStep — Consolidated Report
+
 Revision: 2026-10-09. Progress: `on editing`. Approval: **NOT APPROVED**.
 
 Authoring note: this is the formal-structure working version, not an approved final
@@ -24,9 +28,9 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 
 **Submitted commit:** [PENDING-FINAL-COMMIT]
 
-| Student name | Student number | University email | GitHub handle |
-| --- | --- | --- | --- |
-| [PENDING: one confirmed row per member] | | | |
+| Student name                            | Student number | University email | GitHub handle |
+| --------------------------------------- | -------------- | ---------------- | ------------- |
+| [PENDING: one confirmed row per member] |                |                  |               |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
 
@@ -60,13 +64,13 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 [PENDING-VIDEO: Insert accessible YouTube link, duration (maximum ten minutes),
 demonstrated commit/APK and physical device. Supply the timestamp map below.]
 
-| Demonstration | Timestamp | Related report section |
-| --- | --- | --- |
-| Discovery, selection and planning | [Pending] | 5.2, 5.3 |
-| Physical sensing, arrival and stories | [Pending] | 5.2, 5.5 |
-| External data and changing conditions | [Pending] | 5.2, 5.4 |
-| History, photos and recovery | [Pending] | 5.1, 5.3 |
-| Departure advice, if delivered | [Pending scope] | 5.2, 5.5 |
+| Demonstration                         | Timestamp       | Related report section |
+| ------------------------------------- | --------------- | ---------------------- |
+| Discovery, selection and planning     | [Pending]       | 5.2, 5.3               |
+| Physical sensing, arrival and stories | [Pending]       | 5.2, 5.5               |
+| External data and changing conditions | [Pending]       | 5.2, 5.4               |
+| History, photos and recovery          | [Pending]       | 5.1, 5.3               |
+| Departure advice, if delivered        | [Pending scope] | 5.2, 5.5               |
 
 ## 3. Compilation and operation
 
@@ -126,10 +130,9 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 supporting evidence. Keep the full breakdown to one rendered page. In-progress work
 is not claimed complete, and commit counts do not determine contributions.]
 
-| Member | Completed contribution | Evidence | Individual/shared responsibility |
-| GitHub: [rHuan4422](https://github.com/rHuan4422 | **Contextual recommendations:** implemented deterministic scoring, recommendation reasons, Recommended/Nearby modes and updates from changing context. **Profile and reliability:** replaced fixed statistics, removed the unfinished Memory editor and fixed saved-context recovery. **Theme exploration:** implemented the three-stop workflow, arrival-unlocked stories/questions, skip/undo, persistent progress, recovery and complete/partial results. **Verification:** added regression tests and documented JVM, emulator, build and Lint results. | Recommendations/Profile:** [PR #20][pr20]; commits [eed454c][scoring], [816fb16][integration], [a4b6256][profile], [9cfbe2f][review]; [review and test evidence][reviewdoc]. **Theme exploration:** [PR #24][pr24]; commit [c212cfb][theme]; [implementation plan][themeplan] and [verification evidence][themeevidence]. | Responsible for the listed implementation, fixes, tests and documentation, with Codex assistance. Integrated with shared discovery, sensing, session and history infrastructure. Full-suite test totals include teammates' tests; physical-device field acceptance is not claimed. |
-| [To be completed by members] | | | |
-
+| Member                                            | Completed contribution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Evidence                                                                                                                                                                                                                                                                                                                                                | Individual/shared responsibility                                                                                                                                                                                                                                                   |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub: [rHuan4422](https://github.com/rHuan4422) | **Contextual recommendations:** implemented deterministic scoring, recommendation reasons, Recommended/Nearby modes and updates from changing context. **Profile and reliability:** replaced fixed statistics, removed the unfinished Memory editor and fixed saved-context recovery. **Theme exploration:** implemented the three-stop workflow, arrival-unlocked stories/questions, skip/undo, persistent progress, recovery and complete/partial results. **Verification:** added regression tests and documented JVM, emulator, build and Lint results. | **Recommendations/Profile:** [PR #20][pr20]; commits [eed454c][scoring], [816fb16][integration], [a4b6256][profile], [9cfbe2f][review]; [review and test evidence][reviewdoc]. **Theme exploration:** [PR #24][pr24]; commit [c212cfb][theme]; [implementation plan][themeplan] and [verification evidence][themeevidence]. | Responsible for the listed implementation, fixes, tests and documentation, with Codex assistance. Integrated with shared discovery, sensing, session and history infrastructure. Full-suite test totals include teammates' tests; physical-device field acceptance is not claimed. |
 
 ## 5. System design and evaluation
 
@@ -254,12 +257,12 @@ device observation. Deterministic fixtures exercise rules, failure paths and ren
 physical sensing and complete user journeys need device evidence. The final submitted
 build's results remain to be supplied.
 
-| Evidence | Result and scope |
-| --- | --- |
-| Submitted build | [PENDING-FINAL-TESTS: commit, environment, commands, executed/cached tasks, counts, failures/skips, Lint and artifacts] |
-| Physical walkthrough | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations] |
-| Loading and interaction timing | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained usable] |
-| Responses to changing conditions | [PENDING-DYNAMIC-BEHAVIOR: movement/heading and offline/reconnect observations with timestamps] |
+| Evidence                         | Result and scope                                                                                                        |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Submitted build                  | [PENDING-FINAL-TESTS: commit, environment, commands, executed/cached tasks, counts, failures/skips, Lint and artifacts] |
+| Physical walkthrough             | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations]                    |
+| Loading and interaction timing   | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained usable]        |
+| Responses to changing conditions | [PENDING-DYNAMIC-BEHAVIOR: movement/heading and offline/reconnect observations with timestamps]                         |
 
 Historical records establish a baseline. An earlier API 37 run recorded 75/75
 instrumented tests after corrections [R5]. October 7 records report 854 JVM tests
@@ -319,11 +322,11 @@ Progress: `need review`. Approval: **NOT APPROVED — USER REVIEW MANDATORY**.
 Each member must add their own tool use and actual review; no independent-authorship
 or human-validation claim is inferred.]
 
-| Recorded tool use | Assistance requiring acknowledgement |
-| --- | --- |
-| OpenAI Codex | Test investigation and related dependency/test/resource edits; guided manual checks and transcribed feedback; notes and issue drafts |
-| OpenAI Codex, including requested research agents | Competitor/source research, selected code review, report drafts, editing and structural consolidation |
-| Other members/tools | [Pending actual tools, uses, affected material and human review] |
+| Recorded tool use                                 | Assistance requiring acknowledgement                                                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| OpenAI Codex                                      | Test investigation and related dependency/test/resource edits; guided manual checks and transcribed feedback; notes and issue drafts |
+| OpenAI Codex, including requested research agents | Competitor/source research, selected code review, report drafts, editing and structural consolidation                                |
+| Other members/tools                               | [Pending actual tools, uses, affected material and human review]                                                                     |
 
 The detailed assistance inventory remains in the preserved working draft. Omitting
 a Co-authored-by commit trailer does not replace acknowledgement in the report.
