@@ -42,7 +42,7 @@ Heat, wind and air quality are out of scope.
 | Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". The request also asks for `is_day`; clear and cloudy hours at night use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
 | Source | Open-Meteo standard forecast (`/v1/forecast`, `hourly=`), separate from the current-weather request. |
 | Failure | Existing retry policy, then an error with Retry. No stale fallback on this page. |
-| Time display | Phone's current timezone; each row is labelled by its interval, e.g. "14:00–15:00". |
+| Time display | The forecast location's timezone (`timezone=auto`; the IANA id is used so daylight saving is followed, the reported offset otherwise). When the phone's offset differs, a line under the subtitle says "Times are Melbourne time (UTC+11)". Each row is labelled by its interval, e.g. "2:00 PM–3:00 PM". |
 
 This page's percentages are Open-Meteo's own PoP (its multi-model ensemble). The advice uses
 the average of three models' member counts over a whole walk, so the two pages can show different
@@ -132,12 +132,19 @@ with Retry.
 
 ### 4.4 Daylight
 
-- `is_day` comes from the same ensemble request (`is_day_icon_seamless_eps`; any model's column
-  if that one is absent). An hour is treated as daylight when `is_day` at its end timestamp is 1
-  (an hourly approximation of sunrise/sunset).
-- A candidate whose trip overlaps any night bucket is still listed, labelled "After dark".
+- Both requests ask for `daily=sunrise,sunset` with the location's timezone (`timezone=auto`);
+  day and night are decided from these instants, not from an hourly day/night flag (revised
+  2026-10-10 after the emulator showed moons beside daytime-looking hours: the phone was on UTC
+  while the forecast was for Melbourne).
+- Forecast page: an hour shows a day icon when its middle lies between that day's sunrise and
+  sunset, a night icon (`bedtime` / `partly_cloudy_night`) otherwise.
+- Advice: a walk counts as daylight only when the whole walk lies between one sunrise and that
+  day's sunset; otherwise it is listed with "After dark" and a moon. Multi-model responses carry
+  sunrise/sunset per model (they differ by seconds); ICON's are used, then any model's.
 - The best candidate is chosen among daylight-only candidates; only if there are none is it
   chosen among all candidates, with a note.
+- Missing sun times make the ensemble response `MALFORMED` (every walk would otherwise read as
+  after dark); on the forecast page they only leave the day icon in place.
 
 ### 4.5 Ranking and presentation
 
@@ -164,6 +171,11 @@ with Retry.
 
 - "Not advisable" threshold: 60%. If every daylight candidate is ≥ 60%, the relatively best
   one is still highlighted with a note that rain is likely throughout and an umbrella is advised.
+- Dry throughout: when every departure (day or night) is under 5%, the summary card reads "Dry
+  all day: leave whenever you like" instead of naming a best time, with "Every departure in the
+  next 24 hours has under a 5% chance of rain during your walk."
+- A chance that rounds below 1% is shown as "<1%", not "0%": a model share is rarely exactly zero
+  and "0%" reads as a guarantee.
 - The page footnote names the source and the models actually used: "Average of ICON, ECMWF and
   GFS ensembles via Open-Meteo: chance of ≥ 0.2 mm during your walk".
 
@@ -221,9 +233,10 @@ requested as UTC Unix seconds.
 ```
 GET https://api.open-meteo.com/v1/forecast
     ?latitude={cellLat}&longitude={cellLon}
-    &hourly=precipitation_probability,weather_code,is_day
-    &forecast_hours=26
-    &timezone=GMT&timeformat=unixtime
+    &hourly=precipitation_probability,weather_code
+    &daily=sunrise,sunset
+    &forecast_hours=26&forecast_days=3
+    &timezone=auto&timeformat=unixtime
 ```
 
 ```json
@@ -237,9 +250,10 @@ GET https://api.open-meteo.com/v1/forecast
 ```
 GET https://ensemble-api.open-meteo.com/v1/ensemble
     ?latitude={cellLat}&longitude={cellLon}
-    &hourly=precipitation,is_day&models=icon_seamless,ecmwf_ifs025,gfs025
-    &forecast_hours=34
-    &timezone=GMT&timeformat=unixtime
+    &hourly=precipitation&daily=sunrise,sunset
+    &models=icon_seamless,ecmwf_ifs025,gfs025
+    &forecast_hours=34&forecast_days=3
+    &timezone=auto&timeformat=unixtime
 ```
 
 ```json

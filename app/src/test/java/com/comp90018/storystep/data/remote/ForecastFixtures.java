@@ -10,17 +10,17 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Open-Meteo answers recorded at 2026-10-09 23:12:39 UTC (10:12 in Melbourne), for Melbourne
- * (-37.825, 144.975), dry, and Singapore (1.325, 103.825), showery. Kept under
- * {@code src/test/resources/forecast}.
+ * Open-Meteo answers recorded at 2026-10-10 00:55:16 UTC (11:55 in Melbourne) with the location's
+ * own timezone and daily sunrise and sunset, for Melbourne (-37.825, 144.975), dry, and Singapore
+ * (1.325, 103.825), showery. Kept under {@code src/test/resources/forecast}.
  */
 final class ForecastFixtures {
 
     /** When the fixtures were requested. */
-    static final long RECORDED_AT = 1_791_587_559_000L;
+    static final long RECORDED_AT = 1_791_593_716_000L;
 
-    /** First timestamp in every fixture: 23:00 UTC, the end of the 22:00-23:00 hour. */
-    static final long FIRST_END_SECOND = 1_791_586_800L;
+    /** First timestamp in every fixture: 00:00 UTC, the end of the 23:00-00:00 hour. */
+    static final long FIRST_END_SECOND = 1_791_590_400L;
 
     private ForecastFixtures() {
     }

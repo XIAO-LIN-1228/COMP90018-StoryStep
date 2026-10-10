@@ -19,7 +19,10 @@ public interface EnsembleApiService {
     /** Root for every call on this interface; Retrofit requires the trailing slash. */
     String BASE_URL = "https://ensemble-api.open-meteo.com/";
 
-    String HOURLY_FIELDS = "precipitation,is_day";
+    String HOURLY_FIELDS = "precipitation";
+
+    /** Sunrise and sunset, which decide whether a walk stays in daylight. */
+    String DAILY_FIELDS = "sunrise,sunset";
 
     /** ICON-EPS (hourly), ECMWF IFS ENS and NCEP GEFS (both three-hourly). */
     String MODELS = "icon_seamless,ecmwf_ifs025,gfs025";
@@ -36,8 +39,10 @@ public interface EnsembleApiService {
             @Query("latitude") double latitude,
             @Query("longitude") double longitude,
             @Query("hourly") String hourly,
+            @Query("daily") String daily,
             @Query("models") String models,
             @Query("forecast_hours") int forecastHours,
+            @Query("forecast_days") int forecastDays,
             @Query("timezone") String timezone,
             @Query("timeformat") String timeFormat);
 }

@@ -11,15 +11,22 @@ import retrofit2.http.Query;
  * <p>Separate from {@link WeatherApiService} so the current-conditions request, its cache and the
  * home weather card stay exactly as they are.
  *
- * <p>Times are requested as UTC Unix seconds, so no timezone string is parsed. Each value
- * describes the hour that <em>ends</em> at its timestamp.
+ * <p>Times are requested as UTC Unix seconds, so no date string is parsed. Each value describes
+ * the hour that <em>ends</em> at its timestamp. {@code timezone=auto} makes the provider report
+ * the location's own zone, which the page shows times in, and the daily sunrise and sunset decide
+ * the day and night icons.
  */
 public interface ForecastApiService {
 
     /** Root for every call on this interface; Retrofit requires the trailing slash. */
     String BASE_URL = "https://api.open-meteo.com/";
 
-    String HOURLY_FIELDS = "precipitation_probability,weather_code,is_day";
+    String HOURLY_FIELDS = "precipitation_probability,weather_code";
+
+    String DAILY_FIELDS = "sunrise,sunset";
+
+    /** Today plus two: enough sunrises and sunsets to cover 34 hours from any time of day. */
+    int FORECAST_DAYS = 3;
 
     /**
      * Enough rows for 24 upcoming hours: the first row is the hour that ended at the start of the
@@ -27,7 +34,8 @@ public interface ForecastApiService {
      */
     int FORECAST_HOURS = 26;
 
-    String TIMEZONE = "GMT";
+    /** The location's own timezone, reported back as {@code timezone} and {@code utc_offset_seconds}. */
+    String TIMEZONE = "auto";
     String TIME_FORMAT = "unixtime";
 
     /**
@@ -39,7 +47,9 @@ public interface ForecastApiService {
             @Query("latitude") double latitude,
             @Query("longitude") double longitude,
             @Query("hourly") String hourly,
+            @Query("daily") String daily,
             @Query("forecast_hours") int forecastHours,
+            @Query("forecast_days") int forecastDays,
             @Query("timezone") String timezone,
             @Query("timeformat") String timeFormat);
 }

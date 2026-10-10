@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.DepartureAdvice;
-import com.comp90018.storystep.ui.HistoryText;
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +25,12 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
 
     private final List<DepartureAdvice.Candidate> candidates = new ArrayList<>();
     private int bestIndex = -1;
+    private ForecastPlace place = ForecastPlace.unknown();
 
     /** Replaces every row: each recomputation is a new set of departures. */
     @SuppressLint("NotifyDataSetChanged")
-    public void submit(List<DepartureAdvice.Candidate> rows, int best) {
+    public void submit(List<DepartureAdvice.Candidate> rows, int best, ForecastPlace rowsPlace) {
+        place = rowsPlace;
         candidates.clear();
         candidates.addAll(rows);
         bestIndex = best;
@@ -46,13 +48,12 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
     public void onBindViewHolder(@NonNull RainRowAdapter.Holder holder, int position) {
         DepartureAdvice.Candidate candidate = candidates.get(position);
         Resources resources = holder.itemView.getResources();
-        holder.time.setText(start(resources, candidate));
+        holder.time.setText(start(resources, candidate, place));
         // The icon slot marks a walk that runs into the dark; daylight walks leave it empty.
         holder.icon.setVisibility(candidate.isDaylight() ? View.INVISIBLE : View.VISIBLE);
         holder.icon.setImageResource(R.drawable.ic_weather_clear_night);
         holder.icon.setContentDescription(resources.getString(R.string.advice_after_dark));
-        holder.percent.setText(resources.getString(R.string.forecast_percent,
-                candidate.getPercent()));
+        holder.percent.setText(AdviceText.percent(resources, candidate));
         holder.bar.setProgressCompat(candidate.getPercent(), false);
         String label = resources.getString(AdviceText.band(candidate.getBand()));
         if (!candidate.isDaylight()) {
@@ -65,10 +66,11 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
                 : 0);
     }
 
-    static String start(Resources resources, DepartureAdvice.Candidate candidate) {
+    static String start(Resources resources, DepartureAdvice.Candidate candidate,
+                        ForecastPlace place) {
         return candidate.isNow()
                 ? resources.getString(R.string.advice_now)
-                : HistoryText.formatTime(candidate.getStartMillis());
+                : ForecastText.time(candidate.getStartMillis(), place);
     }
 
     @Override

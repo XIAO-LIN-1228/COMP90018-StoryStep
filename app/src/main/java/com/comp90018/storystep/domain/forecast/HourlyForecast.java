@@ -60,8 +60,9 @@ public final class HourlyForecast {
         }
 
         /**
-         * Whether the hour's end is in daylight, or null when unknown. Only chooses a day or night
-         * icon; the provider's weather code is the same by day and by night.
+         * Whether the middle of the hour is between that day's sunrise and sunset, or null when
+         * unknown. Only chooses a day or night icon; the provider's weather code is the same by
+         * day and by night.
          */
         public Boolean getDaylight() {
             return daylight;
@@ -70,8 +71,13 @@ public final class HourlyForecast {
 
     private final List<Hour> hours;
     private final long fetchedAtMillis;
+    private final ForecastPlace place;
 
     public HourlyForecast(List<Hour> hours, long fetchedAtMillis) {
+        this(hours, fetchedAtMillis, ForecastPlace.unknown());
+    }
+
+    public HourlyForecast(List<Hour> hours, long fetchedAtMillis, ForecastPlace place) {
         Objects.requireNonNull(hours, "hours");
         long[] ends = new long[hours.size()];
         for (int i = 0; i < ends.length; i++) {
@@ -85,6 +91,12 @@ public final class HourlyForecast {
         HourlyBuckets.requireHourly(ends);
         this.hours = Collections.unmodifiableList(new ArrayList<>(hours));
         this.fetchedAtMillis = fetchedAtMillis;
+        this.place = Objects.requireNonNull(place, "place");
+    }
+
+    /** The location's timezone and sun times; times on the page are shown in this zone. */
+    public ForecastPlace getPlace() {
+        return place;
     }
 
     public List<Hour> getHours() {

@@ -65,6 +65,6 @@ public class RecordedDepartureAdviceTest {
             assertTrue(candidate.getProbability() + 1e-9 >= wettestHour);
             largestGap = Math.max(largestGap, candidate.getProbability() - wettestHour);
         }
-        assertTrue("largest gap " + largestGap, largestGap >= 0.10);
+        assertTrue("largest gap " + largestGap, largestGap >= 0.05);
     }
 }

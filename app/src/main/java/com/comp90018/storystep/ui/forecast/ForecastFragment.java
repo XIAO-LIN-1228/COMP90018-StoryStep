@@ -34,6 +34,7 @@ public class ForecastFragment extends Fragment {
     private View errorGroup;
     private TextView errorText;
     private RecyclerView list;
+    private TextView zoneNote;
 
     /** Arguments for opening this page on a point. */
     public static Bundle arguments(GeoPoint origin, boolean referenceArea) {
@@ -60,6 +61,7 @@ public class ForecastFragment extends Fragment {
         errorGroup = view.findViewById(R.id.forecast_error_group);
         errorText = view.findViewById(R.id.forecast_error);
         list = view.findViewById(R.id.forecast_list);
+        zoneNote = view.findViewById(R.id.forecast_zone_note);
         list.setAdapter(adapter);
 
         Bundle args = requireArguments();
@@ -85,6 +87,12 @@ public class ForecastFragment extends Fragment {
         }
         list.setVisibility(state.getStatus() == ForecastUiState.Status.CONTENT
                 ? View.VISIBLE : View.GONE);
-        adapter.submit(state.getHours());
+        adapter.submit(state.getHours(), state.getPlace());
+        String note = state.getStatus() == ForecastUiState.Status.CONTENT
+                ? ForecastText.zoneNote(getResources(), state.getPlace(),
+                        System.currentTimeMillis(), java.util.TimeZone.getDefault())
+                : null;
+        zoneNote.setVisibility(note == null ? View.GONE : View.VISIBLE);
+        zoneNote.setText(note);
     }
 }

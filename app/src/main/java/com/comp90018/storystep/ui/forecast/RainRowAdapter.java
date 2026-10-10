@@ -11,6 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
 import com.google.android.material.progressindicator.LinearProgressIndicator;
 
@@ -24,10 +25,12 @@ import java.util.List;
 public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> {
 
     private final List<HourlyForecast.Hour> hours = new ArrayList<>();
+    private ForecastPlace place = ForecastPlace.unknown();
 
     /** Replaces every row: each load is a new forecast, so there is nothing finer to report. */
     @SuppressLint("NotifyDataSetChanged")
-    public void submit(List<HourlyForecast.Hour> rows) {
+    public void submit(List<HourlyForecast.Hour> rows, ForecastPlace rowsPlace) {
+        place = rowsPlace;
         hours.clear();
         hours.addAll(rows);
         notifyDataSetChanged();
@@ -45,7 +48,7 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
         HourlyForecast.Hour hour = hours.get(position);
         View item = holder.itemView;
         holder.time.setText(ForecastText.interval(item.getResources(),
-                hour.getStartMillis(), hour.getEndMillis()));
+                hour.getStartMillis(), hour.getEndMillis(), place));
         holder.icon.setImageResource(ForecastText.icon(hour.getCondition(), hour.getDaylight()));
         holder.icon.setContentDescription(item.getResources().getString(
                 ForecastText.conditionDescription(hour.getCondition())));

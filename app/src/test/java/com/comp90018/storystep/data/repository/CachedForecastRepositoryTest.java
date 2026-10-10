@@ -6,6 +6,7 @@ import static org.junit.Assert.assertSame;
 
 import com.comp90018.storystep.data.remote.ForecastSource;
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.ForecastUnavailableException;
@@ -88,7 +89,7 @@ public class CachedForecastRepositoryTest {
         return new EnsemblePrecipitation(new long[] {1_791_586_800L},
                 Collections.singletonList(new EnsemblePrecipitation.Model("ICON", 1,
                         new double[][] {{0.0}})),
-                new boolean[] {true}, START);
+                ForecastPlace.unknown(), START);
     }
 
     private Capture<HourlyForecast> loadHourly() {

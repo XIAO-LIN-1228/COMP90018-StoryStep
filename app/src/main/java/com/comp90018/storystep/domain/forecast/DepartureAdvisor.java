@@ -182,15 +182,9 @@ public final class DepartureAdvisor {
         return false;
     }
 
-    /** Whether every hour the walk touches is in daylight. */
+    /** Whether the whole walk is between one sunrise and that day's sunset. */
     private static boolean daylight(EnsemblePrecipitation ensemble, long start, long end) {
-        for (int h = 0; h < ensemble.hourCount(); h++) {
-            if (HourlyBuckets.overlaps(ensemble.endEpochSecond(h), start, end)
-                    && !ensemble.isDay(h)) {
-                return false;
-            }
-        }
-        return true;
+        return ensemble.getPlace().getSun().isDaylightThroughout(start, end);
     }
 
     /**
@@ -227,8 +221,12 @@ public final class DepartureAdvisor {
         if (noMeaningfulDifference) {
             best = firstInPool(candidates, anyDaylight);
         }
+        boolean dry = true;
+        for (DepartureAdvice.Candidate candidate : candidates) {
+            dry &= candidate.getProbability() < RainBand.DRY_PERCENT / 100.0 - EPSILON;
+        }
         return new DepartureAdvice(candidates, models, best, noMeaningfulDifference,
-                allNotAdvisable, !anyDaylight);
+                allNotAdvisable, !anyDaylight, dry);
     }
 
     private static int firstInPool(List<DepartureAdvice.Candidate> candidates,

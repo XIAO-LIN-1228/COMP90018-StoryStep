@@ -22,8 +22,10 @@ public final class RetrofitEnsembleSource implements ForecastSource<EnsemblePrec
                 cellCentre.getLatitude(),
                 cellCentre.getLongitude(),
                 EnsembleApiService.HOURLY_FIELDS,
+                EnsembleApiService.DAILY_FIELDS,
                 EnsembleApiService.MODELS,
                 EnsembleApiService.FORECAST_HOURS,
+                ForecastApiService.FORECAST_DAYS,
                 ForecastApiService.TIMEZONE,
                 ForecastApiService.TIME_FORMAT));
         EnsemblePrecipitation ensemble = RemoteForecastMapper.toEnsemble(body, fetchedAtMillis);

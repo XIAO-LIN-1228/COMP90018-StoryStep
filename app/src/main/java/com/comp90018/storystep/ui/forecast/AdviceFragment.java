@@ -47,6 +47,7 @@ public class AdviceFragment extends Fragment {
     private TextView errorText;
     private RecyclerView list;
     private TextView source;
+    private TextView zoneNote;
     /** The trip the too-long dialog was last shown for, so rotation does not show it again. */
     private long dialogShownFor = -1;
 
@@ -84,6 +85,7 @@ public class AdviceFragment extends Fragment {
         errorText = view.findViewById(R.id.advice_error);
         list = view.findViewById(R.id.advice_list);
         source = view.findViewById(R.id.advice_source);
+        zoneNote = view.findViewById(R.id.advice_zone_note);
         list.setAdapter(adapter);
 
         Bundle args = requireArguments();
@@ -147,12 +149,16 @@ public class AdviceFragment extends Fragment {
                 status == AdviceUiState.Status.ERROR ? View.VISIBLE : View.GONE);
 
         DepartureAdvice advice = state.getAdvice();
+        String note = advice == null ? null : ForecastText.zoneNote(getResources(),
+                state.getPlace(), System.currentTimeMillis(), java.util.TimeZone.getDefault());
+        zoneNote.setVisibility(note == null ? View.GONE : View.VISIBLE);
+        zoneNote.setText(note);
         if (advice == null) {
-            adapter.submit(java.util.Collections.emptyList(), -1);
+            adapter.submit(java.util.Collections.emptyList(), -1, state.getPlace());
             return;
         }
-        adapter.submit(advice.getCandidates(), advice.getBestIndex());
-        renderSummary(advice);
+        adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace());
+        renderSummary(advice, state.getPlace());
         source.setText(getString(R.string.advice_source,
                 AdviceText.models(advice.getModels(), getString(R.string.advice_and))));
         int bestIndex = advice.getBestIndex();
@@ -164,12 +170,22 @@ public class AdviceFragment extends Fragment {
         });
     }
 
-    private void renderSummary(DepartureAdvice advice) {
+    private void renderSummary(DepartureAdvice advice,
+                               com.comp90018.storystep.domain.forecast.ForecastPlace place) {
+        if (advice.isDryThroughout()) {
+            // Whenever the walker leaves it stays dry: say so instead of naming a "best" time
+            // that is no better than any other.
+            best.setText(R.string.advice_dry_title);
+            note.setText(R.string.advice_dry_note);
+            note.setVisibility(View.VISIBLE);
+            return;
+        }
         DepartureAdvice.Candidate chosen = advice.getBest();
+        String chance = AdviceText.percent(getResources(), chosen);
         best.setText(chosen.isNow()
-                ? getString(R.string.advice_best_now, chosen.getPercent())
+                ? getString(R.string.advice_best_now, chance)
                 : getString(R.string.advice_best_at,
-                        HistoryText.formatTime(chosen.getStartMillis()), chosen.getPercent()));
+                        ForecastText.time(chosen.getStartMillis(), place), chance));
         int noteText = 0;
         if (advice.isNoDaylightCandidate()) {
             noteText = R.string.advice_note_no_daylight;

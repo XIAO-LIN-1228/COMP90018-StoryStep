@@ -66,7 +66,8 @@ public class ForecastViewModel extends ViewModel {
             @Override
             public void onSuccess(HourlyForecast forecast) {
                 uiState.setValue(ForecastUiState.content(
-                        forecast.upcoming(clock.wallClockMillis(), HOURS_SHOWN)));
+                        forecast.upcoming(clock.wallClockMillis(), HOURS_SHOWN),
+                        forecast.getPlace()));
             }
 
             @Override

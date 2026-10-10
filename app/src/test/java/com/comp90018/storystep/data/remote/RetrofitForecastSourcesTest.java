@@ -62,10 +62,13 @@ public class RetrofitForecastSourcesTest {
         assertTrue(path, path.startsWith("/v1/forecast?"));
         assertTrue(path, path.contains("latitude=-37.825"));
         assertTrue(path, path.contains("longitude=144.975"));
-        assertTrue(path, path.contains("hourly=precipitation_probability%2Cweather_code%2Cis_day")
-                || path.contains("hourly=precipitation_probability,weather_code,is_day"));
+        assertTrue(path, path.contains("hourly=precipitation_probability%2Cweather_code")
+                || path.contains("hourly=precipitation_probability,weather_code"));
+        assertTrue(path, path.contains("daily=sunrise%2Csunset")
+                || path.contains("daily=sunrise,sunset"));
+        assertTrue(path, path.contains("forecast_days=3"));
         assertTrue(path, path.contains("forecast_hours=26"));
-        assertTrue(path, path.contains("timezone=GMT"));
+        assertTrue(path, path.contains("timezone=auto"));
         assertTrue(path, path.contains("timeformat=unixtime"));
     }
 
@@ -82,7 +85,8 @@ public class RetrofitForecastSourcesTest {
         assertTrue(path, path.contains("forecast_hours=34"));
         assertTrue(path, path.contains("icon_seamless")
                 && path.contains("ecmwf_ifs025") && path.contains("gfs025"));
-        assertTrue(path, path.contains("is_day"));
+        assertTrue(path, path.contains("daily=sunrise"));
+        assertTrue(path, path.contains("timezone=auto"));
     }
 
     @Test

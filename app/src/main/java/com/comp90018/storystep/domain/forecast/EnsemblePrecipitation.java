@@ -72,25 +72,22 @@ public final class EnsemblePrecipitation {
 
     private final long[] endEpochSeconds;
     private final List<Model> models;
-    private final boolean[] isDay;
+    private final ForecastPlace place;
     private final long fetchedAtMillis;
 
     /**
      * @param endEpochSeconds end of each hour, one hour apart (Open-Meteo's timestamps)
      * @param models          at least one model, each with every member one row per hour
-     * @param isDay           whether each hour's end falls in daylight
+     * @param place           the location's timezone and sunrise and sunset
      */
-    public EnsemblePrecipitation(long[] endEpochSeconds, List<Model> models, boolean[] isDay,
+    public EnsemblePrecipitation(long[] endEpochSeconds, List<Model> models, ForecastPlace place,
                                  long fetchedAtMillis) {
         Objects.requireNonNull(endEpochSeconds, "endEpochSeconds");
         Objects.requireNonNull(models, "models");
-        Objects.requireNonNull(isDay, "isDay");
+        Objects.requireNonNull(place, "place");
         HourlyBuckets.requireHourly(endEpochSeconds);
         if (models.isEmpty()) {
             throw new IllegalArgumentException("no models");
-        }
-        if (isDay.length != endEpochSeconds.length) {
-            throw new IllegalArgumentException("isDay length differs from hours");
         }
         for (Model model : models) {
             Objects.requireNonNull(model, "model");
@@ -107,7 +104,7 @@ public final class EnsemblePrecipitation {
         }
         this.endEpochSeconds = endEpochSeconds.clone();
         this.models = Collections.unmodifiableList(new ArrayList<>(models));
-        this.isDay = isDay.clone();
+        this.place = place;
         this.fetchedAtMillis = fetchedAtMillis;
     }
 
@@ -123,8 +120,9 @@ public final class EnsemblePrecipitation {
         return models;
     }
 
-    public boolean isDay(int hour) {
-        return isDay[hour];
+    /** The location's timezone and sun times. */
+    public ForecastPlace getPlace() {
+        return place;
     }
 
     /** End of the last hour covered: no trip may finish after this. */

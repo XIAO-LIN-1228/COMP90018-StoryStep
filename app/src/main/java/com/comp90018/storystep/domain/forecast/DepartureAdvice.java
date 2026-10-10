@@ -62,16 +62,26 @@ public final class DepartureAdvice {
     private final boolean noMeaningfulDifference;
     private final boolean allNotAdvisable;
     private final boolean noDaylightCandidate;
+    private final boolean dryThroughout;
 
     DepartureAdvice(List<Candidate> candidates, List<String> models, int bestIndex,
                     boolean noMeaningfulDifference, boolean allNotAdvisable,
-                    boolean noDaylightCandidate) {
+                    boolean noDaylightCandidate, boolean dryThroughout) {
         this.candidates = Collections.unmodifiableList(new ArrayList<>(candidates));
         this.models = Collections.unmodifiableList(new ArrayList<>(models));
         this.bestIndex = bestIndex;
         this.noMeaningfulDifference = noMeaningfulDifference;
         this.allNotAdvisable = allNotAdvisable;
         this.noDaylightCandidate = noDaylightCandidate;
+        this.dryThroughout = dryThroughout;
+    }
+
+    /**
+     * Every departure, by day or night, is under {@link RainBand#DRY_PERCENT}: whenever the walker
+     * leaves, rain is not expected, and naming one time as best would overstate a difference.
+     */
+    public boolean isDryThroughout() {
+        return dryThroughout;
     }
 
     public List<Candidate> getCandidates() {

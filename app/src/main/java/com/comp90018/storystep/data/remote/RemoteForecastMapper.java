@@ -3,7 +3,9 @@ package com.comp90018.storystep.data.remote;
 import androidx.annotation.Nullable;
 
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SunTimes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -50,8 +52,6 @@ final class RemoteForecastMapper {
     private static final Pattern PRECIPITATION =
             Pattern.compile("precipitation(?:_member(\\d+))?_(.+)");
 
-    private static final String IS_DAY_PREFIX = "is_day_";
-
     private RemoteForecastMapper() {
     }
 
@@ -64,12 +64,11 @@ final class RemoteForecastMapper {
         List<Long> time = dto.hourly.time;
         List<Integer> probability = dto.hourly.precipitationProbability;
         List<Integer> codes = dto.hourly.weatherCode;
-        List<Integer> isDay = dto.hourly.isDay;
         if ((probability != null && probability.size() != time.size())
-                || (codes != null && codes.size() != time.size())
-                || (isDay != null && isDay.size() != time.size())) {
+                || (codes != null && codes.size() != time.size())) {
             return null;
         }
+        ForecastPlace place = place(dto);
         List<HourlyForecast.Hour> hours = new ArrayList<>(time.size());
         for (int i = 0; i < time.size(); i++) {
             Long end = time.get(i);
@@ -77,14 +76,15 @@ final class RemoteForecastMapper {
                 return null;
             }
             Integer code = codes == null ? null : codes.get(i);
-            Integer day = isDay == null ? null : isDay.get(i);
+            // Day or night by the middle of the hour, against that day's sunrise and sunset.
+            long middleMillis = end * 1000L - 30L * 60L * 1000L;
             hours.add(new HourlyForecast.Hour(end,
                     probability == null ? null : probability.get(i),
                     code == null ? null : RemoteWeatherMapper.toCondition(code),
-                    day == null ? null : day == 1));
+                    place.getSun().isDaylight(middleMillis)));
         }
         try {
-            return new HourlyForecast(hours, fetchedAtMillis);
+            return new HourlyForecast(hours, fetchedAtMillis, place);
         } catch (IllegalArgumentException inconsistent) {
             return null;
         }
@@ -146,11 +146,14 @@ final class RemoteForecastMapper {
             return null;
         }
 
-        boolean[] isDay = isDay(hourly, hours);
-        if (isDay == null) {
+        SunTimes sun = ensembleSun(body);
+        if (!sun.isKnown()) {
+            // Without sunrise and sunset every walk would read as after dark.
             return null;
         }
-        return new EnsemblePrecipitation(time, models, isDay, fetchedAtMillis);
+        return new EnsemblePrecipitation(time, models, new ForecastPlace(
+                string(body, "timezone"), integer(body, "utc_offset_seconds"), sun),
+                fetchedAtMillis);
     }
 
     private static double[] millimetres(JsonArray array, int hours) {
@@ -165,31 +168,85 @@ final class RemoteForecastMapper {
         return values;
     }
 
+    /** Timezone and sun times of the hourly response; unknown parts stay unknown. */
+    private static ForecastPlace place(HourlyForecastDto dto) {
+        SunTimes sun = SunTimes.UNKNOWN;
+        if (dto.daily != null) {
+            sun = sunTimes(dto.daily.sunrise, dto.daily.sunset);
+        }
+        return new ForecastPlace(dto.timezone,
+                dto.utcOffsetSeconds == null ? 0 : dto.utcOffsetSeconds, sun);
+    }
+
     /**
-     * Daylight per hour, from ICON's column when present, otherwise any model's: daylight does not
-     * depend on the model. A missing value is read as night, so it can only withhold a "best".
+     * Sunrise and sunset from the ensemble's daily block. With several models each column carries
+     * the model's suffix and they differ by seconds (different grid points); ICON's is preferred,
+     * then any model's, then unsuffixed columns.
      */
-    @Nullable
-    private static boolean[] isDay(JsonObject hourly, int hours) {
-        JsonArray array = array(hourly, IS_DAY_PREFIX + MODELS.get(0).suffix);
-        if (array == null) {
-            for (Map.Entry<String, JsonElement> column : hourly.entrySet()) {
-                if (column.getKey().startsWith(IS_DAY_PREFIX)
-                        && column.getValue().isJsonArray()) {
-                    array = column.getValue().getAsJsonArray();
-                    break;
-                }
+    private static SunTimes ensembleSun(JsonObject body) {
+        JsonElement dailyElement = body.get("daily");
+        if (dailyElement == null || !dailyElement.isJsonObject()) {
+            return SunTimes.UNKNOWN;
+        }
+        JsonObject daily = dailyElement.getAsJsonObject();
+        List<String> suffixes = new ArrayList<>();
+        for (KnownModel known : MODELS) {
+            suffixes.add("_" + known.suffix);
+        }
+        suffixes.add("");
+        for (String suffix : suffixes) {
+            SunTimes sun = sunTimes(longs(array(daily, "sunrise" + suffix)),
+                    longs(array(daily, "sunset" + suffix)));
+            if (sun.isKnown()) {
+                return sun;
             }
         }
-        if (array == null || array.size() != hours) {
+        return SunTimes.UNKNOWN;
+    }
+
+    /** Sun times from two parallel lists; unknown when either is missing, short or out of order. */
+    private static SunTimes sunTimes(@Nullable List<Long> sunrise, @Nullable List<Long> sunset) {
+        if (sunrise == null || sunset == null || sunrise.isEmpty()
+                || sunrise.size() != sunset.size()) {
+            return SunTimes.UNKNOWN;
+        }
+        long[] rise = new long[sunrise.size()];
+        long[] set = new long[sunset.size()];
+        for (int i = 0; i < rise.length; i++) {
+            if (sunrise.get(i) == null || sunset.get(i) == null) {
+                return SunTimes.UNKNOWN;
+            }
+            rise[i] = sunrise.get(i);
+            set[i] = sunset.get(i);
+        }
+        try {
+            return SunTimes.of(rise, set);
+        } catch (IllegalArgumentException outOfOrder) {
+            // Polar day or night, or a broken answer: daylight is simply not known.
+            return SunTimes.UNKNOWN;
+        }
+    }
+
+    @Nullable
+    private static List<Long> longs(@Nullable JsonArray array) {
+        if (array == null) {
             return null;
         }
-        boolean[] isDay = new boolean[hours];
-        for (int i = 0; i < hours; i++) {
-            JsonElement value = array.get(i);
-            isDay[i] = !value.isJsonNull() && value.getAsInt() == 1;
+        List<Long> values = new ArrayList<>(array.size());
+        for (JsonElement value : array) {
+            values.add(value.isJsonNull() ? null : value.getAsLong());
         }
-        return isDay;
+        return values;
+    }
+
+    private static String string(JsonObject object, String name) {
+        JsonElement element = object.get(name);
+        return element != null && element.isJsonPrimitive() ? element.getAsString() : "";
+    }
+
+    private static int integer(JsonObject object, String name) {
+        JsonElement element = object.get(name);
+        return element != null && element.isJsonPrimitive() ? element.getAsInt() : 0;
     }
 
     @Nullable

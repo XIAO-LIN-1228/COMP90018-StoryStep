@@ -6,6 +6,8 @@ import static org.junit.Assert.assertNotNull;
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule;
 
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
+import com.comp90018.storystep.domain.forecast.SunTimes;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.ForecastRepository;
@@ -58,10 +60,11 @@ public class AdviceViewModelTest {
         for (int h = 0; h < ends.length; h++) {
             ends[h] = FIRST_END_SECOND + h * 3_600L;
         }
-        boolean[] day = new boolean[34];
-        Arrays.fill(day, true);
+        // Daylight across the whole span.
+        ForecastPlace place = new ForecastPlace("UTC", 0, SunTimes.of(
+                new long[] {ends[0] - 3_600L}, new long[] {ends[ends.length - 1]}));
         return new EnsemblePrecipitation(ends, Collections.singletonList(
-                new EnsemblePrecipitation.Model("ICON", 1, new double[40][34])), day, NOW);
+                new EnsemblePrecipitation.Model("ICON", 1, new double[40][34])), place, NOW);
     }
 
     private AdviceUiState state() {
@@ -158,7 +161,7 @@ public class AdviceViewModelTest {
         long[] ends = {FIRST_END_SECOND};
         repository.waiting.get(1).onSuccess(new EnsemblePrecipitation(ends,
                 Collections.singletonList(new EnsemblePrecipitation.Model("tiny", 1,
-                        new double[5][1])), new boolean[] {true}, NOW));
+                        new double[5][1])), ForecastPlace.unknown(), NOW));
 
         assertEquals(ForecastUnavailableException.Reason.UNUSABLE, state().getReason());
     }

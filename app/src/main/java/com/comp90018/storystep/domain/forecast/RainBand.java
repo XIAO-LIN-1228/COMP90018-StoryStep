@@ -18,6 +18,9 @@ public enum RainBand {
     /** 80-100%. */
     EXPECTED;
 
+    /** Below this, for every departure, the walk is reported as dry whenever it starts. */
+    public static final int DRY_PERCENT = 5;
+
     /** Percent at and above which a departure is not advised. */
     public static final int NOT_ADVISABLE_PERCENT = 60;
 

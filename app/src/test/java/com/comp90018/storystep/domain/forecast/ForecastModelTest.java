@@ -1,7 +1,9 @@
 package com.comp90018.storystep.domain.forecast;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.comp90018.storystep.domain.model.WeatherCondition;
@@ -107,14 +109,14 @@ public class ForecastModelTest {
         new EnsemblePrecipitation(new long[] {FIRST_END_SECOND, FIRST_END_SECOND + 3_600L},
                 Collections.singletonList(new EnsemblePrecipitation.Model("m", 1,
                         new double[][] {{0.0}})),
-                new boolean[] {true, true}, 0L);
+                ForecastPlace.unknown(), 0L);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void anEmptySeriesIsRejected() {
         new EnsemblePrecipitation(new long[0],
                 Collections.singletonList(new EnsemblePrecipitation.Model("m", 1, new double[0][])),
-                new boolean[0], 0L);
+                ForecastPlace.unknown(), 0L);
     }
 
     @Test
@@ -123,7 +125,7 @@ public class ForecastModelTest {
         EnsemblePrecipitation ensemble = new EnsemblePrecipitation(
                 new long[] {FIRST_END_SECOND},
                 Collections.singletonList(new EnsemblePrecipitation.Model("m", 1, mm)),
-                new boolean[] {true}, 0L);
+                ForecastPlace.unknown(), 0L);
 
         mm[0][0] = 5.0;
 
@@ -145,5 +147,42 @@ public class ForecastModelTest {
         long block = HourlyBuckets.block(at22, 3);
         assertEquals((FIRST_END_SECOND - 3_600L) * 1000L, HourlyBuckets.blockStartMillis(block, 3));
         assertEquals((FIRST_END_SECOND + 2 * 3_600L) * 1000L, HourlyBuckets.blockEndMillis(block, 3));
+    }
+
+    // --- Sun times ---------------------------------------------------------------------------
+
+    /** Melbourne, 2026-10-10: sunrise 06:42:55, sunset 19:32:26 local (UTC+11). */
+    private static final long RISE = 1_791_574_975L;
+    private static final long SET = 1_791_621_146L;
+    private static final SunTimes MELBOURNE = SunTimes.of(
+            new long[] {RISE, RISE + 86_313L}, new long[] {SET, SET + 86_456L});
+
+    @Test
+    public void daylightRunsFromSunriseToSunset() {
+        assertEquals(Boolean.FALSE, MELBOURNE.isDaylight(RISE * 1000L - 1));
+        assertEquals(Boolean.TRUE, MELBOURNE.isDaylight(RISE * 1000L));
+        assertEquals(Boolean.TRUE, MELBOURNE.isDaylight(SET * 1000L - 1));
+        assertEquals(Boolean.FALSE, MELBOURNE.isDaylight(SET * 1000L));
+    }
+
+    @Test
+    public void farOutsideTheCoveredDaysIsUnknown() {
+        assertNull(MELBOURNE.isDaylight(RISE * 1000L - 2 * 86_400_000L));
+        assertNull(SunTimes.UNKNOWN.isDaylight(RISE * 1000L));
+    }
+
+    @Test
+    public void aSpanMustFitInsideOneDay() {
+        long rise = RISE * 1000L;
+        long set = SET * 1000L;
+        assertTrue(MELBOURNE.isDaylightThroughout(rise, set));
+        assertFalse(MELBOURNE.isDaylightThroughout(rise - 1, set));
+        // Across the night between two days.
+        assertFalse(MELBOURNE.isDaylightThroughout(set - 1, rise + 86_400_000L));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void sunsetBeforeSunriseIsRejected() {
+        SunTimes.of(new long[] {SET}, new long[] {RISE});
     }
 }

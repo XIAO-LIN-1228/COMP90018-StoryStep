@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SunTimes;
 import com.comp90018.storystep.domain.model.WeatherCondition;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
@@ -62,11 +63,17 @@ public class RemoteForecastMapperTest {
         // The assumption the block rule rests on: rows ending 01:00, 02:00 and 03:00 UTC match.
         EnsemblePrecipitation ensemble = RemoteForecastMapper.toEnsemble(
                 ForecastFixtures.ensemble("singapore"), 0L);
+        // The first row ending at 01:00, 04:00, ... UTC starts a block.
+        int first = 0;
+        while ((ensemble.endEpochSecond(first) / 3_600L) % 3 != 1) {
+            first++;
+        }
         for (EnsemblePrecipitation.Model model : ensemble.getModels().subList(1, 3)) {
             for (int m = 0; m < model.memberCount(); m++) {
-                // Row 0 ends 23:00; rows 2-4 end 01:00-03:00.
-                assertEquals(model.millimetres(m, 2), model.millimetres(m, 3), 0.0);
-                assertEquals(model.millimetres(m, 2), model.millimetres(m, 4), 0.0);
+                for (int b = first; b + 2 < ensemble.hourCount(); b += 3) {
+                    assertEquals(model.millimetres(m, b), model.millimetres(m, b + 1), 0.0);
+                    assertEquals(model.millimetres(m, b), model.millimetres(m, b + 2), 0.0);
+                }
             }
         }
     }
@@ -76,9 +83,12 @@ public class RemoteForecastMapperTest {
         EnsemblePrecipitation ensemble = RemoteForecastMapper.toEnsemble(
                 ForecastFixtures.ensemble("melbourne"), 0L);
 
-        // Row 0 ends 23:00 UTC, 10:00 in Melbourne; row 12 ends 11:00 UTC, 22:00 there.
-        assertTrue(ensemble.isDay(0));
-        assertFalse(ensemble.isDay(12));
+        // Row 0 ends 00:00 UTC, 11:00 in Melbourne; row 12 ends 12:00 UTC, 23:00 there.
+        SunTimes sun = ensemble.getPlace().getSun();
+        assertEquals(Boolean.TRUE, sun.isDaylight(ensemble.endEpochSecond(0) * 1000L));
+        assertEquals(Boolean.FALSE, sun.isDaylight(ensemble.endEpochSecond(12) * 1000L));
+        assertEquals("Australia/Melbourne", ensemble.getPlace().getTimezoneId());
+        assertEquals(39_600, ensemble.getPlace().getUtcOffsetSeconds());
     }
 
     @Test
@@ -113,7 +123,8 @@ public class RemoteForecastMapperTest {
         JsonObject body = JsonParser.parseString("{\"hourly\":{"
                 + "\"time\":[1791586800,1791590400],"
                 + "\"precipitation_member01_other\":[0.0,0.0],"
-                + "\"is_day_other\":[1,1]}}").getAsJsonObject();
+                + "\"x\":0},\"daily\":{\"sunrise_other\":[1791574975],"
+                + "\"sunset_other\":[1791621146]}}").getAsJsonObject();
 
         assertNull(RemoteForecastMapper.toEnsemble(body, 0L));
     }
@@ -128,14 +139,9 @@ public class RemoteForecastMapperTest {
     }
 
     @Test
-    public void noDaylightColumnRejectsTheResponse() {
+    public void noSunTimesRejectsTheResponse() {
         JsonObject body = ForecastFixtures.ensemble("melbourne");
-        JsonObject hourly = body.getAsJsonObject("hourly");
-        for (String key : hourly.keySet().toArray(new String[0])) {
-            if (key.startsWith("is_day")) {
-                hourly.remove(key);
-            }
-        }
+        body.remove("daily");
 
         assertNull(RemoteForecastMapper.toEnsemble(body, 0L));
     }
@@ -148,7 +154,8 @@ public class RemoteForecastMapperTest {
         assertNull(RemoteForecastMapper.toEnsemble(JsonParser.parseString(
                 "{\"hourly\":{\"time\":[1791586800,1791594000],"
                         + "\"precipitation_member01_icon_seamless_eps\":[0,0],"
-                        + "\"is_day_icon_seamless_eps\":[1,1]}}").getAsJsonObject(), 0L));
+                        + "\"x\":0},\"daily\":{\"sunrise\":[1791574975],"
+                        + "\"sunset\":[1791621146]}}").getAsJsonObject(), 0L));
     }
 
     @Test
@@ -175,15 +182,20 @@ public class RemoteForecastMapperTest {
     }
 
     @Test
-    public void daylightIsReadPerHourAndUnknownWhenAbsent() {
+    public void eachHourIsDayOrNightByItsMiddleAgainstSunriseAndSunset() {
+        // Sunset 19:32:26 local (08:32:26 UTC). The 08:00-09:00 UTC hour's middle, 08:30, is
+        // before sunset; the 09:00-10:00 hour is after.
         HourlyForecastDto dto = new com.google.gson.Gson().fromJson("{\"hourly\":{"
-                + "\"time\":[1791586800,1791590400],\"precipitation_probability\":[0,0],"
-                + "\"weather_code\":[0,0],\"is_day\":[1,0]}}", HourlyForecastDto.class);
+                + "\"time\":[1791622800,1791626400],\"precipitation_probability\":[0,0],"
+                + "\"weather_code\":[0,0]},\"timezone\":\"Australia/Melbourne\","
+                + "\"utc_offset_seconds\":39600,\"daily\":{\"sunrise\":[1791574975],"
+                + "\"sunset\":[1791621146]}}", HourlyForecastDto.class);
 
         HourlyForecast forecast = RemoteForecastMapper.toHourly(dto, 0L);
 
         assertEquals(Boolean.TRUE, forecast.getHours().get(0).getDaylight());
         assertEquals(Boolean.FALSE, forecast.getHours().get(1).getDaylight());
+        assertEquals("Australia/Melbourne", forecast.getPlace().getTimezoneId());
         assertNull(RemoteForecastMapper.toHourly(dto("[1791586800]", "[0]", "[0]"), 0L)
                 .getHours().get(0).getDaylight());
     }

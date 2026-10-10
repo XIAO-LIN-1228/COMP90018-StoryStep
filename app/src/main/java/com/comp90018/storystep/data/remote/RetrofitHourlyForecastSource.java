@@ -21,7 +21,9 @@ public final class RetrofitHourlyForecastSource implements ForecastSource<Hourly
                 cellCentre.getLatitude(),
                 cellCentre.getLongitude(),
                 ForecastApiService.HOURLY_FIELDS,
+                ForecastApiService.DAILY_FIELDS,
                 ForecastApiService.FORECAST_HOURS,
+                ForecastApiService.FORECAST_DAYS,
                 ForecastApiService.TIMEZONE,
                 ForecastApiService.TIME_FORMAT));
         HourlyForecast forecast = RemoteForecastMapper.toHourly(body, fetchedAtMillis);

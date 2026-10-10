@@ -548,8 +548,13 @@
     <string name="advice_stay_minutes">%1$d min</string>
     <string name="advice_walk_duration">Your walk: about %1$s</string>
     <string name="advice_now">Now</string>
-    <string name="advice_best_now">Best: leave now · about %1$d%% chance of rain</string>
-    <string name="advice_best_at">Best: leave at %1$s · about %2$d%% chance of rain</string>
+    <string name="advice_best_now">Best: leave now · about %1$s chance of rain</string>
+    <string name="advice_best_at">Best: leave at %1$s · about %2$s chance of rain</string>
+    <string name="advice_percent_below_one" formatted="false">&lt;1%</string>
+    <string name="advice_dry_title">Dry all day: leave whenever you like</string>
+    <string name="advice_dry_note" formatted="false">Every departure in the next 24 hours has under a 5% chance of rain during your walk.</string>
+    <string name="forecast_zone_note">Times are %1$s time (%2$s)</string>
+    <string name="forecast_zone_note_offset">Times are local to the forecast area (%1$s)</string>
     <string name="advice_note_no_difference">The times differ by less than 5 points, so the earliest is shown.</string>
     <string name="advice_note_all_poor">Rain is likely whenever you go. Take an umbrella.</string>
     <string name="advice_note_no_daylight">No walk stays in daylight. The driest after-dark time is shown.</string>

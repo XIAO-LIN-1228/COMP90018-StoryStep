@@ -137,7 +137,7 @@ public class AdviceViewModel extends ViewModel {
     private void publish(long trip, EnsemblePrecipitation data) {
         try {
             uiState.setValue(AdviceUiState.content(trip,
-                    advisor.advise(clock.wallClockMillis(), trip, data)));
+                    advisor.advise(clock.wallClockMillis(), trip, data), data.getPlace()));
         } catch (ForecastUnavailableException unavailable) {
             uiState.setValue(AdviceUiState.error(trip, unavailable.getReason()));
         }

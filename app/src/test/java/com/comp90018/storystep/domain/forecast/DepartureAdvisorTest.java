@@ -72,8 +72,33 @@ public class DepartureAdvisorTest {
         EnsemblePrecipitation build() {
             return new EnsemblePrecipitation(ends,
                     Collections.singletonList(new EnsemblePrecipitation.Model("icon", 1, mm)),
-                    day, NOW);
+                    place(ends, day), NOW);
         }
+    }
+
+
+    /**
+     * Sun times matching an hourly day/night pattern: each run of daylight hours becomes one day
+     * from the start of its first hour to the end of its last.
+     */
+    static ForecastPlace place(long[] ends, boolean[] day) {
+        java.util.List<Long> rise = new java.util.ArrayList<>();
+        java.util.List<Long> set = new java.util.ArrayList<>();
+        for (int h = 0; h < ends.length; h++) {
+            if (day[h] && (h == 0 || !day[h - 1])) {
+                rise.add(ends[h] - 3_600L);
+            }
+            if (day[h] && (h == ends.length - 1 || !day[h + 1])) {
+                set.add(ends[h]);
+            }
+        }
+        long[] r = new long[rise.size()];
+        long[] s = new long[set.size()];
+        for (int i = 0; i < r.length; i++) {
+            r[i] = rise.get(i);
+            s[i] = set.get(i);
+        }
+        return new ForecastPlace("UTC", 0, r.length == 0 ? SunTimes.UNKNOWN : SunTimes.of(r, s));
     }
 
     private static Fixture fixture() {
@@ -414,7 +439,8 @@ public class DepartureAdvisorTest {
 
     private static EnsemblePrecipitation withModels(EnsemblePrecipitation.Model... models) {
         Fixture shape = fixture();
-        return new EnsemblePrecipitation(shape.ends, Arrays.asList(models), shape.day, NOW);
+        return new EnsemblePrecipitation(shape.ends, Arrays.asList(models),
+                place(shape.ends, shape.day), NOW);
     }
 
     /** 01:00, 02:00 and 03:00 rows: the three-hour block 00:00-03:00 UTC. */
@@ -454,7 +480,7 @@ public class DepartureAdvisorTest {
         boolean[] day = new boolean[33];
         Arrays.fill(day, true);
         EnsemblePrecipitation ensemble = new EnsemblePrecipitation(ends,
-                Collections.singletonList(model("gefs", 3, mm)), day, NOW);
+                Collections.singletonList(model("gefs", 3, mm)), place(ends, day), NOW);
 
         DepartureAdvice advice = advisor.advise(NOW, 10 * MINUTE, ensemble);
 
@@ -507,5 +533,35 @@ public class DepartureAdvisorTest {
 
         assertEquals(Collections.singletonList("icon"), advice.getModels());
         assertEquals(0, startingAt(advice, NEXT_HOUR).getPercent());
+    }
+
+    // --- Dry throughout -------------------------------------------------------------------
+
+    @Test
+    public void everyDepartureUnderFivePercentIsDryThroughout() {
+        // One member of 40 wet in one hour: 2.5% for the walks touching it.
+        EnsemblePrecipitation ensemble = fixture().wet(0, NEXT_HOUR + HOUR, 1.0).build();
+
+        assertTrue(advisor.advise(NOW, HOUR, ensemble).isDryThroughout());
+    }
+
+    @Test
+    public void oneDepartureAtFivePercentIsNotDryThroughout() {
+        EnsemblePrecipitation ensemble = fixture()
+                .wet(0, NEXT_HOUR + HOUR, 1.0).wet(1, NEXT_HOUR + HOUR, 1.0).build();
+
+        assertFalse(advisor.advise(NOW, HOUR, ensemble).isDryThroughout());
+    }
+
+    @Test
+    public void aWalkEndingAtSunsetIsDaylightAndOneMinuteLaterIsNot() {
+        // Daylight 23:00-01:00 only: the rows ending 00:00 and 01:00.
+        Fixture fixture = fixture().night(FIRST_END, NEXT_HOUR)
+                .night(NEXT_HOUR + 3 * HOUR, FIRST_END + 33 * HOUR);
+        EnsemblePrecipitation ensemble = fixture.build();
+
+        assertTrue(startingAt(advisor.advise(NOW, 2 * HOUR, ensemble), NEXT_HOUR).isDaylight());
+        assertFalse(startingAt(advisor.advise(NOW, 2 * HOUR + MINUTE, ensemble), NEXT_HOUR)
+                .isDaylight());
     }
 }

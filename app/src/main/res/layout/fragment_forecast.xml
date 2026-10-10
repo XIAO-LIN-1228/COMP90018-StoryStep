@@ -37,8 +37,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_4"
-            android:layout_marginBottom="@dimen/space_8"
             android:textColor="@color/story_ink_2" />
+
+        <!-- Shown only when the phone's timezone differs from the forecast area's. -->
+        <TextView
+            android:id="@+id/forecast_zone_note"
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/story_ink_2"
+            android:visibility="gone" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/space_8" />
     </LinearLayout>
 
     <FrameLayout

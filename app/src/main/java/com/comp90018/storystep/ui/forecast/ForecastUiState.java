@@ -2,6 +2,7 @@ package com.comp90018.storystep.ui.forecast;
 
 import androidx.annotation.Nullable;
 
+import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
 import com.comp90018.storystep.domain.repository.ForecastUnavailableException;
 
@@ -15,26 +16,35 @@ public final class ForecastUiState {
 
     private final Status status;
     private final List<HourlyForecast.Hour> hours;
+    private final ForecastPlace place;
     @Nullable
     private final ForecastUnavailableException.Reason reason;
 
-    private ForecastUiState(Status status, List<HourlyForecast.Hour> hours,
+    private ForecastUiState(Status status, List<HourlyForecast.Hour> hours, ForecastPlace place,
                             @Nullable ForecastUnavailableException.Reason reason) {
         this.status = status;
         this.hours = Collections.unmodifiableList(hours);
+        this.place = place;
         this.reason = reason;
     }
 
     static ForecastUiState loading() {
-        return new ForecastUiState(Status.LOADING, Collections.emptyList(), null);
+        return new ForecastUiState(Status.LOADING, Collections.emptyList(),
+                ForecastPlace.unknown(), null);
     }
 
-    static ForecastUiState content(List<HourlyForecast.Hour> hours) {
-        return new ForecastUiState(Status.CONTENT, hours, null);
+    static ForecastUiState content(List<HourlyForecast.Hour> hours, ForecastPlace place) {
+        return new ForecastUiState(Status.CONTENT, hours, place, null);
     }
 
     static ForecastUiState error(ForecastUnavailableException.Reason reason) {
-        return new ForecastUiState(Status.ERROR, Collections.emptyList(), reason);
+        return new ForecastUiState(Status.ERROR, Collections.emptyList(),
+                ForecastPlace.unknown(), reason);
+    }
+
+    /** The forecast location's timezone and sun times; unknown unless {@link Status#CONTENT}. */
+    public ForecastPlace getPlace() {
+        return place;
     }
 
     public Status getStatus() {
