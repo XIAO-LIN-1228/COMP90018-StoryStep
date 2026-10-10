@@ -90,7 +90,7 @@ final class ForecastScenarios {
                 MELBOURNE.getOffset(nowMillis) / 1000, sun(nowMillis));
         long firstEnd = (nowMillis / HOUR) * HOUR;
         List<HourlyForecast.Hour> hours = new ArrayList<>();
-        for (int r = 0; r < 26; r++) {
+        for (int r = 0; r < ROWS; r++) {
             long end = firstEnd + r * HOUR;
             int hour = localHour(end - HOUR / 2);
             double share = (share(name, 0, hour) + share(name, 1, hour) + share(name, 2, hour)) / 3;

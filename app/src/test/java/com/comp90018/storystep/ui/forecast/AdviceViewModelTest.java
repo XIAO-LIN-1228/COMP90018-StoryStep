@@ -201,4 +201,42 @@ public class AdviceViewModelTest {
         assertEquals(AdviceUiState.Status.CONTENT, state().getStatus());
         assertEquals(null, state().getHourly());
     }
+
+    @Test
+    public void severeWeatherIsPendingUntilTheHourlyForecastAnswers() {
+        viewModel.init(ORIGIN, 40 * MINUTE, 3);
+        repository.waiting.get(0).onSuccess(dry());
+
+        assertEquals(AdviceViewModel.HourlyState.PENDING, state().getHourlyState());
+
+        repository.hourlyWaiting.get(0).onError(new ForecastUnavailableException(
+                ForecastUnavailableException.Reason.TIMEOUT));
+
+        assertEquals(AdviceViewModel.HourlyState.FAILED, state().getHourlyState());
+    }
+
+    @Test
+    public void retryAsksForTheHourlyForecastAgain() {
+        viewModel.init(ORIGIN, 40 * MINUTE, 3);
+        repository.hourlyWaiting.get(0).onError(new ForecastUnavailableException(
+                ForecastUnavailableException.Reason.TIMEOUT));
+
+        viewModel.retry();
+
+        assertEquals(2, repository.hourlyWaiting.size());
+    }
+
+    @Test
+    public void comingBackInALaterHourRecomputesNow() {
+        viewModel.init(ORIGIN, 40 * MINUTE, 3);
+        repository.waiting.get(0).onSuccess(dry());
+        long firstNow = state().getAdvice().getCandidates().get(0).getStartMillis();
+
+        clock.shiftWallClock(30 * MINUTE);   // 23:30 -> 00:00: a new hour, cache still fresh
+        viewModel.onResume();
+
+        assertEquals(1, repository.waiting.size());
+        assertEquals(firstNow + 30 * MINUTE,
+                state().getAdvice().getCandidates().get(0).getStartMillis());
+    }
 }

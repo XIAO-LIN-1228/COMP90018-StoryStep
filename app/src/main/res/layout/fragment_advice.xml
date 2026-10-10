@@ -39,6 +39,14 @@
             android:text="@string/advice_subtitle"
             android:textColor="@color/story_ink_2" />
 
+        <!-- The plan measures from the reference area, so the forecast is for that area. -->
+        <TextView
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/advice_area"
+            android:textColor="@color/story_ink_2" />
+
         <!-- Shown only when the phone's timezone differs from the forecast area's. -->
         <TextView
             android:id="@+id/advice_zone_note"

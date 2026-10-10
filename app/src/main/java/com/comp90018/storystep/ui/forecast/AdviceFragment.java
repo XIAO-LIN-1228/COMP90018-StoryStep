@@ -101,6 +101,12 @@ public class AdviceFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        viewModel.onResume();
+    }
+
+    @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putLong("dialogShownFor", dialogShownFor);
@@ -146,8 +152,11 @@ public class AdviceFragment extends Fragment {
             errorText.setText(R.string.advice_too_long_inline);
             showTooLongDialog(state.getTripMillis());
         }
+        // Unusable data was fetched fine; asking again within the cache lifetime returns the same.
         errorGroup.findViewById(R.id.advice_retry).setVisibility(
-                status == AdviceUiState.Status.ERROR ? View.VISIBLE : View.GONE);
+                status == AdviceUiState.Status.ERROR && state.getReason()
+                        != com.comp90018.storystep.domain.repository.ForecastUnavailableException
+                        .Reason.UNUSABLE ? View.VISIBLE : View.GONE);
 
         DepartureAdvice advice = state.getAdvice();
         String note = advice == null ? null : ForecastText.zoneNote(getResources(),
@@ -160,7 +169,7 @@ public class AdviceFragment extends Fragment {
         }
         adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace(),
                 state.getHourly());
-        renderSummary(advice, state.getPlace());
+        renderSummary(advice, state.getPlace(), state.getHourlyState());
         source.setText(getString(R.string.advice_two_lines,
                 getString(R.string.advice_source,
                         AdviceText.models(advice.getModels(), getString(R.string.advice_and))),
@@ -175,9 +184,15 @@ public class AdviceFragment extends Fragment {
     }
 
     private void renderSummary(DepartureAdvice advice,
-                               com.comp90018.storystep.domain.forecast.ForecastPlace place) {
-        String unchecked = advice.isSevereChecked() ? null
-                : getString(R.string.advice_severe_unchecked);
+                               com.comp90018.storystep.domain.forecast.ForecastPlace place,
+                               AdviceViewModel.HourlyState hourlyState) {
+        String unchecked;
+        if (hourlyState == AdviceViewModel.HourlyState.PENDING) {
+            unchecked = getString(R.string.advice_severe_pending);
+        } else {
+            unchecked = advice.isSevereChecked() ? null
+                    : getString(R.string.advice_severe_unchecked);
+        }
         if (advice.isSevereAllDaytime()) {
             // Every daylight departure meets a severe threshold: name none, suggest another day.
             best.setText(R.string.advice_severe_all_title);
@@ -185,12 +200,8 @@ public class AdviceFragment extends Fragment {
             return;
         }
         DepartureAdvice.Candidate chosen = advice.getBest();
-        boolean flagged = false;
-        for (DepartureAdvice.Candidate candidate : advice.getCandidates()) {
-            flagged |= candidate.getSevere() != null
-                    && candidate.getSevere().getLevel() != SevereWeather.Level.NONE;
-        }
-        if (advice.isDryThroughout() && !flagged) {
+        // Not while the check is loading: "leave whenever you like" must not precede a hazard.
+        if (advice.isDryThroughout() && hourlyState != AdviceViewModel.HourlyState.PENDING) {
             // Whenever the walker leaves it stays dry: say so instead of naming a "best" time
             // that is no better than any other.
             best.setText(R.string.advice_dry_title);
@@ -208,7 +219,9 @@ public class AdviceFragment extends Fragment {
         } else if (advice.isAllNotAdvisable()) {
             noteText = R.string.advice_note_all_poor;
         } else if (advice.isNoMeaningfulDifference()) {
-            noteText = R.string.advice_note_no_difference;
+            noteText = advice.isBestClean() && advice.isSevereChecked()
+                    ? R.string.advice_note_no_difference
+                    : R.string.advice_note_no_difference_plain;
         }
         String caution = chosen.getSevere() != null
                 && chosen.getSevere().getLevel() == SevereWeather.Level.CAUTION

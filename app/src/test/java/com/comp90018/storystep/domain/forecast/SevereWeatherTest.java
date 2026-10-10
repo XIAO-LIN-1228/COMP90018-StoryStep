@@ -221,7 +221,8 @@ public class SevereWeatherTest {
 
     @Test
     public void atEqualRainAFlaggedDepartureGivesWayToAClearOne() {
-        // All dry; now and the next hours are hot enough for caution, 03:00 onward is not.
+        // All dry; the rows stamped 22:00 to 02:00 are hot enough for caution. Feels-like is the
+        // value at its timestamp, so leaving at 02:00 still sets off in the heat; 03:00 is clear.
         List<HourlyForecast.Hour> rows = calmHours();
         for (int h = 0; h < 5; h++) {
             long end = FIRST_END + h * HOUR;
@@ -233,7 +234,7 @@ public class SevereWeatherTest {
                 new HourlyForecast(rows, 0L));
 
         assertEquals(SevereWeather.Level.NONE, advice.getBest().getSevere().getLevel());
-        assertEquals(FIRST_END + 4 * HOUR, advice.getBest().getStartMillis());
+        assertEquals(FIRST_END + 5 * HOUR, advice.getBest().getStartMillis());
     }
 
     @Test
@@ -248,5 +249,57 @@ public class SevereWeatherTest {
                 new HourlyForecast(rows, 0L));
 
         assertEquals(dryEnd - HOUR, advice.getBest().getStartMillis());
+    }
+
+    // --- Review fixes (2026-10-10) ------------------------------------------------------------
+
+    @Test
+    public void aHeavyThunderstormIsSevere() {
+        assertFlag(SevereWeather.Level.SEVERE, SevereWeather.Hazard.THUNDERSTORM,
+                flag(97, null, null, null));
+    }
+
+    @Test
+    public void aDestructiveMeanWindIsDestructiveWithoutAGust() {
+        assertFlag(SevereWeather.Level.SEVERE, SevereWeather.Hazard.DESTRUCTIVE_WIND,
+                flag(0, null, 89.0, null));
+    }
+
+    @Test
+    public void aStrongMeanWindIsCaution() {
+        assertEquals(SevereWeather.Level.NONE, flag(0, null, 49.9, null).getLevel());
+        assertFlag(SevereWeather.Level.CAUTION, SevereWeather.Hazard.WIND, flag(0, null, 50.0, null));
+    }
+
+    @Test
+    public void theRowStampedAtTheStartInstantCounts() {
+        // Feels-like is the value at its timestamp: a hot 23:00 reading flags a walk leaving at
+        // 23:00 even though the hour it describes, 22:00-23:00, is before the walk.
+        List<HourlyForecast.Hour> rows = calmHours();
+        rows.set(row(NEXT_HOUR), new HourlyForecast.Hour(NEXT_HOUR / 1000L, 0, SkyCondition.CLEAR,
+                true, 0, 20.0, 10.0, 40.0));
+
+        assertFlag(SevereWeather.Level.SEVERE, SevereWeather.Hazard.HEAT,
+                SevereWeather.assessWalk(new HourlyForecast(rows, 0L), NEXT_HOUR,
+                        NEXT_HOUR + HOUR));
+    }
+
+    @Test
+    public void severeWeatherIsUncheckedWhenAWalkIsNotCovered() {
+        DepartureAdvice advice = advisor.advise(NOW, HOUR, dryEnsemble(),
+                new HourlyForecast(calmHours().subList(0, 6), 0L));
+
+        assertFalse(advice.isSevereChecked());
+    }
+
+    @Test
+    public void dryAllDayNeedsEveryWalkUnflaggedAndUnderFivePercentAsShown() {
+        List<HourlyForecast.Hour> rows = calmHours();
+        rows.set(row(NEXT_HOUR + 5 * HOUR), gusty(NEXT_HOUR + 5 * HOUR, 70));
+
+        assertTrue(advisor.advise(NOW, HOUR, dryEnsemble(), new HourlyForecast(calmHours(), 0L))
+                .isDryThroughout());
+        assertFalse(advisor.advise(NOW, HOUR, dryEnsemble(), new HourlyForecast(rows, 0L))
+                .isDryThroughout());
     }
 }

@@ -87,6 +87,11 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         holder.itemView.setBackgroundColor(position == bestIndex
                 ? ContextCompat.getColor(holder.itemView.getContext(), R.color.story_surface_sunk)
                 : 0);
+        // The tint alone says nothing to a screen reader.
+        holder.itemView.setContentDescription(position == bestIndex
+                ? resources.getString(R.string.advice_best_row_description,
+                        start(resources, candidate, place), holder.percent.getText(), label)
+                : null);
     }
 
     /** The yellow (caution) or orange (severe) pill, hidden when nothing is flagged. */

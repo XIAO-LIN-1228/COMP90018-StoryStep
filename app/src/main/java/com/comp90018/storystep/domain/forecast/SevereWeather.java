@@ -13,10 +13,13 @@ public final class SevereWeather {
     /** What the flag is about, in the order one is named when several apply at the same level. */
     public enum Hazard { DESTRUCTIVE_WIND, HAIL, THUNDERSTORM, WIND, SNOW, HEAT, COLD }
 
-    public static final double CAUTION_GUST_KMH = 62;     // Beaufort 8, gale
+    /** Early warning for walkers, below the Victorian pedestrian "unsafe" gust of 72 km/h. */
+    public static final double CAUTION_GUST_KMH = 62;
+    public static final double CAUTION_MEAN_KMH = 50;     // Beaufort 7 mean, hard to walk against
     public static final double SEVERE_GUST_KMH = 90;      // BoM damaging gust
-    public static final double SEVERE_MEAN_KMH = 63;      // BoM damaging 10-minute mean
-    public static final double DESTRUCTIVE_GUST_KMH = 125; // BoM destructive; TC Category 2
+    public static final double SEVERE_MEAN_KMH = 63;      // BoM damaging sustained wind
+    public static final double DESTRUCTIVE_GUST_KMH = 125; // BoM destructive gust; TC Category 2
+    public static final double DESTRUCTIVE_MEAN_KMH = 89;  // BoM destructive sustained wind
     public static final double CAUTION_HEAT_C = 32;       // NWS heat index Extreme Caution
     public static final double SEVERE_HEAT_C = 39;        // NWS heat index Danger
     public static final double CAUTION_COLD_C = 0;        // UTCI moderate cold stress
@@ -79,11 +82,17 @@ public final class SevereWeather {
         double feels = orNaN(hour.getApparentC());
         Flag flag = Flag.NONE;
 
-        if (gust >= DESTRUCTIVE_GUST_KMH) {
-            flag = flag.worse(new Flag(Level.SEVERE, Hazard.DESTRUCTIVE_WIND, gust));
+        if (gust >= DESTRUCTIVE_GUST_KMH || mean >= DESTRUCTIVE_MEAN_KMH) {
+            flag = flag.worse(new Flag(Level.SEVERE, Hazard.DESTRUCTIVE_WIND,
+                    gust >= DESTRUCTIVE_GUST_KMH ? gust : mean));
         }
         if (code != null && (code == 96 || code == 99)) {
+            // Any forecast hail is severe: its size is never forecast.
             flag = flag.worse(new Flag(Level.SEVERE, Hazard.HAIL, Double.NaN));
+        }
+        if (code != null && code == 97) {
+            // Heavy thunderstorm, which models without hail report instead of 96/99.
+            flag = flag.worse(new Flag(Level.SEVERE, Hazard.THUNDERSTORM, gust));
         }
         if (code != null && code == 95) {
             flag = flag.worse(gust >= SEVERE_GUST_KMH
@@ -93,8 +102,9 @@ public final class SevereWeather {
         if (gust >= SEVERE_GUST_KMH || mean >= SEVERE_MEAN_KMH) {
             flag = flag.worse(new Flag(Level.SEVERE, Hazard.WIND, gust >= SEVERE_GUST_KMH
                     ? gust : mean));
-        } else if (gust >= CAUTION_GUST_KMH) {
-            flag = flag.worse(new Flag(Level.CAUTION, Hazard.WIND, gust));
+        } else if (gust >= CAUTION_GUST_KMH || mean >= CAUTION_MEAN_KMH) {
+            flag = flag.worse(new Flag(Level.CAUTION, Hazard.WIND,
+                    gust >= CAUTION_GUST_KMH ? gust : mean));
         }
         if (code != null && (code == 75 || code == 86)) {
             flag = flag.worse(new Flag(Level.SEVERE, Hazard.SNOW, Double.NaN));
@@ -117,12 +127,20 @@ public final class SevereWeather {
     /**
      * The worst flag of every hour the walk [start, end) touches, or null when the forecast does
      * not cover the whole walk (the walk is then unchecked, not safe).
+     *
+     * <p>Gusts are the maximum of the hour before a timestamp, but wind, feels-like and the weather
+     * code are values at the timestamp. So the row stamped at the walk's start instant is read too:
+     * it holds the conditions as the walker sets off.
      */
     public static Flag assessWalk(HourlyForecast forecast, long startMillis, long endMillis) {
         Flag worst = Flag.NONE;
         long coveredFrom = Long.MAX_VALUE;
         long coveredTo = Long.MIN_VALUE;
         for (HourlyForecast.Hour hour : forecast.getHours()) {
+            if (hour.getEndMillis() == startMillis) {
+                worst = worst.worse(assess(hour));
+                continue;
+            }
             if (!HourlyBuckets.overlaps(hour.getEndEpochSecond(), startMillis, endMillis)) {
                 continue;
             }

@@ -17,37 +17,42 @@ public final class AdviceUiState {
     @Nullable private final DepartureAdvice advice;
     private final ForecastPlace place;
     @Nullable private final HourlyForecast hourly;
+    private final AdviceViewModel.HourlyState hourlyState;
     @Nullable private final ForecastUnavailableException.Reason reason;
 
     private AdviceUiState(Status status, long tripMillis, @Nullable DepartureAdvice advice,
                           ForecastPlace place, @Nullable HourlyForecast hourly,
+                          AdviceViewModel.HourlyState hourlyState,
                           @Nullable ForecastUnavailableException.Reason reason) {
         this.status = status;
         this.tripMillis = tripMillis;
         this.advice = advice;
         this.place = place;
         this.hourly = hourly;
+        this.hourlyState = hourlyState;
         this.reason = reason;
     }
 
     static AdviceUiState loading(long tripMillis) {
         return new AdviceUiState(Status.LOADING, tripMillis, null, ForecastPlace.unknown(), null,
-                null);
+                AdviceViewModel.HourlyState.PENDING, null);
     }
 
     static AdviceUiState content(long tripMillis, DepartureAdvice advice, ForecastPlace place,
-                                 @Nullable HourlyForecast hourly) {
-        return new AdviceUiState(Status.CONTENT, tripMillis, advice, place, hourly, null);
+                                 @Nullable HourlyForecast hourly,
+                                 AdviceViewModel.HourlyState hourlyState) {
+        return new AdviceUiState(Status.CONTENT, tripMillis, advice, place, hourly, hourlyState,
+                null);
     }
 
     static AdviceUiState error(long tripMillis, ForecastUnavailableException.Reason reason) {
         return new AdviceUiState(Status.ERROR, tripMillis, null, ForecastPlace.unknown(), null,
-                reason);
+                AdviceViewModel.HourlyState.PENDING, reason);
     }
 
     static AdviceUiState tooLong(long tripMillis) {
         return new AdviceUiState(Status.TOO_LONG, tripMillis, null, ForecastPlace.unknown(), null,
-                null);
+                AdviceViewModel.HourlyState.PENDING, null);
     }
 
     /**
@@ -57,6 +62,11 @@ public final class AdviceUiState {
     @Nullable
     public HourlyForecast getHourly() {
         return hourly;
+    }
+
+    /** Whether the severe-weather check is still loading, failed, or done. */
+    public AdviceViewModel.HourlyState getHourlyState() {
+        return hourlyState;
     }
 
     /** The forecast location's timezone and sun times; times are shown in this zone. */

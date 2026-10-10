@@ -217,4 +217,26 @@ public class ForecastModelTest {
         assertNull(forecast.hourAt(firstStart - 1));
         assertNull(forecast.hourAt((FIRST_END_SECOND + 2 * 3_600L) * 1000L));
     }
+
+    @Test
+    public void aPolarNightIsKnownAndDark() {
+        // Open-Meteo reports sunrise equal to sunset on a polar night.
+        SunTimes night = SunTimes.of(new long[] {RISE, RISE + 86_400L},
+                new long[] {RISE, RISE + 86_400L});
+
+        assertTrue(night.isKnown());
+        assertEquals(Boolean.FALSE, night.isDaylight(RISE * 1000L + 3_600_000L));
+    }
+
+    @Test
+    public void aPolarDayIsOneStretchOfDaylightAcrossMidnight() {
+        // Polar day: each sunset is the next sunrise (both at local midnight).
+        long midnight = 1_791_590_400L;
+        SunTimes day = SunTimes.of(new long[] {midnight, midnight + 86_400L},
+                new long[] {midnight + 86_400L, midnight + 2 * 86_400L});
+
+        long acrossMidnight = (midnight + 86_400L) * 1000L;
+        assertTrue(day.isDaylightThroughout(acrossMidnight - 3_600_000L,
+                acrossMidnight + 3_600_000L));
+    }
 }

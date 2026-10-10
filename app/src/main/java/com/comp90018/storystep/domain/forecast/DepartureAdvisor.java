@@ -9,16 +9,19 @@ import java.util.Objects;
 /**
  * Compares departure times for a planned walk by the chance of rain during the whole walk.
  *
- * <p>Within one model the chance is the share of its members with at least {@value #WET_MM} mm
- * in some part of the walk. Counting members, rather than combining per-hour chances, needs no
+ * <p>Within one model the chance is the share of its members in which at least {@value #WET_MM} mm
+ * falls during the walk. Counting members, rather than combining per-hour chances, needs no
  * assumption about whether rain in one hour predicts rain in the next: each member already is one
  * consistent scenario. The models are then averaged with equal weight, because a single model's
  * ensemble is typically too confident and models disagree; averaging them is the usual remedy
  * and keeps the best-staffed model from outvoting the others. See decision D-08.
  *
- * <p>A model with a three-hour native step is judged per block: a member is wet in a block when
- * the block's total reaches the threshold, and a walk touching any part of the block counts the
- * whole block.
+ * <p>Rain during the walk is each hour's (ICON) or three-hour block's (ECMWF, GFS) amount times
+ * the share of that hour or block the walk covers, summed over the walk. So every model answers
+ * the same question whatever its time step, a walk crossing a block edge is not wetter by
+ * construction, and the minutes of the current hour already gone do not count. The rain is
+ * assumed to fall evenly within an hour or block, which is how Open-Meteo spreads a three-hourly
+ * total over its hours (review 2026-10-10).
  *
  * <p>Departures are "now" and then each full hour up to a day ahead. Hours are UTC hours, which
  * are also local full hours wherever the offset is a whole number of hours.
@@ -108,7 +111,11 @@ public final class DepartureAdvisor {
                     sum / used.size(), daylight(ensemble, start, end),
                     hourly == null ? null : SevereWeather.assessWalk(hourly, start, end)));
         }
-        return choose(candidates, names, hourly != null);
+        boolean checked = hourly != null;
+        for (DepartureAdvice.Candidate candidate : candidates) {
+            checked &= candidate.getSevere() != null;
+        }
+        return choose(candidates, names, checked);
     }
 
     /** "Now", then each full hour after it within the horizon whose walk ends inside the data. */
@@ -170,11 +177,12 @@ public final class DepartureAdvisor {
     private static boolean memberWet(EnsemblePrecipitation.Model model, int member,
                                      int blockHours, EnsemblePrecipitation ensemble,
                                      long start, long end) {
+        double during = 0;
         int h = 0;
         while (h < ensemble.hourCount()) {
             long block = HourlyBuckets.block(ensemble.endEpochSecond(h), blockHours);
-            boolean touched = HourlyBuckets.blockStartMillis(block, blockHours) < end
-                    && HourlyBuckets.blockEndMillis(block, blockHours) > start;
+            long blockStart = HourlyBuckets.blockStartMillis(block, blockHours);
+            long blockEnd = HourlyBuckets.blockEndMillis(block, blockHours);
             // The rows of one block are adjacent; read them together.
             double sum = 0;
             int rows = 0;
@@ -184,13 +192,15 @@ public final class DepartureAdvisor {
                 rows++;
                 h++;
             }
-            // A block's total is spread evenly over its hours, so the mean of the rows present
-            // times the block length recovers it even where the data starts or ends mid-block.
-            if (touched && sum / rows * blockHours >= WET_MM - EPSILON) {
-                return true;
+            long overlap = Math.min(end, blockEnd) - Math.max(start, blockStart);
+            if (overlap > 0) {
+                // A block's total is spread evenly over its hours, so the mean of the rows present
+                // times the block length recovers it even where the data starts mid-block.
+                double total = sum / rows * blockHours;
+                during += total * overlap / (double) (blockEnd - blockStart);
             }
         }
-        return false;
+        return during >= WET_MM - EPSILON;
     }
 
     /** Whether the whole walk is between one sunrise and that day's sunset. */
@@ -213,9 +223,11 @@ public final class DepartureAdvisor {
             daylightNotSevere |= candidate.isDaylight() && !candidate.isSevere();
             anyNotSevere |= !candidate.isSevere();
         }
+        // On the shown percent, so "5%" never sits beside "under 5%"; and never while any walk is
+        // flagged, since "leave whenever you like" would then contradict a pill.
         boolean dry = true;
         for (DepartureAdvice.Candidate candidate : candidates) {
-            dry &= candidate.getProbability() < RainBand.DRY_PERCENT / 100.0 - EPSILON;
+            dry &= candidate.getPercent() < RainBand.DRY_PERCENT && isClean(candidate);
         }
         boolean severeAllDaytime = anyDaylight ? !daylightNotSevere : !anyNotSevere;
         if (severeAllDaytime) {

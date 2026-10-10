@@ -1,8 +1,8 @@
 # Hourly forecast and departure-window advice
 
 Date: 2026-10-10. Branch: `feature/departure-window-advice`.
-Status: design final after three-way review (code impact, method verification, feasibility);
-**not implemented, not tested**.
+Status: implemented on this branch (JVM tests, emulator checks; see §12). Physical-device
+acceptance and accuracy against observations are not done.
 
 Nothing in this document is evidence of forecast accuracy, user benefit or device acceptance.
 It records the agreed behavior so implementation and the report can cite one contract.
@@ -19,7 +19,8 @@ there is no travel-mode choice):
    the walker can choose when to leave.
 
 Results describe relative chance of rain. They are not safety advice or a weather guarantee.
-Heat, wind and air quality are out of scope.
+Air quality is out of scope. Severe weather (thunderstorms, hail, snow, strong winds, heat and
+cold) is flagged as forecast-based guidance, §4.6.
 
 ## 2. Constraints
 
@@ -93,8 +94,10 @@ Source: Open-Meteo Ensemble API, one request for three global ensembles,
 Within each model, for each candidate:
 
 ```
-wet(member, unit)   = unit total >= 0.2 mm       unit = hour (ICON) or 3-hour block (ECMWF, GEFS)
-share(model)        = members wet in any unit the trip touches / members in the model
+rain(member, walk)  = Σ unit total × (part of the unit the walk covers / unit length)
+                      unit = hour (ICON) or 3-hour block (ECMWF, GEFS)
+wet(member)         = rain(member, walk) >= 0.2 mm
+share(model)        = wet members / members in the model
 P(rain during trip) = mean of share(model) over the models used      (equal weight)
 ```
 
@@ -102,18 +105,22 @@ P(rain during trip) = mean of share(model) over the models used      (equal weig
   other two at every wet location sampled (single-hour maxima: Singapore 30% vs ECMWF 96% / GEFS
   100%; Wellington 40% vs 90% / 55%; Perth 10% vs 39% / 39%; Sydney 8% vs 35% / 3%). One
   snapshot, not verified against observations, so it shows disagreement rather than which model
-  is right. Single-model ensembles are known to be over-confident; averaging models is the
+  is right. Re-measured with the pro-rated rule on the recorded Singapore response: mean chance for
+  one-hour walks ICON 16%, ECMWF 48%, GEFS 52% (three-hour walks 24% / 67% / 71%), so the gap is
+  model disagreement, not an artefact of the old block rule. Single-model ensembles are known to be over-confident; averaging models is the
   standard remedy. Equal weight per model keeps ECMWF's 51 members from outvoting the others.
-- **Three-hour models.** Open-Meteo spreads a 3-hour total evenly over its hours (verified:
-  identical values in the rows ending 01:00, 02:00, 03:00 UTC). Such a model is judged per block:
-  the block total (mean of its rows present × 3, which also handles a block cut by the start of
-  the data) must reach 0.2 mm, and a trip touching any part of the block counts the whole block.
-  This makes those two models coarser in time; ICON keeps hourly timing.
+- **Rain during the walk, pro-rated (revised after the second review, 2026-10-10).** Each hour's
+  (ICON) or three-hour block's (ECMWF, GEFS) amount counts in proportion to how much of it the
+  walk covers, assuming rain falls evenly within it — which is how Open-Meteo spreads a
+  three-hourly total over its hours (verified: rows inside a UTC block ending 00/03/06… UTC are
+  identical; the block total is the mean of the rows present × 3, which also handles a block cut
+  by the start of the data). So all three models answer the same question, a walk crossing a
+  block edge is not wetter by construction, and the minutes of the current hour already gone do
+  not count. The earlier rule (any touched unit counts in full) made ECMWF/GEFS answer "≥ 0.2 mm in
+  3 h" and ICON "≥ 0.2 mm in 1 h".
 - Values are reported at 0.1 mm resolution, so ≥ 0.2 mm is the same as "> 0.1 mm". 0.2 mm is
   the Bureau of Meteorology's "any rain" amount and close to the NWS measurable-precipitation
   threshold (0.01 in ≈ 0.25 mm); it also avoids counting models' trace drizzle.
-- An hour (ICON) overlaps if any part of it intersects the trip; it then counts fully. Only
-  "Now" starts mid-hour.
 - Members are discovered by column name (`precipitation` / `precipitation_memberNN` plus the
   model suffix), not a fixed count. A model with fewer than 10 members, or a missing value in an
   hour any departure needs, is left out; the rest still advise. If no model remains: error.
@@ -123,9 +130,9 @@ P(rain during trip) = mean of share(model) over the models used      (equal weig
   calibrates; this design does not).
 - Displayed as "about X% chance of rain during the walk", rounded to a whole percent.
 
-Limitations stated on the page's info text and in the report: raw ensembles are uncalibrated;
-three-hour models blur timing within a block; a 0.1 mm-rounded hourly share of a 3-hour total
-slightly favours "wet" at the threshold.
+Limitations stated in the report: raw ensembles are uncalibrated; rain is assumed even within an
+hour or three-hour block; a 0.1 mm-rounded hourly share of a 3-hour total slightly favours "wet" at
+the threshold.
 
 There is **no fallback method**. If the ensemble cannot be used (§8), the page shows an error
 with Retry.
@@ -152,8 +159,9 @@ with Retry.
 
 ### 4.5 Ranking and presentation
 
-- Ranking for "best": daylight first, then lowest probability (unrounded), then earlier
-  departure.
+- Ranking for "best": severe departures excluded, daylight first, then lowest probability
+  (unrounded), then earlier departure; within 5 points of the driest, an unflagged departure goes
+  before a caution one (§4.6).
 - If the daylight candidates differ by less than 5 percentage points, the page says there is no
   meaningful difference, and the earliest daylight candidate is highlighted.
 - A summary card above the list: "Best: leave at … · about X% chance of rain" (or "leave now")
@@ -164,19 +172,20 @@ with Retry.
 - The stay time is a chip row (5 / 15 / 30 / 60 min) at the top of the page with "Your walk:
   about …" beneath. Changing it recomputes from the ensemble the page already holds while that
   is within `ForecastRepository.LIFETIME_MILLIS` (30 min); otherwise it asks again.
-- Each row shows the percentage and a label, aligned to US NWS terms:
+- Each row shows the percentage and a label, worded after US NWS terms:
 
 | Trip chance | Label |
 |---|---|
 | 0–29% | Low chance of rain |
-| 30–59% | Rain possible — consider an umbrella |
+| 30–59% | Rain possible: consider an umbrella |
 | 60–79% | Rain likely |
 | 80–100% | Rain expected |
 
 - "Not advisable" threshold: 60%. If every daylight candidate is ≥ 60%, the relatively best
   one is still highlighted with a note that rain is likely throughout and an umbrella is advised.
-- Dry throughout: when every departure (day or night) is under 5%, the summary card reads "Dry
-  all day: leave whenever you like" instead of naming a best time, with "Every departure in the
+- Dry throughout: when every departure (day or night) shows under 5% (the rounded figure) and none
+  carries a weather flag, and the severe-weather check is not still loading, the summary card
+  reads "Dry all day: leave whenever you like" instead of naming a best time, with "Every departure in the
   next 24 hours has under a 5% chance of rain during your walk."
 - A chance that rounds below 1% is shown as "<1%", not "0%": a model share is rarely exactly zero
   and "0%" reads as a guarantee.
@@ -191,8 +200,8 @@ umbrella or cancelling a walk was found; HKO's advice to consider postponing out
 
 ### 4.6 Severe weather (added 2026-10-10)
 
-Departure advice also flags severe weather in two levels. This is forecast-based guidance aligned
-to public criteria, not an official warning or safety advice; the page says so and points to BoM
+Departure advice also flags severe weather in two levels. This is forecast-based guidance using
+thresholds taken approximately from public criteria, not an official warning or safety advice; the page says so and points to BoM
 warnings. Emergency-service integration stays out of scope.
 
 Data: the deterministic hourly forecast the advice page already requests, extended with
@@ -200,18 +209,20 @@ Data: the deterministic hourly forecast the advice page already requests, extend
 `apparent_temperature` (°C), and lengthened to 34 hours so it covers every departure plus an
 eight-hour walk. No ensemble probability is used for hazards.
 
-| Hazard | Caution (label and tip) | Severe (not recommended, flagged) | Aligned to |
+| Hazard | Caution (label and tip) | Severe (not recommended, flagged) | Thresholds taken from |
 |---|---|---|---|
-| Thunderstorm | code 95 | code 95 with gust ≥ 90 km/h | BoM severe thunderstorm (gust ≥ 90 km/h) |
-| Hail | — | code 96 or 99 | BoM severe thunderstorm (hail); size not forecast |
+| Thunderstorm | code 95 | code 95 with gust ≥ 90 km/h; code 97 (heavy thunderstorm) | BoM severe thunderstorm (gust ≥ 90 km/h) |
+| Hail | — | code 96 or 99 (any forecast hail; size is never forecast) | BoM severe thunderstorm (hail ≥ 2 cm) |
 | Snow | codes 71, 73, 77, 85 | codes 75, 86 (heavy) | WMO code table |
-| Strong wind | gust ≥ 62 km/h | gust ≥ 90 km/h or mean ≥ 63 km/h | Beaufort 8 gale; BoM damaging winds |
-| Destructive wind (cyclone, hurricane, typhoon, tornado proxy) | — | gust ≥ 125 km/h | BoM destructive gust; TC Category 2 |
-| Heat | feels like ≥ 32 °C | feels like ≥ 39 °C | NWS heat index Extreme Caution / Danger; UTCI |
-| Cold | feels like ≤ 0 °C | feels like ≤ −13 °C | UTCI moderate / strong cold stress |
+| Strong wind | gust ≥ 62 km/h or mean ≥ 50 km/h | gust ≥ 90 km/h or mean ≥ 63 km/h | Caution: an early prompt below the Victorian pedestrian "unsafe" gust (72 km/h), and Beaufort 7 mean (50–61 km/h, hard to walk against). Severe: BoM damaging winds |
+| Destructive wind (cyclone, hurricane, typhoon, tornado proxy) | — | gust ≥ 125 km/h or mean ≥ 89 km/h | BoM destructive winds; TC Category 2 |
+| Heat | feels like ≥ 32 °C | feels like ≥ 39 °C | Approximately the NWS heat index Extreme Caution / Danger and UTCI lines; Open-Meteo `apparent_temperature` is neither index |
+| Cold | feels like ≤ 0 °C | feels like ≤ −13 °C | Approximately the UTCI moderate / strong cold-stress lines |
 
 Rules:
-- A departure takes the worst level of any hour its walk touches. Within a level, the hazard
+- A departure takes the worst level of any hour its walk touches, plus the row stamped at the
+  start instant: gusts are the maximum of the preceding hour, but wind, feels-like and the weather
+  code are values at the timestamp, so that row holds the conditions as the walker sets off. Within a level, the hazard
   named on screen is chosen in the order destructive wind, hail, thunderstorm, wind, snow, heat,
   cold.
 - Severe departures never become "best". Among the rest, the existing rain ranking and daylight
@@ -220,8 +231,9 @@ Rules:
 - Caution departures can still be best; the summary then adds the hazard as a tip. But among
   departures within 5 percentage points of the driest, the earliest one with no flag goes first
   (equal rain, fewer worries); a clearly drier caution departure still wins.
-- If the hourly forecast fails, rain advice is given as usual with the line "Severe weather could
-  not be checked".
+- While the hourly forecast is loading the summary says "Checking for severe weather…" and does
+  not show "dry all day". If it fails, or does not cover some walk, rain advice is given as usual
+  with "Severe weather could not be checked". Retry and expiry re-request it with the ensemble.
 - Presentation: a pill under the row's label with a warning-triangle icon, "Forecast caution ·
   Feels like 34 °C" on yellow or "Forecast severe · Gusts up to 95 km/h" on orange. Yellow and
   orange follow the international convention (EUMETNET MeteoAlarm; the Australian Warning System's
@@ -260,11 +272,13 @@ All small and additive:
 - `fragment_nearby_attractions.xml`, `NearbyAttractionsFragment` — a horizontal row around
   `weather_card` for the button; navigation. The header becomes slightly taller.
 - `ui/weather/WeatherViewModel` — getters for the current origin and area label.
-- `fragment_plan.xml`, `PlanFragment` — a horizontal row around `plan_subtitle` for the button,
+- `fragment_plan.xml`, `PlanFragment` — the "Best time to leave" button below `plan_subtitle`,
   enabled state, passing walking millis and stop count.
 - `domain/plan/WalkPlan` — `walkingMillis(origin)`.
-- `ui/WeatherText` — widen `conditionLabel` visibility for reuse.
-- `res/values/strings.xml`.
+- `res/values/strings.xml`, `res/values/styles.xml` (`Widget.StoryStep.Button.Compact`),
+  `res/values/colors.xml` and `res/values-night/colors.xml` (caution/severe colours).
+- `app/src/debug` (scenario switch, receiver guarded by the DUMP permission, debug manifest) and
+  `app/src/release` (pass-through `DebugForecastHooks`).
 
 Unchanged: `WeatherApiService`, `CachedWeatherRepository`, `RemoteWeatherMapper` (its
 package-private `toCondition` is called from the same package), recommendation, exploration and
@@ -282,9 +296,9 @@ requested as UTC Unix seconds.
 ```
 GET https://api.open-meteo.com/v1/forecast
     ?latitude={cellLat}&longitude={cellLon}
-    &hourly=precipitation_probability,weather_code
+    &hourly=precipitation_probability,weather_code,wind_gusts_10m,wind_speed_10m,apparent_temperature
     &daily=sunrise,sunset
-    &forecast_hours=26&forecast_days=3
+    &forecast_hours=34&forecast_days=3
     &timezone=auto&timeformat=unixtime
 ```
 
@@ -334,7 +348,7 @@ Verified on 2026-10-10 for Melbourne:
 
 ```java
 // domain.repository
-final class ForecastUnavailableException extends Exception {
+final class ForecastUnavailableException extends RuntimeException {   // like WeatherUnavailableException
     enum Reason { NO_NETWORK, TIMEOUT, HTTP_ERROR, RATE_LIMITED, MALFORMED, UNUSABLE }
 }
 interface ForecastRepository {
@@ -350,7 +364,11 @@ interface ForecastSource<T> {
 }
 
 // domain.forecast (pure Java)
-final class HourlyForecast        { List<Hour> hours; long fetchedAtMillis; }   // Hour: endEpochSecond, Integer probability, WeatherCondition condition
+final class HourlyForecast        { List<Hour> hours; long fetchedAtMillis; ForecastPlace place; Hour hourAt(long millis); }
+//   Hour: endEpochSecond, Integer probability, SkyCondition sky, Boolean daylight,
+//         Integer weatherCode, Double gustKmh, Double windKmh, Double apparentC
+enum SkyCondition { CLEAR, PARTLY_CLOUDY, OVERCAST, FOG, RAIN, SNOW, THUNDERSTORM, UNKNOWN }
+final class SevereWeather { enum Level { NONE, CAUTION, SEVERE }  static Flag assess(Hour); static Flag assessWalk(HourlyForecast, long start, long end); }
 final class EnsemblePrecipitation { long[] endEpochSeconds; List<Model> models; ForecastPlace place; long fetchedAtMillis; }
 final class ForecastPlace { String timezoneId; int utcOffsetSeconds; SunTimes sun; }
 final class SunTimes { /* per day sunrise..sunset */ Boolean isDaylight(long millis); boolean isDaylightThroughout(long start, long end); }
@@ -395,7 +413,7 @@ data that parses but cannot be used.
 
 ### 7.2 Departure-window advice
 
-1. Plan page: "When to leave" is enabled when the plan has ≥ 1 stop. Tapping it passes the
+1. Plan page: "Best time to leave" is shown when the plan has ≥ 1 stop. Tapping it passes the
    plan origin, walking millis (router or straight-leg, §4.1) and stop count.
 2. The advice page shows the stay-time selector (default 5). D = walking + stay × stops.
 3. If D > 8 h → too-long dialog; no request.
@@ -417,7 +435,7 @@ data that parses but cannot be used.
 ### 7.3 Lifecycle
 
 ViewModels survive rotation and keep their results; recomputation happens only on input change,
-Retry, or resume after the cache expired. A result arriving after the page is closed only fills
+Retry, a new forecast, or resume in a later hour than the advice was computed in. A result arriving after the page is closed only fills
 the cache. The memory cache is lost on process death and the page refetches.
 
 Known limitation: tapping Start later reorders stops from the origin (`orderedFrom`), so the
@@ -431,13 +449,15 @@ difference is usually small and is not corrected.
 | Offline (`ConnectivityMonitor`) | No request, no retry. "You're offline. Check your connection and try again." + Retry |
 | Timeout, 5xx | Retried by `NetworkRetryPolicy` (3 attempts, 500 ms exponential backoff); then a generic "Forecast unavailable" + Retry |
 | 429 | Retried once after the server delay clamped to 1–5 s; then "Forecast service is busy" + Retry |
-| Other 4xx, incl. 400 `{"error":true}` | Not retried; generic error + Retry; the `reason` is logged |
+| Other 4xx, incl. 400 `{"error":true}` | Not retried; generic error + Retry |
 | Malformed JSON, missing `time`, length mismatch, unsorted or non-hourly times | `MALFORMED`, not retried; generic error + Retry |
 | One model: fewer than 10 members, or any null in needed rows | That model is left out; the footnote lists the models used |
 | No model usable | `UNUSABLE`, not retried; "Rain advice is unavailable right now" + Retry |
 | Forecast page: null PoP or weather code in a row | That field shows "–"; the row stays |
 | Trip > 8 h | Dialog before any request; stay selector stays usable |
-| Plan empty | Button disabled |
+| Plan empty | Button hidden |
+| Ensemble unusable (`UNUSABLE`) | Message without Retry: the same data is cached for 30 minutes |
+| Polar day or night | Sun times are accepted (polar night has no daylight; touching days merge) |
 | Router has not answered | Straight-leg walking estimate is used |
 
 General rules: no exception other than `ForecastUnavailableException` leaves a source; the UI
@@ -456,7 +476,8 @@ data.
      multi-hour walk's member-count probability can exceed any single hour (the key figure
      for the report);
    - daylight preference, "After dark", no-daylight case;
-   - ties on raw counts and the < 2-member no-difference rule; all-poor flag;
+   - ties and the 5-point no-difference rule; all-poor flag; pro-rated block rain and the
+     block-edge case;
    - 8-hour limit; 34-hour data keeps all candidates for D = 8 h;
    - three-hour block alignment and block totals, including a block cut by the data start;
    - equal model weighting; a model left out for nulls or too few members; `UNUSABLE` when
@@ -529,10 +550,35 @@ Checked on 2026-10-10:
 
 From secondary listings only; check the original before quoting:
 
-- Joslyn, S., Nadav-Greenberg, L., & Nichols, R. M. (2009). *BAMS*, 90(2), 185–193.
+- Joslyn, S., Nadav-Greenberg, L., & Nichols, R. M. (2009). *BAMS*, 90(2), 185–194.
   doi:10.1175/2008BAMS2509.1.
 - Gabriel, K. R., & Neumann, J. (1962). A Markov chain model for daily rainfall occurrence at
   Tel Aviv. *QJRMS*, 88, 90–95.
 
-Not confirmed; do not cite without locating the original: Hughes & Sangster (1979),
-"Combining precipitation probabilities".
+- Hughes, L. A., & Sangster, W. E. (1979). Combining precipitation probabilities. *Monthly
+  Weather Review*, 107, 520–524. doi:10.1175/1520-0493(1979)107<0520:CPP>2.0.CO;2 (located by the
+  second review via Crossref).
+
+## 12. Implementation and evidence (2026-10-10)
+
+Implemented on `feature/departure-window-advice`. Evidence, all on the development machine:
+
+- JVM tests: 1008 passing (`./gradlew testDebugUnitTest`), including recorded Melbourne and
+  Singapore Open-Meteo responses run end to end, the pro-rated block rule and its edge case,
+  severe-weather thresholds, polar sun times, and the advice ViewModel's loading, failure, retry
+  and resume paths. The test that a walk is at least as wet as its wettest hour is a regression
+  guard, not evidence of value.
+- `./gradlew assembleDebug assembleRelease lintDebug` pass; no lint findings beyond the project's
+  existing ones. Release builds contain no scenario code.
+- Emulator (API 37): both pages, timezone note, sun/moon by sunrise and sunset, seven sky icons,
+  dry-all-day, and the seven debug scenarios including the three severe ones. Screenshots taken
+  with a scenario on show simulated weather and must be labelled so.
+- Not done: physical device, TalkBack, accuracy against observations, a rainy real day.
+
+Second three-way review (2026-10-10) found no blockers; its fixes are in this revision: pro-rated
+rain, code 97, destructive mean wind, caution mean wind, start-instant row, rounded dry rule,
+hourly loading/failed state with retry and expiry, recompute on resume, polar sun times, area
+line, best-row screen-reader text, Retry hidden for unusable data, debug receiver permission and
+34-hour scenario data. Seven earlier commits on the branch (report drafts, `notes.md`,
+`AGENTS.md`, test-library bumps, ScrimButton 48 dp) are not part of this feature; how to split
+them is decided when the PR is opened.

@@ -104,9 +104,21 @@ public final class DepartureAdvice {
         return severeAllDaytime;
     }
 
-    /** Whether severe weather was checked at all; false when the hourly forecast was missing. */
+    /**
+     * Whether severe weather was checked for every departure: false when the hourly forecast was
+     * missing or did not cover some walk.
+     */
     public boolean isSevereChecked() {
         return severeChecked;
+    }
+
+    /** Whether the best departure carries no caution flag (or was not checked). */
+    public boolean isBestClean() {
+        if (bestIndex < 0) {
+            return false;
+        }
+        SevereWeather.Flag flag = candidates.get(bestIndex).getSevere();
+        return flag == null || flag.getLevel() == SevereWeather.Level.NONE;
     }
 
     /** Whether a best departure is named. */
@@ -115,8 +127,9 @@ public final class DepartureAdvice {
     }
 
     /**
-     * Every departure, by day or night, is under {@link RainBand#DRY_PERCENT}: whenever the walker
-     * leaves, rain is not expected, and naming one time as best would overstate a difference.
+     * Every departure, by day or night, shows under {@link RainBand#DRY_PERCENT} and carries no
+     * weather flag: whenever the walker leaves, rain is not expected, and naming one time as best
+     * would overstate a difference.
      */
     public boolean isDryThroughout() {
         return dryThroughout;

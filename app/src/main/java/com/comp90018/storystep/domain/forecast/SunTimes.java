@@ -13,21 +13,33 @@ import java.util.Objects;
 public final class SunTimes {
 
     /** No sunrise or sunset known: every question about daylight is unknown. */
-    public static final SunTimes UNKNOWN = new SunTimes(new long[0], new long[0]);
+    public static final SunTimes UNKNOWN = new SunTimes(new long[0], new long[0], false, 0, 0);
 
     private static final long DAY_MILLIS = 24L * 60L * 60L * 1000L;
 
     private final long[] sunriseMillis;
     private final long[] sunsetMillis;
+    private final boolean known;
+    /** The span the provider's days cover, so a polar night with no daylight is still known. */
+    private final long coveredFrom;
+    private final long coveredTo;
 
-    private SunTimes(long[] sunriseMillis, long[] sunsetMillis) {
+    private SunTimes(long[] sunriseMillis, long[] sunsetMillis, boolean known, long coveredFrom,
+                     long coveredTo) {
         this.sunriseMillis = sunriseMillis;
         this.sunsetMillis = sunsetMillis;
+        this.known = known;
+        this.coveredFrom = coveredFrom;
+        this.coveredTo = coveredTo;
     }
 
     /**
      * @param sunriseEpochSeconds one sunrise per day, in order
-     * @param sunsetEpochSeconds  the same day's sunset, each after its sunrise
+     * @param sunsetEpochSeconds  the same day's sunset, not before its sunrise
+     *
+     * <p>Polar days and nights are accepted: a day whose sunrise equals its sunset (polar night)
+     * has no daylight, and days that touch (polar day: sunset at midnight, next sunrise at the
+     * same midnight) are merged into one stretch of daylight.
      */
     public static SunTimes of(long[] sunriseEpochSeconds, long[] sunsetEpochSeconds) {
         Objects.requireNonNull(sunriseEpochSeconds, "sunrise");
@@ -35,22 +47,43 @@ public final class SunTimes {
         if (sunriseEpochSeconds.length != sunsetEpochSeconds.length) {
             throw new IllegalArgumentException("sunrise and sunset counts differ");
         }
-        long[] rise = new long[sunriseEpochSeconds.length];
-        long[] set = new long[sunsetEpochSeconds.length];
-        for (int i = 0; i < rise.length; i++) {
-            if (sunsetEpochSeconds[i] <= sunriseEpochSeconds[i]
-                    || (i > 0 && sunriseEpochSeconds[i] <= sunsetEpochSeconds[i - 1])) {
-                throw new IllegalArgumentException("sun times out of order at day " + i);
+        java.util.List<long[]> spans = new java.util.ArrayList<>();
+        for (int i = 0; i < sunriseEpochSeconds.length; i++) {
+            long rise = sunriseEpochSeconds[i] * 1000L;
+            long set = sunsetEpochSeconds[i] * 1000L;
+            if (set < rise) {
+                throw new IllegalArgumentException("sunset before sunrise at day " + i);
             }
-            rise[i] = sunriseEpochSeconds[i] * 1000L;
-            set[i] = sunsetEpochSeconds[i] * 1000L;
+            if (set == rise) {
+                continue;   // polar night: no daylight that day
+            }
+            if (!spans.isEmpty()) {
+                long[] last = spans.get(spans.size() - 1);
+                if (rise < last[0]) {
+                    throw new IllegalArgumentException("sun times out of order at day " + i);
+                }
+                if (rise <= last[1]) {
+                    last[1] = Math.max(last[1], set);   // touching days: polar day
+                    continue;
+                }
+            }
+            spans.add(new long[] {rise, set});
         }
-        return new SunTimes(rise, set);
+        long[] rise = new long[spans.size()];
+        long[] set = new long[spans.size()];
+        for (int i = 0; i < rise.length; i++) {
+            rise[i] = spans.get(i)[0];
+            set[i] = spans.get(i)[1];
+        }
+        boolean any = sunriseEpochSeconds.length > 0;
+        long from = any ? sunriseEpochSeconds[0] * 1000L : 0;
+        long to = any ? sunsetEpochSeconds[sunsetEpochSeconds.length - 1] * 1000L : 0;
+        return new SunTimes(rise, set, any, from, to);
     }
 
-    /** Whether any day is known. */
+    /** Whether any day is known, including a polar night with no daylight at all. */
     public boolean isKnown() {
-        return sunriseMillis.length > 0;
+        return known;
     }
 
     /**
@@ -58,8 +91,7 @@ public final class SunTimes {
      * day outside the covered days, where a night cannot be told from a missing day.
      */
     public Boolean isDaylight(long millis) {
-        if (!isKnown() || millis < sunriseMillis[0] - DAY_MILLIS
-                || millis >= sunsetMillis[sunsetMillis.length - 1] + DAY_MILLIS) {
+        if (!known || millis < coveredFrom - DAY_MILLIS || millis >= coveredTo + DAY_MILLIS) {
             return null;
         }
         for (int i = 0; i < sunriseMillis.length; i++) {
