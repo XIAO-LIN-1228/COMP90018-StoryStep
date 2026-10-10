@@ -7,6 +7,7 @@ import androidx.annotation.StringRes;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.DepartureAdvice;
 import com.comp90018.storystep.domain.forecast.RainBand;
+import com.comp90018.storystep.domain.forecast.SevereWeather;
 
 import java.util.List;
 
@@ -39,6 +40,39 @@ final class AdviceText {
         return candidate.getPercent() < 1
                 ? resources.getString(R.string.advice_percent_below_one)
                 : resources.getString(R.string.forecast_percent, candidate.getPercent());
+    }
+
+    /** "Forecast severe · Gusts up to 95 km/h", "Forecast caution · Feels like 34 °C". */
+    static String hazard(Resources resources, SevereWeather.Flag flag) {
+        boolean severe = flag.getLevel() == SevereWeather.Level.SEVERE;
+        int value = Double.isNaN(flag.getValue()) ? 0 : (int) Math.round(flag.getValue());
+        String what;
+        switch (flag.getHazard()) {
+            case DESTRUCTIVE_WIND:
+                what = resources.getString(R.string.hazard_destructive_wind, value);
+                break;
+            case HAIL:
+                what = resources.getString(R.string.hazard_hail);
+                break;
+            case THUNDERSTORM:
+                what = severe && !Double.isNaN(flag.getValue())
+                        ? resources.getString(R.string.hazard_thunderstorm_gusts, value)
+                        : resources.getString(R.string.hazard_thunderstorm);
+                break;
+            case WIND:
+                what = resources.getString(R.string.hazard_wind, value);
+                break;
+            case SNOW:
+                what = resources.getString(severe ? R.string.hazard_heavy_snow
+                        : R.string.hazard_snow);
+                break;
+            case HEAT:
+            case COLD:
+            default:
+                what = resources.getString(R.string.hazard_feels_like, value);
+                break;
+        }
+        return resources.getString(severe ? R.string.hazard_severe : R.string.hazard_caution, what);
     }
 
     /** "ICON", "ICON and GFS", "ICON, ECMWF and GFS". */

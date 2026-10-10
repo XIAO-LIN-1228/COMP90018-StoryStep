@@ -65,10 +65,11 @@ public class AdviceViewModel extends ViewModel {
             @Override
             public void onSuccess(HourlyForecast result) {
                 hourly = result;
+                // Severe weather changes which departure is best, so recompute, not just redraw.
                 AdviceUiState current = uiState.getValue();
-                if (current != null && current.getStatus() == AdviceUiState.Status.CONTENT) {
-                    uiState.setValue(AdviceUiState.content(current.getTripMillis(),
-                            current.getAdvice(), current.getPlace(), result));
+                if (ensemble != null && current != null
+                        && current.getStatus() == AdviceUiState.Status.CONTENT) {
+                    publish(current.getTripMillis(), ensemble);
                 }
             }
 
@@ -156,7 +157,7 @@ public class AdviceViewModel extends ViewModel {
     private void publish(long trip, EnsemblePrecipitation data) {
         try {
             uiState.setValue(AdviceUiState.content(trip,
-                    advisor.advise(clock.wallClockMillis(), trip, data), data.getPlace(),
+                    advisor.advise(clock.wallClockMillis(), trip, data, hourly), data.getPlace(),
                     hourly));
         } catch (ForecastUnavailableException unavailable) {
             uiState.setValue(AdviceUiState.error(trip, unavailable.getReason()));

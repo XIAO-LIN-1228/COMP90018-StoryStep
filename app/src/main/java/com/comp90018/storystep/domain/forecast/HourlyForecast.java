@@ -20,6 +20,10 @@ public final class HourlyForecast {
         private final Integer precipitationProbability;
         private final SkyCondition sky;
         private final Boolean daylight;
+        private final Integer weatherCode;
+        private final Double gustKmh;
+        private final Double windKmh;
+        private final Double apparentC;
 
         public Hour(long endEpochSecond, Integer precipitationProbability, SkyCondition sky) {
             this(endEpochSecond, precipitationProbability, sky, null);
@@ -27,10 +31,47 @@ public final class HourlyForecast {
 
         public Hour(long endEpochSecond, Integer precipitationProbability, SkyCondition sky,
                     Boolean daylight) {
+            this(endEpochSecond, precipitationProbability, sky, daylight, null, null, null, null);
+        }
+
+        /**
+         * @param weatherCode the WMO code itself, which severe-weather flags read (thunderstorm
+         *                    with hail, heavy snow) beyond what {@link SkyCondition} keeps
+         * @param gustKmh     strongest gust of the hour at 10 m, km/h
+         * @param windKmh     mean wind at 10 m, km/h
+         * @param apparentC   feels-like temperature, °C
+         */
+        public Hour(long endEpochSecond, Integer precipitationProbability, SkyCondition sky,
+                    Boolean daylight, Integer weatherCode, Double gustKmh, Double windKmh,
+                    Double apparentC) {
             this.endEpochSecond = endEpochSecond;
             this.precipitationProbability = precipitationProbability;
             this.sky = sky;
             this.daylight = daylight;
+            this.weatherCode = weatherCode;
+            this.gustKmh = gustKmh;
+            this.windKmh = windKmh;
+            this.apparentC = apparentC;
+        }
+
+        /** The WMO weather code, or null. */
+        public Integer getWeatherCode() {
+            return weatherCode;
+        }
+
+        /** Strongest gust of the hour, km/h, or null. */
+        public Double getGustKmh() {
+            return gustKmh;
+        }
+
+        /** Mean wind, km/h, or null. */
+        public Double getWindKmh() {
+            return windKmh;
+        }
+
+        /** Feels-like temperature, °C, or null. */
+        public Double getApparentC() {
+            return apparentC;
         }
 
         /** When the hour this row describes ends; Open-Meteo's own timestamp. */

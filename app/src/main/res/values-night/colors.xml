@@ -49,6 +49,10 @@
     <color name="story_success">#4FB48D</color>
     <color name="story_error_wash">#3A1D16</color>
     <color name="story_error">#E58B7B</color>
+    <color name="story_caution_wash">#3D3210</color>
+    <color name="story_caution_ink">#FFDB70</color>
+    <color name="story_severe_wash">#4A2510</color>
+    <color name="story_severe_ink">#FFB27A</color>
 
     <color name="map_park">#1E211A</color>
 </resources>

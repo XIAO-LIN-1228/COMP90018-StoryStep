@@ -189,6 +189,51 @@ ranking because every candidate shares the same duration. No empirical cut-off f
 umbrella or cancelling a walk was found; HKO's advice to consider postponing outdoor plans at
 "Medium" (≥ 45%) refers to ≥ 10 mm per day, a much heavier event.
 
+### 4.6 Severe weather (added 2026-10-10)
+
+Departure advice also flags severe weather in two levels. This is forecast-based guidance aligned
+to public criteria, not an official warning or safety advice; the page says so and points to BoM
+warnings. Emergency-service integration stays out of scope.
+
+Data: the deterministic hourly forecast the advice page already requests, extended with
+`wind_gusts_10m` (km/h, maximum of the preceding hour), `wind_speed_10m` (km/h) and
+`apparent_temperature` (°C), and lengthened to 34 hours so it covers every departure plus an
+eight-hour walk. No ensemble probability is used for hazards.
+
+| Hazard | Caution (label and tip) | Severe (not recommended, flagged) | Aligned to |
+|---|---|---|---|
+| Thunderstorm | code 95 | code 95 with gust ≥ 90 km/h | BoM severe thunderstorm (gust ≥ 90 km/h) |
+| Hail | — | code 96 or 99 | BoM severe thunderstorm (hail); size not forecast |
+| Snow | codes 71, 73, 77, 85 | codes 75, 86 (heavy) | WMO code table |
+| Strong wind | gust ≥ 62 km/h | gust ≥ 90 km/h or mean ≥ 63 km/h | Beaufort 8 gale; BoM damaging winds |
+| Destructive wind (cyclone, hurricane, typhoon, tornado proxy) | — | gust ≥ 125 km/h | BoM destructive gust; TC Category 2 |
+| Heat | feels like ≥ 32 °C | feels like ≥ 39 °C | NWS heat index Extreme Caution / Danger; UTCI |
+| Cold | feels like ≤ 0 °C | feels like ≤ −13 °C | UTCI moderate / strong cold stress |
+
+Rules:
+- A departure takes the worst level of any hour its walk touches. Within a level, the hazard
+  named on screen is chosen in the order destructive wind, hail, thunderstorm, wind, snow, heat,
+  cold.
+- Severe departures never become "best". Among the rest, the existing rain ranking and daylight
+  preference apply. If every daylight departure is severe, the summary says severe weather is
+  forecast for every daytime departure and suggests another day; no best is named.
+- Caution departures can still be best; the summary then adds the hazard as a tip. But among
+  departures within 5 percentage points of the driest, the earliest one with no flag goes first
+  (equal rain, fewer worries); a clearly drier caution departure still wins.
+- If the hourly forecast fails, rain advice is given as usual with the line "Severe weather could
+  not be checked".
+- Presentation: a pill under the row's label with a warning-triangle icon, "Forecast caution ·
+  Feels like 34 °C" on yellow or "Forecast severe · Gusts up to 95 km/h" on orange. Yellow and
+  orange follow the international convention (EUMETNET MeteoAlarm; the Australian Warning System's
+  Advice and Watch and Act); red is not used because both systems reserve it for official,
+  life-threatening emergency warnings. The words avoid official warning names.
+
+Limitations to state: tornadoes are not forecast and have no field (destructive gusts and
+thunderstorms are the proxy); global models underestimate cyclone peak gusts; hail size is never
+forecast and codes 96/99 come only from some models, so hail is under-reported in Australia;
+gusts are open-terrain 10 m values and street gusts can be higher; fixed heat and cold thresholds
+ignore acclimatisation (BoM's heatwave service uses local climate instead).
+
 ## 5. Architecture
 
 ### 5.1 New code (names indicative)
@@ -438,7 +483,10 @@ adb shell am broadcast -n com.comp90018.storystep/.di.DebugForecastReceiver --es
 ```
 
 then reopen "Best time to leave". Names: `afternoon_showers`, `rain_all_day`,
-`dry_only_at_night`, `models_disagree`, `off` (real data). The hourly forecast is simulated too
+`dry_only_at_night`, `models_disagree`, and for severe weather `storm_afternoon` (caution
+thunderstorm, then severe gusts of 95 km/h, then hail), `heat_day` (feels like 33 °C caution,
+40 °C severe in the afternoon) and `gale_all_day` (gusts of 100 km/h through the day); `off`
+(real data). The hourly forecast is simulated too
 (chance from the members' average share, a weather code chosen from it), so the forecast page and
 the departure icons agree with the departure chances.
 Each scenario sets, per local hour and model, the share of members raining; the same members stay

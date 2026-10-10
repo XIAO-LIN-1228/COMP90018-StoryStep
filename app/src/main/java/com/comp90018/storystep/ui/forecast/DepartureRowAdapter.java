@@ -1,20 +1,25 @@
 package com.comp90018.storystep.ui.forecast;
 
 import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.DepartureAdvice;
 import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SevereWeather;
 import com.comp90018.storystep.domain.forecast.SkyCondition;
 
 import java.util.ArrayList;
@@ -78,9 +83,35 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         }
         holder.label.setText(label);
         holder.label.setVisibility(View.VISIBLE);
+        bindHazard(holder.hazard, candidate.getSevere());
         holder.itemView.setBackgroundColor(position == bestIndex
                 ? ContextCompat.getColor(holder.itemView.getContext(), R.color.story_surface_sunk)
                 : 0);
+    }
+
+    /** The yellow (caution) or orange (severe) pill, hidden when nothing is flagged. */
+    private static void bindHazard(TextView pill, @Nullable SevereWeather.Flag flag) {
+        if (flag == null || flag.getLevel() == SevereWeather.Level.NONE) {
+            pill.setVisibility(View.GONE);
+            return;
+        }
+        boolean severe = flag.getLevel() == SevereWeather.Level.SEVERE;
+        int ink = ContextCompat.getColor(pill.getContext(),
+                severe ? R.color.story_severe_ink : R.color.story_caution_ink);
+        pill.setText(AdviceText.hazard(pill.getResources(), flag));
+        pill.setTextColor(ink);
+        pill.setBackgroundTintList(ColorStateList.valueOf(ContextCompat.getColor(
+                pill.getContext(),
+                severe ? R.color.story_severe_wash : R.color.story_caution_wash)));
+        Drawable triangle = ContextCompat.getDrawable(pill.getContext(), R.drawable.ic_weather_alert);
+        if (triangle != null) {
+            int size = pill.getResources().getDimensionPixelSize(R.dimen.space_16);
+            triangle = DrawableCompat.wrap(triangle.mutate());
+            DrawableCompat.setTint(triangle, ink);
+            triangle.setBounds(0, 0, size, size);
+        }
+        pill.setCompoundDrawablesRelative(triangle, null, null, null);
+        pill.setVisibility(View.VISIBLE);
     }
 
     static String start(Resources resources, DepartureAdvice.Candidate candidate,

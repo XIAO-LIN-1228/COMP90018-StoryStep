@@ -16,12 +16,27 @@ public final class DepartureAdvice {
         private final boolean now;
         private final double probability;
         private final boolean daylight;
+        private final SevereWeather.Flag severe;
 
-        Candidate(long startMillis, boolean now, double probability, boolean daylight) {
+        Candidate(long startMillis, boolean now, double probability, boolean daylight,
+                  SevereWeather.Flag severe) {
             this.startMillis = startMillis;
             this.now = now;
             this.probability = probability;
             this.daylight = daylight;
+            this.severe = severe;
+        }
+
+        /**
+         * The worst severe-weather flag during the walk; null when it could not be checked (no
+         * hourly forecast, or one that does not cover the walk).
+         */
+        public SevereWeather.Flag getSevere() {
+            return severe;
+        }
+
+        boolean isSevere() {
+            return severe != null && severe.getLevel() == SevereWeather.Level.SEVERE;
         }
 
         public long getStartMillis() {
@@ -63,10 +78,13 @@ public final class DepartureAdvice {
     private final boolean allNotAdvisable;
     private final boolean noDaylightCandidate;
     private final boolean dryThroughout;
+    private final boolean severeAllDaytime;
+    private final boolean severeChecked;
 
     DepartureAdvice(List<Candidate> candidates, List<String> models, int bestIndex,
                     boolean noMeaningfulDifference, boolean allNotAdvisable,
-                    boolean noDaylightCandidate, boolean dryThroughout) {
+                    boolean noDaylightCandidate, boolean dryThroughout,
+                    boolean severeAllDaytime, boolean severeChecked) {
         this.candidates = Collections.unmodifiableList(new ArrayList<>(candidates));
         this.models = Collections.unmodifiableList(new ArrayList<>(models));
         this.bestIndex = bestIndex;
@@ -74,6 +92,26 @@ public final class DepartureAdvice {
         this.allNotAdvisable = allNotAdvisable;
         this.noDaylightCandidate = noDaylightCandidate;
         this.dryThroughout = dryThroughout;
+        this.severeAllDaytime = severeAllDaytime;
+        this.severeChecked = severeChecked;
+    }
+
+    /**
+     * Every daylight departure meets a severe-weather threshold: no best is named and the page
+     * suggests another day. {@link #getBestIndex()} is then -1.
+     */
+    public boolean isSevereAllDaytime() {
+        return severeAllDaytime;
+    }
+
+    /** Whether severe weather was checked at all; false when the hourly forecast was missing. */
+    public boolean isSevereChecked() {
+        return severeChecked;
+    }
+
+    /** Whether a best departure is named. */
+    public boolean hasBest() {
+        return bestIndex >= 0;
     }
 
     /**

@@ -68,5 +68,17 @@ public class HourlyForecastDto {
         @Nullable
         public List<Integer> weatherCode;
 
+        @SerializedName("wind_gusts_10m")
+        @Nullable
+        public List<Double> windGusts;
+
+        @SerializedName("wind_speed_10m")
+        @Nullable
+        public List<Double> windSpeed;
+
+        @SerializedName("apparent_temperature")
+        @Nullable
+        public List<Double> apparentTemperature;
+
     }
 }

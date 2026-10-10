@@ -67,7 +67,7 @@ public class RetrofitForecastSourcesTest {
         assertTrue(path, path.contains("daily=sunrise%2Csunset")
                 || path.contains("daily=sunrise,sunset"));
         assertTrue(path, path.contains("forecast_days=3"));
-        assertTrue(path, path.contains("forecast_hours=26"));
+        assertTrue(path, path.contains("forecast_hours=34"));
         assertTrue(path, path.contains("timezone=auto"));
         assertTrue(path, path.contains("timeformat=unixtime"));
     }

@@ -21,7 +21,9 @@ public interface ForecastApiService {
     /** Root for every call on this interface; Retrofit requires the trailing slash. */
     String BASE_URL = "https://api.open-meteo.com/";
 
-    String HOURLY_FIELDS = "precipitation_probability,weather_code";
+    /** Gusts, mean wind and feels-like feed the severe-weather flags (D-08 §4.6). */
+    String HOURLY_FIELDS = "precipitation_probability,weather_code,wind_gusts_10m,"
+            + "wind_speed_10m,apparent_temperature";
 
     String DAILY_FIELDS = "sunrise,sunset";
 
@@ -29,10 +31,10 @@ public interface ForecastApiService {
     int FORECAST_DAYS = 3;
 
     /**
-     * Enough rows for 24 upcoming hours: the first row is the hour that ended at the start of the
-     * current hour, and the hour in progress is the second.
+     * The page lists 24 upcoming hours; departure advice also reads this forecast for severe
+     * weather, so it reaches as far as the ensemble: a day of departures plus an eight-hour walk.
      */
-    int FORECAST_HOURS = 26;
+    int FORECAST_HOURS = 34;
 
     /** The location's own timezone, reported back as {@code timezone} and {@code utc_offset_seconds}. */
     String TIMEZONE = "auto";

@@ -71,6 +71,7 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
         final TextView percent;
         final LinearProgressIndicator bar;
         final TextView label;
+        final TextView hazard;
 
         Holder(View view) {
             super(view);
@@ -79,6 +80,7 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
             percent = view.findViewById(R.id.rain_row_percent);
             bar = view.findViewById(R.id.rain_row_bar);
             label = view.findViewById(R.id.rain_row_label);
+            hazard = view.findViewById(R.id.rain_row_hazard);
         }
     }
 }

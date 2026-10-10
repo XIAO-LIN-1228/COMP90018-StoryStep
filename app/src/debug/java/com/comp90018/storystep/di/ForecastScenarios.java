@@ -27,7 +27,8 @@ final class ForecastScenarios {
 
     static final String OFF = "off";
     static final List<String> NAMES = Arrays.asList(OFF, "afternoon_showers", "rain_all_day",
-            "dry_only_at_night", "models_disagree");
+            "dry_only_at_night", "models_disagree", "storm_afternoon", "heat_day",
+            "gale_all_day");
 
     private static final TimeZone MELBOURNE = TimeZone.getTimeZone("Australia/Melbourne");
     private static final long HOUR = 3_600_000L;
@@ -93,15 +94,24 @@ final class ForecastScenarios {
             long end = firstEnd + r * HOUR;
             int hour = localHour(end - HOUR / 2);
             double share = (share(name, 0, hour) + share(name, 1, hour) + share(name, 2, hour)) / 3;
+            int code = code(name, share, hour);
             hours.add(new HourlyForecast.Hour(end / 1000L, (int) Math.round(share * 100),
-                    SkyCondition.fromWmo(code(name, share)),
-                    place.getSun().isDaylight(end - HOUR / 2)));
+                    SkyCondition.fromWmo(code), place.getSun().isDaylight(end - HOUR / 2),
+                    code, gust(name, hour), gust(name, hour) * 0.6, feelsLike(name, hour)));
         }
         return new HourlyForecast(hours, nowMillis, place);
     }
 
-    /** A plausible WMO code for a share of wet members. */
-    private static int code(String scenario, double share) {
+    /** A plausible WMO code for a share of wet members, with the storm scenario's thunder. */
+    private static int code(String scenario, double share, int hour) {
+        if ("storm_afternoon".equals(scenario)) {
+            if (hour == 16) {
+                return 96;   // thunderstorm with hail
+            }
+            if (hour == 14 || hour == 15) {
+                return 95;
+            }
+        }
         if (share >= 0.5) {
             return "models_disagree".equals(scenario) ? 95 : 61;   // thunderstorm / rain
         }
@@ -120,6 +130,35 @@ final class ForecastScenarios {
         return 0;
     }
 
+    /** Strongest gust in the hour, km/h: a gale all day, or the storm's squalls. */
+    private static double gust(String scenario, int hour) {
+        switch (scenario) {
+            case "gale_all_day":
+                return hour >= 6 && hour < 21 ? 100 : 70;
+            case "storm_afternoon":
+                if (hour == 15) {
+                    return 95;    // severe thunderstorm (gust >= 90 km/h)
+                }
+                return hour == 14 || hour == 16 ? 70 : 25;
+            default:
+                return 20;
+        }
+    }
+
+    /** Feels-like temperature, °C: a hot afternoon, otherwise mild. */
+    private static double feelsLike(String scenario, int hour) {
+        if ("heat_day".equals(scenario)) {
+            if (hour >= 13 && hour < 18) {
+                return 40;    // severe: NWS heat index Danger
+            }
+            if (hour >= 10 && hour < 20) {
+                return 33;    // caution: Extreme Caution
+            }
+            return 24;
+        }
+        return 18;
+    }
+
     /** Share of a model's members raining in the hour that starts at this local hour. */
     private static double share(String scenario, int model, int hour) {
         boolean day = hour >= 7 && hour < 19;
@@ -127,6 +166,12 @@ final class ForecastScenarios {
             case "afternoon_showers":
                 // Dry morning, showers 13:00-18:00 local.
                 return hour >= 13 && hour < 18 ? 0.70 : 0.03;
+            case "storm_afternoon":
+                return hour >= 14 && hour < 17 ? 0.80 : 0.05;
+            case "heat_day":
+                return 0.02;
+            case "gale_all_day":
+                return 0.10;
             case "rain_all_day":
                 // Wet throughout; a slightly lighter spell 09:00-11:00.
                 return hour >= 9 && hour < 11 ? 0.62 : 0.80;

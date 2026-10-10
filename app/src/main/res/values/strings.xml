@@ -555,7 +555,7 @@
     <string name="advice_dry_note" formatted="false">Every departure in the next 24 hours has under a 5% chance of rain during your walk.</string>
     <string name="forecast_zone_note">Times are %1$s time (%2$s)</string>
     <string name="forecast_zone_note_offset">Times are local to the forecast area (%1$s)</string>
-    <string name="advice_note_no_difference">The times differ by less than 5 points, so the earliest is shown.</string>
+    <string name="advice_note_no_difference">The times differ by less than 5 points, so the earliest without a weather flag is shown.</string>
     <string name="advice_note_all_poor">Rain is likely whenever you go. Take an umbrella.</string>
     <string name="advice_note_no_daylight">No walk stays in daylight. The driest after-dark time is shown.</string>
     <string name="advice_band_low">Low chance of rain</string>
@@ -568,6 +568,21 @@
     <string name="sky_overcast">Overcast</string>
     <string name="sky_fog">Fog</string>
     <string name="sky_thunderstorm">Thunderstorm</string>
+    <string name="hazard_caution">Forecast caution · %1$s</string>
+    <string name="hazard_severe">Forecast severe · %1$s</string>
+    <string name="hazard_destructive_wind">Destructive gusts up to %1$d km/h</string>
+    <string name="hazard_hail">Thunderstorm with hail</string>
+    <string name="hazard_thunderstorm">Thunderstorm</string>
+    <string name="hazard_thunderstorm_gusts">Thunderstorm, gusts up to %1$d km/h</string>
+    <string name="hazard_wind">Winds up to %1$d km/h</string>
+    <string name="hazard_snow">Snow</string>
+    <string name="hazard_heavy_snow">Heavy snow</string>
+    <string name="hazard_feels_like">Feels like %1$d °C</string>
+    <string name="advice_severe_all_title">Severe weather forecast for every daytime departure</string>
+    <string name="advice_severe_all_note">Consider walking on another day, and check Bureau of Meteorology warnings.</string>
+    <string name="advice_severe_unchecked">Severe weather could not be checked.</string>
+    <string name="advice_two_lines">%1$s\n%2$s</string>
+    <string name="advice_alerts_disclaimer">Weather flags are forecast-based, not official warnings. Check Bureau of Meteorology warnings.</string>
     <string name="advice_label_after_dark">%1$s · After dark</string>
     <string name="advice_and">and</string>
     <string name="advice_source">Average of the %1$s ensembles via Open-Meteo: chance of 0.2 mm or more at some point during your walk. Model output, not a guarantee.</string>

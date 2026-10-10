@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.DepartureAdvice;
 import com.comp90018.storystep.domain.forecast.DepartureAdvisor;
+import com.comp90018.storystep.domain.forecast.SevereWeather;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.ui.HistoryText;
 import com.comp90018.storystep.ui.ViewModelFactory;
@@ -160,9 +161,11 @@ public class AdviceFragment extends Fragment {
         adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace(),
                 state.getHourly());
         renderSummary(advice, state.getPlace());
-        source.setText(getString(R.string.advice_source,
-                AdviceText.models(advice.getModels(), getString(R.string.advice_and))));
-        int bestIndex = advice.getBestIndex();
+        source.setText(getString(R.string.advice_two_lines,
+                getString(R.string.advice_source,
+                        AdviceText.models(advice.getModels(), getString(R.string.advice_and))),
+                getString(R.string.advice_alerts_disclaimer)));
+        int bestIndex = Math.max(0, advice.getBestIndex());
         list.post(() -> {
             RecyclerView.LayoutManager manager = list.getLayoutManager();
             if (manager instanceof LinearLayoutManager) {
@@ -173,15 +176,27 @@ public class AdviceFragment extends Fragment {
 
     private void renderSummary(DepartureAdvice advice,
                                com.comp90018.storystep.domain.forecast.ForecastPlace place) {
-        if (advice.isDryThroughout()) {
-            // Whenever the walker leaves it stays dry: say so instead of naming a "best" time
-            // that is no better than any other.
-            best.setText(R.string.advice_dry_title);
-            note.setText(R.string.advice_dry_note);
-            note.setVisibility(View.VISIBLE);
+        String unchecked = advice.isSevereChecked() ? null
+                : getString(R.string.advice_severe_unchecked);
+        if (advice.isSevereAllDaytime()) {
+            // Every daylight departure meets a severe threshold: name none, suggest another day.
+            best.setText(R.string.advice_severe_all_title);
+            showNote(getString(R.string.advice_severe_all_note), unchecked);
             return;
         }
         DepartureAdvice.Candidate chosen = advice.getBest();
+        boolean flagged = false;
+        for (DepartureAdvice.Candidate candidate : advice.getCandidates()) {
+            flagged |= candidate.getSevere() != null
+                    && candidate.getSevere().getLevel() != SevereWeather.Level.NONE;
+        }
+        if (advice.isDryThroughout() && !flagged) {
+            // Whenever the walker leaves it stays dry: say so instead of naming a "best" time
+            // that is no better than any other.
+            best.setText(R.string.advice_dry_title);
+            showNote(getString(R.string.advice_dry_note), unchecked);
+            return;
+        }
         String chance = AdviceText.percent(getResources(), chosen);
         best.setText(chosen.isNow()
                 ? getString(R.string.advice_best_now, chance)
@@ -195,10 +210,25 @@ public class AdviceFragment extends Fragment {
         } else if (advice.isNoMeaningfulDifference()) {
             noteText = R.string.advice_note_no_difference;
         }
-        note.setVisibility(noteText == 0 ? View.GONE : View.VISIBLE);
-        if (noteText != 0) {
-            note.setText(noteText);
+        String caution = chosen.getSevere() != null
+                && chosen.getSevere().getLevel() == SevereWeather.Level.CAUTION
+                ? AdviceText.hazard(getResources(), chosen.getSevere()) : null;
+        String main = noteText == 0 ? null : getString(noteText);
+        showNote(join(main, caution), unchecked);
+    }
+
+    /** Shows the summary note lines that are present, or hides the note. */
+    private void showNote(String first, String second) {
+        String text = join(first, second);
+        note.setVisibility(text == null ? View.GONE : View.VISIBLE);
+        note.setText(text);
+    }
+
+    private static String join(String first, String second) {
+        if (first == null) {
+            return second;
         }
+        return second == null ? first : first + "\n" + second;
     }
 
     private void showTooLongDialog(long tripMillis) {

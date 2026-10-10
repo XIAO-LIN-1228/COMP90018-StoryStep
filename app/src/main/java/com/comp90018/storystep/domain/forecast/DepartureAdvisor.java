@@ -63,6 +63,16 @@ public final class DepartureAdvisor {
      */
     public DepartureAdvice advise(long nowMillis, long tripMillis,
                                   EnsemblePrecipitation ensemble) {
+        return advise(nowMillis, tripMillis, ensemble, null);
+    }
+
+    /**
+     * As {@link #advise(long, long, EnsemblePrecipitation)}, also flagging severe weather from the
+     * hourly forecast (D-08 §4.6): severe departures are never best, and if every daylight
+     * departure is severe no best is named. A null forecast leaves severe weather unchecked.
+     */
+    public DepartureAdvice advise(long nowMillis, long tripMillis,
+                                  EnsemblePrecipitation ensemble, HourlyForecast hourly) {
         Objects.requireNonNull(ensemble, "ensemble");
         if (tripMillis <= 0 || isTooLong(tripMillis)) {
             throw new IllegalArgumentException("trip duration out of range: " + tripMillis);
@@ -95,9 +105,10 @@ public final class DepartureAdvisor {
                 sum += wetShare(model, ensemble, start, end);
             }
             candidates.add(new DepartureAdvice.Candidate(start, start == nowMillis,
-                    sum / used.size(), daylight(ensemble, start, end)));
+                    sum / used.size(), daylight(ensemble, start, end),
+                    hourly == null ? null : SevereWeather.assessWalk(hourly, start, end)));
         }
-        return choose(candidates, names);
+        return choose(candidates, names, hourly != null);
     }
 
     /** "Now", then each full hour after it within the horizon whose walk ends inside the data. */
@@ -188,14 +199,28 @@ public final class DepartureAdvisor {
     }
 
     /**
-     * Best is the driest daylight walk, the earliest on a tie; after-dark walks are considered
-     * only when no walk stays in daylight.
+     * Best is the driest daylight walk without severe weather, the earliest on a tie; after-dark
+     * walks are considered only when no walk stays in daylight. Severe walks are never best, and
+     * when every daylight walk is severe no best is named.
      */
     private static DepartureAdvice choose(List<DepartureAdvice.Candidate> candidates,
-                                          List<String> models) {
+                                          List<String> models, boolean severeChecked) {
         boolean anyDaylight = false;
+        boolean daylightNotSevere = false;
+        boolean anyNotSevere = false;
         for (DepartureAdvice.Candidate candidate : candidates) {
             anyDaylight |= candidate.isDaylight();
+            daylightNotSevere |= candidate.isDaylight() && !candidate.isSevere();
+            anyNotSevere |= !candidate.isSevere();
+        }
+        boolean dry = true;
+        for (DepartureAdvice.Candidate candidate : candidates) {
+            dry &= candidate.getProbability() < RainBand.DRY_PERCENT / 100.0 - EPSILON;
+        }
+        boolean severeAllDaytime = anyDaylight ? !daylightNotSevere : !anyNotSevere;
+        if (severeAllDaytime) {
+            return new DepartureAdvice(candidates, models, -1, false, false, !anyDaylight,
+                    false, true, severeChecked);
         }
 
         int best = -1;
@@ -205,7 +230,7 @@ public final class DepartureAdvisor {
         boolean allNotAdvisable = true;
         for (int i = 0; i < candidates.size(); i++) {
             DepartureAdvice.Candidate candidate = candidates.get(i);
-            if (anyDaylight && !candidate.isDaylight()) {
+            if ((anyDaylight && !candidate.isDaylight()) || candidate.isSevere()) {
                 continue;
             }
             pool++;
@@ -218,21 +243,45 @@ public final class DepartureAdvisor {
         }
 
         boolean noMeaningfulDifference = pool >= 2 && highest - lowest < MEANINGFUL_GAP - EPSILON;
+        // Among departures within the meaningful gap of the driest, one with no caution flag
+        // goes before one with a flag: equal rain, fewer worries.
+        int clean = firstCleanNear(candidates, anyDaylight, lowest);
         if (noMeaningfulDifference) {
-            best = firstInPool(candidates, anyDaylight);
-        }
-        boolean dry = true;
-        for (DepartureAdvice.Candidate candidate : candidates) {
-            dry &= candidate.getProbability() < RainBand.DRY_PERCENT / 100.0 - EPSILON;
+            best = clean >= 0 ? clean : firstInPool(candidates, anyDaylight);
+        } else if (clean >= 0 && !isClean(candidates.get(best))) {
+            best = clean;
         }
         return new DepartureAdvice(candidates, models, best, noMeaningfulDifference,
-                allNotAdvisable, !anyDaylight, dry);
+                allNotAdvisable, !anyDaylight, dry, false, severeChecked);
+    }
+
+    /** No caution or severe flag; an unchecked walk counts as clean, having nothing against it. */
+    private static boolean isClean(DepartureAdvice.Candidate candidate) {
+        return candidate.getSevere() == null
+                || candidate.getSevere().getLevel() == SevereWeather.Level.NONE;
+    }
+
+    /** The earliest clean candidate in the pool within the meaningful gap of the driest, or -1. */
+    private static int firstCleanNear(List<DepartureAdvice.Candidate> candidates,
+                                      boolean daylightOnly, double lowest) {
+        for (int i = 0; i < candidates.size(); i++) {
+            DepartureAdvice.Candidate candidate = candidates.get(i);
+            if ((daylightOnly && !candidate.isDaylight()) || candidate.isSevere()) {
+                continue;
+            }
+            if (isClean(candidate)
+                    && candidate.getProbability() < lowest + MEANINGFUL_GAP - EPSILON) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private static int firstInPool(List<DepartureAdvice.Candidate> candidates,
                                    boolean daylightOnly) {
         for (int i = 0; i < candidates.size(); i++) {
-            if (!daylightOnly || candidates.get(i).isDaylight()) {
+            DepartureAdvice.Candidate candidate = candidates.get(i);
+            if ((!daylightOnly || candidate.isDaylight()) && !candidate.isSevere()) {
                 return i;
             }
         }

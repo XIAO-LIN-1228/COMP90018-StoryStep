@@ -67,4 +67,20 @@
         android:layout_marginTop="@dimen/space_4"
         android:textColor="@color/story_ink_2"
         android:visibility="gone" />
+
+    <!-- Severe-weather flag (departure advice only): a yellow or orange pill with a triangle. -->
+    <TextView
+        android:id="@+id/rain_row_hazard"
+        style="@style/TextAppearance.StoryStep.Supporting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_4"
+        android:background="@drawable/bg_hazard_pill"
+        android:drawablePadding="@dimen/space_4"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/space_8"
+        android:paddingTop="2dp"
+        android:paddingEnd="@dimen/space_8"
+        android:paddingBottom="2dp"
+        android:visibility="gone" />
 </LinearLayout>

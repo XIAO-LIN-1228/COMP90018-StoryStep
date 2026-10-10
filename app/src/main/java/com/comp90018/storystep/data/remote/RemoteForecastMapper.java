@@ -65,8 +65,14 @@ final class RemoteForecastMapper {
         List<Long> time = dto.hourly.time;
         List<Integer> probability = dto.hourly.precipitationProbability;
         List<Integer> codes = dto.hourly.weatherCode;
+        List<Double> gusts = dto.hourly.windGusts;
+        List<Double> winds = dto.hourly.windSpeed;
+        List<Double> feels = dto.hourly.apparentTemperature;
         if ((probability != null && probability.size() != time.size())
-                || (codes != null && codes.size() != time.size())) {
+                || (codes != null && codes.size() != time.size())
+                || (gusts != null && gusts.size() != time.size())
+                || (winds != null && winds.size() != time.size())
+                || (feels != null && feels.size() != time.size())) {
             return null;
         }
         ForecastPlace place = place(dto);
@@ -82,7 +88,10 @@ final class RemoteForecastMapper {
             hours.add(new HourlyForecast.Hour(end,
                     probability == null ? null : probability.get(i),
                     code == null ? null : SkyCondition.fromWmo(code),
-                    place.getSun().isDaylight(middleMillis)));
+                    place.getSun().isDaylight(middleMillis), code,
+                    gusts == null ? null : gusts.get(i),
+                    winds == null ? null : winds.get(i),
+                    feels == null ? null : feels.get(i)));
         }
         try {
             return new HourlyForecast(hours, fetchedAtMillis, place);
