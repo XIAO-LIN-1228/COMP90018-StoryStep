@@ -493,7 +493,8 @@ data.
 4. **Forecast page** and home entry.
 5. **Advice page**, plan entry, stay selector, too-long dialog.
 6. Update `docs/development_plan.md` and `docs/verification_checklist.md`; run `./gradlew test`
-   and `lint`; manual check on an emulator, then a device.
+   and `lint`; manual check on an emulator, then a device. Done 2026-10-10 except the device: see
+   [EV-DEPARTURE-ADVICE-2026-10-10](../verification/EV-DEPARTURE-ADVICE-2026-10-10.md).
 
 ## 9a. Simulated weather for demonstration (debug builds only)
 

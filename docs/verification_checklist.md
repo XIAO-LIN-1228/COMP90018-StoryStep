@@ -1,5 +1,16 @@
 # StoryStep: Requirement Verification and Evidence Ledger
 
+2026-10-10 rain-forecast and departure-advice extension on `feature/departure-window-advice`
+(draft PR #39): [evidence](verification/EV-DEPARTURE-ADVICE-2026-10-10.md),
+[design](decisions/D-08-departure-window-advice.md). It adds an hourly rain page and a "Best time
+to leave" page ranking departures by the chance of rain during the planned walk, from the ICON,
+ECMWF and GFS ensembles, with two-level severe-weather flags.
+- Automated: 1007 JVM tests pass, and both APKs and Lint build (0 errors, 118 warnings).
+- Emulator: live data, seven simulated weather scenarios, rotation, landscape and offline retry
+  pass.
+- NOT_RUN: physical device, TalkBack, 200% font and accuracy against observed rain. It extends
+  REQ-19 and REQ-20; their rows below are unchanged.
+
 2026-09-27 attraction-coverage extension on `feature/attraction-coverage`:
 [automated evidence](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md). Trusted fallback names,
 six additional provider types, conservative classification and source-identity deduplication are
@@ -41,7 +52,7 @@ fallback, the D-06 retention half of NFR-04.4 and the code-side accessibility wo
 rows that claimed REQ-20.2 retry/backoff and backup exclusion were open when the code had them.
 No device, emulator or TalkBack run: every AT-xxB row and NFR-05 remain NOT_RUN.
 
-Prepared: 2026-08-31. Last updated: 2026-09-27 (opening-status extension). Requirements: [development plan](development_plan.md).
+Prepared: 2026-08-31. Last updated: 2026-10-10 (departure-advice extension). Requirements: [development plan](development_plan.md).
 
 This is the single tracking ledger for requirement acceptance. All cases below begin as NOT_RUN. Existing skeleton code or historical build reports do not imply these end-to-end cases have passed. Do not tick a requirement merely because Claude Code implemented it or generated a test class.
 
