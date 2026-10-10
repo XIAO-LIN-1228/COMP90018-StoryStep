@@ -39,7 +39,7 @@ Heat, wind and air quality are out of scope.
 | Entry | A compact button "Rain forecast" with an umbrella icon right of the home weather reading (`weather_hourly_link` in a new `weather_row` wrapping `weather_card`; the reading takes the remaining width). Style `Widget.StoryStep.Button.Compact`: the secondary white pill at chip size, 48 dp touch target. The card itself still refreshes weather on tap. The row hides with the card in list mode. |
 | Location | Exactly what the weather card uses: its current origin and area label. If the card shows the reference area (no live fix), the page shows the same "reference area" label. No permission prompt or separate GPS handling. |
 | Horizon | Next 24 hours as one list; no date switching. |
-| Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". The request also asks for `is_day`; clear and cloudy hours at night use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
+| Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". Clear and cloudy hours at night (by sunrise/sunset, §4.4) use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
 | Source | Open-Meteo standard forecast (`/v1/forecast`, `hourly=`), separate from the current-weather request. |
 | Failure | Existing retry policy, then an error with Retry. No stale fallback on this page. |
 | Time display | The forecast location's timezone (`timezone=auto`; the IANA id is used so daylight saving is followed, the reported offset otherwise). When the phone's offset differs, a line under the subtitle says "Times are Melbourne time (UTC+11)". Each row is labelled by its interval, e.g. "2:00 PM–3:00 PM". |
@@ -82,7 +82,7 @@ statement about model resolution, not about precision.
 ### 4.3 Chance of rain during the trip: three-model ensemble member counting
 
 Source: Open-Meteo Ensemble API, one request for three global ensembles,
-`models=icon_seamless,ecmwf_ifs025,gfs025`, `hourly=precipitation,is_day`:
+`models=icon_seamless,ecmwf_ifs025,gfs025`, `hourly=precipitation`, `daily=sunrise,sunset`:
 
 | Model | Response suffix | Members | Native step |
 |---|---|---|---|
@@ -260,14 +260,17 @@ GET https://ensemble-api.open-meteo.com/v1/ensemble
 { "hourly": { "time": [1791586800, ...],
               "precipitation_icon_seamless_eps": [0.0, ...],
               "precipitation_member01_icon_seamless_eps": [0.0, ...],  ... member39
-              "is_day_icon_seamless_eps": [1, 1, ..., 0, ...],
-              "precipitation_ecmwf_ifs025_ensemble": [...], ... member50, "is_day_ecmwf_ifs025_ensemble": [...],
-              "precipitation_ncep_gefs025": [...],           ... member30, "is_day_ncep_gefs025": [...] } }
+              "precipitation_ecmwf_ifs025_ensemble": [...], ... member50,
+              "precipitation_ncep_gefs025": [...],           ... member30 },
+  "timezone": "Australia/Melbourne", "utc_offset_seconds": 39600,
+  "daily": { "time": [...],
+             "sunrise_icon_seamless_eps": [1791574949, ...], "sunset_icon_seamless_eps": [1791621127, ...],
+             ... the same per model, seconds apart } }
 ```
 
 Verified on 2026-10-10 for Melbourne:
 
-- ICON 40, ECMWF 51 and GEFS 31 precipitation columns, one `is_day` per model, no nulls
+- ICON 40, ECMWF 51 and GEFS 31 precipitation columns, sunrise/sunset per model, no nulls
   within 34 hours; about 33 KB uncompressed.
 - The first `time` is the start of the current UTC hour. Open-Meteo documents precipitation and
   PoP as referring to the **preceding hour**, so row `t` covers `(t − 3600, t]`. The forecast
@@ -299,7 +302,9 @@ interface ForecastSource<T> {
 
 // domain.forecast (pure Java)
 final class HourlyForecast        { List<Hour> hours; long fetchedAtMillis; }   // Hour: endEpochSecond, Integer probability, WeatherCondition condition
-final class EnsemblePrecipitation { long[] endEpochSeconds; List<Model> models; boolean[] isDay; long fetchedAtMillis; }
+final class EnsemblePrecipitation { long[] endEpochSeconds; List<Model> models; ForecastPlace place; long fetchedAtMillis; }
+final class ForecastPlace { String timezoneId; int utcOffsetSeconds; SunTimes sun; }
+final class SunTimes { /* per day sunrise..sunset */ Boolean isDaylight(long millis); boolean isDaylightThroughout(long start, long end); }
 //   Model: String name; int blockHours (1 or 3); double[][] memberMm /* [member][hour], NaN = missing */
 
 final class DepartureAdvisor {
@@ -423,7 +428,7 @@ data.
 - Which model is closest to observed rain is not verified; equal weighting is a design choice.
 - Ensemble probabilities are uncalibrated; calibration needs historical forecast–observation
   pairs and is out of scope.
-- `is_day` at the bucket end approximates sunrise/sunset to within an hour.
+- Sunrise and sunset are the provider's for the grid point; terrain and buildings are ignored.
 
 ## 11. Sources
 
