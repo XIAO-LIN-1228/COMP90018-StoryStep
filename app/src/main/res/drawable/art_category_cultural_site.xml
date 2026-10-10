@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in artwork for a place with no photograph. A ticket: a cultural venue.
+     A wide canvas with the glyph centred, so a centre-cropped square thumbnail and a wide hero
+     both keep the glyph at the same share of the frame. Colours follow the theme tokens, so the
+     night palette applies without a second file. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="100dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="@color/story_surface_sunk"
+        android:pathData="M0,0h320v200h-320z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="@color/kind_sights"
+        android:pathData="M160,44a56,56 0,1 1,0 112a56,56 0,1 1,0 -112z" />
+    <group
+        android:scaleX="2.5"
+        android:scaleY="2.5"
+        android:translateX="130"
+        android:translateY="70">
+        <path
+            android:fillColor="@color/kind_sights"
+            android:pathData="M3,7a1,1 0 0,1 1,-1h16a1,1 0 0,1 1,1v3.2a2,2 0 0,0 0,3.6V17a1,1 0 0,1 -1,1H4a1,1 0 0,1 -1,-1v-3.2a2,2 0 0,0 0,-3.6zM14,8v1.5h1.5V8zM14,11.2v1.5h1.5v-1.5zM14,14.5V16h1.5v-1.5z" />
+    </group>
+</vector>

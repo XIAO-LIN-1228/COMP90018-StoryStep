@@ -1,6 +1,7 @@
 package com.comp90018.storystep.ui.profile;
 
 import com.comp90018.storystep.ui.ViewModelFactory;
+import com.comp90018.storystep.ui.HistoryText;
 import androidx.lifecycle.ViewModelProvider;
 import android.widget.TextView;
 
@@ -49,8 +50,7 @@ public class ProfileFragment extends Fragment {
         viewModel.getFirstWalkMillis().observe(getViewLifecycleOwner(), first ->
                 ((TextView) view.findViewById(R.id.profile_subtitle)).setText(first == null
                         ? getString(R.string.profile_local)
-                        : getString(R.string.profile_since, new java.text.SimpleDateFormat(
-                                "MMM yyyy", java.util.Locale.getDefault()).format(new java.util.Date(first)))));
+                        : getString(R.string.profile_since, HistoryText.formatMonthYear(first))));
 
         androidx.recyclerview.widget.RecyclerView walks = view.findViewById(R.id.profile_walks);
         View walksHeading = view.findViewById(R.id.profile_walks_heading);

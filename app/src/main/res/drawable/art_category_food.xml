@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stand-in artwork for a place with no photograph. A fork and knife: food.
+     A wide canvas with the glyph centred, so a centre-cropped square thumbnail and a wide hero
+     both keep the glyph at the same share of the frame. Colours follow the theme tokens, so the
+     night palette applies without a second file. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="100dp"
+    android:viewportWidth="320"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="@color/story_surface_sunk"
+        android:pathData="M0,0h320v200h-320z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="@color/kind_food"
+        android:pathData="M160,44a56,56 0,1 1,0 112a56,56 0,1 1,0 -112z" />
+    <group
+        android:scaleX="2.5"
+        android:scaleY="2.5"
+        android:translateX="130"
+        android:translateY="70">
+        <path
+            android:fillColor="@color/kind_food"
+            android:pathData="M7,2h1.6v6.2c0,1.6 -1,2.8 -2.4,3.2V22H4.6V11.4C3.2,11 2.2,9.8 2.2,8.2V2h1.6v6h1V2h1.2v6h1zM15.5,2c2.5,0 4.5,2.8 4.5,6.8c0,3.2 -1.4,5.6 -3.2,6.3V22h-1.7v-6.9C13.4,14.4 12,12 12,8.8C12,4.8 13.7,2 15.5,2z" />
+    </group>
+</vector>

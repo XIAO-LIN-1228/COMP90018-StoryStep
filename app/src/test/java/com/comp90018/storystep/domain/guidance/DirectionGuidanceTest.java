@@ -104,11 +104,14 @@ public class DirectionGuidanceTest {
     }
 
     @Test
-    public void withoutADestinationNothingIsClaimed() {
-        GuidanceSnapshot guidance = DirectionGuidance.compute(ORIGIN, null, 0.0);
+    public void withoutADestinationTheDeviceCompassStillWorks() {
+        GuidanceSnapshot guidance = DirectionGuidance.compute(ORIGIN, null, 90.0);
 
         assertFalse(guidance.hasBearing());
         assertNull(guidance.getCardinal());
+        assertFalse(guidance.hasRelativeBearing());
+        assertTrue(guidance.hasHeading());
+        assertEquals(90.0, guidance.getHeadingDegrees(), 0.0);
     }
 
     @Test
@@ -118,6 +121,7 @@ public class DirectionGuidanceTest {
         assertFalse("every direction is equally correct, so none may be shown",
                 guidance.hasBearing());
         assertFalse(guidance.hasRelativeBearing());
+        assertTrue("arrival removes the target arrow, not the device compass", guidance.hasHeading());
     }
 
     @Test
@@ -125,8 +129,19 @@ public class DirectionGuidanceTest {
         GuidanceSnapshot guidance = GuidanceSnapshot.unavailable();
 
         assertFalse(guidance.hasBearing());
+        assertFalse(guidance.hasHeading());
         assertEquals("callers that ignore the flag get a harmless value, not a plausible lie",
                 0.0, guidance.getRelativeBearingDegrees(), 0.0);
+    }
+
+    @Test
+    public void headingIsIndependentOfTheTargetBearingAndWrapsAtNorth() {
+        GuidanceSnapshot guidance = DirectionGuidance.compute(ORIGIN, north(), 350.0);
+        assertEquals(350.0, guidance.getHeadingDegrees(), 0.001);
+        assertEquals(10.0, guidance.getRelativeBearingDegrees(), 0.001);
+        assertEquals(0.0, guidance.getTargetBearingDegrees(), 0.001);
+        assertFalse(DirectionGuidance.compute(null, north(), 350.0).hasHeading());
+        assertFalse(DirectionGuidance.compute(ORIGIN, north(), null).hasHeading());
     }
 
     private static GeoPoint north() {

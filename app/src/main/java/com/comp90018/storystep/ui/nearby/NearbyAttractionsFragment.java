@@ -54,8 +54,8 @@ import java.util.List;
  * belong to the coordinator behind the ViewModel, which is why rotating the screen or navigating
  * away no longer disturbs a running session.
  *
- * <p>Nothing is requested at launch. Collection begins only when the user presses the exploration
- * control, and the coordinator ends it as soon as the app stops being visible.
+ * <p>With permission, home discovery collects location while this screen is visible. Its
+ * subscription is independent of journey recording and stops when the screen is hidden.
  */
 public class NearbyAttractionsFragment extends Fragment
         implements AttractionAdapter.OnAttractionSelected, AttractionAdapter.OnSaveToggled {
@@ -112,6 +112,8 @@ public class NearbyAttractionsFragment extends Fragment
     private View homeHeader;
     private View nearbyBackButton;
     private MaterialCardView weatherCard;
+    /** The weather line and the hourly link beside it, shown and hidden together. */
+    private View weatherRow;
     private TextView weatherReading;
     private WeatherViewModel weatherViewModel;
     private TextView homeTitle;
@@ -175,7 +177,13 @@ public class NearbyAttractionsFragment extends Fragment
         homeMapCard = view.findViewById(R.id.home_map_card);
         View recenter = view.findViewById(R.id.recenter_button);
         TouchTargets.expand(recenter);
-        recenter.setOnClickListener(v -> homeMap.recenter());
+        recenter.setOnClickListener(v -> {
+            if (viewModel.getMapOrigin().getValue() != null) {
+                homeMap.recenter();
+            } else if (withAccess()) {
+                startHomeLocation();
+            }
+        });
         listCredit = view.findViewById(R.id.list_credit);
         View placesSheet = view.findViewById(R.id.places_sheet);
         sheet = com.google.android.material.bottomsheet.BottomSheetBehavior.from(placesSheet);
@@ -232,6 +240,7 @@ public class NearbyAttractionsFragment extends Fragment
         nearbyBackButton = view.findViewById(R.id.nearby_back_button);
         TouchTargets.expand(nearbyBackButton);
         weatherCard = view.findViewById(R.id.weather_card);
+        weatherRow = view.findViewById(R.id.weather_row);
         weatherReading = view.findViewById(R.id.weather_reading);
         homeTitle = view.findViewById(R.id.home_title);
         searchContainer = view.findViewById(R.id.search_container);
@@ -271,6 +280,7 @@ public class NearbyAttractionsFragment extends Fragment
                     ? R.string.order_nearby : R.string.order_recommended);
         });
         viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+        homeMap.centerOn(com.comp90018.storystep.data.repository.SampleAttractions.DEMO_ORIGIN);
         viewModel.getMapOrigin().observe(getViewLifecycleOwner(), homeMap::setOrigin);
         viewModel.getFilter().observe(getViewLifecycleOwner(), this::mirrorFilter);
         viewModel.getUnlockProgress().observe(getViewLifecycleOwner(), progress -> {
@@ -290,6 +300,7 @@ public class NearbyAttractionsFragment extends Fragment
         weatherViewModel.getContextWeather().observe(getViewLifecycleOwner(), viewModel::onWeatherChanged);
         // Tapping the card retries, which is the only recovery a user has for a failed fetch.
         weatherCard.setOnClickListener(v -> weatherViewModel.load());
+        view.findViewById(R.id.weather_hourly_link).setOnClickListener(v -> openHourlyForecast());
         weatherViewModel.load();
 
         seeAllButton.setOnClickListener(v -> setListMode(!listMode));
@@ -312,11 +323,13 @@ public class NearbyAttractionsFragment extends Fragment
         // is what stops the screen from offering actions that would silently do nothing.
         viewModel.onLocationAccessChanged(currentAccess());
         viewModel.onVisible();
+        startHomeLocation();
         contextHandler.post(contextTick);
     }
 
     @Override
     public void onStop() {
+        viewModel.stopHomeLocation();
         contextHandler.removeCallbacks(contextTick);
         super.onStop();
     }
@@ -405,15 +418,19 @@ public class NearbyAttractionsFragment extends Fragment
         permissionLauncher.launch(LOCATION_PERMISSIONS);
     }
 
+    private void startHomeLocation() {
+        viewModel.startHomeLocation(
+                new com.comp90018.storystep.platform.location.AndroidLocationSource(requireContext()),
+                currentAccess());
+    }
+
     private void onPermissionResult() {
         // The per-permission booleans are not consulted directly: a re-check goes through the same
         // policy as every other path, so granted, approximate-only and denied are classified once.
         LocationAccess access = currentAccess();
         viewModel.onLocationAccessRequested(access);
         if (access.isGranted()) {
-            // The user asked for a session by pressing the control; granting is the last thing
-            // that was missing, so continue rather than making them press it again.
-            onSessionButtonClicked();
+            startHomeLocation();
         }
     }
 
@@ -455,8 +472,8 @@ public class NearbyAttractionsFragment extends Fragment
         loadingIndicator.setVisibility(loading && !hasItems ? View.VISIBLE : View.GONE);
         // The provenance line is folded into the sheet's one-line footer (list_credit); here it
         // only keeps the stale banner in step. The freshness notice still matters on its own.
-        provenanceLine(state);
-        originLabel.setVisibility(View.GONE);
+        originLabel.setText(provenanceLine(state));
+        originLabel.setVisibility(View.VISIBLE);
 
         Integer message = statusMessageFor(state);
         boolean showMessage = message != null && !hasItems;
@@ -563,14 +580,9 @@ public class NearbyAttractionsFragment extends Fragment
                 action = v -> requestLocationPermissions();
                 break;
             case WAITING_FOR_FIX:
-                if (!phase.isPaused()) {
-                    permissionNotice.setVisibility(View.GONE);
-                    permissionNoticeAction.setOnClickListener(null);
-                    return;
-                }
-                message = R.string.nearby_session_paused_background;
-                actionLabel = R.string.nearby_resume_exploring;
-                action = v -> resumeIfAccessAllows();
+                message = R.string.nearby_waiting_for_fix;
+                actionLabel = R.string.nearby_retry;
+                action = v -> startHomeLocation();
                 break;
             case PERMISSION_DENIED:
                 message = R.string.nearby_permission_denied;
@@ -666,10 +678,22 @@ public class NearbyAttractionsFragment extends Fragment
         weatherCard.setClickable(state.isRetryable());
     }
 
+    /** Opens the hourly forecast for the same point and area label the weather card shows. */
+    private void openHourlyForecast() {
+        com.comp90018.storystep.domain.model.GeoPoint origin = weatherViewModel.getCurrentOrigin();
+        if (origin == null) {
+            return;
+        }
+        NavHostFragment.findNavController(this).navigate(R.id.action_nearby_to_forecast,
+                com.comp90018.storystep.ui.forecast.ForecastFragment.arguments(origin,
+                        weatherViewModel.getAreaLabel()
+                                == WeatherUiState.AreaLabel.REFERENCE_AREA));
+    }
+
     private void setListMode(boolean enabled) {
         listMode = enabled;
         nearbyBackButton.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        weatherCard.setVisibility(enabled ? View.GONE : View.VISIBLE);
+        weatherRow.setVisibility(enabled ? View.GONE : View.VISIBLE);
         homeTitle.setText(enabled ? R.string.nearby_title : R.string.app_name);
         // The map stays; the sheet rises to fill the screen for the full list and rests again
         // for browsing. Either state is one drag from the other.
@@ -680,7 +704,7 @@ public class NearbyAttractionsFragment extends Fragment
         }
         searchContainer.setVisibility(enabled ? View.VISIBLE : View.GONE);
         filterGroup.setVisibility(enabled ? View.VISIBLE : View.GONE);
-        originLabel.setVisibility(View.GONE);
+        originLabel.setVisibility(View.VISIBLE);
         listCredit.setVisibility(enabled ? View.VISIBLE : View.GONE);
         // At rest the list runs on under the frosted tab bar, so its foot keeps clear of the
         // bar as well as the floating action; expanded, the credit line already does that.

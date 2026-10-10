@@ -82,6 +82,16 @@ public final class ApiClientFactory {
         return createRetrofit(WeatherApiService.BASE_URL, debug).create(WeatherApiService.class);
     }
 
+    /** The hourly forecast client (forecast page). Same provider and root as the weather client. */
+    public static ForecastApiService createForecastService(boolean debug) {
+        return createRetrofit(ForecastApiService.BASE_URL, debug).create(ForecastApiService.class);
+    }
+
+    /** The ensemble client (departure advice). Open-Meteo serves ensembles from its own host. */
+    public static EnsembleApiService createEnsembleService(boolean debug) {
+        return createRetrofit(EnsembleApiService.BASE_URL, debug).create(EnsembleApiService.class);
+    }
+
     /** The attraction client. Its root is fixed by the provider, so callers do not choose one. */
     public static OverpassApiService createOverpassService(boolean debug) {
         return createRetrofit(OverpassApiService.BASE_URL, debug, OVERPASS_TIMEOUT_SECONDS)
@@ -106,6 +116,16 @@ public final class ApiClientFactory {
 
     public static WikipediaApiService createWikipediaService(boolean debug) {
         return createRetrofit(WikipediaApiService.BASE_URL, debug).create(WikipediaApiService.class);
+    }
+
+    /**
+     * The client photographs are downloaded with. Same User-Agent as the API calls: Wikimedia's
+     * upload servers throttle or refuse the platform's anonymous default, which left places with
+     * a perfectly good photo URL showing the placeholder. No logging, because image URLs are not
+     * worth a log line each.
+     */
+    public static OkHttpClient createImageClient() {
+        return createHttpClient(false, DEFAULT_TIMEOUT_SECONDS);
     }
 
     private static OkHttpClient createHttpClient(boolean debug, long timeoutSeconds) {

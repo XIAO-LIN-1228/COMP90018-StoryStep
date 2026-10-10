@@ -17,6 +17,7 @@ import com.comp90018.storystep.ui.journey.JourneyDetailViewModel;
 import com.comp90018.storystep.ui.journey.JourneysViewModel;
 import com.comp90018.storystep.ui.journey.SessionRecoveryViewModel;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsViewModel;
+import com.comp90018.storystep.ui.plan.PlanStartViewModel;
 import com.comp90018.storystep.ui.profile.PrivacyDataViewModel;
 import com.comp90018.storystep.ui.saved.SavedViewModel;
 import com.comp90018.storystep.ui.story.StoryViewModel;
@@ -64,7 +65,12 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(ExplorationViewModel.class)) {
-            return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator());
+            return (T) new ExplorationViewModel(appContainer.getExplorationCoordinator(),
+                    appContainer.getWalkPlanner(), appContainer.getWalkRouteSource(),
+                    appContainer.getIoExecutor(), appContainer.getMainExecutor());
+        }
+        if (modelClass.isAssignableFrom(PlanStartViewModel.class)) {
+            return (T) new PlanStartViewModel(appContainer.getExplorationCoordinator());
         }
         if (modelClass.isAssignableFrom(JourneyDetailViewModel.class)) {
             return (T) new JourneyDetailViewModel(appContainer.getHistoryRepository());
@@ -83,6 +89,16 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
                     appContainer.getWeatherRepository(),
                     appContainer.getExplorationCoordinator(),
                     appContainer.getReferenceOrigin(), appContainer.getClock());
+        }
+        if (modelClass.isAssignableFrom(
+                com.comp90018.storystep.ui.forecast.ForecastViewModel.class)) {
+            return (T) new com.comp90018.storystep.ui.forecast.ForecastViewModel(
+                    appContainer.getForecastRepository(), appContainer.getClock());
+        }
+        if (modelClass.isAssignableFrom(
+                com.comp90018.storystep.ui.forecast.AdviceViewModel.class)) {
+            return (T) new com.comp90018.storystep.ui.forecast.AdviceViewModel(
+                    appContainer.getForecastRepository(), appContainer.getClock());
         }
         if (modelClass.isAssignableFrom(SavedViewModel.class)) {
             return (T) new SavedViewModel(

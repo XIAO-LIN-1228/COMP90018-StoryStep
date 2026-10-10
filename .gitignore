@@ -26,3 +26,6 @@ local.properties
 
 # Local temporary Markdown documents
 /docs/tempdoc/
+
+# Local Markdown documents
+/localMd/

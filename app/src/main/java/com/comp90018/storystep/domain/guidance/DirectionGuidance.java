@@ -22,13 +22,14 @@ public final class DirectionGuidance {
      *                     missing, unreliable or stale
      */
     public static GuidanceSnapshot compute(GeoPoint from, GeoPoint target, Double trueHeading) {
-        if (from == null || target == null) {
+        if (from == null) {
             return GuidanceSnapshot.unavailable();
         }
-        if (from.equals(target)) {
+        if (target == null || from.equals(target)) {
             // Standing on the destination: every direction is equally correct, so pointing anywhere
             // would be arbitrary. The distance readout already tells the user they have arrived.
-            return GuidanceSnapshot.unavailable();
+            return trueHeading == null ? GuidanceSnapshot.unavailable()
+                    : GuidanceSnapshot.headingOnly(trueHeading);
         }
         double bearing = GeoCalculator.initialBearingDegrees(from, target);
         if (trueHeading == null) {

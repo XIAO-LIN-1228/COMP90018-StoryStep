@@ -66,6 +66,8 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.osmdroid)
     implementation(libs.glide)
+    implementation(libs.glide.okhttp3)
+    annotationProcessor(libs.glide.compiler)
 
     testImplementation(libs.junit)
     testImplementation(libs.arch.core.testing)

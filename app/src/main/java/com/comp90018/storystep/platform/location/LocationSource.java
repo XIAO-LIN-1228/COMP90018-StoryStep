@@ -6,7 +6,7 @@ import com.comp90018.storystep.domain.model.LocationSample;
  * Foreground-only access to the device position.
  *
  * <p>Updates are delivered only between {@link #startUpdates(Listener)} and
- * {@link #stopUpdates()}, which are driven by an explicit user exploration session. There is no
+ * {@link #stopUpdates()}, which are driven by a visible discovery screen or an explicit user exploration session. There is no
  * background variant of this interface, and none may be added: continuous background tracking is
  * out of scope for the project.
  *

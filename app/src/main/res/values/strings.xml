@@ -11,10 +11,10 @@
     <string name="nearby_list_description">List of nearby attractions</string>
 
     <!-- Where the listed distances are measured from -->
-    <string name="nearby_origin_reference_area">Distances from the demo area, not your location. Start exploring to use your position.</string>
+    <string name="nearby_origin_reference_area">Location not acquired. Browsing the demo area; distances are measured from that area.</string>
     <string name="nearby_origin_live_precise">Distances from your current location.</string>
     <string name="nearby_origin_live_approximate">Approximate distances: you granted approximate location only.</string>
-    <string name="nearby_origin_live_paused">Distances from where you last were. Paused, so they are no longer updating.</string>
+    <string name="nearby_origin_live_paused">Distances from your last known location; waiting for a current position.</string>
 
     <!-- Exploration control and location access -->
     <string name="nearby_recenter">Back to my location</string>
@@ -203,7 +203,24 @@
     <string name="direction_west">west</string>
     <string name="direction_north_west">north-west</string>
     <string name="direction_towards">Head %1$s</string>
-    <string name="direction_no_compass">%1$s of you · no compass on this device</string>
+    <string name="direction_no_compass">%1$s of you · compass unavailable</string>
+    <string name="exploration_compass_heading">Facing %1$s · %2$d°</string>
+    <string name="exploration_compass_waiting">Compass unavailable</string>
+    <string name="exploration_compass_help">Waiting for a reliable heading</string>
+    <string name="exploration_compass_true_north">Compass · true north</string>
+    <string name="exploration_no_target">Choose a place for distance and direction</string>
+    <string name="exploration_at_target">At your destination</string>
+    <string name="exploration_map_waiting">Waiting for GPS</string>
+    <string name="exploration_map_position">Your location · ±%1$d m</string>
+    <string name="exploration_map_paused">Paused · last recorded location</string>
+    <string name="exploration_recenter">Show my location</string>
+    <string name="exploration_map_north">N ↑</string>
+    <string name="exploration_map_north_description">Map faces north</string>
+    <string name="exploration_photos_title">Capture a moment</string>
+    <string name="exploration_photos_hint">Photos stay with this journey</string>
+    <string name="exploration_route_legend">Dashed: planned · Solid: walked</string>
+    <string name="exploration_route_estimate_legend">Dashed: straight-line plan · Solid: walked</string>
+    <string name="exploration_trail_legend">Solid: your recorded trail</string>
 
     <string name="exploration_stop_title">Finish this exploration?</string>
     <string name="exploration_stop_message">Your progress and discovered stories will be saved on this device.</string>
@@ -249,6 +266,17 @@
     <string name="history_duration_minutes">%1$d min</string>
     <string name="history_duration_hours">%1$dh %2$dm</string>
     <string name="history_duration_under_a_minute">&lt;1 min</string>
+    <string name="history_date_today">Today</string>
+    <string name="history_date_yesterday">Yesterday</string>
+    <string name="history_date_tomorrow">Tomorrow</string>
+    <plurals name="history_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <plurals name="history_days_ahead">
+        <item quantity="one">In %1$d day</item>
+        <item quantity="other">In %1$d days</item>
+    </plurals>
     <plurals name="journey_photo_count">
         <item quantity="one">%1$d photograph from this walk</item>
         <item quantity="other">%1$d photographs from this walk</item>
@@ -460,6 +488,10 @@
     <string name="plan_empty">Add a few places and StoryStep will order them and draw the walk between them.</string>
     <string name="plan_add_stop">Add a place</string>
     <string name="plan_start">Start walking</string>
+    <string name="plan_starting">Starting your walk…</string>
+    <string name="plan_start_failed">Could not start your walk. Nothing is being recorded. Try again.</string>
+    <string name="plan_location_permission">Allow location to start this walk and show your distance and direction. Location is used only while you explore in the foreground. You can cancel and keep planning.</string>
+    <string name="plan_location_services">Turn on device location, then return and tap Start walking.</string>
     <string name="plan_full">A walk holds up to %1$d stops.</string>
     <string name="plan_move_up">Move earlier</string>
     <string name="plan_move_down">Move later</string>
@@ -491,4 +523,74 @@
     <string name="kind_shopping">Shopping</string>
     <string name="profile_recent_walks">Recent walks</string>
     <string name="profile_saved_places">Saved places</string>
+
+    <!-- Hourly forecast and departure advice (D-08) -->
+    <string name="forecast_hourly_link">Rain forecast</string>
+    <string name="forecast_hourly_link_description">Rain forecast: chance of rain for the next 24 hours</string>
+    <string name="forecast_title">Next 24 hours</string>
+    <string name="forecast_area_live">Chance of rain near you, hour by hour</string>
+    <string name="forecast_area_reference">Chance of rain in the reference area, hour by hour</string>
+    <string name="forecast_interval">%1$s–%2$s</string>
+    <string name="forecast_percent">%1$d%%</string>
+    <string name="forecast_missing">–</string>
+    <string name="forecast_loading">Loading forecast</string>
+    <string name="forecast_retry">Try again</string>
+    <string name="forecast_source">Chance of more than 0.1 mm in each hour. Forecast: Open-Meteo</string>
+    <string name="forecast_error_offline">You\'re offline. Check your connection and try again.</string>
+    <string name="forecast_error_busy">The forecast service is busy. Try again in a moment.</string>
+    <string name="forecast_error_generic">Forecast unavailable right now.</string>
+    <string name="advice_error_unusable">Rain advice is unavailable right now.</string>
+    <string name="advice_link">Best time to leave</string>
+    <string name="advice_link_description">Best time to leave: chance of rain during this walk for each departure time</string>
+    <string name="advice_title">When to leave</string>
+    <string name="advice_subtitle">Chance of rain during your planned walk, for each departure time</string>
+    <string name="advice_stay_label">Stay at each stop</string>
+    <string name="advice_stay_minutes">%1$d min</string>
+    <string name="advice_walk_duration">Your walk: about %1$s</string>
+    <string name="advice_now">Now</string>
+    <string name="advice_best_now">Best: leave now · about %1$s chance of rain</string>
+    <string name="advice_best_at">Best: leave at %1$s · about %2$s chance of rain</string>
+    <string name="advice_percent_below_one" formatted="false">&lt;1%</string>
+    <string name="advice_dry_title">Dry all day: leave whenever you like</string>
+    <string name="advice_dry_note" formatted="false">Every departure in the next 24 hours has under a 5% chance of rain during your walk.</string>
+    <string name="forecast_zone_note">Times are %1$s time (%2$s)</string>
+    <string name="forecast_zone_note_offset">Times are local to the forecast area (%1$s)</string>
+    <string name="advice_note_no_difference">The times differ by less than 5 points, so the earliest without a weather flag is shown.</string>
+    <string name="advice_note_all_poor">Rain is likely whenever you go. Take an umbrella.</string>
+    <string name="advice_note_no_daylight">No walk stays in daylight. The driest after-dark time is shown.</string>
+    <string name="advice_band_low">Low chance of rain</string>
+    <string name="advice_band_possible">Rain possible: consider an umbrella</string>
+    <string name="advice_band_likely">Rain likely</string>
+    <string name="advice_band_expected">Rain expected</string>
+    <string name="advice_after_dark">After dark</string>
+    <string name="advice_daylight">In daylight</string>
+    <string name="sky_partly_cloudy">Partly cloudy</string>
+    <string name="sky_overcast">Overcast</string>
+    <string name="sky_fog">Fog</string>
+    <string name="sky_thunderstorm">Thunderstorm</string>
+    <string name="hazard_caution">Forecast caution · %1$s</string>
+    <string name="hazard_severe">Forecast severe · %1$s</string>
+    <string name="hazard_destructive_wind">Destructive gusts up to %1$d km/h</string>
+    <string name="hazard_hail">Thunderstorm with hail</string>
+    <string name="hazard_thunderstorm">Thunderstorm</string>
+    <string name="hazard_thunderstorm_gusts">Thunderstorm, gusts up to %1$d km/h</string>
+    <string name="hazard_wind">Winds up to %1$d km/h</string>
+    <string name="hazard_snow">Snow</string>
+    <string name="hazard_heavy_snow">Heavy snow</string>
+    <string name="hazard_feels_like">Feels like %1$d °C</string>
+    <string name="advice_severe_all_title">Severe weather forecast for every daytime departure</string>
+    <string name="advice_severe_all_note">Consider walking on another day, and check Bureau of Meteorology warnings.</string>
+    <string name="advice_severe_unchecked">Severe weather could not be checked.</string>
+    <string name="advice_severe_pending">Checking for severe weather…</string>
+    <string name="advice_note_no_difference_plain">The times differ by less than 5 points, so the earliest is shown.</string>
+    <string name="advice_best_row_description">Best time: %1$s, %2$s chance of rain, %3$s</string>
+    <string name="advice_area">Forecast for the planned walk\'s area (reference area)</string>
+    <string name="advice_two_lines">%1$s\n%2$s</string>
+    <string name="advice_alerts_disclaimer">Weather flags are forecast-based, not official warnings. Check Bureau of Meteorology warnings.</string>
+    <string name="advice_label_after_dark">%1$s · After dark</string>
+    <string name="advice_and">and</string>
+    <string name="advice_source">Average of the %1$s ensembles via Open-Meteo: chance of rain at 0.2 mm an hour or more at some point during your walk. Model output, not a guarantee.</string>
+    <string name="advice_too_long_title">Walk too long for advice</string>
+    <string name="advice_too_long_message">Advice covers walks up to %1$s and does not span days. This walk is about %2$s. Choose a shorter stay or fewer stops.</string>
+    <string name="advice_too_long_inline">This walk is too long for advice. Choose a shorter stay or fewer stops.</string>
 </resources>

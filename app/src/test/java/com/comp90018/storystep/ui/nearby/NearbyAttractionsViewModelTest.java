@@ -201,6 +201,77 @@ public class NearbyAttractionsViewModelTest {
         assertEquals(NearbyUiState.Status.CONTENT, observe(viewModel).getStatus());
     }
 
+    @Test
+    public void demoAreaNeverBecomesUserMarker() {
+        NearbyAttractionsViewModel model = viewModelFor(new InMemoryAttractionRepository());
+        model.load();
+        org.junit.Assert.assertNull(model.getMapOrigin().getValue());
+    }
+
+    @Test
+    public void homeFixDoesNotStartJourneyAndSurvivesSessionCompletion() {
+        ExplorationCoordinator coordinator = coordinator();
+        FakeClock clock = FakeClock.startingAt(1_000L);
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(
+                new InMemoryAttractionRepository(), TestSavedAttractions.empty(), ORIGIN,
+                3000.0, coordinator, null, clock);
+        FakeLocationSource source = new FakeLocationSource();
+        model.load();
+        model.startHomeLocation(source, LocationAccess.PRECISE);
+        assertEquals(NearbyUiState.Status.WAITING_FOR_FIX, observe(model).getStatus());
+        org.junit.Assert.assertNull(model.getMapOrigin().getValue());
+        GeoPoint actual = northOfOrigin(2000);
+        source.emit(sampleAt(actual, 10, 1000));
+        assertEquals(actual, model.getMapOrigin().getValue());
+        assertEquals(SessionState.IDLE, coordinator.summary().getState());
+        org.junit.Assert.assertNull(coordinator.routeSnapshot().getLastSample());
+        model.onSessionChanged(sessionIn(SessionState.ACTIVE, null));
+        model.onSessionChanged(sessionIn(SessionState.COMPLETED, null));
+        assertEquals(actual, model.getMapOrigin().getValue());
+        assertEquals(NearbyUiState.OriginLabel.LIVE_PRECISE, observe(model).getOriginLabel());
+        model.stopHomeLocation();
+        assertFalse(source.isRegistered());
+        source.emitToRetiredListener(sampleAt(ORIGIN, 10, 2000));
+        org.junit.Assert.assertNull(model.getMapOrigin().getValue());
+    }
+
+    @Test
+    public void homePermissionDenialAndProviderLossRemoveUserMarker() {
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(
+                new InMemoryAttractionRepository(), TestSavedAttractions.empty(), ORIGIN,
+                3000.0, coordinator(), null, FakeClock.startingAt(1000));
+        FakeLocationSource source = new FakeLocationSource();
+        model.load();
+        model.startHomeLocation(source, LocationAccess.DENIED);
+        assertFalse(source.isRegistered());
+        assertEquals(NearbyUiState.Status.PERMISSION_DENIED, observe(model).getStatus());
+        model.startHomeLocation(source, LocationAccess.APPROXIMATE);
+        source.emit(sampleAt(ORIGIN, 1500, 1000));
+        assertEquals(ORIGIN, model.getMapOrigin().getValue());
+        assertEquals(NearbyUiState.OriginLabel.LIVE_APPROXIMATE, observe(model).getOriginLabel());
+        source.emitUnavailable(LocationSource.Reason.PROVIDER_DISABLED);
+        org.junit.Assert.assertNull(model.getMapOrigin().getValue());
+        assertEquals(NearbyUiState.Status.LOCATION_UNAVAILABLE, observe(model).getStatus());
+    }
+
+    @Test
+    public void homeRejectsStaleAndInaccurateFixesAndRestartsOnReturn() {
+        NearbyAttractionsViewModel model = new NearbyAttractionsViewModel(
+                new InMemoryAttractionRepository(), TestSavedAttractions.empty(), ORIGIN,
+                3000.0, coordinator(), null, FakeClock.startingAt(30_000));
+        FakeLocationSource source = new FakeLocationSource();
+        model.load();
+        model.startHomeLocation(source, LocationAccess.PRECISE);
+        source.emit(sampleAt(ORIGIN, 10, 1000));
+        source.emit(sampleAt(ORIGIN, 1000, 30_000));
+        org.junit.Assert.assertNull(model.getMapOrigin().getValue());
+        model.stopHomeLocation();
+        model.startHomeLocation(source, LocationAccess.PRECISE);
+        source.emit(sampleAt(northOfOrigin(5000), 10, 30_000));
+        assertEquals(northOfOrigin(5000), model.getMapOrigin().getValue());
+        assertEquals(2, source.registrationCount());
+    }
+
     // --- origin labelling ----------------------------------------------------------------------
 
     @Test

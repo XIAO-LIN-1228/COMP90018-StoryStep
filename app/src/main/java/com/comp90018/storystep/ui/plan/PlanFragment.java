@@ -1,14 +1,26 @@
 package com.comp90018.storystep.ui.plan;
 
+import android.Manifest;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.core.content.ContextCompat;
+import androidx.core.location.LocationManagerCompat;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,10 +31,15 @@ import com.comp90018.storystep.di.AppContainer;
 import com.comp90018.storystep.domain.model.Attraction;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.plan.WalkPlan;
+import com.comp90018.storystep.platform.location.LocationAccess;
+import com.comp90018.storystep.platform.location.LocationAccessPolicy;
 import com.comp90018.storystep.ui.DistanceText;
 import com.comp90018.storystep.ui.HistoryText;
+import com.comp90018.storystep.ui.ViewModelFactory;
 import com.comp90018.storystep.ui.nearby.NearbyAttractionsFragment;
 import com.comp90018.storystep.ui.widget.PlaceMapView;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,9 +61,25 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
     private RecyclerView list;
     private PlanStopAdapter adapter;
     private TextView subtitle;
+    private TextView whenToLeave;
     private View empty;
     private TextView clear;
     private View startButton;
+    private PlanStartViewModel startModel;
+    private TextView startStatus;
+    private static final String LOCATION_PREFS = "storystep.location";
+    private static final String PERMISSION_REQUESTED = "location_permission_requested";
+
+    private final ActivityResultLauncher<String[]> permissions = registerForActivityResult(
+            new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                if (getView() == null) { return; }
+                if (currentAccess().isGranted()) {
+                    startWalking();
+                } else {
+                    // Explain the result, but never launch another system prompt automatically.
+                    showLocationPermissionHelp();
+                }
+            });
 
     private WalkPlanner planner;
     @Nullable private GeoPoint origin;
@@ -72,13 +105,32 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
 
         map = view.findViewById(R.id.plan_map);
         map.setCoveredBottom(getResources().getDimensionPixelSize(R.dimen.sheet_peek_height));
+        View sheetView = view.findViewById(R.id.plan_sheet);
+        BottomSheetBehavior<View> sheet = BottomSheetBehavior.from(sheetView);
+        ((View) sheetView.getParent()).addOnLayoutChangeListener(
+                (parent, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom) -> {
+                    int height = bottom - top;
+                    if (height <= 1) { return; }
+                    int peek = Math.min(getResources().getDimensionPixelSize(R.dimen.sheet_peek_height),
+                            height - 1);
+                    sheet.setPeekHeight(peek);
+                    // The fixed footer reduces the sheet's height. Keep the middle snap between
+                    // collapsed and expanded instead of letting it fall below the collapsed top.
+                    sheet.setHalfExpandedRatio((1f + (float) peek / height) / 2f);
+                    map.setCoveredBottom(peek);
+                });
         if (origin != null) {
             map.setOrigin(origin);
         }
         subtitle = view.findViewById(R.id.plan_subtitle);
+        whenToLeave = view.findViewById(R.id.plan_when_to_leave);
+        whenToLeave.setOnClickListener(v -> openDepartureAdvice());
         empty = view.findViewById(R.id.plan_empty);
         clear = view.findViewById(R.id.plan_clear);
         startButton = view.findViewById(R.id.plan_start);
+        startStatus = view.findViewById(R.id.plan_start_status);
+        startModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(PlanStartViewModel.class);
         list = view.findViewById(R.id.plan_stops);
         adapter = new PlanStopAdapter(this);
         list.setAdapter(adapter);
@@ -90,6 +142,18 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         view.findViewById(R.id.plan_in_progress_action).setOnClickListener(v ->
                 NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_exploration));
         planner.addObserver(this);
+        startModel.getState().observe(getViewLifecycleOwner(), state -> {
+            startButton.setEnabled(!planner.plan().isEmpty()
+                    && state != PlanStartViewModel.State.STARTING);
+            startStatus.setVisibility(state == PlanStartViewModel.State.STARTING
+                    || state == PlanStartViewModel.State.FAILED ? View.VISIBLE : View.GONE);
+            startStatus.setText(state == PlanStartViewModel.State.STARTING
+                    ? R.string.plan_starting : R.string.plan_start_failed);
+            if (state == PlanStartViewModel.State.READY) {
+                startModel.acknowledgeResult();
+                NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_exploration);
+            }
+        });
     }
 
     /**
@@ -125,8 +189,10 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         empty.setVisibility(any ? View.GONE : View.VISIBLE);
         list.setVisibility(any ? View.VISIBLE : View.GONE);
         clear.setVisibility(any ? View.VISIBLE : View.GONE);
-        startButton.setEnabled(any);
+        startButton.setEnabled(any && startModel.getState().getValue()
+                != PlanStartViewModel.State.STARTING);
         subtitle.setText(any ? summary(plan) : getString(R.string.plan_subtitle_empty));
+        whenToLeave.setVisibility(any && origin != null ? View.VISIBLE : View.GONE);
 
         List<PlaceMapView.Place> pins = new ArrayList<>();
         for (int i = 0; i < plan.size(); i++) {
@@ -206,16 +272,84 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
                 HistoryText.formatDuration(getResources(), millis));
     }
 
+    /**
+     * Opens departure advice for this plan. Passes the walking alone, from the router when it
+     * has answered and from the straight legs until then; the advice page adds its own stay.
+     */
+    private void openDepartureAdvice() {
+        WalkPlan plan = planner.plan();
+        if (plan.isEmpty() || origin == null) {
+            return;
+        }
+        boolean routed = route != null && plan.equals(routedPlan);
+        long walking = routed ? route.getDurationMillis() : plan.walkingMillis(origin);
+        NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_advice,
+                com.comp90018.storystep.ui.forecast.AdviceFragment.arguments(
+                        origin, walking, plan.size()));
+    }
+
     private void startWalking() {
         WalkPlan plan = planner.plan();
         Attraction first = plan.first();
         if (first == null) {
             return;
         }
+        if (container().getExplorationCoordinator().summary().getState().hasSession()) {
+            NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_exploration);
+            return;
+        }
+        LocationAccess access = currentAccess();
+        if (!access.isGranted()) {
+            showLocationPermissionHelp();
+            return;
+        }
+        LocationManager manager = (LocationManager) requireContext()
+                .getSystemService(Context.LOCATION_SERVICE);
+        if (manager == null || !LocationManagerCompat.isLocationEnabled(manager)) {
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setMessage(R.string.plan_location_services)
+                    .setNegativeButton(R.string.cancel, null)
+                    .setPositiveButton(R.string.nearby_open_settings, (dialog, which) ->
+                            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)))
+                    .show();
+            return;
+        }
         // Reordered from where the walker actually is, then walked in that order.
         planner.setPlan(plan.orderedFrom(origin));
-        container().getExplorationCoordinator().requestStart(planner.plan().first());
-        NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_exploration);
+        startModel.start(planner.plan().first(), access);
+    }
+
+    private LocationAccess currentAccess() {
+        Context context = requireContext();
+        return LocationAccessPolicy.evaluate(
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED,
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED,
+                shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION),
+                context.getSharedPreferences(LOCATION_PREFS, Context.MODE_PRIVATE)
+                        .getBoolean(PERMISSION_REQUESTED, false));
+    }
+
+    private void showLocationPermissionHelp() {
+        boolean canRequest = currentAccess().canRequest();
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.settings_location)
+                .setMessage(canRequest ? R.string.plan_location_permission
+                        : R.string.nearby_permission_permanently_denied)
+                .setNegativeButton(R.string.cancel, null)
+                .setPositiveButton(canRequest ? R.string.nearby_grant_access
+                        : R.string.nearby_open_settings, (dialog, which) -> {
+                    if (canRequest) {
+                        requireContext().getSharedPreferences(LOCATION_PREFS, Context.MODE_PRIVATE)
+                                .edit().putBoolean(PERMISSION_REQUESTED, true).apply();
+                        permissions.launch(new String[] {Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION});
+                    } else {
+                        startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                Uri.fromParts("package", requireContext().getPackageName(), null)));
+                    }
+                }).show();
     }
 
     @Override

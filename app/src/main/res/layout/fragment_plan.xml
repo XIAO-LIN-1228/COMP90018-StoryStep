@@ -5,258 +5,283 @@
     plan; the sheet is where it is edited. Start is the one brand-coloured action and is only
     offered once there is somewhere to go.
 -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="@color/story_ground">
 
-    <FrameLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <com.comp90018.storystep.ui.widget.PlaceMapView
-            android:id="@+id/plan_map"
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_map_top_scrim"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/page_horizontal_margin"
-            android:paddingTop="@dimen/space_12"
-            android:paddingEnd="@dimen/page_horizontal_margin"
-            android:paddingBottom="@dimen/space_16">
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.PageTitle"
+            <com.comp90018.storystep.ui.widget.PlaceMapView
+                android:id="@+id/plan_map"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/plan_title" />
+                android:layout_height="match_parent" />
 
-            <TextView
-                android:id="@+id/plan_subtitle"
-                style="@style/TextAppearance.StoryStep.Supporting"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:text="@string/plan_subtitle_empty"
-                android:textColor="@color/story_ink_2"
-                tools:text="3 stops · about 2.1 km · around 40 min" />
-        </LinearLayout>
-    </FrameLayout>
-
-    <LinearLayout
-        android:id="@+id/plan_sheet"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/bg_sheet"
-        android:elevation="@dimen/floating_elevation"
-        android:orientation="vertical"
-        app:behavior_expandedOffset="0dp"
-        app:behavior_fitToContents="false"
-        app:behavior_hideable="false"
-        app:behavior_peekHeight="@dimen/sheet_peek_height"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
-
-        <View
-            android:layout_width="44dp"
-            android:layout_height="4dp"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="10dp"
-            android:background="@drawable/bg_sheet_handle" />
-
-        <!--
-            A walk already under way. Planning is where walking begins, so this is where a walk
-            left running or paused is picked back up; it is the only route to it, and without
-            it an unfinished walk would sit in the database with no way back to it.
-        -->
-        <LinearLayout
-            android:id="@+id/plan_in_progress"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/page_horizontal_margin"
-            android:layout_marginTop="@dimen/space_12"
-            android:layout_marginEnd="@dimen/page_horizontal_margin"
-            android:background="@drawable/bg_stale_banner"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/space_12"
-            android:paddingTop="8dp"
-            android:paddingEnd="8dp"
-            android:paddingBottom="8dp"
-            android:visibility="gone"
-            tools:visibility="visible">
-
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:contentDescription="@null"
-                android:src="@drawable/ic_start_walk"
-                app:tint="@color/story_signal" />
-
-            <TextView
-                android:id="@+id/plan_in_progress_text"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_12"
-                android:layout_weight="1"
-                android:fontFamily="@font/bricolage_medium"
-                android:textColor="@color/story_on_ink"
-                android:textSize="13.5sp"
-                tools:text="Your walk is paused — location is not being recorded." />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/plan_in_progress_action"
-                style="@style/Widget.StoryStep.Button.Primary"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/space_8"
-                android:insetTop="0dp"
-                android:insetBottom="0dp"
-                android:minWidth="0dp"
-                android:minHeight="38dp"
-                android:paddingStart="@dimen/space_16"
-                android:paddingEnd="@dimen/space_16"
-                android:text="@string/plan_go_to_walk"
-                android:textSize="13.5sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/page_horizontal_margin"
-            android:paddingTop="@dimen/space_12"
-            android:paddingEnd="@dimen/space_8">
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.Headline"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/plan_stops_heading" />
-
-            <TextView
-                android:id="@+id/plan_clear"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/minimum_touch_target"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:fontFamily="@font/bricolage_semibold"
-                android:gravity="center"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:text="@string/plan_clear"
-                android:textColor="@color/story_ink_3"
-                android:textSize="14sp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <!--
-            Nothing planned yet. The empty state takes the space the list will, so the sheet
-            does not open on a paragraph with a void beneath it.
-        -->
-        <LinearLayout
-            android:id="@+id/plan_empty"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/space_32"
-            android:paddingEnd="@dimen/space_32"
-            android:paddingBottom="@dimen/space_24">
-
-            <ImageView
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:background="@drawable/bg_stat_icon"
-                android:contentDescription="@null"
-                android:padding="17dp"
-                android:src="@drawable/ic_kind_sights"
-                app:tint="@color/story_signal_ink" />
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.Headline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_16"
-                android:text="@string/plan_empty_title" />
-
-            <TextView
-                style="@style/TextAppearance.StoryStep.Prose"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
-                android:gravity="center"
-                android:text="@string/plan_empty"
-                android:textColor="@color/story_ink_3" />
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/plan_stops"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:clipToPadding="false"
-            android:paddingTop="@dimen/space_8"
-            android:paddingBottom="@dimen/space_8"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_plan_stop" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingStart="@dimen/page_horizontal_margin"
-            android:paddingTop="@dimen/space_8"
-            android:paddingEnd="@dimen/page_horizontal_margin"
-            android:paddingBottom="88dp">
-
-            <!--
-                A dashed slot rather than a second solid button: it reads as room for another
-                stop, and leaves Start as the only filled action on the screen.
-            -->
             <LinearLayout
-                android:id="@+id/plan_add"
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:background="@drawable/bg_add_pill"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="26dp"
-                    android:layout_height="26dp"
-                    android:background="@drawable/bg_stat_icon"
-                    android:contentDescription="@null"
-                    android:padding="4dp"
-                    android:src="@drawable/ic_plus" />
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_map_top_scrim"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/page_horizontal_margin"
+                android:paddingTop="@dimen/space_12"
+                android:paddingEnd="@dimen/page_horizontal_margin"
+                android:paddingBottom="@dimen/space_16">
 
                 <TextView
+                    style="@style/TextAppearance.StoryStep.PageTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/plan_title" />
+
+                <TextView
+                    android:id="@+id/plan_subtitle"
+                    style="@style/TextAppearance.StoryStep.Supporting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/plan_subtitle_empty"
+                    android:textColor="@color/story_ink_2"
+                    tools:text="3 stops · about 2.1 km · around 40 min" />
+
+                <!-- Departure advice for this plan (D-08); hidden while the plan is empty. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/plan_when_to_leave"
+                    style="@style/Widget.StoryStep.Button.Compact"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:fontFamily="@font/bricolage_bold"
-                    android:text="@string/plan_add_stop"
-                    android:textColor="@color/story_signal_ink"
-                    android:textSize="@dimen/text_body" />
+                    android:layout_marginTop="@dimen/space_4"
+                    android:contentDescription="@string/advice_link_description"
+                    android:text="@string/advice_link"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_clock" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/plan_sheet"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_sheet"
+            android:elevation="@dimen/floating_elevation"
+            android:orientation="vertical"
+            app:behavior_expandedOffset="0dp"
+            app:behavior_fitToContents="false"
+            app:behavior_hideable="false"
+            app:behavior_peekHeight="@dimen/sheet_peek_height"
+            app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+            <View
+                android:layout_width="44dp"
+                android:layout_height="4dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/bg_sheet_handle" />
+
+            <!--
+                A walk already under way. Planning is where walking begins, so this is where a walk
+                left running or paused is picked back up; it is the only route to it, and without
+                it an unfinished walk would sit in the database with no way back to it.
+            -->
+            <LinearLayout
+                android:id="@+id/plan_in_progress"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/page_horizontal_margin"
+                android:layout_marginTop="@dimen/space_12"
+                android:layout_marginEnd="@dimen/page_horizontal_margin"
+                android:background="@drawable/bg_stale_banner"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/space_12"
+                android:paddingTop="8dp"
+                android:paddingEnd="8dp"
+                android:paddingBottom="8dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:contentDescription="@null"
+                    android:src="@drawable/ic_start_walk"
+                    app:tint="@color/story_signal" />
+
+                <TextView
+                    android:id="@+id/plan_in_progress_text"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_12"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/bricolage_medium"
+                    android:textColor="@color/story_on_ink"
+                    android:textSize="13.5sp"
+                    tools:text="Your walk is paused — location is not being recorded." />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/plan_in_progress_action"
+                    style="@style/Widget.StoryStep.Button.Primary"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/space_8"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minWidth="0dp"
+                    android:minHeight="38dp"
+                    android:paddingStart="@dimen/space_16"
+                    android:paddingEnd="@dimen/space_16"
+                    android:text="@string/plan_go_to_walk"
+                    android:textSize="13.5sp" />
             </LinearLayout>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/plan_start"
-                style="@style/Widget.StoryStep.Button.Primary"
+            <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="@dimen/primary_button_height"
-                android:layout_marginTop="@dimen/space_8"
-                android:enabled="false"
-                android:text="@string/plan_start" />
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/page_horizontal_margin"
+                android:paddingTop="@dimen/space_12"
+                android:paddingEnd="@dimen/space_8">
+
+                <TextView
+                    style="@style/TextAppearance.StoryStep.Headline"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/plan_stops_heading" />
+
+                <TextView
+                    android:id="@+id/plan_clear"
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/minimum_touch_target"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:fontFamily="@font/bricolage_semibold"
+                    android:gravity="center"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:text="@string/plan_clear"
+                    android:textColor="@color/story_ink_3"
+                    android:textSize="14sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!--
+                Nothing planned yet. The empty state takes the space the list will, so the sheet
+                does not open on a paragraph with a void beneath it.
+            -->
+            <LinearLayout
+                android:id="@+id/plan_empty"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:gravity="top|center_horizontal"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/space_32"
+                android:paddingTop="@dimen/space_16"
+                android:paddingEnd="@dimen/space_32"
+                android:paddingBottom="@dimen/space_24">
+
+                <TextView
+                    style="@style/TextAppearance.StoryStep.Headline"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/plan_empty_title" />
+
+                <TextView
+                    android:id="@+id/plan_empty_guidance"
+                    style="@style/TextAppearance.StoryStep.Prose"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center"
+                    android:text="@string/plan_empty"
+                    android:textColor="@color/story_ink_3" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/plan_stops"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingTop="@dimen/space_8"
+                android:paddingBottom="@dimen/space_8"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+                tools:listitem="@layout/item_plan_stop" />
+
         </LinearLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <!-- Keep the actions outside the sliding sheet so every snap position can use them. -->
+    <LinearLayout
+        android:id="@+id/plan_actions"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/page_horizontal_margin"
+        android:paddingTop="@dimen/space_8"
+        android:paddingEnd="@dimen/page_horizontal_margin"
+        android:paddingBottom="88dp">
+
+        <TextView
+            android:id="@+id/plan_start_status"
+            style="@style/TextAppearance.StoryStep.Supporting"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="@dimen/space_8"
+            android:accessibilityLiveRegion="polite"
+            android:visibility="gone" />
+
+        <!--
+            A dashed slot rather than a second solid button: it reads as room for another
+            stop, and leaves Start as the only filled action on the screen.
+        -->
+        <LinearLayout
+            android:id="@+id/plan_add"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/primary_button_height"
+            android:background="@drawable/bg_add_pill"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:background="@drawable/bg_stat_icon"
+                android:contentDescription="@null"
+                android:padding="4dp"
+                android:src="@drawable/ic_plus" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:fontFamily="@font/bricolage_bold"
+                android:text="@string/plan_add_stop"
+                android:textColor="@color/story_signal_ink"
+                android:textSize="@dimen/text_body" />
+        </LinearLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/plan_start"
+            style="@style/Widget.StoryStep.Button.Primary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/primary_button_height"
+            android:layout_marginTop="@dimen/space_8"
+            android:enabled="false"
+            android:text="@string/plan_start" />
     </LinearLayout>
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+</LinearLayout>
