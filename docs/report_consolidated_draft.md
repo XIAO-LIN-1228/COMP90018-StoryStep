@@ -245,200 +245,271 @@ is not claimed complete, and commit counts do not determine contributions.]
 
 ## 5. System design and evaluation
 
-Progress: `on editing`. Approval: **NOT APPROVED**.
+Progress: `need review`. Approval: **NOT APPROVED**.
 
-StoryStep connects information about nearby places with the experience of visiting
-them. Its architecture separates external data and persistent records from the
-sensing and decision rules that drive exploration. The following sections explain
-these mechanisms, the user journey they support, and the evidence available for
-assessing their behavior. The implementation reviewed is main at `ede3f7e` [R1];
-test results apply to the individual revisions identified below.
+StoryStep must keep a walk consistent when readings are noisy, requests finish
+late or the app is interrupted. This section explains the design and its evidence.
+Source references use `ede3f7e` [R1]; tests apply to the revisions in Section 5.4.
+The final submission revision and ten-page PDF limit still need checking.
 
-[PENDING-BASELINE: reconcile implementation and verification with the submitted build.]
+**Rubric coverage.** This table locates the argument for each criterion. It also
+identifies required material that is still outstanding; it does not assign marks.
+
+| Rubric criterion | Report location | Argument or evidence |
+| --- | --- | --- |
+| Material - Report & Video | Sections 2 and 5 | Design and evaluation below; video link and timestamps pending |
+| Material - Screenshot | Section 3.3 | Android Studio Console screenshot pending |
+| Material - Commit log | Submission package | Commit-log ZIP and its coverage of the submitted revision still to be verified |
+| Material - Itemised contributions | Section 4 | Member contributions and PR evidence; remaining members and one-page layout pending |
+| Implementation - Quality | 5.1, 5.4 | Separation of responsibilities, explicit storage contracts and regression cases |
+| Implementation - Sensors | 5.2, 5.4 | Location, movement and heading processing, with distinct validity checks |
+| Implementation - Connectivity | 5.1 | External data changes discovery, weather context and route presentation; caches handle failures |
+| Implementation - Responsiveness | 5.3, 5.4 | Background work and controlled redraws; measured interaction timings pending |
+| Implementation - Technical depth | 5.1, 5.2, 5.4 | Recovery, repeat-safe writes, noisy sensing and out-of-order responses |
+| User Interface - Appeal | 5.3 | Shared colour and type resources, map hierarchy and route styles; final screenshots pending |
+| User Interface - Guidelines | 5.3, 5.4 | Android navigation, insets, scalable controls and accessibility behaviour; remaining checks stated |
+| User Interface - Flow | 5.3 | Discovery-to-history path and recovery from interrupted starts |
+| User Interface - Language | 5.3 | Action labels, unavailable states and qualified fallback information |
+| User Interface - Reactiveness | 5.2, 5.3 | Changes to position, heading and stored state update the display; final demonstration pending |
+| Innovation - Novelty | 5.5 | A visitor workflow combining contextual choice, arrival-linked interpretation and local records |
+| Innovation - Surprise | 5.5 | An arrival opens an observation activity as well as a destination record |
+| Innovation - Tech Knowledge | 5.5 | Integration of sensing, state, storage, network and interface concepts |
+| Innovation - Cross-Disciplinary | 5.5 | Architectural and botanical observation applied through location-specific questions |
+| Innovation - Impact | 5.5 | Potential benefits for unfamiliar visitors, with limits on measured outcomes |
 
 ### 5.1 System architecture and data handling
 
-Progress: `need support doc`. Approval: **NOT APPROVED**.
+Fragments display ViewModel state. `ExplorationCoordinator` manages sessions and
+sensing; domain classes calculate results; repositories load and persist them.
+`AppContainer` wires the components. Android calls stay in platform adapters, while
+distance, arrival, movement and ranking remain plain Java. Tests can therefore
+supply clocks, readings and failed stores without running a screen [R1].
 
-The application separates presentation, application coordination, domain calculations,
-repositories and platform adapters. Plain-Java classes isolate computational rules
-from Android lifecycle code, while adapters such as AndroidSensorHub manage platform
-subscriptions. This allows deterministic logic tests without treating simulated
-inputs as evidence of physical sensor behavior.
+Starting a walk changes storage and navigation together. The planner waits for
+session creation before navigating; failed writes remain retryable, duplicate taps
+are ignored, and ViewModel state retains the pending result across recreation [R2].
+Central coordination keeps those transitions consistent across screens.
 
-Repositories combine remote information with local storage. Overpass supplies nearby
-places, Wikimedia sources enrich descriptions and images, Open-Meteo supplies current
-weather, and Valhalla supplies pedestrian routes. Map tiles provide the geographic
-display. Requests for the same area can be coalesced, and cached observations are
-classified by freshness before being returned or used as labelled fallback data.
-Content gaps and failed requests remain possible; caching does not provide complete
-offline navigation. Route requests contain the supplied route coordinates, even
-though weather and place queries use area-based locations.
+Room schema version 12 uses exported schemas and explicit migrations to preserve
+records across upgrades. Sequence numbers prevent retried route writes from
+duplicating points; visits are unique per session and attraction. A story is offered
+after its visit is saved, with failed writes reported for retry. Its snapshot keeps
+the content recorded on arrival even if provider data changes. Repository and
+coordinator tests cover these contracts; fake DAOs do not prove SQLite behaviour.
 
-Persistent state provides continuity between actions and their visible results.
-An arrival is stored before its story becomes available. PlanStartViewModel retains
-pending start state across recreation and signals readiness after a session exists.
-Room schema version 12 exports schemas and registers explicit migrations to preserve
-stored data rather than relying on destructive migration. Saved places and completed
-journeys persist; the unstarted walking plan remains in memory.
+Recovery restores progress as paused, without treating the old fix as live or
+joining the missing interval into the trail. Saved places and finished journeys
+persist, but an unstarted ordered plan remains in memory. The [persistence record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-REQ14-REQ15-2026-09-04-01.md) documents the initial implementation and tests.
 
-[PENDING-IMPLEMENTATION-REVIEW: confirm final configuration, migration evidence and
-remaining Lint warnings. Review also found a stale version-10 database comment above
-its version-12 annotation; reconcile documentation with delivered code.]
+**External data and failure handling.** Network access supplies the places,
+weather and route geometry used during a walk.
 
-### 5.2 Exploration and departure decisions
+| Source | Use in StoryStep | Behaviour when data is unavailable |
+| --- | --- | --- |
+| OpenStreetMap Overpass | Nearby attraction records | Use an eligible cached area with a stale label, or report unavailable content |
+| Wikidata, Wikipedia and Wikimedia Commons | Descriptions, facts and images | Retain available place information; use artwork when a photo cannot load |
+| Open-Meteo | Weather display and recommendation context | Label eligible cached weather; unsuitable weather is neutral in ranking |
+| Valhalla | Walking geometry between selected stops | Show a labelled straight-line plan, distinct from the recorded trail |
+| OpenStreetMap tile service | Geographic map display | Tile coverage depends on available downloads/cache; this is not complete offline navigation |
 
-Progress: `need support doc`. Approval: **NOT APPROVED**.
+Requests for the same area share one pending fetch. I/O runs on a background
+executor and results return on the UI executor. Attractions refresh after 24 hours
+and expire after 30 days; weather refreshes after 30 minutes and expires after six
+hours, measured from fetch time. A failed refresh can return eligible cached data
+with a stale label. Bounded retries distinguish transient failures, rate limits and
+invalid responses, limiting repeated work [R1].
 
-Users choose destinations, while the app supplies context for comparing them.
-Recommendation ranking combines distance, weather, time, saved and unvisited factors
-with deterministic explanations. Unsuitable weather data is neutral. This fixed-rule
-policy does not learn an interest profile. Selected stops are ordered using a
-nearest-neighbour heuristic, after which Valhalla provides a street walking path;
-the ordering does not guarantee a globally shortest itinerary.
+Saved snapshots and journey records are separate from provider caches. The
+implemented 30-day cleanup removes eligible provider entries without erasing those
+user records; the policy note still requires team approval of the window. Backup
+exclusions are configured but lack device verification. Weather and attraction
+queries use area-based locations; routing sends route coordinates, so local storage
+does not imply that all location-related data stays on the phone.
 
-During exploration, location supports recorded movement and arrival decisions.
-The inspected arrival policy requires distance plus reported accuracy within 50 metres,
-accuracy within 25 metres, and at least three accepted fixes spanning ten seconds.
-Fifteen-second gap and sample-age limits prevent old or disconnected samples from
-being treated as a continuous stay. These parameters are starting values whose
-physical performance still requires field evidence.
+### 5.2 Sensing, arrival and destination decisions
 
-Movement estimation removes a time-dependent gravity estimate and measures variation
-in acceleration magnitude over two-second windows. Separate thresholds and agreement
-across two windows reduce rapid changes of state near the decision boundary. Heading
-processing combines orientation readings with true-heading conversion and smooths
-sine/cosine components, avoiding the discontinuity between 359 and 1 degrees. Optional
-step and pressure adapters provide walk metrics when available; absent capabilities
-are shown as unavailable. These inputs serve different purposes rather than all
-jointly determining arrival. Foreground home discovery also acquires location
-separately from journey recording.
+Arrival uses location quality and dwell time. Movement and heading provide
+separate context and guidance.
 
-Departure-window advice is intended to extend destination and ordering decisions to
-when to leave. Its design compares precipitation probability, apparent temperature
-and wind over a chosen walking duration, then explains the relative suitability of
-upcoming departure windows. This remains a planned extension, not verified delivery
-or a guarantee of comfort or safety.
+| Input | Processing and purpose | Invalid or missing input |
+| --- | --- | --- |
+| Location | Distance/bearing, route accumulation and sustained arrival checks | Reject unsuitable fixes; reduced discovery with approximate permission; no automatic arrival without precise access |
+| Accelerometer | Remove a gravity estimate and measure variation over two-second windows | Report unavailable movement when readings cannot support an estimate |
+| Accelerometer and magnetometer | Orientation, magnetic-to-true-heading conversion and circular smoothing | Fall back to available distance/cardinal guidance when heading is missing, stale or unreliable |
+| Optional step counter and barometer | Steps and metres climbed during a walk | Omit the unavailable measurement; steps also depend on permission |
 
-[PENDING-DEPARTURE-IMPLEMENTATION: add the delivered algorithm/API, duration aggregation,
-timezone and missing-data handling, and boundary-test results once available.]
+The route filter checks accuracy, age, displacement and implied speed to keep
+stationary drift from adding travel. Arrival needs those stationary readings to
+establish a stay. It therefore evaluates fixes separately, rather than receiving
+only the samples accepted as movement.
 
-### 5.3 User experience design
+Arrival requires distance plus reported accuracy within 50 metres, accuracy within
+25 metres, and three qualifying fixes spanning ten seconds. Fifteen-second age and
+gap limits reject stale or interrupted stays. `standingStillAtTheDestinationStillArrives`
+checks the separation from route filtering. Passing through, changed targets,
+repeat arrivals and failed writes have regression cases. These starting thresholds
+have not been validated as a physical accuracy guarantee
+([arrival verification](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-REQ12-REQ13-2026-09-05-01.md)).
 
-Progress: `need support doc`. Approval: **NOT APPROVED**.
+Movement classification uses 0.35 and 0.7 m/s² thresholds and two agreeing windows
+to change an established state, reducing switching near a boundary. Heading uses
+sine/cosine smoothing so 359° and 1° average near north. Declination converts magnetic
+to true heading; readings expire after five seconds. Controlled fixtures exercise
+these rules, while device-specific behaviour still needs field measurements.
 
-Explore, Plan, Journeys and Profile organise the main user journey. Visitors move
-from nearby discovery to attraction details and planning, then to exploration and
-stored history. Saved places and settings are reachable through Profile. Arrival
-prompts offer View story or Later, and questions in the curated theme are optional,
-allowing users to decide how much interpretation to engage with during a walk.
+Journey collection pauses in the background. Home discovery separately obtains
+location while visible and authorised, so browsing does not create a journey.
 
-The planner keeps Add and Start outside its sliding content so users do not need to
-expand the sheet to find the main actions. It checks location access and waits for
-session creation before navigating. Cancellation preserves planning, and Back from
-a no-session exploration state does not offer to discard a nonexistent journey [R2].
-These choices connect navigation to the underlying state and provide a route back
-when an action cannot be completed.
+Recommendations combine distance, weather, time, saved status and prior visits,
+with opening-status and bounded popularity adjustments. Unsuitable weather is
+neutral; reason codes explain the fixed-rule ranking. Users choose the stops.
+Nearest-neighbour ordering and a requested street route support planning without
+guaranteeing a globally shortest itinerary [R1].
 
-MainActivity applies system-bar insets and delegates tab destination handling to
-NavigationUI. Shared resources define 48dp touch targets; selected controls expand
-with text and status updates use live regions. The recorded planner checks still
-show bottom-tab clipping at 200% font scale, and automated checks do not establish
-spoken-label quality or TalkBack reading order [R2].
+Departure-window advice remains outside the verified baseline discussed here.
+If included in the submitted build, its forecast source, duration aggregation,
+timezone handling and tests must be added before it is counted as delivered.
 
-Interface text distinguishes missing measurements and recoverable actions, including
-waiting for a location fix and retrying an arrival save. A fallback route is labelled
-as a straight-line plan. English date formatting was corrected for non-English device
-settings [R3]. Permission wording needs to match both home discovery and journey
-recording: “during an active exploration” may suggest a narrower lifecycle. Weather
-labels and the prominence of Not now also need final-build confirmation.
+### 5.3 User experience and interface behaviour
 
-[PENDING-VISUAL-DESIGN: add selected final screenshots and an agreed account of visual
-hierarchy, typography, colour and spacing. PENDING-UI: supply the final walkthrough,
-large-font, TalkBack and language observations; retain unresolved limitations.]
+Explore, attraction details, Plan, exploration and Journeys follow the sequence of
+choosing, walking and reviewing. Profile holds saved places and settings. View story
+or Later and optional theme questions leave the visitor control over interruptions.
+
+**Flow and recovery.** Add a place and Start walking remain outside the sliding
+sheet, visible without expansion. Permission refusal preserves the plan; permanent
+denial offers app settings. Navigation waits for a saved session. With no session,
+Back returns without asking to discard a nonexistent journey. These controls follow
+the actual state, including when a start fails [R2].
+
+**Appearance and hierarchy.** Shared resources use warm light walking surfaces,
+dark journey surfaces and Bricolage heading/body/label styles. Amber marks unread
+stories; category colours distinguish places. Final screenshots should show these
+choices. Outdoor legibility and appeal have not been assessed through user studies.
+
+Exploration reserves map space and keeps Stop reachable. Take photo and From
+library are separate actions. Dashed planned geometry, a solid recorded trail and
+numbered stops distinguish intention from travel. Recenter returns to the accepted
+position; a straight-line fallback is labelled as an estimate [R4].
+
+**Android conventions and language.** MainActivity uses system-bar insets and
+NavigationUI. Controls use 48dp touch-target resources, scalable text and flexible
+heights. Status text has live regions; compass announcements are limited to cardinal
+changes. Selected API 36 layouts passed normal/200% font checks, but bottom-tab
+clipping remains and TalkBack reading order is unverified [R2, R4].
+
+Labels distinguish waiting for GPS, unavailable heading and failed arrival saves.
+The user is told when a route or cached result is a fallback. English journey-date
+formatting is explicit even under non-English device settings [R3]. One remaining
+wording issue is that the onboarding explanation says location is used during an
+active exploration, although foreground home discovery also obtains location.
+That explanation needs to cover both uses.
+
+**Responsiveness and reactiveness.** Route requests run off the UI thread, wait
+for an accepted origin and do not repeat for every GPS update. Results from an old
+request cannot replace an edited plan or publish after its ViewModel is cleared.
+Heading and timer updates do not rebuild every route overlay [R4]. These choices
+avoid unnecessary work; they are not substitutes for measured loading times.
+
+Reactiveness concerns the meaning of the update: a new accepted fix extends the
+trail, a changed heading rotates the compass, an expired heading becomes
+unavailable, and a saved arrival offers a story. Context changes can alter the
+recommendation order. Existing tests exercise these state transitions and selected
+rendering paths. The final video should show the corresponding physical input and
+visible response, including an offline/reconnect case.
 
 ### 5.4 Verification results and limitations
 
-Progress: `need support doc`. Approval: **NOT APPROVED**.
+JVM tests isolate calculations and failures; instrumented tests exercise Android
+storage and screens; manual checks observe a particular phone setup. Builds do not
+establish sensor accuracy; synthetic UI fixtures do not exercise real camera or
+gallery interactions.
 
-Verification combines pure-Java tests, instrumented presentation checks and manual
-device observation. Deterministic fixtures exercise rules, failure paths and rendering;
-physical sensing and complete user journeys need device evidence. The final submitted
-build's results remain to be supplied.
-
-| Evidence                         | Result and scope                                                                                                        |
-| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Submitted build                  | [PENDING-FINAL-TESTS: commit, environment, commands, executed/cached tasks, counts, failures/skips, Lint and artifacts] |
-| Physical walkthrough             | [PENDING-PHONE: device/API, permissions, route/arrival, media persistence and recovery observations]                    |
-| Loading and interaction timing   | [PENDING-TIMINGS: defined actions, raw durations, network/cache conditions and whether controls remained usable]        |
-| Responses to changing conditions | [PENDING-DYNAMIC-BEHAVIOR: movement/heading and offline/reconnect observations with timestamps]                         |
-
-Penghua He's completed feature-branch verification records are summarised below.
-The counts are results from separate revisions and are not combined.
+Penghua He's completed feature-branch verification records are retained below.
+Each row describes a separate revision; the test counts must not be added together.
 
 | Date / revision | Command | Environment | Actual result | Evidence |
 | --- | --- | --- | --- | --- |
-| 27 September 2026 / `feature/voice-story` | `./gradlew test assembleDebug lint` | Gradle JVM/build/Lint | 827 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; build successful | [Voice-story record](verification/EV-VOICE-STORY-2026-09-27.md) |
-| 27 September 2026 / `feature/opening-status` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 838 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Opening-status record](verification/EV-OPENING-STATUS-2026-09-27.md) |
-| 27 September 2026 / `feature/popularity-ranking` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 841 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Popularity-ranking record](verification/EV-POPULARITY-RANKING-2026-09-27.md) |
-| 27 September 2026 / `feature/attraction-coverage` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 846 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Attraction-coverage record](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md) |
-| 7 October 2026 / `fix/home-location`, committed as `ebebeaf` | `.\\gradlew.bat testDebugUnitTest assembleDebug lintDebug --console=plain` | Windows, Temurin JDK 25.0.4 | 858 JVM tests with 0 failures; build and Lint successful; 16 tasks executed and 32 up-to-date | Generated reports at `app/build/reports/tests/testDebugUnitTest/index.html` and `app/build/reports/lint-results-debug.html` |
+| 27 September 2026 / `feature/voice-story` | `./gradlew test assembleDebug lint` | Gradle JVM/build/Lint | 827 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; build successful | [Voice-story record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-VOICE-STORY-2026-09-27.md) |
+| 27 September 2026 / `feature/opening-status` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 838 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Opening-status record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-OPENING-STATUS-2026-09-27.md) |
+| 27 September 2026 / `feature/popularity-ranking` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 841 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Popularity-ranking record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-POPULARITY-RANKING-2026-09-27.md) |
+| 27 September 2026 / `feature/attraction-coverage` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 846 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Attraction-coverage record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-ATTRACTION-COVERAGE-2026-09-27.md) |
+| 7 October 2026 / `fix/home-location`, committed as `ebebeaf` | `.\gradlew.bat testDebugUnitTest assembleDebug lintDebug --console=plain` | Windows, Temurin JDK 25.0.4 | 858 JVM tests with 0 failures; build and Lint successful; 16 tasks executed and 32 up-to-date | Generated reports at `app/build/reports/tests/testDebugUnitTest/index.html` and `app/build/reports/lint-results-debug.html` |
 
-An OPPO X9 Pro was used to install and launch the debug application through USB
-debugging and to exercise the application on a physical phone. The onboarding screen
-rendered on the device, and the installed app remained available after USB
-disconnection. The tester subsequently confirmed that the issues encountered during
-this physical-device session had been resolved.
+An earlier API 37 record reports 75/75 instrumented tests after corrections [R5].
+The 7 October planner run reports 854 JVM tests and four presentation cases at each
+of normal and 200% font scale [R2]. The locale run reports 854 JVM tests and four
+API 36 cases [R3]. The exploration run reports 862 JVM tests and three presentation
+cases at each font scale, also on API 36 [R4]. Those October records report
+successful builds, zero Lint errors and 113 warnings. Their inputs and revision
+limits remain relevant; these are not results for an unspecified final package.
 
-Historical records establish a baseline. An earlier API 37 run recorded 75/75
-instrumented tests after corrections [R5]. October 7 records report 854 JVM tests
-and four planner presentation cases at each of two font scales [R2], 854 JVM tests
-and four locale cases [R3], then 862 JVM tests and three exploration cases at each
-scale [R4]. The latter device runs used API 36 and reported successful builds with
-zero Lint errors and 113 warnings. Counts overlap and are not summed. Exploration
-inputs were synthetic; subsequent home-location and photo changes require evidence
-beyond these historical results.
+Section 3.2 records a fresh macOS build of `ede3f7e` and Penghua He's Windows/OPPO
+X9 Pro installation. He reports launch, onboarding display, operation after USB
+disconnection and resolution of encountered problems. The phone's Android/API
+version, individual fixes and retest cases are not yet listed. Installation evidence
+is present; a complete final-build walkthrough remains outstanding.
 
-One repair illustrates how tests informed implementation. Denied planned-walk starts
-had led to an idle exploration/exit problem. The revised flow gates navigation on
-session creation and retains recovery on the planner. Focused tests cover denial,
-delayed or failed writes and no-session Back [R2]; real system-dialog and final-phone
-acceptance remain separate. The detailed failure history is retained in that record.
+**What the regression cases establish.** The following cases connect implementation
+choices to specific failure modes rather than relying only on suite totals.
 
-Two questions remain distinct: how long an action takes, and whether the interface
-updates correctly when position, heading or network conditions change. Build times
-and test totals answer neither. Historical manual feedback identified slow initial
-content loading and weather-refresh concerns, but did not constitute a controlled
-latency benchmark. Real sensing accuracy, final camera/gallery round trips, TalkBack
-and broader device coverage remain unestablished by the reviewed records [R4, R6].
-These gaps must be resolved or retained as limitations of the submitted evaluation.
+| Case | Behaviour checked | Evidence and limit |
+| --- | --- | --- |
+| Denied or delayed walk start | No premature navigation; failed writes can be retried; duplicate starts are ignored | Planner JVM and API 36 presentation checks [R2]; real system-dialog behaviour not rerun |
+| Stationary arrival and write failure | Staying still can qualify; failed storage is not announced as a saved visit; repeated arrivals do not create another visit | Arrival coordinator tests and the historical arrival record linked in 5.2; physical thresholds unvalidated |
+| Repeated route checkpoint and recovery | Re-offered points do not duplicate the trace; restored progress carries no live last fix | `RoomSessionStoreTest` [R1]; fake DAOs do not test SQLite itself |
+| Edited plan or offline routing | An old response cannot replace a new plan; failed routing retains a labelled estimate separate from travel | `ExplorationPlannedRouteTest` and [R4]; no live-service latency measurement |
+| Stale heading and layout changes | Heading expiry, map update cadence and selected controls at normal/large font sizes | JVM and synthetic API 36 checks [R4]; no physical compass or camera validation |
+
+For example, denied starts previously reached an idle exploration page. Gating
+navigation on permission and session creation fixed the flow; tests for denial,
+delayed writes, retries and no-session Back now guard that repair [R2].
+
+The remaining evaluation work is specific:
+
+| Outstanding evidence | What must be recorded |
+| --- | --- |
+| Final submitted build | Commit, environment, commands, executed/cached tasks, failures/skips, Lint findings and accessible reports |
+| Physical walkthrough | Phone/API, permission choices, route/arrival, photo persistence and recovery results for the installed build |
+| Responsiveness | Defined loading actions, measured durations, network/cache conditions and whether controls remain usable |
+| Reactiveness and accessibility | Input-to-display changes, offline/reconnect behaviour, final large-font checks and TalkBack observations |
+
+Historical feedback mentions slow initial loading and weather-refresh concerns
+[R6], but gives no controlled latency benchmark. No claim of measured speed,
+physical sensing accuracy or improved user satisfaction is made here. The final
+report should replace these evidence requests with results or retain the unresolved
+items as limitations.
 
 ### 5.5 Design contribution and application value
 
-Progress: `need review`. Approval: **NOT APPROVED**.
+**Novelty and surprise.** StoryStep combines contextual choice, an explicit walk,
+arrival-linked interpretation and local records. Itinerary planning in Wanderlog
+[R7], route weather in komoot [R8], and GPS stories/quizzes in izi.TRAVEL [R9] show
+that the components have precedents. The contribution is the implemented visitor
+workflow, with no claim to have invented the individual features.
 
-StoryStep is designed around the transition from deciding where to go to understanding
-what is encountered there. It connects autonomous place selection and contextual
-planning with arrival-linked interpretation and local exploration records. Related
-products already offer itinerary planning, route weather or GPS stories, including
-Wanderlog, komoot and izi.TRAVEL [R7–R9]. The contribution is this particular visitor
-experience, rather than a claim to have invented those individual capabilities.
+At Old Quad, arrival reveals a story and a question about visible arches; other
+stops focus on towers and the System Garden [R10]. Reaching a map point starts an
+observation activity. That transition is the intended surprise, with answering
+optional and no leaderboard required.
 
-In the three-stop Parkville theme, arrival reveals a story and an optional question
-about visible features such as a tower or arches. Progress accumulates as places are
-visited, inviting users to discover another story and build a collection of place
-experiences. This extends a map destination into an observation activity without
-requiring points, badges or a leaderboard. Architectural and botanical content links
-the digital interaction to the physical setting and its history [R10]. Whether this
-actually increases motivation or learning has not been measured.
+**Computing knowledge.** Geometry, signal processing, state transitions, database
+consistency and asynchronous requests work together in the same walk. Their
+boundaries create technical depth: an unread story must survive interruption after
+its visit is saved, while an old route response must not replace a new plan.
+Sections 5.1–5.4 explain how implementation and tests address both.
 
-The departure-advice concept would complement that experience by helping users choose
-when to begin, as described in Section 5.2. Together, the intended benefits are less
-effort in organising an unfamiliar outing and greater attention to places encountered.
-Saved places and journey history also support returning to earlier discoveries.
-Content coverage, forecast uncertainty and device capabilities constrain those benefits.
-Without user evaluation, they remain potential value rather than demonstrated gains
-in planning efficiency, satisfaction or understanding.
+**Cross-disciplinary application.** Architectural and botanical observation shape
+the theme's questions. Prompts refer to visible features at each stop, with university
+sources attached to the narratives [R10]. Location makes the prompt relevant to
+the surroundings; a learning benefit has not been measured.
+
+**Potential impact.** Combining discovery and interpretation may help unfamiliar
+visitors organise an outing and notice places they would otherwise pass. Saved
+places and journey photographs support returning to those discoveries. Coverage,
+location quality and connectivity limit usefulness; no comparative study has
+measured planning-time or satisfaction gains. Departure advice remains future work
+for this baseline and is not counted as a delivered benefit.
 
 ## 6. AI and other assistance acknowledgement
 
