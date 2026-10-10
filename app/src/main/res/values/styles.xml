@@ -129,6 +129,25 @@
         <item name="elevation">@dimen/card_elevation</item>
     </style>
 
+    <!--
+        A small white pill with a leading icon: the secondary button at chip size, for an action
+        that sits beside a line of text (the rain forecast on the home header, the best time to
+        leave on the plan). 48dp tall to touch, like the chips beside it.
+    -->
+    <style name="Widget.StoryStep.Button.Compact" parent="Widget.StoryStep.Button.Secondary">
+        <item name="android:minHeight">@dimen/minimum_touch_target</item>
+        <item name="android:minWidth">@dimen/minimum_touch_target</item>
+        <item name="android:insetTop">4dp</item>
+        <item name="android:insetBottom">4dp</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">0dp</item>
+        <item name="android:textSize">@dimen/text_chip</item>
+        <item name="iconSize">18dp</item>
+        <item name="iconPadding">6dp</item>
+        <item name="iconTint">@color/story_ink</item>
+    </style>
     <style name="Widget.StoryStep.Button.Photo" parent="Widget.StoryStep.Button.Secondary">
         <item name="android:minHeight">88dp</item>
         <item name="android:minWidth">48dp</item>

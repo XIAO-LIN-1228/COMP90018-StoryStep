@@ -525,8 +525,8 @@
     <string name="profile_saved_places">Saved places</string>
 
     <!-- Hourly forecast and departure advice (D-08) -->
-    <string name="forecast_hourly_link">Hourly ›</string>
-    <string name="forecast_hourly_link_description">Hourly chance of rain</string>
+    <string name="forecast_hourly_link">Rain forecast</string>
+    <string name="forecast_hourly_link_description">Rain forecast: chance of rain for the next 24 hours</string>
     <string name="forecast_title">Next 24 hours</string>
     <string name="forecast_area_live">Chance of rain near you, hour by hour</string>
     <string name="forecast_area_reference">Chance of rain in the reference area, hour by hour</string>
@@ -540,8 +540,8 @@
     <string name="forecast_error_busy">The forecast service is busy. Try again in a moment.</string>
     <string name="forecast_error_generic">Forecast unavailable right now.</string>
     <string name="advice_error_unusable">Rain advice is unavailable right now.</string>
-    <string name="advice_link">When to leave ›</string>
-    <string name="advice_link_description">When to leave: chance of rain for each departure time</string>
+    <string name="advice_link">Best time to leave</string>
+    <string name="advice_link_description">Best time to leave: chance of rain during this walk for each departure time</string>
     <string name="advice_title">When to leave</string>
     <string name="advice_subtitle">Chance of rain during your planned walk, for each departure time</string>
     <string name="advice_stay_label">Stay at each stop</string>

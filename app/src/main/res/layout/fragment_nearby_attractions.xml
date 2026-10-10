@@ -66,7 +66,7 @@
         <!-- The weather line and, beside it, the way into the hourly forecast (D-08). -->
         <LinearLayout
             android:id="@+id/weather_row"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:gravity="center_vertical"
@@ -74,7 +74,8 @@
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/weather_card"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
                 app:cardBackgroundColor="@android:color/transparent"
                 app:cardElevation="0dp"
@@ -89,21 +90,15 @@
                     android:textColor="@color/story_ink_2" />
             </com.google.android.material.card.MaterialCardView>
 
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/weather_hourly_link"
-                style="@style/TextAppearance.StoryStep.Supporting"
+                style="@style/Widget.StoryStep.Button.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="?attr/selectableItemBackground"
+                android:layout_marginStart="@dimen/space_8"
                 android:contentDescription="@string/forecast_hourly_link_description"
-                android:gravity="center_vertical"
-                android:minWidth="@dimen/minimum_touch_target"
-                android:minHeight="@dimen/minimum_touch_target"
-                android:paddingStart="@dimen/space_12"
-                android:paddingEnd="@dimen/space_8"
                 android:text="@string/forecast_hourly_link"
-                android:textColor="@color/story_ink"
-                android:textStyle="bold" />
+                app:icon="@drawable/ic_umbrella" />
         </LinearLayout>
 
         <!--

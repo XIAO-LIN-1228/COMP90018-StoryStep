@@ -36,7 +36,7 @@ Heat, wind and air quality are out of scope.
 
 | Item | Decision |
 |---|---|
-| Entry | A text link "Hourly ›" right of the home weather reading (`weather_hourly_link` in a new `weather_row` wrapping `weather_card`), 48 dp touch target. The card itself still refreshes weather on tap. The row hides with the card in list mode. |
+| Entry | A compact button "Rain forecast" with an umbrella icon right of the home weather reading (`weather_hourly_link` in a new `weather_row` wrapping `weather_card`; the reading takes the remaining width). Style `Widget.StoryStep.Button.Compact`: the secondary white pill at chip size, 48 dp touch target. The card itself still refreshes weather on tap. The row hides with the card in list mode. |
 | Location | Exactly what the weather card uses: its current origin and area label. If the card shows the reference area (no live fix), the page shows the same "reference area" label. No permission prompt or separate GPS handling. |
 | Horizon | Next 24 hours as one list; no date switching. |
 | Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". The request also asks for `is_day`; clear and cloudy hours at night use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
@@ -52,9 +52,9 @@ numbers; the advice page states its source (§4.5).
 
 ### 4.1 Entry, origin and duration
 
-- Entry: a text link "When to leave ›" under the plan summary line in `PlanFragment`
-  ("3 stops · about 2.1 km · around 40 min"), same style as "Hourly ›"; hidden when the plan
-  has no stops.
+- Entry: a compact button "Best time to leave" with a clock icon under the plan summary line
+  in `PlanFragment` ("3 stops · about 2.1 km · around 40 min"), same style as "Rain forecast";
+  hidden when the plan has no stops.
 - Origin: the plan's own origin (`AppContainer.getReferenceOrigin()`, the point the planner
   routes and measures from). The page says which area the forecast is for. No permission prompt.
 - Stay time: one value for every stop, chosen from 5 / 15 / 30 / 60 minutes, default 5
