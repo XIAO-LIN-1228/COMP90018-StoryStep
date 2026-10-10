@@ -1,15 +1,13 @@
 package com.comp90018.storystep.domain.forecast;
 
-import com.comp90018.storystep.domain.model.WeatherCondition;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Open-Meteo's own hourly chance of rain and condition for one weather area: what the forecast
- * page lists.
+ * Open-Meteo's own hourly chance of rain and sky for one weather area: what the forecast page
+ * lists, and what the departure page reads each departure's sky from.
  *
  * <p>Either field may be missing for an hour; that hour is still listed, with the field blank.
  */
@@ -20,19 +18,18 @@ public final class HourlyForecast {
 
         private final long endEpochSecond;
         private final Integer precipitationProbability;
-        private final WeatherCondition condition;
+        private final SkyCondition sky;
         private final Boolean daylight;
 
-        public Hour(long endEpochSecond, Integer precipitationProbability,
-                    WeatherCondition condition) {
-            this(endEpochSecond, precipitationProbability, condition, null);
+        public Hour(long endEpochSecond, Integer precipitationProbability, SkyCondition sky) {
+            this(endEpochSecond, precipitationProbability, sky, null);
         }
 
-        public Hour(long endEpochSecond, Integer precipitationProbability,
-                    WeatherCondition condition, Boolean daylight) {
+        public Hour(long endEpochSecond, Integer precipitationProbability, SkyCondition sky,
+                    Boolean daylight) {
             this.endEpochSecond = endEpochSecond;
             this.precipitationProbability = precipitationProbability;
-            this.condition = condition;
+            this.sky = sky;
             this.daylight = daylight;
         }
 
@@ -54,9 +51,9 @@ public final class HourlyForecast {
             return precipitationProbability;
         }
 
-        /** The condition, or null when the provider gave no code for this hour. */
-        public WeatherCondition getCondition() {
-            return condition;
+        /** The sky, or null when the provider gave no weather code for this hour. */
+        public SkyCondition getSky() {
+            return sky;
         }
 
         /**
@@ -105,6 +102,16 @@ public final class HourlyForecast {
 
     public long getFetchedAtMillis() {
         return fetchedAtMillis;
+    }
+
+    /** The hour that contains this instant, or null when the forecast does not cover it. */
+    public Hour hourAt(long millis) {
+        for (Hour hour : hours) {
+            if (millis >= hour.getStartMillis() && millis < hour.getEndMillis()) {
+                return hour;
+            }
+        }
+        return null;
     }
 
     /**

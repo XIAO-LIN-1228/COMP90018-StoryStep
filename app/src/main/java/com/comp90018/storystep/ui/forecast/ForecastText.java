@@ -8,9 +8,8 @@ import androidx.annotation.StringRes;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.ForecastPlace;
-import com.comp90018.storystep.domain.model.WeatherCondition;
+import com.comp90018.storystep.domain.forecast.SkyCondition;
 import com.comp90018.storystep.domain.repository.ForecastUnavailableException;
-import com.comp90018.storystep.ui.WeatherText;
 
 import java.text.DateFormat;
 import java.util.Date;
@@ -87,34 +86,62 @@ public final class ForecastText {
 
     /**
      * @param daylight whether the hour is in daylight; null when unknown, which shows the day
-     *                 icon. Only clear and cloudy differ by night.
+     *                 icon. Only clear and partly cloudy have night versions: an overcast, foggy
+     *                 or wet sky looks the same either way.
      */
     @DrawableRes
-    public static int icon(WeatherCondition condition, Boolean daylight) {
-        if (condition == null) {
+    public static int icon(SkyCondition sky, Boolean daylight) {
+        if (sky == null) {
             return R.drawable.ic_weather_unknown;
         }
         boolean night = Boolean.FALSE.equals(daylight);
-        switch (condition) {
+        switch (sky) {
             case CLEAR:
                 return night ? R.drawable.ic_weather_clear_night : R.drawable.ic_weather_clear;
-            case CLOUDY:
-                return night ? R.drawable.ic_weather_cloudy_night : R.drawable.ic_weather_cloudy;
+            case PARTLY_CLOUDY:
+                return night ? R.drawable.ic_weather_partly_cloudy_night
+                        : R.drawable.ic_weather_partly_cloudy;
+            case OVERCAST:
+                return R.drawable.ic_weather_cloudy;
+            case FOG:
+                return R.drawable.ic_weather_fog;
             case RAIN:
                 return R.drawable.ic_weather_rain;
             case SNOW:
                 return R.drawable.ic_weather_snow;
+            case THUNDERSTORM:
+                return R.drawable.ic_weather_thunderstorm;
             case UNKNOWN:
             default:
                 return R.drawable.ic_weather_unknown;
         }
     }
 
-    /** Spoken description of the icon; the same words as the weather card. */
+    /** Spoken description of the icon. Never "Clear" for a sky that was not reported. */
     @StringRes
-    public static int conditionDescription(WeatherCondition condition) {
-        return WeatherText.conditionLabel(
-                condition == null ? WeatherCondition.UNKNOWN : condition);
+    public static int skyDescription(SkyCondition sky) {
+        if (sky == null) {
+            return R.string.weather_condition_unknown;
+        }
+        switch (sky) {
+            case CLEAR:
+                return R.string.weather_clear;
+            case PARTLY_CLOUDY:
+                return R.string.sky_partly_cloudy;
+            case OVERCAST:
+                return R.string.sky_overcast;
+            case FOG:
+                return R.string.sky_fog;
+            case RAIN:
+                return R.string.weather_rain;
+            case SNOW:
+                return R.string.weather_snow;
+            case THUNDERSTORM:
+                return R.string.sky_thunderstorm;
+            case UNKNOWN:
+            default:
+                return R.string.weather_condition_unknown;
+        }
     }
 
     /** What went wrong, in words a walker can act on. Never a raw exception message. */

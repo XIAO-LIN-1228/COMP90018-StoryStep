@@ -49,9 +49,9 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
         View item = holder.itemView;
         holder.time.setText(ForecastText.interval(item.getResources(),
                 hour.getStartMillis(), hour.getEndMillis(), place));
-        holder.icon.setImageResource(ForecastText.icon(hour.getCondition(), hour.getDaylight()));
+        holder.icon.setImageResource(ForecastText.icon(hour.getSky(), hour.getDaylight()));
         holder.icon.setContentDescription(item.getResources().getString(
-                ForecastText.conditionDescription(hour.getCondition())));
+                ForecastText.skyDescription(hour.getSky())));
         Integer chance = hour.getPrecipitationProbability();
         holder.percent.setText(chance == null
                 ? item.getResources().getString(R.string.forecast_missing)

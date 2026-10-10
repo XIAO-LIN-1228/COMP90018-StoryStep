@@ -5,6 +5,7 @@ import androidx.annotation.Nullable;
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
 import com.comp90018.storystep.domain.forecast.ForecastPlace;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SkyCondition;
 import com.comp90018.storystep.domain.forecast.SunTimes;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -80,7 +81,7 @@ final class RemoteForecastMapper {
             long middleMillis = end * 1000L - 30L * 60L * 1000L;
             hours.add(new HourlyForecast.Hour(end,
                     probability == null ? null : probability.get(i),
-                    code == null ? null : RemoteWeatherMapper.toCondition(code),
+                    code == null ? null : SkyCondition.fromWmo(code),
                     place.getSun().isDaylight(middleMillis)));
         }
         try {

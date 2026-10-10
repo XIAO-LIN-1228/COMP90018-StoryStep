@@ -7,12 +7,15 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.comp90018.storystep.R;
 import com.comp90018.storystep.domain.forecast.DepartureAdvice;
 import com.comp90018.storystep.domain.forecast.ForecastPlace;
+import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SkyCondition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,11 +29,14 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
     private final List<DepartureAdvice.Candidate> candidates = new ArrayList<>();
     private int bestIndex = -1;
     private ForecastPlace place = ForecastPlace.unknown();
+    @Nullable private HourlyForecast hourly;
 
     /** Replaces every row: each recomputation is a new set of departures. */
     @SuppressLint("NotifyDataSetChanged")
-    public void submit(List<DepartureAdvice.Candidate> rows, int best, ForecastPlace rowsPlace) {
+    public void submit(List<DepartureAdvice.Candidate> rows, int best, ForecastPlace rowsPlace,
+                       @Nullable HourlyForecast rowsHourly) {
         place = rowsPlace;
+        hourly = rowsHourly;
         candidates.clear();
         candidates.addAll(rows);
         bestIndex = best;
@@ -49,13 +55,21 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         DepartureAdvice.Candidate candidate = candidates.get(position);
         Resources resources = holder.itemView.getResources();
         holder.time.setText(start(resources, candidate, place));
-        // Time of day, not weather: the forecast page's sun means "clear", which a rainy daytime
-        // walk is not, so daylight and after dark use their own pair of symbols.
         holder.icon.setVisibility(View.VISIBLE);
-        holder.icon.setImageResource(candidate.isDaylight()
-                ? R.drawable.ic_daylight : R.drawable.ic_after_dark);
-        holder.icon.setContentDescription(resources.getString(candidate.isDaylight()
-                ? R.string.advice_daylight : R.string.advice_after_dark));
+        HourlyForecast.Hour hour = hourly == null ? null : hourly.hourAt(candidate.getStartMillis());
+        if (hour != null && hour.getSky() != null && hour.getSky() != SkyCondition.UNKNOWN) {
+            // The sky in the hour of departure, day or night by the departure instant itself.
+            Boolean day = place.getSun().isDaylight(candidate.getStartMillis());
+            holder.icon.setImageResource(ForecastText.icon(hour.getSky(), day));
+            holder.icon.setContentDescription(resources.getString(
+                    ForecastText.skyDescription(hour.getSky())));
+        } else {
+            // No hourly forecast: say only whether it is light. A sun here would claim "clear".
+            holder.icon.setImageResource(candidate.isDaylight()
+                    ? R.drawable.ic_daylight : R.drawable.ic_after_dark);
+            holder.icon.setContentDescription(resources.getString(candidate.isDaylight()
+                    ? R.string.advice_daylight : R.string.advice_after_dark));
+        }
         holder.percent.setText(AdviceText.percent(resources, candidate));
         holder.bar.setProgressCompat(candidate.getPercent(), false);
         String label = resources.getString(AdviceText.band(candidate.getBand()));

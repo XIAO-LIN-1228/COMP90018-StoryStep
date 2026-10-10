@@ -23,7 +23,8 @@ import com.comp90018.storystep.domain.time.Clock;
  * </pre>
  *
  * and turn it off with {@code --es scenario off}. Scenarios are listed in
- * {@link ForecastScenarios}. Only the ensemble is simulated; the hourly forecast page stays real.
+ * {@link ForecastScenarios}. The ensemble and the hourly forecast are both simulated, so the
+ * rain forecast page and the departure icons agree with the departure chances.
  */
 final class DebugForecastHooks {
 
@@ -39,7 +40,14 @@ final class DebugForecastHooks {
         return new ForecastRepository() {
             @Override
             public void hourly(GeoPoint origin, RepositoryCallback<HourlyForecast> callback) {
-                real.hourly(origin, callback);
+                String scenario = prefs.getString(KEY_SCENARIO, ForecastScenarios.OFF);
+                HourlyForecast simulated =
+                        ForecastScenarios.hourly(scenario, clock.wallClockMillis());
+                if (simulated == null) {
+                    real.hourly(origin, callback);
+                } else {
+                    main.post(() -> callback.onSuccess(simulated));
+                }
             }
 
             @Override

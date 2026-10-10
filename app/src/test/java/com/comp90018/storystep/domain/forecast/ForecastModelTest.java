@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.comp90018.storystep.domain.model.WeatherCondition;
 
 import org.junit.Test;
 
@@ -23,7 +22,7 @@ public class ForecastModelTest {
     private static HourlyForecast hourly(int hours) {
         List<HourlyForecast.Hour> rows = new ArrayList<>();
         for (int h = 0; h < hours; h++) {
-            rows.add(new HourlyForecast.Hour(FIRST_END_SECOND + h * 3_600L, h, WeatherCondition.CLEAR));
+            rows.add(new HourlyForecast.Hour(FIRST_END_SECOND + h * 3_600L, h, SkyCondition.CLEAR));
         }
         return new HourlyForecast(rows, 0L);
     }
@@ -81,7 +80,7 @@ public class ForecastModelTest {
         HourlyForecast.Hour hour = new HourlyForecast(rows, 0L).getHours().get(0);
 
         assertNull(hour.getPrecipitationProbability());
-        assertNull(hour.getCondition());
+        assertNull(hour.getSky());
     }
 
     @Test
@@ -184,5 +183,38 @@ public class ForecastModelTest {
     @Test(expected = IllegalArgumentException.class)
     public void sunsetBeforeSunriseIsRejected() {
         SunTimes.of(new long[] {SET}, new long[] {RISE});
+    }
+
+    // --- Sky -----------------------------------------------------------------------------------
+
+    @Test
+    public void wmoCodesMapToSevenSkies() {
+        assertEquals(SkyCondition.CLEAR, SkyCondition.fromWmo(0));
+        assertEquals(SkyCondition.PARTLY_CLOUDY, SkyCondition.fromWmo(1));
+        assertEquals(SkyCondition.PARTLY_CLOUDY, SkyCondition.fromWmo(2));
+        assertEquals(SkyCondition.OVERCAST, SkyCondition.fromWmo(3));
+        assertEquals(SkyCondition.FOG, SkyCondition.fromWmo(45));
+        assertEquals(SkyCondition.FOG, SkyCondition.fromWmo(48));
+        assertEquals(SkyCondition.RAIN, SkyCondition.fromWmo(51));
+        assertEquals(SkyCondition.RAIN, SkyCondition.fromWmo(67));
+        assertEquals(SkyCondition.RAIN, SkyCondition.fromWmo(81));
+        assertEquals(SkyCondition.SNOW, SkyCondition.fromWmo(73));
+        assertEquals(SkyCondition.SNOW, SkyCondition.fromWmo(86));
+        assertEquals(SkyCondition.THUNDERSTORM, SkyCondition.fromWmo(95));
+        assertEquals(SkyCondition.THUNDERSTORM, SkyCondition.fromWmo(99));
+        assertEquals(SkyCondition.UNKNOWN, SkyCondition.fromWmo(null));
+        assertEquals(SkyCondition.UNKNOWN, SkyCondition.fromWmo(4));
+    }
+
+    @Test
+    public void hourAtFindsTheHourContainingAnInstant() {
+        HourlyForecast forecast = hourly(3);
+        long firstStart = FIRST_END_SECOND * 1000L - HOUR;
+
+        assertEquals(FIRST_END_SECOND, forecast.hourAt(firstStart).getEndEpochSecond());
+        assertEquals(FIRST_END_SECOND + 3_600L,
+                forecast.hourAt(FIRST_END_SECOND * 1000L).getEndEpochSecond());
+        assertNull(forecast.hourAt(firstStart - 1));
+        assertNull(forecast.hourAt((FIRST_END_SECOND + 2 * 3_600L) * 1000L));
     }
 }

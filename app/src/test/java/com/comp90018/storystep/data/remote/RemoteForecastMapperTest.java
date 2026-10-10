@@ -8,8 +8,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
 import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SkyCondition;
 import com.comp90018.storystep.domain.forecast.SunTimes;
-import com.comp90018.storystep.domain.model.WeatherCondition;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -168,17 +168,19 @@ public class RemoteForecastMapperTest {
         HourlyForecast.Hour first = forecast.getHours().get(0);
         assertEquals(ForecastFixtures.FIRST_END_SECOND, first.getEndEpochSecond());
         assertNotNull(first.getPrecipitationProbability());
-        assertNotNull(first.getCondition());
+        assertNotNull(first.getSky());
     }
 
     @Test
-    public void weatherCodesUseTheExistingConditionMapping() {
-        HourlyForecastDto dto = dto("[1791586800,1791590400]", "[10,90]", "[0,61]");
+    public void weatherCodesBecomeSkies() {
+        HourlyForecastDto dto = dto("[1791586800,1791590400,1791594000]", "[10,20,90]",
+                "[2,45,95]");
 
         HourlyForecast forecast = RemoteForecastMapper.toHourly(dto, 0L);
 
-        assertEquals(WeatherCondition.CLEAR, forecast.getHours().get(0).getCondition());
-        assertEquals(WeatherCondition.RAIN, forecast.getHours().get(1).getCondition());
+        assertEquals(SkyCondition.PARTLY_CLOUDY, forecast.getHours().get(0).getSky());
+        assertEquals(SkyCondition.FOG, forecast.getHours().get(1).getSky());
+        assertEquals(SkyCondition.THUNDERSTORM, forecast.getHours().get(2).getSky());
     }
 
     @Test
@@ -206,7 +208,7 @@ public class RemoteForecastMapperTest {
                 dto("[1791586800]", "[null]", "[null]"), 0L);
 
         assertNull(forecast.getHours().get(0).getPrecipitationProbability());
-        assertNull(forecast.getHours().get(0).getCondition());
+        assertNull(forecast.getHours().get(0).getSky());
     }
 
     @Test

@@ -6,12 +6,15 @@ Licence: Apache License, Version 2.0 (full text below)
 
 Files and their source icons (unmodified Android VectorDrawable XML):
   app/src/main/res/drawable/ic_weather_clear.xml    <- sunny
-  app/src/main/res/drawable/ic_weather_cloudy.xml   <- cloud
+  app/src/main/res/drawable/ic_weather_cloudy.xml   <- cloud (overcast)
   app/src/main/res/drawable/ic_weather_rain.xml     <- rainy
   app/src/main/res/drawable/ic_weather_snow.xml     <- weather_snowy
   app/src/main/res/drawable/ic_weather_unknown.xml  <- question_mark
   app/src/main/res/drawable/ic_weather_clear_night.xml   <- bedtime
-  app/src/main/res/drawable/ic_weather_cloudy_night.xml  <- partly_cloudy_night
+  app/src/main/res/drawable/ic_weather_partly_cloudy_night.xml  <- partly_cloudy_night
+  app/src/main/res/drawable/ic_weather_partly_cloudy.xml        <- partly_cloudy_day
+  app/src/main/res/drawable/ic_weather_fog.xml                  <- foggy
+  app/src/main/res/drawable/ic_weather_thunderstorm.xml         <- thunderstorm
   app/src/main/res/drawable/ic_umbrella.xml              <- umbrella
   app/src/main/res/drawable/ic_daylight.xml              <- light_mode
   app/src/main/res/drawable/ic_after_dark.xml            <- dark_mode

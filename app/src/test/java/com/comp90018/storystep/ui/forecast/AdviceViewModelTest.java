@@ -38,10 +38,11 @@ public class AdviceViewModelTest {
 
     private static final class HeldRepository implements ForecastRepository {
         final List<RepositoryCallback<EnsemblePrecipitation>> waiting = new ArrayList<>();
+        final List<RepositoryCallback<HourlyForecast>> hourlyWaiting = new ArrayList<>();
 
         @Override
         public void hourly(GeoPoint origin, RepositoryCallback<HourlyForecast> callback) {
-            throw new UnsupportedOperationException();
+            hourlyWaiting.add(callback);
         }
 
         @Override
@@ -172,5 +173,32 @@ public class AdviceViewModelTest {
         assertEquals("ICON and GFS", AdviceText.models(Arrays.asList("ICON", "GFS"), "and"));
         assertEquals("ICON, ECMWF and GFS",
                 AdviceText.models(Arrays.asList("ICON", "ECMWF", "GFS"), "and"));
+    }
+
+    @Test
+    public void theHourlyForecastIsAskedOnceAndJoinsTheAdviceWhenItArrives() {
+        viewModel.init(ORIGIN, 40 * MINUTE, 3);
+        repository.waiting.get(0).onSuccess(dry());
+        HourlyForecast hourly = new HourlyForecast(java.util.Collections.singletonList(
+                new HourlyForecast.Hour(FIRST_END_SECOND + 3_600L, 0,
+                        com.comp90018.storystep.domain.forecast.SkyCondition.CLEAR)), NOW);
+
+        repository.hourlyWaiting.get(0).onSuccess(hourly);
+        viewModel.onStayChosen(15);
+
+        assertEquals(1, repository.hourlyWaiting.size());
+        assertEquals(hourly, state().getHourly());
+        assertEquals(AdviceUiState.Status.CONTENT, state().getStatus());
+    }
+
+    @Test
+    public void aFailedHourlyForecastLeavesTheAdviceAlone() {
+        viewModel.init(ORIGIN, 40 * MINUTE, 3);
+        repository.hourlyWaiting.get(0).onError(new ForecastUnavailableException(
+                ForecastUnavailableException.Reason.TIMEOUT));
+        repository.waiting.get(0).onSuccess(dry());
+
+        assertEquals(AdviceUiState.Status.CONTENT, state().getStatus());
+        assertEquals(null, state().getHourly());
     }
 }

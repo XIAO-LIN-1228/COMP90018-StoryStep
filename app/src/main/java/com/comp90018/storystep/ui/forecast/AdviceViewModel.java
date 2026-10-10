@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel;
 
 import com.comp90018.storystep.domain.forecast.DepartureAdvisor;
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
+import com.comp90018.storystep.domain.forecast.HourlyForecast;
 import com.comp90018.storystep.domain.model.GeoPoint;
 import com.comp90018.storystep.domain.repository.ForecastRepository;
 import com.comp90018.storystep.domain.repository.ForecastUnavailableException;
@@ -38,6 +39,8 @@ public class AdviceViewModel extends ViewModel {
     private int stops;
     /** The last ensemble fetched, reused for stay changes while it is within the cache lifetime. */
     @Nullable private EnsemblePrecipitation ensemble;
+    /** The hourly forecast, only for each departure's sky icon; advice never waits for it. */
+    @Nullable private HourlyForecast hourly;
     /** Bumped per request so a late answer for an older request is ignored. */
     private int generation;
 
@@ -58,6 +61,22 @@ public class AdviceViewModel extends ViewModel {
         this.walkingMillis = walkingMillis;
         this.stops = stops;
         refresh();
+        repository.hourly(origin, new RepositoryCallback<HourlyForecast>() {
+            @Override
+            public void onSuccess(HourlyForecast result) {
+                hourly = result;
+                AdviceUiState current = uiState.getValue();
+                if (current != null && current.getStatus() == AdviceUiState.Status.CONTENT) {
+                    uiState.setValue(AdviceUiState.content(current.getTripMillis(),
+                            current.getAdvice(), current.getPlace(), result));
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                // Rows keep their day or night symbol; the advice itself does not need this.
+            }
+        });
     }
 
     public LiveData<AdviceUiState> getUiState() {
@@ -137,7 +156,8 @@ public class AdviceViewModel extends ViewModel {
     private void publish(long trip, EnsemblePrecipitation data) {
         try {
             uiState.setValue(AdviceUiState.content(trip,
-                    advisor.advise(clock.wallClockMillis(), trip, data), data.getPlace()));
+                    advisor.advise(clock.wallClockMillis(), trip, data), data.getPlace(),
+                    hourly));
         } catch (ForecastUnavailableException unavailable) {
             uiState.setValue(AdviceUiState.error(trip, unavailable.getReason()));
         }

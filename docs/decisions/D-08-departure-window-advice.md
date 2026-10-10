@@ -39,7 +39,7 @@ Heat, wind and air quality are out of scope.
 | Entry | A compact button "Rain forecast" with an umbrella icon right of the home weather reading (`weather_hourly_link` in a new `weather_row` wrapping `weather_card`; the reading takes the remaining width). Style `Widget.StoryStep.Button.Compact`: the secondary white pill at chip size, 48 dp touch target. The card itself still refreshes weather on tap. The row hides with the card in list mode. |
 | Location | Exactly what the weather card uses: its current origin and area label. If the card shows the reference area (no live fix), the page shows the same "reference area" label. No permission prompt or separate GPS handling. |
 | Horizon | Next 24 hours as one list; no date switching. |
-| Fields per hour | Time interval, condition icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The condition comes from the existing `RemoteWeatherMapper.toCondition`; icons are Material Symbols (Apache 2.0: sunny, cloud, rainy, weather_snowy, question_mark), recorded in `docs/licenses/icons/`. A missing value shows "–". Clear and cloudy hours at night (by sunrise/sunset, §4.4) use `bedtime` and `partly_cloudy_night`, because `weather_code` is the same by day and night (found on the emulator, 2026-10-10). |
+| Fields per hour | Time interval, sky icon, `precipitation_probability` (%) and a bar of that length (`item_rain_row`, shared with advice). The sky is `SkyCondition`, mapped straight from the WMO code (revised 2026-10-10: the app's five-way `WeatherCondition` merged partly cloudy, overcast and fog, and rain with thunder; it stays unchanged for recommendations). Seven skies, Material Symbols icons (Apache 2.0, recorded in `docs/licenses/icons/`): 0 clear `sunny` / night `bedtime`; 1–2 partly cloudy `partly_cloudy_day` / night `partly_cloudy_night`; 3 overcast `cloud`; 45/48 fog `foggy`; drizzle, rain, freezing rain and showers `rainy`; snow `weather_snowy`; 95–99 `thunderstorm`; anything else `question_mark`. Night versions follow sunrise/sunset (§4.4). A missing value shows "–". |
 | Source | Open-Meteo standard forecast (`/v1/forecast`, `hourly=`), separate from the current-weather request. |
 | Failure | Existing retry policy, then an error with Retry. No stale fallback on this page. |
 | Time display | The forecast location's timezone (`timezone=auto`; the IANA id is used so daylight saving is followed, the reported offset otherwise). When the phone's offset differs, a line under the subtitle says "Times are Melbourne time (UTC+11)". Each row is labelled by its interval, e.g. "2:00 PM–3:00 PM". |
@@ -139,10 +139,11 @@ with Retry.
 - Forecast page: an hour shows a day icon when its middle lies between that day's sunrise and
   sunset, a night icon (`bedtime` / `partly_cloudy_night`) otherwise.
 - Advice: a walk counts as daylight only when the whole walk lies between one sunrise and that
-  day's sunset; otherwise it is listed with "After dark". Every advice row shows a time-of-day
-  symbol: Material Symbols `light_mode` (sun) in daylight, `dark_mode` (moon) after dark. These
-  differ from the forecast page's weather icons on purpose: a sun there means "clear", which a
-  rainy daytime walk is not. Multi-model responses carry
+  day's sunset; otherwise it is listed with "After dark". Each advice row shows the sky in the
+  hour of departure, from the hourly forecast the page also requests (shared cache with the
+  forecast page), with the night version when the departure instant is after dark. The advice
+  never waits for that request; if it fails or does not cover a departure, the row shows a plain
+  time-of-day symbol instead (`light_mode` / `dark_mode`), never a "clear" sun. Multi-model responses carry
   sunrise/sunset per model (they differ by seconds); ICON's are used, then any model's.
 - The best candidate is chosen among daylight-only candidates; only if there are none is it
   chosen among all candidates, with a note.
@@ -437,7 +438,9 @@ adb shell am broadcast -n com.comp90018.storystep/.di.DebugForecastReceiver --es
 ```
 
 then reopen "Best time to leave". Names: `afternoon_showers`, `rain_all_day`,
-`dry_only_at_night`, `models_disagree`, `off` (real data). The hourly forecast page stays real.
+`dry_only_at_night`, `models_disagree`, `off` (real data). The hourly forecast is simulated too
+(chance from the members' average share, a weather code chosen from it), so the forecast page and
+the departure icons agree with the departure chances.
 Each scenario sets, per local hour and model, the share of members raining; the same members stay
 wet across hours, as in a real ensemble.
 

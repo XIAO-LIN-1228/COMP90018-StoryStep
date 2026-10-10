@@ -4,8 +4,11 @@ import androidx.annotation.Nullable;
 
 import com.comp90018.storystep.domain.forecast.EnsemblePrecipitation;
 import com.comp90018.storystep.domain.forecast.ForecastPlace;
+import com.comp90018.storystep.domain.forecast.HourlyForecast;
+import com.comp90018.storystep.domain.forecast.SkyCondition;
 import com.comp90018.storystep.domain.forecast.SunTimes;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
@@ -71,6 +74,50 @@ final class ForecastScenarios {
             }
         }
         return new EnsemblePrecipitation.Model(name, blockHours, mm);
+    }
+
+    /**
+     * The hourly forecast matching the scenario: chance of rain from the members' average share,
+     * and a weather code chosen from it, so icons agree with the departure chances.
+     */
+    @Nullable
+    static HourlyForecast hourly(String name, long nowMillis) {
+        if (OFF.equals(name) || !isKnown(name)) {
+            return null;
+        }
+        ForecastPlace place = new ForecastPlace(MELBOURNE.getID(),
+                MELBOURNE.getOffset(nowMillis) / 1000, sun(nowMillis));
+        long firstEnd = (nowMillis / HOUR) * HOUR;
+        List<HourlyForecast.Hour> hours = new ArrayList<>();
+        for (int r = 0; r < 26; r++) {
+            long end = firstEnd + r * HOUR;
+            int hour = localHour(end - HOUR / 2);
+            double share = (share(name, 0, hour) + share(name, 1, hour) + share(name, 2, hour)) / 3;
+            hours.add(new HourlyForecast.Hour(end / 1000L, (int) Math.round(share * 100),
+                    SkyCondition.fromWmo(code(name, share)),
+                    place.getSun().isDaylight(end - HOUR / 2)));
+        }
+        return new HourlyForecast(hours, nowMillis, place);
+    }
+
+    /** A plausible WMO code for a share of wet members. */
+    private static int code(String scenario, double share) {
+        if (share >= 0.5) {
+            return "models_disagree".equals(scenario) ? 95 : 61;   // thunderstorm / rain
+        }
+        if (share >= 0.3) {
+            return 80;   // showers
+        }
+        if (share >= 0.15) {
+            return 3;    // overcast
+        }
+        if (share >= 0.06) {
+            return 2;    // partly cloudy
+        }
+        if (share >= 0.03) {
+            return 1;    // mainly clear
+        }
+        return 0;
     }
 
     /** Share of a model's members raining in the hour that starts at this local hour. */

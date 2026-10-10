@@ -154,10 +154,11 @@ public class AdviceFragment extends Fragment {
         zoneNote.setVisibility(note == null ? View.GONE : View.VISIBLE);
         zoneNote.setText(note);
         if (advice == null) {
-            adapter.submit(java.util.Collections.emptyList(), -1, state.getPlace());
+            adapter.submit(java.util.Collections.emptyList(), -1, state.getPlace(), null);
             return;
         }
-        adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace());
+        adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace(),
+                state.getHourly());
         renderSummary(advice, state.getPlace());
         source.setText(getString(R.string.advice_source,
                 AdviceText.models(advice.getModels(), getString(R.string.advice_and))));
