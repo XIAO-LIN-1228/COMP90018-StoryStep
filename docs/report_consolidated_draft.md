@@ -32,7 +32,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 | --------------------------------------- | -------------- | ---------------- | ------------- |
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
 | Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
-| [PENDING: remaining members] | | | |
+| Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au |  |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
 
