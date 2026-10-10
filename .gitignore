@@ -24,5 +24,8 @@ local.properties
 # Local implementation-handoff notes, deliberately kept out of the repository
 /docs/claude_code_handoff.md
 
+# Local temporary Markdown documents
+/docs/tempdoc/
+
 # Local Markdown documents
 /localMd/
