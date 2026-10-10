@@ -563,6 +563,7 @@
     <string name="advice_band_likely">Rain likely</string>
     <string name="advice_band_expected">Rain expected</string>
     <string name="advice_after_dark">After dark</string>
+    <string name="advice_daylight">In daylight</string>
     <string name="advice_label_after_dark">%1$s · After dark</string>
     <string name="advice_and">and</string>
     <string name="advice_source">Average of the %1$s ensembles via Open-Meteo: chance of 0.2 mm or more at some point during your walk. Model output, not a guarantee.</string>

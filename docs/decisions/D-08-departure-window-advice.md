@@ -139,7 +139,10 @@ with Retry.
 - Forecast page: an hour shows a day icon when its middle lies between that day's sunrise and
   sunset, a night icon (`bedtime` / `partly_cloudy_night`) otherwise.
 - Advice: a walk counts as daylight only when the whole walk lies between one sunrise and that
-  day's sunset; otherwise it is listed with "After dark" and a moon. Multi-model responses carry
+  day's sunset; otherwise it is listed with "After dark". Every advice row shows a time-of-day
+  symbol: Material Symbols `light_mode` (sun) in daylight, `dark_mode` (moon) after dark. These
+  differ from the forecast page's weather icons on purpose: a sun there means "clear", which a
+  rainy daytime walk is not. Multi-model responses carry
   sunrise/sunset per model (they differ by seconds); ICON's are used, then any model's.
 - The best candidate is chosen among daylight-only candidates; only if there are none is it
   chosen among all candidates, with a note.
@@ -156,7 +159,7 @@ with Retry.
   plus at most one note (no daylight > all likely > no meaningful difference).
 - All candidates are listed in time order; the best row has a tinted background and the list
   scrolls to it. Rows reuse the forecast page's row layout; the icon slot shows a moon only for
-  walks that run after dark, and the label reads "<band> · After dark". No numeric score.
+  walks that run after dark (superseded: every row now shows a day or night symbol, §4.4), and the label reads "<band> · After dark". No numeric score.
 - The stay time is a chip row (5 / 15 / 30 / 60 min) at the top of the page with "Your walk:
   about …" beneath. Changing it recomputes from the ensemble the page already holds while that
   is within `ForecastRepository.LIFETIME_MILLIS` (30 min); otherwise it asks again.

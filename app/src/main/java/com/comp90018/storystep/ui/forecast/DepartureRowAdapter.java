@@ -49,10 +49,13 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         DepartureAdvice.Candidate candidate = candidates.get(position);
         Resources resources = holder.itemView.getResources();
         holder.time.setText(start(resources, candidate, place));
-        // The icon slot marks a walk that runs into the dark; daylight walks leave it empty.
-        holder.icon.setVisibility(candidate.isDaylight() ? View.INVISIBLE : View.VISIBLE);
-        holder.icon.setImageResource(R.drawable.ic_weather_clear_night);
-        holder.icon.setContentDescription(resources.getString(R.string.advice_after_dark));
+        // Time of day, not weather: the forecast page's sun means "clear", which a rainy daytime
+        // walk is not, so daylight and after dark use their own pair of symbols.
+        holder.icon.setVisibility(View.VISIBLE);
+        holder.icon.setImageResource(candidate.isDaylight()
+                ? R.drawable.ic_daylight : R.drawable.ic_after_dark);
+        holder.icon.setContentDescription(resources.getString(candidate.isDaylight()
+                ? R.string.advice_daylight : R.string.advice_after_dark));
         holder.percent.setText(AdviceText.percent(resources, candidate));
         holder.bar.setProgressCompat(candidate.getPercent(), false);
         String label = resources.getString(AdviceText.band(candidate.getBand()));
