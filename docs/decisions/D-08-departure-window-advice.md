@@ -424,6 +424,23 @@ data.
 6. Update `docs/development_plan.md` and `docs/verification_checklist.md`; run `./gradlew test`
    and `lint`; manual check on an emulator, then a device.
 
+## 9a. Simulated weather for demonstration (debug builds only)
+
+`app/src/debug` holds a scenario switch that replaces the ensemble behind departure advice with
+simulated three-model data for Melbourne (same shape as the real response: ICON 40 hourly, ECMWF
+51 and GFS 31 in three-hour blocks, sunrise 06:40, sunset 19:30). `app/src/release` has a
+pass-through class of the same name, so release builds contain none of it (checked: no scenario
+classes in the release dex). Switch with
+
+```
+adb shell am broadcast -n com.comp90018.storystep/.di.DebugForecastReceiver --es scenario <name>
+```
+
+then reopen "Best time to leave". Names: `afternoon_showers`, `rain_all_day`,
+`dry_only_at_night`, `models_disagree`, `off` (real data). The hourly forecast page stays real.
+Each scenario sets, per local hour and model, the share of members raining; the same members stay
+wet across hours, as in a real ensemble.
+
 ## 10. Open points
 
 - Free-tier weighting of ~122 member columns across three models (Open-Meteo counts large

@@ -177,7 +177,9 @@ public class AppContainer {
                 mainExecutor);
         // Hourly forecast and ensemble members: memory-cached, no Room table (decision D-08).
         boolean debug = isDebuggable(this.applicationContext);
-        this.forecastRepository = new CachedForecastRepository(
+        // In debug builds a simulated-weather switch can stand in for the ensemble
+        // (DebugForecastHooks); release builds get the repository unchanged.
+        this.forecastRepository = DebugForecastHooks.wrap(this.applicationContext, new CachedForecastRepository(
                 new RetryingForecastSource<>(new RetrofitHourlyForecastSource(
                         ApiClientFactory.createForecastService(debug))),
                 new RetryingForecastSource<>(new RetrofitEnsembleSource(
@@ -185,7 +187,7 @@ public class AppContainer {
                 new AndroidConnectivityMonitor(this.applicationContext),
                 clock,
                 forecastExecutor,
-                mainExecutor);
+                mainExecutor), clock);
         // Retention is a database concern rather than a repository one: it spans three caches
         // that no single repository owns, and it must leave the user's own record alone.
         this.cacheRetentionSweeper = new CacheRetentionSweeper(
