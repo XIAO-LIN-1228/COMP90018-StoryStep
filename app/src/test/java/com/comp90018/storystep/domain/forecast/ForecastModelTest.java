@@ -137,16 +137,6 @@ public class ForecastModelTest {
         new EnsemblePrecipitation.Model("m", 6, new double[0][]);
     }
 
-    @Test
-    public void threeHourBlocksEndOnMultiplesOfThreeUtcHours() {
-        // FIRST_END_SECOND is 22:00 UTC; 22:00 and 00:00 share the 21:00-00:00 block.
-        long at22 = FIRST_END_SECOND;
-        assertEquals(HourlyBuckets.block(at22, 3), HourlyBuckets.block(at22 + 2 * 3_600L, 3));
-        assertEquals(HourlyBuckets.block(at22, 3) + 1, HourlyBuckets.block(at22 + 3 * 3_600L, 3));
-        long block = HourlyBuckets.block(at22, 3);
-        assertEquals((FIRST_END_SECOND - 3_600L) * 1000L, HourlyBuckets.blockStartMillis(block, 3));
-        assertEquals((FIRST_END_SECOND + 2 * 3_600L) * 1000L, HourlyBuckets.blockEndMillis(block, 3));
-    }
 
     // --- Sun times ---------------------------------------------------------------------------
 

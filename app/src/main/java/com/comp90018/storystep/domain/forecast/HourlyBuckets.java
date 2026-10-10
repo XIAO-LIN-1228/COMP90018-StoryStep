@@ -44,23 +44,4 @@ final class HourlyBuckets {
         return startMillis(endEpochSecond) < tripEndMillis
                 && endMillis(endEpochSecond) > tripStartMillis;
     }
-
-    /**
-     * Which native block of {@code blockHours} hours the hour ending at {@code endEpochSecond}
-     * belongs to. Blocks end on multiples of {@code blockHours} UTC hours (00:00, 03:00, ...), as
-     * three-hourly ensemble output does, so the hours ending 01:00, 02:00 and 03:00 share a block.
-     */
-    static long block(long endEpochSecond, int blockHours) {
-        return Math.floorDiv(endEpochSecond / HOUR_SECONDS - 1, blockHours);
-    }
-
-    /** Start of a block, in milliseconds. */
-    static long blockStartMillis(long block, int blockHours) {
-        return block * blockHours * HOUR_MILLIS;
-    }
-
-    /** End of a block, in milliseconds. */
-    static long blockEndMillis(long block, int blockHours) {
-        return (block + 1) * blockHours * HOUR_MILLIS;
-    }
 }

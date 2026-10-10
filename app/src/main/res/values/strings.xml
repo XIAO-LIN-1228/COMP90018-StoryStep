@@ -589,7 +589,7 @@
     <string name="advice_alerts_disclaimer">Weather flags are forecast-based, not official warnings. Check Bureau of Meteorology warnings.</string>
     <string name="advice_label_after_dark">%1$s · After dark</string>
     <string name="advice_and">and</string>
-    <string name="advice_source">Average of the %1$s ensembles via Open-Meteo: chance of at least 0.2 mm falling during your walk. Model output, not a guarantee.</string>
+    <string name="advice_source">Average of the %1$s ensembles via Open-Meteo: chance of rain at 0.2 mm an hour or more at some point during your walk. Model output, not a guarantee.</string>
     <string name="advice_too_long_title">Walk too long for advice</string>
     <string name="advice_too_long_message">Advice covers walks up to %1$s and does not span days. This walk is about %2$s. Choose a shorter stay or fewer stops.</string>
     <string name="advice_too_long_inline">This walk is too long for advice. Choose a shorter stay or fewer stops.</string>

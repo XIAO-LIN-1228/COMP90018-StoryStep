@@ -9,19 +9,18 @@ import java.util.Objects;
 /**
  * Compares departure times for a planned walk by the chance of rain during the whole walk.
  *
- * <p>Within one model the chance is the share of its members in which at least {@value #WET_MM} mm
- * falls during the walk. Counting members, rather than combining per-hour chances, needs no
+ * <p>Within one model the chance is the share of its members that rain at {@value #WET_MM} mm an
+ * hour or more in some hour the walk touches. Counting members, rather than combining per-hour chances, needs no
  * assumption about whether rain in one hour predicts rain in the next: each member already is one
  * consistent scenario. The models are then averaged with equal weight, because a single model's
  * ensemble is typically too confident and models disagree; averaging them is the usual remedy
  * and keeps the best-staffed model from outvoting the others. See decision D-08.
  *
- * <p>Rain during the walk is each hour's (ICON) or three-hour block's (ECMWF, GFS) amount times
- * the share of that hour or block the walk covers, summed over the walk. So every model answers
- * the same question whatever its time step, a walk crossing a block edge is not wetter by
- * construction, and the minutes of the current hour already gone do not count. The rain is
- * assumed to fall evenly within an hour or block, which is how Open-Meteo spreads a three-hourly
- * total over its hours (review 2026-10-10).
+ * <p>Every model is read hour by hour. A three-hourly model's rows are its three-hour total spread
+ * evenly, so each row is that model's rain rate for the hour; judging every model's rows against
+ * the same rate puts them all to the same question, and a walk crossing a three-hour boundary is
+ * no wetter than one inside it. (An amount accumulated over the walk was tried and rejected: a
+ * seven-minute walk in steady 1 mm/h rain collects 0.12 mm and read as dry.)
  *
  * <p>Departures are "now" and then each full hour up to a day ahead. Hours are UTC hours, which
  * are also local full hours wherever the offset is a whole number of hours.
@@ -38,7 +37,7 @@ public final class DepartureAdvisor {
     public static final long HORIZON_MILLIS = 24L * HourlyBuckets.HOUR_MILLIS;
 
     /**
-     * An hour or block counts as wet from this amount. Values arrive in 0.1 mm steps, so this is
+     * An hour counts as wet from this rate, mm per hour. Values arrive in 0.1 mm steps, so this is
      * "more than a trace"; it is also the Bureau of Meteorology's amount for any rain.
      */
     public static final double WET_MM = 0.2;
@@ -139,17 +138,11 @@ public final class DepartureAdvisor {
         return HourlyBuckets.startMillis(ensemble.endEpochSecond(0)) <= startMillis;
     }
 
-    /**
-     * Whether the model has a value in every hour any departure needs. For a three-hour model
-     * that is every hour of every block a walk touches, since the block total is read from them.
-     */
+    /** Whether the model has a value in every hour any departure needs. */
     private static boolean complete(EnsemblePrecipitation.Model model,
                                     EnsemblePrecipitation ensemble, long from, long to) {
-        int block = model.getBlockHours();
         for (int h = 0; h < ensemble.hourCount(); h++) {
-            long b = HourlyBuckets.block(ensemble.endEpochSecond(h), block);
-            if (HourlyBuckets.blockStartMillis(b, block) >= to
-                    || HourlyBuckets.blockEndMillis(b, block) <= from) {
+            if (!HourlyBuckets.overlaps(ensemble.endEpochSecond(h), from, to)) {
                 continue;
             }
             for (int m = 0; m < model.memberCount(); m++) {
@@ -164,10 +157,9 @@ public final class DepartureAdvisor {
     /** Share of the model's members wet in some hour or block the walk touches. */
     private static double wetShare(EnsemblePrecipitation.Model model,
                                    EnsemblePrecipitation ensemble, long start, long end) {
-        int blockHours = model.getBlockHours();
         int wet = 0;
         for (int m = 0; m < model.memberCount(); m++) {
-            if (memberWet(model, m, blockHours, ensemble, start, end)) {
+            if (memberWet(model, m, ensemble, start, end)) {
                 wet++;
             }
         }
@@ -175,32 +167,14 @@ public final class DepartureAdvisor {
     }
 
     private static boolean memberWet(EnsemblePrecipitation.Model model, int member,
-                                     int blockHours, EnsemblePrecipitation ensemble,
-                                     long start, long end) {
-        double during = 0;
-        int h = 0;
-        while (h < ensemble.hourCount()) {
-            long block = HourlyBuckets.block(ensemble.endEpochSecond(h), blockHours);
-            long blockStart = HourlyBuckets.blockStartMillis(block, blockHours);
-            long blockEnd = HourlyBuckets.blockEndMillis(block, blockHours);
-            // The rows of one block are adjacent; read them together.
-            double sum = 0;
-            int rows = 0;
-            while (h < ensemble.hourCount()
-                    && HourlyBuckets.block(ensemble.endEpochSecond(h), blockHours) == block) {
-                sum += model.millimetres(member, h);
-                rows++;
-                h++;
-            }
-            long overlap = Math.min(end, blockEnd) - Math.max(start, blockStart);
-            if (overlap > 0) {
-                // A block's total is spread evenly over its hours, so the mean of the rows present
-                // times the block length recovers it even where the data starts mid-block.
-                double total = sum / rows * blockHours;
-                during += total * overlap / (double) (blockEnd - blockStart);
+                                     EnsemblePrecipitation ensemble, long start, long end) {
+        for (int h = 0; h < ensemble.hourCount(); h++) {
+            if (HourlyBuckets.overlaps(ensemble.endEpochSecond(h), start, end)
+                    && model.millimetres(member, h) >= WET_MM - EPSILON) {
+                return true;
             }
         }
-        return during >= WET_MM - EPSILON;
+        return false;
     }
 
     /** Whether the whole walk is between one sunrise and that day's sunset. */

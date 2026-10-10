@@ -172,14 +172,12 @@ public class DepartureAdvisorTest {
     }
 
     @Test
-    public void leavingNowMidHourCountsOnlyTheRainDuringTheWalk() {
-        // 22:28 for ten minutes lies inside 22:00-23:00, the row stamped 23:00: a sixth of it.
-        EnsemblePrecipitation light = fixture().wet(0, NEXT_HOUR, 1.0).build();
-        EnsemblePrecipitation heavy = fixture().wet(0, NEXT_HOUR, 1.5).build();
+    public void aShortWalkInSteadyRainIsWet() {
+        // 22:28 for ten minutes lies inside 22:00-23:00, the row stamped 23:00, raining 1 mm/h.
+        // (Accumulating only the rain of those ten minutes, 0.17 mm, wrongly read this as dry.)
+        EnsemblePrecipitation ensemble = fixture().wet(0, NEXT_HOUR, 1.0).build();
 
-        // 1.0 mm over the hour puts 0.17 mm in those ten minutes: dry; 1.5 mm puts 0.25 mm: wet.
-        assertEquals(0, members(advisor.advise(NOW, 10 * MINUTE, light).getCandidates().get(0)));
-        assertEquals(1, members(advisor.advise(NOW, 10 * MINUTE, heavy).getCandidates().get(0)));
+        assertEquals(1, members(advisor.advise(NOW, 10 * MINUTE, ensemble).getCandidates().get(0)));
     }
 
     @Test
@@ -448,28 +446,27 @@ public class DepartureAdvisorTest {
     private static final long BLOCK_START = NEXT_HOUR + HOUR;
 
     @Test
-    public void aThreeHourBlockCountsTheShareOfItTheWalkCovers() {
-        // 0.3 mm spread over 00:00-03:00: a walk gets 0.1 mm for each hour of the block it covers.
-        Fixture three = new Fixture(10, 34);
+    public void aThreeHourModelIsJudgedByItsHourlyRate() {
+        // A three-hour total spread evenly: 0.3 mm over 00:00-03:00 is 0.1 mm/h, under the rate,
+        // so no walk in it is wet; 0.6 mm (0.2 mm/h) is wet for any walk touching it.
+        Fixture light = new Fixture(10, 34);
+        Fixture heavier = new Fixture(10, 34);
         for (int i = 1; i <= 3; i++) {
-            three.wet(0, BLOCK_START + i * HOUR, 0.1);
+            light.wet(0, BLOCK_START + i * HOUR, 0.1);
+            heavier.wet(0, BLOCK_START + i * HOUR, 0.2);
         }
-        EnsemblePrecipitation ensemble = withModels(model("ecmwf", 3, three.mm));
 
-        // One hour inside the block: 0.1 mm, dry. Two hours: 0.2 mm, wet. The whole block: wet.
-        assertEquals(0, startingAt(advisor.advise(NOW, HOUR, ensemble), BLOCK_START + HOUR)
-                .getPercent());
-        assertEquals(10, startingAt(advisor.advise(NOW, 2 * HOUR, ensemble), BLOCK_START)
-                .getPercent());
-        assertEquals(10, startingAt(advisor.advise(NOW, 3 * HOUR, ensemble), BLOCK_START)
-                .getPercent());
+        assertEquals(0, startingAt(advisor.advise(NOW, 3 * HOUR,
+                withModels(model("ecmwf", 3, light.mm))), BLOCK_START).getPercent());
+        assertEquals(10, startingAt(advisor.advise(NOW, HOUR,
+                withModels(model("ecmwf", 3, heavier.mm))), BLOCK_START + HOUR).getPercent());
     }
 
     @Test
     public void crossingABlockEdgeIsNotWetterThanStayingInside() {
-        // Two blocks with the same 0.6 mm each: a two-hour walk gets 0.4 mm whether it sits inside
-        // one block or straddles the edge between them. Counting whole touched blocks would have
-        // made the straddling walk wetter.
+        // Two blocks of light rain, 0.6 mm each: the same chance for a two-hour walk inside one
+        // block or straddling the edge. Counting whole touched blocks made the straddling walk
+        // wetter.
         Fixture three = new Fixture(10, 34);
         for (int i = 1; i <= 6; i++) {
             three.wet(0, BLOCK_START + i * HOUR, 0.2);
@@ -488,7 +485,7 @@ public class DepartureAdvisorTest {
         for (int h = 0; h < ends.length; h++) {
             ends[h] = FIRST_END_SECOND + (h + 1) * 3_600L;
         }
-        // Two rows of 1.5 mm: a block total of 4.5 mm, so ten minutes of it hold 0.25 mm.
+        // Two rows of 1.5 mm/h at the start of the data: the walk is in that rain.
         double[][] mm = new double[10][33];
         mm[0][0] = 1.5;
         mm[0][1] = 1.5;

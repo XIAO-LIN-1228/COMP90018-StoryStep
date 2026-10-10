@@ -94,9 +94,9 @@ Source: Open-Meteo Ensemble API, one request for three global ensembles,
 Within each model, for each candidate:
 
 ```
-rain(member, walk)  = Σ unit total × (part of the unit the walk covers / unit length)
-                      unit = hour (ICON) or 3-hour block (ECMWF, GEFS)
-wet(member)         = rain(member, walk) >= 0.2 mm
+rate(member, hour)  = the model's hourly row: mm in that hour (ICON), or its 3-hour total
+                      spread evenly (ECMWF, GEFS), i.e. mm per hour either way
+wet(member)         = rate >= 0.2 mm/h in at least one hour the walk touches
 share(model)        = wet members / members in the model
 P(rain during trip) = mean of share(model) over the models used      (equal weight)
 ```
@@ -105,19 +105,23 @@ P(rain during trip) = mean of share(model) over the models used      (equal weig
   other two at every wet location sampled (single-hour maxima: Singapore 30% vs ECMWF 96% / GEFS
   100%; Wellington 40% vs 90% / 55%; Perth 10% vs 39% / 39%; Sydney 8% vs 35% / 3%). One
   snapshot, not verified against observations, so it shows disagreement rather than which model
-  is right. Re-measured with the pro-rated rule on the recorded Singapore response: mean chance for
-  one-hour walks ICON 16%, ECMWF 48%, GEFS 52% (three-hour walks 24% / 67% / 71%), so the gap is
-  model disagreement, not an artefact of the old block rule. Single-model ensembles are known to be over-confident; averaging models is the
-  standard remedy. Equal weight per model keeps ECMWF's 51 members from outvoting the others.
-- **Rain during the walk, pro-rated (revised after the second review, 2026-10-10).** Each hour's
-  (ICON) or three-hour block's (ECMWF, GEFS) amount counts in proportion to how much of it the
-  walk covers, assuming rain falls evenly within it — which is how Open-Meteo spreads a
-  three-hourly total over its hours (verified: rows inside a UTC block ending 00/03/06… UTC are
-  identical; the block total is the mean of the rows present × 3, which also handles a block cut
-  by the start of the data). So all three models answer the same question, a walk crossing a
-  block edge is not wetter by construction, and the minutes of the current hour already gone do
-  not count. The earlier rule (any touched unit counts in full) made ECMWF/GEFS answer "≥ 0.2 mm in
-  3 h" and ICON "≥ 0.2 mm in 1 h".
+  is right. Re-measured with the hourly-rate rule on the recorded Singapore response: mean chance
+  for one-hour walks ICON 16%, ECMWF 48%, GEFS 52% (three-hour walks 23% / 57% / 61%), so the gap
+  is model disagreement, not an artefact of the original block rule. Single-model ensembles are
+  known to be over-confident; averaging models is the standard remedy. Equal weight per model keeps ECMWF's 51 members from outvoting the others.
+- **Hourly rain rate, one question for every model (2026-10-10).** Open-Meteo spreads a
+  three-hourly total evenly over its hours (verified: rows inside a UTC block ending 00/03/06… UTC
+  are identical), so every model's row is an hourly rate and all three are judged against the same
+  0.2 mm/h. A walk crossing a three-hour boundary is then no wetter than one inside it, and "Now"
+  counts the current hour in full: if it is raining at 1 mm/h, a ten-minute walk is wet.
+  - The original rule counted any touched unit's total in full, so ECMWF/GEFS answered "≥ 0.2 mm
+    in 3 h" and ICON "≥ 0.2 mm in 1 h" (second review).
+  - The second review's replacement, rain accumulated over the walk (each unit pro-rated by the
+    part the walk covers), was implemented and then rejected in emulator acceptance: a seven-minute
+    walk collects under 0.2 mm in almost any rain, so every short walk read as dry ("dry all day"
+    on a simulated all-day-rain forecast). Short walks are the common case.
+  - Cost: light rain under 0.2 mm/h is never counted, however long the walk; a long walk through
+    an hour of 0.15 mm/h drizzle reads as dry.
 - Values are reported at 0.1 mm resolution, so ≥ 0.2 mm is the same as "> 0.1 mm". 0.2 mm is
   the Bureau of Meteorology's "any rain" amount and close to the NWS measurable-precipitation
   threshold (0.01 in ≈ 0.25 mm); it also avoids counting models' trace drizzle.
@@ -190,7 +194,8 @@ with Retry.
 - A chance that rounds below 1% is shown as "<1%", not "0%": a model share is rarely exactly zero
   and "0%" reads as a guarantee.
 - The page footnote names the source and the models actually used: "Average of ICON, ECMWF and
-  GFS ensembles via Open-Meteo: chance of ≥ 0.2 mm during your walk".
+  GFS ensembles via Open-Meteo: chance of rain at 0.2 mm an hour or more at some point during your
+  walk".
 
 NWS defines these terms for a 12-hour period and BoM's wording for a day (BoM calls 40–60%
 "medium"); applying them to a walk of a few hours is a product choice. It is acceptable for
@@ -476,10 +481,9 @@ data.
      multi-hour walk's member-count probability can exceed any single hour (the key figure
      for the report);
    - daylight preference, "After dark", no-daylight case;
-   - ties and the 5-point no-difference rule; all-poor flag; pro-rated block rain and the
-     block-edge case;
+   - ties and the 5-point no-difference rule; all-poor flag; three-hour rows judged as hourly
+     rates and the block-edge case;
    - 8-hour limit; 34-hour data keeps all candidates for D = 8 h;
-   - three-hour block alignment and block totals, including a block cut by the data start;
    - equal model weighting; a model left out for nulls or too few members; `UNUSABLE` when
      none remains;
    - timezone/DST conversion for display.
@@ -563,8 +567,8 @@ From secondary listings only; check the original before quoting:
 
 Implemented on `feature/departure-window-advice`. Evidence, all on the development machine:
 
-- JVM tests: 1008 passing (`./gradlew testDebugUnitTest`), including recorded Melbourne and
-  Singapore Open-Meteo responses run end to end, the pro-rated block rule and its edge case,
+- JVM tests: 1007 passing (`./gradlew testDebugUnitTest`), including recorded Melbourne and
+  Singapore Open-Meteo responses run end to end, the hourly-rate rule and the block-edge case,
   severe-weather thresholds, polar sun times, and the advice ViewModel's loading, failure, retry
   and resume paths. The test that a walk is at least as wet as its wettest hour is a regression
   guard, not evidence of value.
@@ -572,13 +576,16 @@ Implemented on `feature/departure-window-advice`. Evidence, all on the developme
   existing ones. Release builds contain no scenario code.
 - Emulator (API 37): both pages, timezone note, sun/moon by sunrise and sunset, seven sky icons,
   dry-all-day, and the seven debug scenarios including the three severe ones. Screenshots taken
-  with a scenario on show simulated weather and must be labelled so.
+  with a scenario on show simulated weather and must be labelled so. Re-run after the second
+  review: stay chips, rotation, offline error and retry, and landscape, where the advice header
+  now scrolls away with the list (it had left the list no height).
 - Not done: physical device, TalkBack, accuracy against observations, a rainy real day.
 
-Second three-way review (2026-10-10) found no blockers; its fixes are in this revision: pro-rated
-rain, code 97, destructive mean wind, caution mean wind, start-instant row, rounded dry rule,
-hourly loading/failed state with retry and expiry, recompute on resume, polar sun times, area
-line, best-row screen-reader text, Retry hidden for unusable data, debug receiver permission and
-34-hour scenario data. Seven earlier commits on the branch (report drafts, `notes.md`,
-`AGENTS.md`, test-library bumps, ScrimButton 48 dp) are not part of this feature; how to split
-them is decided when the PR is opened.
+Second three-way review (2026-10-10) found no blockers; its fixes are in this revision: one rain
+question for all models (hourly rate, after the pro-rated variant failed acceptance), code 97,
+destructive mean wind, caution mean wind, start-instant row, rounded dry rule, hourly
+loading/failed state with retry and expiry, recompute on resume, polar sun times, area line,
+best-row screen-reader text, Retry hidden for unusable data, debug receiver permission and 34-hour
+scenario data. Seven earlier commits on the branch (report drafts, `notes.md`, `AGENTS.md`,
+test-library bumps, ScrimButton 48 dp) are not part of this feature; how to split them is decided
+when the PR is opened.

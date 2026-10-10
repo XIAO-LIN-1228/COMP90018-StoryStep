@@ -14,8 +14,8 @@ import java.util.Objects;
  * independent ones.
  *
  * <p>Models differ in time resolution. A model whose native step is three hours is delivered
- * hourly with each three-hour total spread evenly across its hours, so its rows only mean
- * something as a block; {@link Model#getBlockHours()} records that.
+ * hourly with each three-hour total spread evenly across its hours, so its rows are hourly rates
+ * that change every three hours; {@link Model#getBlockHours()} records the native step.
  *
  * <p>A value the provider left empty is held as {@link Double#NaN}. This class keeps the shape
  * consistent; whether enough data is present for advice is decided by {@link DepartureAdvisor}.
