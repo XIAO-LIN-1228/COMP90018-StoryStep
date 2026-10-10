@@ -572,8 +572,9 @@ Implemented on `feature/departure-window-advice`. Evidence, all on the developme
   severe-weather thresholds, polar sun times, and the advice ViewModel's loading, failure, retry
   and resume paths. The test that a walk is at least as wet as its wettest hour is a regression
   guard, not evidence of value.
-- `./gradlew assembleDebug assembleRelease lintDebug` pass; no lint findings beyond the project's
-  existing ones. Release builds contain no scenario code.
+- `./gradlew assembleDebug assembleRelease lintDebug` pass; lint reports warnings only. The
+  feature adds two: Overdraw on the root background of the two new layouts, the pattern every
+  existing page uses. Release builds contain no scenario code.
 - Emulator (API 37): both pages, timezone note, sun/moon by sunrise and sunset, seven sky icons,
   dry-all-day, and the seven debug scenarios including the three severe ones. Screenshots taken
   with a scenario on show simulated weather and must be labelled so. Re-run after the second
@@ -586,6 +587,6 @@ question for all models (hourly rate, after the pro-rated variant failed accepta
 destructive mean wind, caution mean wind, start-instant row, rounded dry rule, hourly
 loading/failed state with retry and expiry, recompute on resume, polar sun times, area line,
 best-row screen-reader text, Retry hidden for unusable data, debug receiver permission and 34-hour
-scenario data. Seven earlier commits on the branch (report drafts, `notes.md`, `AGENTS.md`,
-test-library bumps, ScrimButton 48 dp) are not part of this feature; how to split them is decided
-when the PR is opened.
+scenario data. Seven earlier commits that had been on the branch (report drafts, `notes.md`,
+`AGENTS.md`, test-library bumps, ScrimButton 48 dp) were not part of this feature and were moved
+out before the PR was opened; the validation ones remain in draft PR #30.
