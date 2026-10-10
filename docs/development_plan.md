@@ -4,6 +4,13 @@ Prepared: 2026-08-31. Planning baseline: `762662e` (`framework-build`).
 
 Status: proposed execution plan, not a claim that the features or tests below are complete.
 
+2026-10-10 authorized extension: rain forecast and departure-window advice on
+`feature/departure-window-advice` (draft PR #39), with no schema change. The behaviour contract,
+decisions and limitations are in [D-08](decisions/D-08-departure-window-advice.md), and the
+verification is in [execution evidence](verification/EV-DEPARTURE-ADVICE-2026-10-10.md). It
+builds on REQ-19 (same provider and reference area) and REQ-20 (retry policy, typed failures),
+and adds no turn-by-turn, background or alerting behaviour.
+
 2026-09-21 authorized extension: theme exploration is implemented locally on
 `feature/theme-exploration`, with Room v10. See the [implementation/test plan](theme-exploration-plan.md)
 and [execution evidence](verification/EV-THEME-EXPLORATION-2026-09-21.md). Earlier schema and
@@ -137,6 +144,7 @@ The defaults below make planning concrete. They are proposed product policies, n
 | D-05 | Track visits for the selected destination; do not unlock every nearby attraction simultaneously | M1 + M2 | REQ-12 |
 | D-06 | Store a sampled local route; exclude sensitive app data from backup/transfer; retain until user deletion, with no public route export | M4 + M1 | REQ-07/15 real data |
 | D-07 | Initial sensing/cache/scoring settings below; tune against controlled and physical trials | M3 + M5 + M1 | Final sensor/context acceptance |
+| D-08 | Departure-window advice: three-ensemble average, 0.2 mm/h wet rate, daylight-first ranking, two-level severe-weather flags, 24-hour horizon and 8-hour walk limit. **Resolved 2026-10-10** after two three-way reviews and emulator acceptance; see [D-08](decisions/D-08-departure-window-advice.md). Forecast accuracy is unvalidated | Feature owner + team | Claiming the advice is accurate |
 
 Do not create accounts, buy plans, deploy a backend or upload routes to resolve these decisions without a separate team authorization. If a service cannot be selected, keep fixtures and contracts testable, but mark real-network acceptance BLOCKED rather than complete.
 

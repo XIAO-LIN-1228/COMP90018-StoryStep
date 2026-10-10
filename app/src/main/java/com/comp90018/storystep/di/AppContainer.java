@@ -16,6 +16,10 @@ import com.comp90018.storystep.data.remote.OverpassAttractionSource;
 import com.comp90018.storystep.data.remote.RetrofitWeatherSource;
 import com.comp90018.storystep.data.remote.RetryingAttractionSource;
 import com.comp90018.storystep.data.remote.RetryingWeatherSource;
+import com.comp90018.storystep.data.remote.RetrofitEnsembleSource;
+import com.comp90018.storystep.data.remote.RetrofitHourlyForecastSource;
+import com.comp90018.storystep.data.remote.RetryingForecastSource;
+import com.comp90018.storystep.data.repository.CachedForecastRepository;
 import com.comp90018.storystep.data.repository.CachedWeatherRepository;
 import com.comp90018.storystep.data.repository.AttractionCache;
 import com.comp90018.storystep.data.repository.SampleJourneys;
@@ -32,6 +36,7 @@ import com.comp90018.storystep.domain.repository.AttractionRepository;
 import com.comp90018.storystep.domain.repository.HistoryRepository;
 import com.comp90018.storystep.domain.repository.SavedAttractionRepository;
 import com.comp90018.storystep.domain.repository.SessionStore;
+import com.comp90018.storystep.domain.repository.ForecastRepository;
 import com.comp90018.storystep.domain.repository.WeatherRepository;
 import com.comp90018.storystep.domain.session.SessionStateMachine;
 import com.comp90018.storystep.domain.privacy.RetentionPolicy;
@@ -72,6 +77,7 @@ public class AppContainer {
     private final SessionStore sessionStore;
     private final SavedAttractionRepository savedAttractionRepository;
     private final WeatherRepository weatherRepository;
+    private final ForecastRepository forecastRepository;
     private final ExplorationCoordinator explorationCoordinator;
     /** The walk being planned; process-scoped so it survives navigation between screens. */
     private final com.comp90018.storystep.application.WalkPlanner walkPlanner =
@@ -82,6 +88,12 @@ public class AppContainer {
 
     private final Executor mainExecutor;
     private final ExecutorService ioExecutor;
+
+    /**
+     * One thread for forecast requests (decision D-08). Their retries sleep between attempts, and
+     * on the shared two-thread I/O pool that could stall Room, attractions and weather.
+     */
+    private final ExecutorService forecastExecutor = Executors.newSingleThreadExecutor();
 
     /**
      * The production assembly: attractions come from the Room cache and sessions are durable.
@@ -163,6 +175,19 @@ public class AppContainer {
                 clock,
                 ioExecutor,
                 mainExecutor);
+        // Hourly forecast and ensemble members: memory-cached, no Room table (decision D-08).
+        boolean debug = isDebuggable(this.applicationContext);
+        // In debug builds a simulated-weather switch can stand in for the ensemble
+        // (DebugForecastHooks); release builds get the repository unchanged.
+        this.forecastRepository = DebugForecastHooks.wrap(this.applicationContext, new CachedForecastRepository(
+                new RetryingForecastSource<>(new RetrofitHourlyForecastSource(
+                        ApiClientFactory.createForecastService(debug))),
+                new RetryingForecastSource<>(new RetrofitEnsembleSource(
+                        ApiClientFactory.createEnsembleService(debug))),
+                new AndroidConnectivityMonitor(this.applicationContext),
+                clock,
+                forecastExecutor,
+                mainExecutor), clock);
         // Retention is a database concern rather than a repository one: it spans three caches
         // that no single repository owns, and it must leave the user's own record alone.
         this.cacheRetentionSweeper = new CacheRetentionSweeper(
@@ -319,6 +344,11 @@ public class AppContainer {
      */
     public WeatherRepository getWeatherRepository() {
         return weatherRepository;
+    }
+
+    /** Hourly forecast and ensemble members for the forecast page and departure advice. */
+    public ForecastRepository getForecastRepository() {
+        return forecastRepository;
     }
 
     /**

@@ -67,6 +67,11 @@
     <color name="story_success">#1F6F52</color>
     <color name="story_error_wash">#F7E4E0</color>
     <color name="story_error">#B23A2B</color>
+    <!-- Severe-weather flags on departure advice (D-08 §4.6): yellow caution, orange severe. -->
+    <color name="story_caution_wash">#FFF1B8</color>
+    <color name="story_caution_ink">#5C4300</color>
+    <color name="story_severe_wash">#FFD9B3</color>
+    <color name="story_severe_ink">#7A3300</color>
 
     <!-- Route sketch and the prototype map surface, retuned to the daylight neutrals -->
     <color name="map_park">#E2E7DA</color>

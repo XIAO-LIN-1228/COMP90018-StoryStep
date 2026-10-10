@@ -171,8 +171,18 @@ public final class WalkPlan {
         if (stops.isEmpty()) {
             return 0;
         }
-        long walking = Math.round(distanceMeters(origin) / WALKING_SPEED_MPS * 1000.0);
-        return walking + DWELL_MILLIS_PER_STOP * stops.size();
+        return walkingMillis(origin) + DWELL_MILLIS_PER_STOP * stops.size();
+    }
+
+    /**
+     * The walking alone, at {@link #WALKING_SPEED_MPS} over the straight legs, with no stay. For
+     * callers that add their own stay time, so the default one is not counted twice.
+     */
+    public long walkingMillis(GeoPoint origin) {
+        if (stops.isEmpty()) {
+            return 0;
+        }
+        return Math.round(distanceMeters(origin) / WALKING_SPEED_MPS * 1000.0);
     }
 
     /** The stops' positions, in order: what the map draws a line through. */

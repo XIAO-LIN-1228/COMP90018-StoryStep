@@ -42,7 +42,20 @@
         <action android:id="@+id/action_nearby_to_detail" app:destination="@id/attractionDetailFragment" />
         <action android:id="@+id/action_nearby_to_exploration" app:destination="@id/explorationFragment" />
         <action android:id="@+id/action_nearby_to_session_recovery" app:destination="@id/sessionRecoveryFragment" />
+        <action android:id="@+id/action_nearby_to_forecast" app:destination="@id/forecastFragment" />
     </fragment>
+
+    <fragment
+        android:id="@+id/forecastFragment"
+        android:name="com.comp90018.storystep.ui.forecast.ForecastFragment"
+        android:label="@string/forecast_title"
+        tools:layout="@layout/fragment_forecast" />
+
+    <fragment
+        android:id="@+id/adviceFragment"
+        android:name="com.comp90018.storystep.ui.forecast.AdviceFragment"
+        android:label="@string/advice_title"
+        tools:layout="@layout/fragment_advice" />
 
     <fragment
         android:id="@+id/planFragment"
@@ -51,6 +64,7 @@
         tools:layout="@layout/fragment_plan">
         <action android:id="@+id/action_plan_to_nearby" app:destination="@id/nearbyAttractionsFragment" />
         <action android:id="@+id/action_plan_to_detail" app:destination="@id/attractionDetailFragment" />
+        <action android:id="@+id/action_plan_to_advice" app:destination="@id/adviceFragment" />
         <action
             android:id="@+id/action_plan_to_exploration"
             app:destination="@id/explorationFragment"

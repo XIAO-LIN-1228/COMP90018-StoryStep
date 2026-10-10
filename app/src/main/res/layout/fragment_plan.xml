@@ -52,6 +52,18 @@
                     android:text="@string/plan_subtitle_empty"
                     android:textColor="@color/story_ink_2"
                     tools:text="3 stops · about 2.1 km · around 40 min" />
+
+                <!-- Departure advice for this plan (D-08); hidden while the plan is empty. -->
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/plan_when_to_leave"
+                    style="@style/Widget.StoryStep.Button.Compact"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/space_4"
+                    android:contentDescription="@string/advice_link_description"
+                    android:text="@string/advice_link"
+                    android:visibility="gone"
+                    app:icon="@drawable/ic_clock" />
             </LinearLayout>
         </FrameLayout>
 

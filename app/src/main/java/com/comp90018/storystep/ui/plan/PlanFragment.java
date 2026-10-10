@@ -61,6 +61,7 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
     private RecyclerView list;
     private PlanStopAdapter adapter;
     private TextView subtitle;
+    private TextView whenToLeave;
     private View empty;
     private TextView clear;
     private View startButton;
@@ -122,6 +123,8 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
             map.setOrigin(origin);
         }
         subtitle = view.findViewById(R.id.plan_subtitle);
+        whenToLeave = view.findViewById(R.id.plan_when_to_leave);
+        whenToLeave.setOnClickListener(v -> openDepartureAdvice());
         empty = view.findViewById(R.id.plan_empty);
         clear = view.findViewById(R.id.plan_clear);
         startButton = view.findViewById(R.id.plan_start);
@@ -189,6 +192,7 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         startButton.setEnabled(any && startModel.getState().getValue()
                 != PlanStartViewModel.State.STARTING);
         subtitle.setText(any ? summary(plan) : getString(R.string.plan_subtitle_empty));
+        whenToLeave.setVisibility(any && origin != null ? View.VISIBLE : View.GONE);
 
         List<PlaceMapView.Place> pins = new ArrayList<>();
         for (int i = 0; i < plan.size(); i++) {
@@ -266,6 +270,22 @@ public class PlanFragment extends Fragment implements WalkPlanner.Observer,
         return getString(R.string.plan_subtitle, stops,
                 DistanceText.format(getResources(), metres),
                 HistoryText.formatDuration(getResources(), millis));
+    }
+
+    /**
+     * Opens departure advice for this plan. Passes the walking alone, from the router when it
+     * has answered and from the straight legs until then; the advice page adds its own stay.
+     */
+    private void openDepartureAdvice() {
+        WalkPlan plan = planner.plan();
+        if (plan.isEmpty() || origin == null) {
+            return;
+        }
+        boolean routed = route != null && plan.equals(routedPlan);
+        long walking = routed ? route.getDurationMillis() : plan.walkingMillis(origin);
+        NavHostFragment.findNavController(this).navigate(R.id.action_plan_to_advice,
+                com.comp90018.storystep.ui.forecast.AdviceFragment.arguments(
+                        origin, walking, plan.size()));
     }
 
     private void startWalking() {
