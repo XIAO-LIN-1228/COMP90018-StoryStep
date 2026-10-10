@@ -13,6 +13,9 @@ import com.comp90018.storystep.domain.model.GeoPoint;
  */
 public interface ForecastRepository {
 
+    /** How long a fetched forecast is reused before it is asked for again. */
+    long LIFETIME_MILLIS = 30L * 60L * 1000L;
+
     /** Open-Meteo's own hourly chance of rain and condition for the origin's area. */
     void hourly(GeoPoint origin, RepositoryCallback<HourlyForecast> callback);
 

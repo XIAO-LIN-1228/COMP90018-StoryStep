@@ -52,8 +52,9 @@ numbers; the advice page states its source (§4.5).
 
 ### 4.1 Entry, origin and duration
 
-- Entry: a "When to leave" button beside the plan summary line in `PlanFragment`
-  ("3 stops · about 2.1 km · around 40 min"). Disabled when the plan has no stops.
+- Entry: a text link "When to leave ›" under the plan summary line in `PlanFragment`
+  ("3 stops · about 2.1 km · around 40 min"), same style as "Hourly ›"; hidden when the plan
+  has no stops.
 - Origin: the plan's own origin (`AppContainer.getReferenceOrigin()`, the point the planner
   routes and measures from). The page says which area the forecast is for. No permission prompt.
 - Stay time: one value for every stop, chosen from 5 / 15 / 30 / 60 minutes, default 5
@@ -144,8 +145,14 @@ with Retry.
   departure.
 - If the daylight candidates differ by less than 5 percentage points, the page says there is no
   meaningful difference, and the earliest daylight candidate is highlighted.
-- All candidates are listed in time order and the list scrolls to the highlighted row. Rows
-  reuse the forecast page's row layout. No numeric score.
+- A summary card above the list: "Best: leave at … · about X% chance of rain" (or "leave now")
+  plus at most one note (no daylight > all likely > no meaningful difference).
+- All candidates are listed in time order; the best row has a tinted background and the list
+  scrolls to it. Rows reuse the forecast page's row layout; the icon slot shows a moon only for
+  walks that run after dark, and the label reads "<band> · After dark". No numeric score.
+- The stay time is a chip row (5 / 15 / 30 / 60 min) at the top of the page with "Your walk:
+  about …" beneath. Changing it recomputes from the ensemble the page already holds while that
+  is within `ForecastRepository.LIFETIME_MILLIS` (30 min); otherwise it asks again.
 - Each row shows the percentage and a label, aligned to US NWS terms:
 
 | Trip chance | Label |

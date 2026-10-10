@@ -95,6 +95,11 @@ public class ViewModelFactory implements ViewModelProvider.Factory {
             return (T) new com.comp90018.storystep.ui.forecast.ForecastViewModel(
                     appContainer.getForecastRepository(), appContainer.getClock());
         }
+        if (modelClass.isAssignableFrom(
+                com.comp90018.storystep.ui.forecast.AdviceViewModel.class)) {
+            return (T) new com.comp90018.storystep.ui.forecast.AdviceViewModel(
+                    appContainer.getForecastRepository(), appContainer.getClock());
+        }
         if (modelClass.isAssignableFrom(SavedViewModel.class)) {
             return (T) new SavedViewModel(
                     appContainer.getSavedAttractionRepository(),

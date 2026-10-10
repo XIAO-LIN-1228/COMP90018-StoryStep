@@ -1,0 +1,201 @@
+package com.comp90018.storystep.ui.forecast;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.comp90018.storystep.R;
+import com.comp90018.storystep.domain.forecast.DepartureAdvice;
+import com.comp90018.storystep.domain.forecast.DepartureAdvisor;
+import com.comp90018.storystep.domain.model.GeoPoint;
+import com.comp90018.storystep.ui.HistoryText;
+import com.comp90018.storystep.ui.ViewModelFactory;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+
+/**
+ * When to leave on the planned walk (decision D-08): each departure over the next day, with the
+ * chance of rain at some point during the whole walk. Opened from the plan's summary line.
+ */
+public class AdviceFragment extends Fragment {
+
+    public static final String ARG_LATITUDE = "latitude";
+    public static final String ARG_LONGITUDE = "longitude";
+    public static final String ARG_WALKING_MILLIS = "walkingMillis";
+    public static final String ARG_STOPS = "stops";
+
+    private AdviceViewModel viewModel;
+    private final DepartureRowAdapter adapter = new DepartureRowAdapter();
+
+    private TextView duration;
+    private View summary;
+    private TextView best;
+    private TextView note;
+    private View loading;
+    private View errorGroup;
+    private TextView errorText;
+    private RecyclerView list;
+    private TextView source;
+    /** The trip the too-long dialog was last shown for, so rotation does not show it again. */
+    private long dialogShownFor = -1;
+
+    /** Arguments for opening this page on a planned walk. */
+    public static Bundle arguments(GeoPoint origin, long walkingMillis, int stops) {
+        Bundle args = new Bundle();
+        args.putDouble(ARG_LATITUDE, origin.getLatitude());
+        args.putDouble(ARG_LONGITUDE, origin.getLongitude());
+        args.putLong(ARG_WALKING_MILLIS, walkingMillis);
+        args.putInt(ARG_STOPS, stops);
+        return args;
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_advice, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (savedInstanceState != null) {
+            dialogShownFor = savedInstanceState.getLong("dialogShownFor", -1);
+        }
+        view.findViewById(R.id.advice_back).setOnClickListener(v ->
+                NavHostFragment.findNavController(this).navigateUp());
+        duration = view.findViewById(R.id.advice_duration);
+        summary = view.findViewById(R.id.advice_summary);
+        best = view.findViewById(R.id.advice_best);
+        note = view.findViewById(R.id.advice_note);
+        loading = view.findViewById(R.id.advice_loading);
+        errorGroup = view.findViewById(R.id.advice_error_group);
+        errorText = view.findViewById(R.id.advice_error);
+        list = view.findViewById(R.id.advice_list);
+        source = view.findViewById(R.id.advice_source);
+        list.setAdapter(adapter);
+
+        Bundle args = requireArguments();
+        viewModel = new ViewModelProvider(this, ViewModelFactory.from(this))
+                .get(AdviceViewModel.class);
+        viewModel.init(new GeoPoint(args.getDouble(ARG_LATITUDE), args.getDouble(ARG_LONGITUDE)),
+                args.getLong(ARG_WALKING_MILLIS), args.getInt(ARG_STOPS));
+
+        bindStayChips(view.findViewById(R.id.advice_stay_group));
+        view.findViewById(R.id.advice_retry).setOnClickListener(v -> viewModel.retry());
+        viewModel.getUiState().observe(getViewLifecycleOwner(), this::render);
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putLong("dialogShownFor", dialogShownFor);
+    }
+
+    private void bindStayChips(ChipGroup group) {
+        for (int minutes : AdviceViewModel.STAY_MINUTES) {
+            Chip chip = (Chip) getLayoutInflater().inflate(R.layout.item_stay_chip, group, false);
+            chip.setId(View.generateViewId());
+            chip.setText(getString(R.string.advice_stay_minutes, minutes));
+            chip.setTag(minutes);
+            group.addView(chip);
+        }
+        viewModel.getStayMinutes().observe(getViewLifecycleOwner(), minutes -> {
+            for (int i = 0; i < group.getChildCount(); i++) {
+                Chip chip = (Chip) group.getChildAt(i);
+                chip.setChecked(minutes.equals(chip.getTag()));
+            }
+        });
+        group.setOnCheckedStateChangeListener((g, checked) -> {
+            if (!checked.isEmpty()) {
+                viewModel.onStayChosen((Integer) g.findViewById(checked.get(0)).getTag());
+            }
+        });
+    }
+
+    private void render(AdviceUiState state) {
+        duration.setText(getString(R.string.advice_walk_duration,
+                HistoryText.formatDuration(getResources(), state.getTripMillis())));
+        AdviceUiState.Status status = state.getStatus();
+        loading.setVisibility(status == AdviceUiState.Status.LOADING ? View.VISIBLE : View.GONE);
+        boolean showError = status == AdviceUiState.Status.ERROR
+                || status == AdviceUiState.Status.TOO_LONG;
+        errorGroup.setVisibility(showError ? View.VISIBLE : View.GONE);
+        boolean content = status == AdviceUiState.Status.CONTENT;
+        list.setVisibility(content ? View.VISIBLE : View.GONE);
+        summary.setVisibility(content ? View.VISIBLE : View.GONE);
+        source.setVisibility(content ? View.VISIBLE : View.GONE);
+
+        if (status == AdviceUiState.Status.ERROR) {
+            errorText.setText(ForecastText.error(state.getReason()));
+        } else if (status == AdviceUiState.Status.TOO_LONG) {
+            errorText.setText(R.string.advice_too_long_inline);
+            showTooLongDialog(state.getTripMillis());
+        }
+        errorGroup.findViewById(R.id.advice_retry).setVisibility(
+                status == AdviceUiState.Status.ERROR ? View.VISIBLE : View.GONE);
+
+        DepartureAdvice advice = state.getAdvice();
+        if (advice == null) {
+            adapter.submit(java.util.Collections.emptyList(), -1);
+            return;
+        }
+        adapter.submit(advice.getCandidates(), advice.getBestIndex());
+        renderSummary(advice);
+        source.setText(getString(R.string.advice_source,
+                AdviceText.models(advice.getModels(), getString(R.string.advice_and))));
+        int bestIndex = advice.getBestIndex();
+        list.post(() -> {
+            RecyclerView.LayoutManager manager = list.getLayoutManager();
+            if (manager instanceof LinearLayoutManager) {
+                ((LinearLayoutManager) manager).scrollToPositionWithOffset(bestIndex, 0);
+            }
+        });
+    }
+
+    private void renderSummary(DepartureAdvice advice) {
+        DepartureAdvice.Candidate chosen = advice.getBest();
+        best.setText(chosen.isNow()
+                ? getString(R.string.advice_best_now, chosen.getPercent())
+                : getString(R.string.advice_best_at,
+                        HistoryText.formatTime(chosen.getStartMillis()), chosen.getPercent()));
+        int noteText = 0;
+        if (advice.isNoDaylightCandidate()) {
+            noteText = R.string.advice_note_no_daylight;
+        } else if (advice.isAllNotAdvisable()) {
+            noteText = R.string.advice_note_all_poor;
+        } else if (advice.isNoMeaningfulDifference()) {
+            noteText = R.string.advice_note_no_difference;
+        }
+        note.setVisibility(noteText == 0 ? View.GONE : View.VISIBLE);
+        if (noteText != 0) {
+            note.setText(noteText);
+        }
+    }
+
+    private void showTooLongDialog(long tripMillis) {
+        if (dialogShownFor == tripMillis) {
+            return;
+        }
+        dialogShownFor = tripMillis;
+        new MaterialAlertDialogBuilder(requireContext())
+                .setTitle(R.string.advice_too_long_title)
+                .setMessage(getString(R.string.advice_too_long_message,
+                        HistoryText.formatDuration(getResources(),
+                                DepartureAdvisor.MAX_TRIP_MILLIS),
+                        HistoryText.formatDuration(getResources(), tripMillis)))
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+}

@@ -35,9 +35,6 @@ import java.util.concurrent.Executor;
  */
 public final class CachedForecastRepository implements ForecastRepository {
 
-    /** How long a fetched forecast is reused. */
-    public static final long LIFETIME_MILLIS = 30L * 60L * 1000L;
-
     private final ForecastSource<HourlyForecast> hourlySource;
     private final ForecastSource<EnsemblePrecipitation> ensembleSource;
     private final ConnectivityMonitor connectivity;
