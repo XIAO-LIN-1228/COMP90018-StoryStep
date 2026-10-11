@@ -237,11 +237,10 @@ successful compilation, captioned with date and submitted build identity.]
 
 ## 4. Individual contributions
 
-Progress: `need support doc`. Approval: **NOT APPROVED**.
+Progress: `need review`. Approval: **NOT APPROVED**.
 
-[PENDING-CONTRIBUTIONS: Each member supplies and confirms completed contributions and
-supporting evidence. Keep the full breakdown to one rendered page. In-progress work
-is not claimed complete, and commit counts do not determine contributions.]
+[PENDING-CONTRIBUTIONS-REVIEW: All five members have entered their contributions.
+Each member confirms their own row, and the table must fit one rendered page.]
 
 | Member                                            | Completed contribution                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Evidence                                                                                                                                                                                                                                                                                                                                                | Individual/shared responsibility                                                                                                                                                                                                                                                   |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -269,7 +268,7 @@ identifies required material that is still outstanding; it does not assign marks
 | Material - Report & Video | Sections 2 and 5 | Design and evaluation below; video link and timestamps pending |
 | Material - Screenshot | Section 3.3 | Android Studio Console screenshot pending |
 | Material - Commit log | Submission package | Commit-log ZIP and its coverage of the submitted revision still to be verified |
-| Material - Itemised contributions | Section 4 | Member contributions and PR evidence; remaining members and one-page layout pending |
+| Material - Itemised contributions | Section 4 | Contributions and PR evidence for all five members; one-page layout pending |
 | Implementation - Quality | 5.1, 5.4 | Separation of responsibilities, explicit storage contracts and regression cases |
 | Implementation - Sensors | 5.2, 5.4 | Location, movement and heading processing, with distinct validity checks |
 | Implementation - Connectivity | 5.1, 5.2 | External data changes discovery, weather context, route presentation and departure advice; caches handle failures |
