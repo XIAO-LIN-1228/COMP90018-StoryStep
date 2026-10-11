@@ -33,7 +33,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
 | Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
 | Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au | [RHUAN4422](https://github.com/rHuan4422) |
-| Hongjian Zhu | [PENDING] | [PENDING] | [Ghostflamez](https://github.com/Ghostflamez) |
+| Hongjian Zhu | 1401916 | hongjianz1@student.unimelb.edu.au | [Ghostflamez](https://github.com/Ghostflamez) |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
 
@@ -558,13 +558,10 @@ Progress: `need review`. Approval: **NOT APPROVED — USER REVIEW MANDATORY**.
 Each member must add their own tool use and actual review; no independent-authorship
 or human-validation claim is inferred.]
 
-| Recorded tool use                                 | Assistance requiring acknowledgement                                                                                                 |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| OpenAI Codex                                      | Test investigation and related dependency/test/resource edits; guided manual checks and transcribed feedback; notes and issue drafts |
-| OpenAI Codex, including requested research agents | Competitor/source research, selected code review, report drafts, editing and structural consolidation                                |
-| Anthropic Claude Code (Claude Opus), used by Hongjian Zhu | Departure-advice research agents (forecast methods, warning thresholds, icon sources), two three-agent design reviews, code and test implementation, emulator acceptance, D-08/evidence/PR text, and the departure-advice and contribution text in this report. The member chose between presented options at each design step. |
-| OpenAI Codex, used by Hongjian Zhu                | Early departure-advice design discussion before implementation                                                                       |
-| Other members/tools                               | [Pending actual tools, uses, affected material and human review]                                                                     |
+| Recorded tool use     | Assistance requiring acknowledgement                                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OpenAI Codex          | Guidance for manual testing; review of automated-test completeness; automatic recording and organisation of test feedback; automated maintenance of issue drafts; competitor and algorithm research |
+| Anthropic Claude Code | Competitor and algorithm research; brainstorming support; suggestions for the report structure; spelling and grammar checks                                  |
 
 The detailed assistance inventory remains in the preserved working draft. Omitting
 a Co-authored-by commit trailer does not replace acknowledgement in the report.
