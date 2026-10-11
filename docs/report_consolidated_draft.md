@@ -33,7 +33,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 | Student name | Student number | University email | GitHub handle |
 | --- | --- | --- | --- |
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
-| Keshang Cheng | [PENDING-KESHANG-STUDENT-NUMBER] | [PENDING-KESHANG-UNIVERSITY-EMAIL] | [chengkeshang](https://github.com/chengkeshang) |
+| Keshang Cheng | 1600507 | keshangc@student.unimelb.edu.au | [chengkeshang](https://github.com/chengkeshang) |
 | Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
 | Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au | [rHuan4422](https://github.com/rHuan4422) |
 | Hongjian Zhu | 1401916 | hongjianz1@student.unimelb.edu.au | [Ghostflamez](https://github.com/Ghostflamez) |
