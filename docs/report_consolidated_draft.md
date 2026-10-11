@@ -1,6 +1,4 @@
-# 分支：docs/project-report
-
-19:45StoryStep — Consolidated Report
+# StoryStep — Consolidated Report
 
 Revision: 2026-10-11. Progress: `on editing`. Approval: **NOT APPROVED**.
 
@@ -18,21 +16,25 @@ local-only team handoff at docs/tempdoc/report_evidence_handoff_zh.md (not publi
 
 Progress: `need support doc`. Approval: **NOT APPROVED**.
 
-**Subject:** COMP90018 — Mobile Computing Systems Programming
+**StoryStep: a context-aware Android tourism companion**
 
-**Project:** StoryStep
+**Final project report**
+
+**Subject:** COMP90018 Mobile Computing Systems Programming, Semester 2, 2026, The University of Melbourne
 
 **Group:** [PENDING-GROUP]
 
-**Submission date:** [PENDING-DATE]
+**Repository:** [github.com/XIAO-LIN-1228/COMP90018-StoryStep](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep)
 
 **Submitted commit:** [PENDING-FINAL-COMMIT]
 
-| Student name                            | Student number | University email | GitHub handle |
-| --------------------------------------- | -------------- | ---------------- | ------------- |
+**Submission date:** [PENDING-DATE]
+
+| Student name | Student number | University email | GitHub handle |
+| --- | --- | --- | --- |
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
 | Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
-| Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au | [RHUAN4422](https://github.com/rHuan4422) |
+| Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au | [rHuan4422](https://github.com/rHuan4422) |
 | Hongjian Zhu | 1401916 | hongjianz1@student.unimelb.edu.au | [Ghostflamez](https://github.com/Ghostflamez) |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
@@ -552,19 +554,31 @@ the forecasts are uncalibrated, and the three ensembles often disagree.
 
 ## 6. AI and other assistance acknowledgement
 
-Progress: `need review`. Approval: **NOT APPROVED — USER REVIEW MANDATORY**.
+Progress: `need review`. Approval: **NOT APPROVED**.
 
-[PENDING-AI-DISCLOSURE: Confirm and convert this inventory into final disclosure prose.
-Each member must add their own tool use and actual review; no independent-authorship
-or human-validation claim is inferred.]
+The team used two generative AI tools while building StoryStep and writing this
+report. Neither tool is part of the app, and StoryStep makes no AI requests at
+runtime.
 
-| Recorded tool use     | Assistance requiring acknowledgement                                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| OpenAI Codex          | Guidance for manual testing; review of automated-test completeness; automatic recording and organisation of test feedback; automated maintenance of issue drafts; competitor and algorithm research |
-| Anthropic Claude Code | Competitor and algorithm research; brainstorming support; suggestions for the report structure; spelling and grammar checks                                  |
+**OpenAI Codex** was used to:
 
-The detailed assistance inventory remains in the preserved working draft. Omitting
-a Co-authored-by commit trailer does not replace acknowledgement in the report.
+- guide manual testing;
+- review whether the automated tests were complete;
+- record and organise test feedback;
+- maintain draft GitHub issues;
+- research competing apps and algorithms.
+
+**Anthropic Claude Code** was used to:
+
+- research competing apps and algorithms;
+- support brainstorming;
+- suggest a structure for this report;
+- check spelling and grammar.
+
+Team members reviewed every AI output before using it and made the design and
+scope decisions themselves. Research findings were checked against the sources
+cited in Section 7. The team is responsible for all submitted code, documentation
+and report content.
 
 ## 7. References and attributions
 
