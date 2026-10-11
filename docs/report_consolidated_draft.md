@@ -2,7 +2,7 @@
 
 19:45StoryStep — Consolidated Report
 
-Revision: 2026-10-09. Progress: `on editing`. Approval: **NOT APPROVED**.
+Revision: 2026-10-11. Progress: `on editing`. Approval: **NOT APPROVED**.
 
 Authoring note: this is the formal-structure working version, not an approved final
 submission. The criterion-by-criterion draft remains unchanged in
@@ -33,6 +33,7 @@ Progress: `need support doc`. Approval: **NOT APPROVED**.
 | Lin Xiao | 1663572 | lxiao4914@student.unimelb.edu.au | [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228) |
 | Penghua He | 1637978 | penghuah@student.unimelb.edu.au | [Penghua-He](https://github.com/Penghua-He) |
 | Rui Huan | 1693874 | rhuan4422@student.unimelb.edu.au | [RHUAN4422](https://github.com/rHuan4422) |
+| Hongjian Zhu | [PENDING] | [PENDING] | [Ghostflamez](https://github.com/Ghostflamez) |
 
 <!-- Publicity consent is optional; do not insert it without explicit group agreement. -->
 
@@ -49,15 +50,16 @@ with arrival-linked stories, a curated campus observation theme, saved places an
 local journey records. Its purpose is to connect practical planning with an
 opportunity to understand the places encountered.
 
-Departure-window advice is being developed alongside this report to extend support
-to when to leave. Its design compares forecast conditions over the intended walking
-duration and explains the relative suitability of candidate departure times. It is
-not yet counted as verified delivery. The inspected implementation also does not
-persist unstarted plans or provide turn-by-turn navigation; saved places and completed
-journeys are separate from saving an itinerary for later.
+Departure-window advice extends this support to when to leave. For each departure
+over the next day it estimates the chance of rain during the planned walk from three
+forecast ensembles, flags forecast severe weather and prefers daylight; an hourly rain
+page accompanies it. It is implemented and emulator-tested, while physical-device
+acceptance is outstanding. The implementation does not persist unstarted plans or
+provide turn-by-turn navigation; saved places and completed journeys are separate
+from saving an itinerary for later.
 
 [PENDING-SCOPE: Reconcile this overview and Section 5 with the final submitted commit,
-especially departure advice and any optional, currently unmerged provider features.]
+especially any optional, currently unmerged provider features.]
 
 ## 2. Demonstration video
 
@@ -72,7 +74,7 @@ demonstrated commit/APK and physical device. Supply the timestamp map below.]
 | Physical sensing, arrival and stories | [Pending]       | 5.2, 5.5               |
 | External data and changing conditions | [Pending]       | 5.2, 5.4               |
 | History, photos and recovery          | [Pending]       | 5.1, 5.3               |
-| Departure advice, if delivered        | [Pending scope] | 5.2, 5.5               |
+| Rain forecast and departure advice    | [Pending]       | 5.2, 5.5               |
 
 ## 3. Compilation and operation
 
@@ -117,6 +119,7 @@ absolute path. No API key, account, Firebase setup or separately deployed backen
 is required by this baseline; Room creates its local database on first launch.
 
 At runtime, Internet access supplies Overpass attractions, Open-Meteo weather,
+hourly forecasts and forecast ensembles,
 Wikimedia descriptions/photos, OpenStreetMap tiles and Valhalla walking routes.
 Existing saved records and available caches support limited offline use; an empty
 installation cannot provide fresh remote content offline. Provider failures may
@@ -242,6 +245,7 @@ is not claimed complete, and commit counts do not determine contributions.]
 | Rui Huan (GitHub: [rHuan4422](https://github.com/rHuan4422)) | **Contextual recommendations:** implemented deterministic scoring, recommendation reasons, Recommended/Nearby modes and updates from changing context. **Profile and reliability:** replaced fixed statistics, removed the unfinished Memory editor and fixed saved-context recovery. **Theme exploration:** implemented the three-stop workflow, arrival-unlocked stories/questions, skip/undo, persistent progress, recovery and complete/partial results. **Verification:** added regression tests and documented JVM, emulator, build and Lint results. | **Recommendations/Profile:** [PR #20](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/20); commits [eed454c](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/eed454c4ecea010a6b40a4e0775e85fcd6b0c852), [816fb16](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/816fb1624bf3dcf12bdbc0657a07f8d8c242aa98), [a4b6256](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/a4b62563c28c8b7ace7cf4d5bb5e934a82c803ed), [9cfbe2f](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/9cfbe2fc709717945509cd4d9c1927d6330225e4); [review and test evidence](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/9cfbe2fc709717945509cd4d9c1927d6330225e4/docs/verification/EV-TEAM-A-REVIEW-2026-09-20.md). **Theme exploration:** [PR #24](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/24); commit [c212cfb](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/c212cfb8806df26847445bb390b6ae7c98801791); [implementation plan](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/c212cfb8806df26847445bb390b6ae7c98801791/docs/theme-exploration-plan.md) and [verification evidence](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/c212cfb8806df26847445bb390b6ae7c98801791/docs/verification/EV-THEME-EXPLORATION-2026-09-21.md). | Responsible for the listed implementation, fixes, tests and documentation, with Codex assistance. Integrated with shared discovery, sensing, session and history infrastructure. Full-suite test totals include teammates' tests; physical-device field acceptance is not claimed. |
 | Lin Xiao (GitHub: [XIAO-LIN-1228](https://github.com/XIAO-LIN-1228)) | **Foundation and sensing:** established the layered Java/XML architecture, foreground location and permission handling, session lifecycle, route-distance recording, movement classification and compass guidance. **Persistence and stories:** implemented Room-backed session recovery, quality-aware arrival and stored story snapshots, saved attractions and journey history. **Remote data:** integrated Open-Meteo weather and Overpass attraction discovery with area caching, freshness checks and stale fallback. **Refinement:** added saved-detail fallback, cache retention and accessibility improvements; repaired planner start recovery, date localisation, exploration map/photo controls, compass presentation and attraction image loading. **Verification:** added domain, repository and UI regression tests and recorded build, Lint and emulator evidence. | Foundation/location/session/sensing: [#2](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/2), [#3](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/3), [#4](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/4), [#6](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/6), [#7](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/7). Persistence/arrival/saves/history: [#8](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/8), [#9](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/9), [#10](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/10), [#12](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/12). Weather/attractions: [#11](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/11), [#13](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/13). Refinements: [#21](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/21), [#35](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/35), [#36](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/36), [#37](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/37), [#38](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/38). | Responsible for the listed implementations, tests and evidence within the shared application. Later UI, recommendation, theme and reliability work includes teammates' contributions. Test-suite totals are shared project results; physical-device acceptance is not claimed. |
 | Penghua He (GitHub: [Penghua-He](https://github.com/Penghua-He)) | **Reliability and data handling:** implemented bounded retry, backoff and rate-limit handling for attraction and weather requests, journey-photo cleanup and backup exclusions. **Stories and feedback:** added narration with pause/continue, speech-rate controls, readable fallback and one-shot feedback after persisted arrivals. **Recommendations and coverage:** added conservative opening-status evaluation, bounded popularity weighting, additional attraction types, trusted fallback names and source-identity deduplication. **Location refinement:** separated home discovery from journey recording and prevented reference coordinates from appearing as the user's location. **Verification:** added regression tests and verification records for these changes. | [PR #19](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/19), [PR #26](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/26), [PR #27](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/27), [PR #28](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/28), [PR #29](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/29); commits [b6bed78](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/b6bed7893d18c679227921f57a8680a1550640f9), [2a56a3e](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/2a56a3e), [6eb8b89](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/6eb8b89), [ce81182](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/ce81182), [a59f6b0](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/a59f6b0), [ebebeaf](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/ebebeaf53e9ec704f75a4873dfd2c0770c162ecd). | Individually responsible for the listed incremental features, fixes and related tests, integrated with the team's existing data, recommendation, exploration and persistence infrastructure. |
+| Hongjian Zhu (GitHub: [Ghostflamez](https://github.com/Ghostflamez)) | **Departure-window advice and rain forecast:** designed the feature and revised the design through two structured reviews and emulator acceptance. Implemented the hourly Rain forecast and Best time to leave pages; Open-Meteo forecast and ensemble sources with retry and a 30-minute area cache; the equal-weight three-ensemble chance of rain over a walk; daylight-first ranking using the location's timezone and sunrise/sunset; two-level severe-weather flags; and seven-condition sky icons. **Verification:** added 137 JVM tests, including recorded Melbourne and Singapore responses, and a debug-only simulated-weather switch for demonstrations. Recorded build, Lint and emulator results and updated the development plan and verification ledger. | [PR #39](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/pull/39), merged as [57a6507](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/commit/57a6507); [design decision D-08](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/decisions/D-08-departure-window-advice.md) and [verification record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/verification/EV-DEPARTURE-ADVICE-2026-10-10.md). | Responsible for the listed design, implementation, tests and documentation, with Codex and Claude Code assistance (Section 6). Builds on the team's plan, weather and retry infrastructure. The 1007-test total includes teammates' tests; physical-device acceptance and forecast accuracy are not claimed. |
 
 ## 5. System design and evaluation
 
@@ -249,7 +253,8 @@ Progress: `need review`. Approval: **NOT APPROVED**.
 
 StoryStep must keep a walk consistent when readings are noisy, requests finish
 late or the app is interrupted. This section explains the design and its evidence.
-Source references use `ede3f7e` [R1]; tests apply to the revisions in Section 5.4.
+Source references use `ede3f7e` [R1], and `3695680` for departure advice [R11];
+tests apply to the revisions in Section 5.4.
 The final submission revision and ten-page PDF limit still need checking.
 
 **Rubric coverage.** This table locates the argument for each criterion. It also
@@ -263,9 +268,9 @@ identifies required material that is still outstanding; it does not assign marks
 | Material - Itemised contributions | Section 4 | Member contributions and PR evidence; remaining members and one-page layout pending |
 | Implementation - Quality | 5.1, 5.4 | Separation of responsibilities, explicit storage contracts and regression cases |
 | Implementation - Sensors | 5.2, 5.4 | Location, movement and heading processing, with distinct validity checks |
-| Implementation - Connectivity | 5.1 | External data changes discovery, weather context and route presentation; caches handle failures |
+| Implementation - Connectivity | 5.1, 5.2 | External data changes discovery, weather context, route presentation and departure advice; caches handle failures |
 | Implementation - Responsiveness | 5.3, 5.4 | Background work and controlled redraws; measured interaction timings pending |
-| Implementation - Technical depth | 5.1, 5.2, 5.4 | Recovery, repeat-safe writes, noisy sensing and out-of-order responses |
+| Implementation - Technical depth | 5.1, 5.2, 5.4 | Recovery, repeat-safe writes, noisy sensing, out-of-order responses and ensemble rain estimates over a walk |
 | User Interface - Appeal | 5.3 | Shared colour and type resources, map hierarchy and route styles; final screenshots pending |
 | User Interface - Guidelines | 5.3, 5.4 | Android navigation, insets, scalable controls and accessibility behaviour; remaining checks stated |
 | User Interface - Flow | 5.3 | Discovery-to-history path and recovery from interrupted starts |
@@ -309,6 +314,7 @@ weather and route geometry used during a walk.
 | OpenStreetMap Overpass | Nearby attraction records | Use an eligible cached area with a stale label, or report unavailable content |
 | Wikidata, Wikipedia and Wikimedia Commons | Descriptions, facts and images | Retain available place information; use artwork when a photo cannot load |
 | Open-Meteo | Weather display and recommendation context | Label eligible cached weather; unsuitable weather is neutral in ranking |
+| Open-Meteo forecast and ensemble APIs | Hourly rain chance, sky, wind and feels-like temperature; ICON, ECMWF and GFS ensemble members for departure advice | Retry transient failures, then an offline, timeout or rate-limit message with Retry; rain advice still shows if only the severe-weather check fails |
 | Valhalla | Walking geometry between selected stops | Show a labelled straight-line plan, distinct from the recorded trail |
 | OpenStreetMap tile service | Geographic map display | Tile coverage depends on available downloads/cache; this is not complete offline navigation |
 
@@ -317,7 +323,9 @@ executor and results return on the UI executor. Attractions refresh after 24 hou
 and expire after 30 days; weather refreshes after 30 minutes and expires after six
 hours, measured from fetch time. A failed refresh can return eligible cached data
 with a stale label. Bounded retries distinguish transient failures, rate limits and
-invalid responses, limiting repeated work [R1].
+invalid responses, limiting repeated work [R1]. Forecasts for departure advice are
+held in memory for 30 minutes per area and never persisted, so outdated advice is
+not shown as current [R11].
 
 Saved snapshots and journey records are separate from provider caches. The
 implemented 30-day cleanup removes eligible provider entries without erasing those
@@ -366,9 +374,25 @@ neutral; reason codes explain the fixed-rule ranking. Users choose the stops.
 Nearest-neighbour ordering and a requested street route support planning without
 guaranteeing a globally shortest itinerary [R1].
 
-Departure-window advice remains outside the verified baseline discussed here.
-If included in the submitted build, its forecast source, duration aggregation,
-timezone handling and tests must be added before it is counted as delivered.
+**Departure-window advice.** Rain forecast and Best time to leave extend planning to
+when to set off [R11]. Each candidate departure (now, then every full hour for 24
+hours) starts a walk lasting the plan's walking time plus a chosen stay per stop, up
+to eight hours. Three Open-Meteo ensembles supply alternative futures: ICON (40
+members, hourly), and ECMWF (51) and GFS (31), both three-hourly [R13]. A member is
+wet if any hour the walk touches has at least 0.2 mm/h of rain. Each model's wet share
+is averaged with equal weight, so ECMWF's larger ensemble does not outvote the others.
+Counting members across the whole walk gives the chance of rain at any point during
+it. Hourly probabilities cannot be combined into that figure, because neighbouring
+hours are correlated.
+
+Ranking prefers walks wholly in daylight, using the location's sunrise and sunset.
+Departures within five points of the driest count as equivalent; the earliest without
+a weather flag is then chosen. Hourly weather codes, gusts, mean wind and feels-like
+temperature raise caution or severe flags for thunderstorms, hail, snow, strong wind,
+heat and cold. Their thresholds are approximately those of Bureau of Meteorology,
+Beaufort and UTCI criteria. A severe departure is never recommended. Times use the
+forecast location's timezone. The page states that the advice is uncalibrated model
+output, not an official warning.
 
 ### 5.3 User experience and interface behaviour
 
@@ -425,7 +449,8 @@ storage and screens; manual checks observe a particular phone setup. Builds do n
 establish sensor accuracy; synthetic UI fixtures do not exercise real camera or
 gallery interactions.
 
-Penghua He's completed feature-branch verification records are retained below.
+Completed feature-branch verification records from Penghua He, and from Hongjian Zhu
+for departure advice, are retained below.
 Each row describes a separate revision; the test counts must not be added together.
 
 | Date / revision | Command | Environment | Actual result | Evidence |
@@ -435,6 +460,7 @@ Each row describes a separate revision; the test counts must not be added togeth
 | 27 September 2026 / `feature/popularity-ranking` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 841 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Popularity-ranking record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-POPULARITY-RANKING-2026-09-27.md) |
 | 27 September 2026 / `feature/attraction-coverage` | `./gradlew test assembleDebug assembleDebugAndroidTest lint` | Gradle JVM/build/Lint | 846 JVM tests; 0 failures, errors or skips; Lint 0 errors and 112 warnings; debug and Android-test APKs built | [Attraction-coverage record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/docs/verification/EV-ATTRACTION-COVERAGE-2026-09-27.md) |
 | 7 October 2026 / `fix/home-location`, committed as `ebebeaf` | `.\gradlew.bat testDebugUnitTest assembleDebug lintDebug --console=plain` | Windows, Temurin JDK 25.0.4 | 858 JVM tests with 0 failures; build and Lint successful; 16 tasks executed and 32 up-to-date | Generated reports at `app/build/reports/tests/testDebugUnitTest/index.html` and `app/build/reports/lint-results-debug.html` |
+| 10 October 2026 / `feature/departure-window-advice`, merged as `57a6507` | `./gradlew testDebugUnitTest lintDebug assembleDebug assembleRelease`; manual emulator checks | Windows; API 37 emulator with live Open-Meteo and simulated weather | 1007 JVM tests (137 added) with 0 failures; Lint 0 errors and 118 warnings; both APKs built; 14 emulator checks passed, including seven simulated weather days, rotation, landscape and offline retry | [Departure-advice record](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/verification/EV-DEPARTURE-ADVICE-2026-10-10.md) |
 
 An earlier API 37 record reports 75/75 instrumented tests after corrections [R5].
 The 7 October planner run reports 854 JVM tests and four presentation cases at each
@@ -460,10 +486,14 @@ choices to specific failure modes rather than relying only on suite totals.
 | Repeated route checkpoint and recovery | Re-offered points do not duplicate the trace; restored progress carries no live last fix | `RoomSessionStoreTest` [R1]; fake DAOs do not test SQLite itself |
 | Edited plan or offline routing | An old response cannot replace a new plan; failed routing retains a labelled estimate separate from travel | `ExplorationPlannedRouteTest` and [R4]; no live-service latency measurement |
 | Stale heading and layout changes | Heading expiry, map update cadence and selected controls at normal/large font sizes | JVM and synthetic API 36 checks [R4]; no physical compass or camera validation |
+| Short walk in steady rain | A ten-minute walk in 1 mm/h rain counts as wet; a walk crossing a three-hour forecast block is no wetter than one inside it | `DepartureAdvisorTest` [R12]; agreement with observed rain is unmeasured |
 
 For example, denied starts previously reached an idle exploration page. Gating
 navigation on permission and session creation fixed the flow; tests for denial,
-delayed writes, retries and no-session Back now guard that repair [R2].
+delayed writes, retries and no-session Back now guard that repair [R2]. Similarly,
+emulator acceptance of departure advice showed that totalling rain over the walk let
+a seven-minute walk read as dry in all-day rain. Judging each hour's rain rate fixed
+it; the short-walk case above now guards that repair [R12].
 
 The remaining evaluation work is specific:
 
@@ -473,6 +503,7 @@ The remaining evaluation work is specific:
 | Physical walkthrough | Phone/API, permission choices, route/arrival, photo persistence and recovery results for the installed build |
 | Responsiveness | Defined loading actions, measured durations, network/cache conditions and whether controls remain usable |
 | Reactiveness and accessibility | Input-to-display changes, offline/reconnect behaviour, final large-font checks and TalkBack observations |
+| Departure advice on a phone | Phone/API, both entry points, TalkBack and 200% font on both pages, and comparison with observed rain on a wet day |
 
 Historical feedback mentions slow initial loading and weather-refresh concerns
 [R6], but gives no controlled latency benchmark. No claim of measured speed,
@@ -486,7 +517,9 @@ items as limitations.
 arrival-linked interpretation and local records. Itinerary planning in Wanderlog
 [R7], route weather in komoot [R8], and GPS stories/quizzes in izi.TRAVEL [R9] show
 that the components have precedents. The contribution is the implemented visitor
-workflow, with no claim to have invented the individual features.
+workflow, with no claim to have invented the individual features. Departure advice
+compares start times for the planned walk by agreement across forecast ensembles,
+rather than reading a single forecast.
 
 At Old Quad, arrival reveals a story and a question about visible arches; other
 stops focus on towers and the System Garden [R10]. Reaching a map point starts an
@@ -497,19 +530,25 @@ optional and no leaderboard required.
 consistency and asynchronous requests work together in the same walk. Their
 boundaries create technical depth: an unread story must survive interruption after
 its visit is saved, while an old route response must not replace a new plan.
-Sections 5.1–5.4 explain how implementation and tests address both.
+Departure advice adds probabilistic reasoning: it combines ensemble members over a
+time window rather than reading per-hour probabilities. Sections 5.1–5.4 explain how
+implementation and tests address these concerns.
 
 **Cross-disciplinary application.** Architectural and botanical observation shape
 the theme's questions. Prompts refer to visible features at each stop, with university
 sources attached to the narratives [R10]. Location makes the prompt relevant to
-the surroundings; a learning benefit has not been measured.
+the surroundings; a learning benefit has not been measured. Departure advice draws on
+meteorology and risk communication. Rain labels follow US National Weather Service
+probability terms, and the two flag levels follow public warning colour conventions
+[R11].
 
 **Potential impact.** Combining discovery and interpretation may help unfamiliar
 visitors organise an outing and notice places they would otherwise pass. Saved
 places and journey photographs support returning to those discoveries. Coverage,
 location quality and connectivity limit usefulness; no comparative study has
-measured planning-time or satisfaction gains. Departure advice remains future work
-for this baseline and is not counted as a delivered benefit.
+measured planning-time or satisfaction gains. Departure advice may help visitors
+choose a drier or safer time to start. No study has measured whether users follow it;
+the forecasts are uncalibrated, and the three ensembles often disagree.
 
 ## 6. AI and other assistance acknowledgement
 
@@ -523,6 +562,8 @@ or human-validation claim is inferred.]
 | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
 | OpenAI Codex                                      | Test investigation and related dependency/test/resource edits; guided manual checks and transcribed feedback; notes and issue drafts |
 | OpenAI Codex, including requested research agents | Competitor/source research, selected code review, report drafts, editing and structural consolidation                                |
+| Anthropic Claude Code (Claude Opus), used by Hongjian Zhu | Departure-advice research agents (forecast methods, warning thresholds, icon sources), two three-agent design reviews, code and test implementation, emulator acceptance, D-08/evidence/PR text, and the departure-advice and contribution text in this report. The member chose between presented options at each design step. |
+| OpenAI Codex, used by Hongjian Zhu                | Early departure-advice design discussion before implementation                                                                       |
 | Other members/tools                               | [Pending actual tools, uses, affected material and human review]                                                                     |
 
 The detailed assistance inventory remains in the preserved working draft. Omitting
@@ -546,6 +587,9 @@ scope and wording review. This is not a complete submission bibliography.]
 - **R8:** [komoot route weather](https://www.komoot.com/premium/weather).
 - **R9:** [izi.TRAVEL app features](https://www.izi.travel/en/app).
 - **R10:** [Theme content and embedded university source links](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/ede3f7e340338bd7f10547bec19be471e95158b1/app/src/main/java/com/comp90018/storystep/data/repository/ThemeCatalog.java).
+- **R11:** [Departure-window advice design, D-08](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/decisions/D-08-departure-window-advice.md), including its method and threshold sources.
+- **R12:** [Departure-advice verification record, 2026-10-10](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/verification/EV-DEPARTURE-ADVICE-2026-10-10.md).
+- **R13:** [Open-Meteo Ensemble API](https://open-meteo.com/en/docs/ensemble-api).
 
 <!-- Packaging check: required outer ZIP name, PDF, code ZIP and Git-log ZIP must be
 verified separately. Do not present missing artifacts as delivered. -->
