@@ -100,7 +100,8 @@ baseline discussed in this report.
 | Java | The verified wrapper launcher used OpenJDK 22.0.2; the checked-in daemon criteria select JDK 25. Android Studio bundles JBR 25.0.2. Application source/target compatibility is Java 11. |
 | Application | Java/XML; package `com.comp90018.storystep`; minimum API 26; compile/target API 37 |
 | Historical emulator | Pixel_8, API 36, used for the presentation checks in [R2, R4]; not rerun for this build check |
-| Supplementary Windows setup | Windows PowerShell; IntelliJ IDEA 2024.3.2.2; Eclipse Temurin JDK 25.0.4; local Android SDK; OPPO X9 Pro physical phone |
+| Supplementary Windows setup | Windows PowerShell; IntelliJ IDEA 2024.3.2.2; Eclipse Temurin JDK 25.0.4; local Android SDK; OPPO Find X9 Pro physical phone |
+| Physical test handset | OPPO Find X9 Pro, 16 GB RAM and 512 GB storage; Android 16 (API 36); ColorOS 16.0.10; Android security patch dated 1 August 2026. Testing was performed at Melbourne Connect using mobile data. The 6.78-inch 2772 × 1272 display and the published GPS/GNSS, electronic-compass, accelerometer, gyroscope and camera capabilities are consistent with OPPO's global CPH2791 specification [R14], but the exact identifier of the tested regional variant was not captured. OPPO's public sensor list does not establish a hardware step counter or barometer, so optional step/ascent results must be reported as observed or unavailable. |
 
 A phone running API 26 or later is required to run the app; GPS, accelerometer and
 magnetometer are recommended for the complete sensing demonstration. Steps and
@@ -168,8 +169,12 @@ settings. An existing installation signed with another debug key cannot be updat
 in place; use a separate test device or remove the old installation only after
 preserving any needed records, since uninstalling deletes local app data.
 
-**First run and permissions.** The following walkthrough is based on the inspected
-implementation; physical-phone execution remains to be recorded.
+**First run and permissions.** On the OPPO test handset, Keshang selected **Use my
+location** during onboarding while testing at Melbourne Connect over mobile data.
+This records the in-app onboarding choice; the subsequent Android system permission
+choice (precise or approximate, and allowed or denied) was not recorded. The
+remaining steps below describe the required walkthrough and must not be read as a
+claim that every step was completed on that phone.
 
 1. Enable the phone's location service and Internet connection. Open StoryStep,
    select **Get started**, and continue through **Use my location** or **Not now**.
@@ -222,8 +227,15 @@ checked-in wrapper was run from the repository root on 7 October 2026:
 The run returned **BUILD SUCCESSFUL**. Of 48 actionable tasks, 16 were executed and
 32 were up-to-date; the generated unit-test reports contained 858 tests with no
 failures. From that computer, the debug APK was installed through USB debugging on
-Keshang Cheng's OPPO X9 Pro. Keshang performed the on-device check: the application
-launched successfully and continued to run after the USB cable was disconnected.
+Keshang Cheng's OPPO Find X9 Pro (16 GB RAM and 512 GB storage), running Android 16
+(API 36), ColorOS 16.0.10 and the 1 August 2026 Android security patch. Testing took
+place at Melbourne Connect over mobile data. OPPO's published specification for the
+global CPH2791 variant lists the location, compass, accelerometer, gyroscope and
+camera capabilities relevant to StoryStep [R14]. Keshang selected **Use my
+location** during onboarding, confirmed that the application launched successfully,
+and confirmed that it continued to run after the USB cable was disconnected. The
+exact regional model identifier, test date, Android system permission selection and
+complete feature walkthrough were not recorded.
 
 The fresh macOS archive build above was command-line only; the installation and
 physical-phone evidence comes from the separate Windows and OPPO run.
@@ -475,10 +487,14 @@ limits remain relevant; these are not results for an unspecified final package.
 
 Section 3.2 records a fresh macOS build of `ede3f7e`, the Windows build and USB
 installation from Penghua He's computer, and Keshang Cheng's checks on his OPPO
-X9 Pro. Keshang reports successful launch and operation after USB disconnection.
-The phone's Android/API version, individual fixes and retest cases are not yet
-listed. Installation evidence is present; a complete final-build walkthrough remains
-outstanding.
+Find X9 Pro. Keshang reports successful launch and operation after USB disconnection.
+The handset is an OPPO Find X9 Pro with 16 GB RAM and 512 GB storage, Android 16
+(API 36), ColorOS 16.0.10 and the 1 August 2026 security patch. The observed launch
+check was performed at Melbourne Connect over mobile data; the onboarding choice
+was **Use my location**. The exact regional device identifier, test date, Android
+system permission choice, individual fixes and retest cases are not yet listed.
+Installation and launch evidence is present; a complete final-build walkthrough
+remains outstanding.
 
 **What the regression cases establish.** The following cases connect implementation
 choices to specific failure modes rather than relying only on suite totals.
@@ -603,6 +619,7 @@ scope and wording review. This is not a complete submission bibliography.]
 - **R11:** [Departure-window advice design, D-08](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/decisions/D-08-departure-window-advice.md), including its method and threshold sources.
 - **R12:** [Departure-advice verification record, 2026-10-10](https://github.com/XIAO-LIN-1228/COMP90018-StoryStep/blob/3695680/docs/verification/EV-DEPARTURE-ADVICE-2026-10-10.md).
 - **R13:** [Open-Meteo Ensemble API](https://open-meteo.com/en/docs/ensemble-api).
+- **R14:** [OPPO Find X9 Pro official specifications](https://www.oppo.com/mx/smartphones/series-find-x/find-x9-pro/specs/) (global model CPH2791; 16 GB + 512 GB configuration, display, ColorOS, sensors and GNSS; accessed 12 October 2026). The manufacturer notes that OS information is indicative and subject to the actual product.
 
 <!-- Packaging check: required outer ZIP name, PDF, code ZIP and Git-log ZIP must be
 verified separately. Do not present missing artifacts as delivered. -->
