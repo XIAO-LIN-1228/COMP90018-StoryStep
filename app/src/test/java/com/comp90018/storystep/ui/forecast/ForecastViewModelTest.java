@@ -82,6 +82,23 @@ public class ForecastViewModelTest {
     }
 
     @Test
+    public void contentRemembersTheInstantItCountedFrom() {
+        // The page labels hours after midnight with their day relative to this instant.
+        viewModel.init(ORIGIN, false);
+
+        repository.waiting.get(0).onSuccess(hours(26));
+
+        ForecastUiState state = viewModel.getUiState().getValue();
+        assertEquals(clock.wallClockMillis(), state.getReferenceMillis());
+        java.util.TimeZone zone = ForecastText.zone(state.getPlace());
+        // 23:00-00:00 UTC is the current hour, today; 00:00-01:00 is the first one tomorrow.
+        assertEquals(0, ForecastText.dayOffset(state.getReferenceMillis(),
+                state.getHours().get(0).getStartMillis(), zone));
+        assertEquals(1, ForecastText.dayOffset(state.getReferenceMillis(),
+                state.getHours().get(1).getStartMillis(), zone));
+    }
+
+    @Test
     public void aFailureKeepsItsReasonAndRetryAsksAgain() {
         viewModel.init(ORIGIN, false);
         repository.waiting.get(0).onError(new ForecastUnavailableException(

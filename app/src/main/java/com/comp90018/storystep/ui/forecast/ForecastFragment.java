@@ -87,7 +87,7 @@ public class ForecastFragment extends Fragment {
         }
         list.setVisibility(state.getStatus() == ForecastUiState.Status.CONTENT
                 ? View.VISIBLE : View.GONE);
-        adapter.submit(state.getHours(), state.getPlace());
+        adapter.submit(state.getHours(), state.getPlace(), state.getReferenceMillis());
         String note = state.getStatus() == ForecastUiState.Status.CONTENT
                 ? ForecastText.zoneNote(getResources(), state.getPlace(),
                         System.currentTimeMillis(), java.util.TimeZone.getDefault())
