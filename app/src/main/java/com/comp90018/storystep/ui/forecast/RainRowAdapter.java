@@ -26,10 +26,14 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
 
     private final List<HourlyForecast.Hour> hours = new ArrayList<>();
     private ForecastPlace place = ForecastPlace.unknown();
+    /** When the hours were counted from; an hour starting on a later day says which day. */
+    private long referenceMillis;
 
     /** Replaces every row: each load is a new forecast, so there is nothing finer to report. */
     @SuppressLint("NotifyDataSetChanged")
-    public void submit(List<HourlyForecast.Hour> rows, ForecastPlace rowsPlace) {
+    public void submit(List<HourlyForecast.Hour> rows, ForecastPlace rowsPlace,
+                       long rowsReferenceMillis) {
+        referenceMillis = rowsReferenceMillis;
         place = rowsPlace;
         hours.clear();
         hours.addAll(rows);
@@ -47,8 +51,8 @@ public class RainRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Holder> 
     public void onBindViewHolder(@NonNull Holder holder, int position) {
         HourlyForecast.Hour hour = hours.get(position);
         View item = holder.itemView;
-        holder.time.setText(ForecastText.interval(item.getResources(),
-                hour.getStartMillis(), hour.getEndMillis(), place));
+        holder.time.setText(ForecastText.dayInterval(item.getResources(),
+                hour.getStartMillis(), hour.getEndMillis(), referenceMillis, place));
         holder.icon.setImageResource(ForecastText.icon(hour.getSky(), hour.getDaylight()));
         holder.icon.setContentDescription(item.getResources().getString(
                 ForecastText.skyDescription(hour.getSky())));

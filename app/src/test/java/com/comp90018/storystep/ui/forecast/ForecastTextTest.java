@@ -62,6 +62,25 @@ public class ForecastTextTest {
     }
 
     @Test
+    public void anHourAfterLocalMidnightIsOnTheNextDay() {
+        // The hourly rows are labelled by when they start. At 23:30 the current row
+        // 23:00-00:00 is today; the next, 00:00-01:00, is tomorrow.
+        TimeZone melbourne = TimeZone.getTimeZone("Australia/Melbourne");
+        long elevenThirtyPm = MIDNIGHT_UTC + 12 * HOUR + 30 * 60_000L;  // 2026-10-10 23:30 AEDT
+        long elevenPm = MIDNIGHT_UTC + 12 * HOUR;
+        assertEquals(0, ForecastText.dayOffset(elevenThirtyPm, elevenPm, melbourne));
+        assertEquals(1, ForecastText.dayOffset(elevenThirtyPm, elevenPm + HOUR, melbourne));
+        assertEquals(1, ForecastText.dayOffset(elevenThirtyPm, elevenPm + 23 * HOUR, melbourne));
+    }
+
+    @Test
+    public void anIntervalHasNoLineBreakOfItsOwn() {
+        // "Tomorrow 2:00 AM–3:00 AM" wraps after "Tomorrow", never before the last "AM".
+        assertEquals("2:00 AM–⁠3:00 AM", ForecastText.unbreakable("2:00 AM–3:00 AM"));
+        assertEquals("23:00–⁠00:00", ForecastText.unbreakable("23:00–00:00"));
+    }
+
+    @Test
     public void theDayIsTheLocationsNotUtcs() {
         // 11:00 and 23:00 Melbourne on 2026-10-10 straddle a UTC midnight but share a local day.
         TimeZone melbourne = TimeZone.getTimeZone("Australia/Melbourne");

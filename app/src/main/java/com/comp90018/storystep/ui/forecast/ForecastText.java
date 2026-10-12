@@ -44,18 +44,45 @@ public final class ForecastText {
      */
     public static String dayTime(Resources resources, long millis, long referenceMillis,
                                  ForecastPlace place) {
-        String time = time(millis, place);
+        return withDay(resources, time(millis, place), millis, referenceMillis, place);
+    }
+
+    /**
+     * An hour's interval that also says its day when the hour starts on a later day than the
+     * reference instant: "11:00 PM–12:00 AM" today, "Tomorrow 12:00 AM–1:00 AM" after midnight.
+     * The hourly list spans a whole day, so a bare interval after midnight reads as one already
+     * past.
+     */
+    public static String dayInterval(Resources resources, long startMillis, long endMillis,
+                                     long referenceMillis, ForecastPlace place) {
+        return withDay(resources,
+                unbreakable(interval(resources, startMillis, endMillis, place)),
+                startMillis, referenceMillis, place);
+    }
+
+    /**
+     * Keeps an interval on one line, so a label too wide for the row wraps after its day
+     * ("Tomorrow" / "2:00 AM–3:00 AM") rather than leaving "AM" on a line of its own: spaces
+     * become no-break spaces and a word joiner follows the dash.
+     */
+    static String unbreakable(String interval) {
+        return interval.replace(' ', ' ').replace("–", "–⁠");
+    }
+
+    /** Prefixes {@code text} with "Tomorrow" or a weekday when {@code millis} is on a later day. */
+    private static String withDay(Resources resources, String text, long millis,
+                                  long referenceMillis, ForecastPlace place) {
         int days = dayOffset(referenceMillis, millis, zone(place));
         if (days == 0) {
-            return time;
+            return text;
         }
         if (days == 1) {
-            return resources.getString(R.string.forecast_tomorrow_time, time);
+            return resources.getString(R.string.forecast_tomorrow_time, text);
         }
         DateFormat weekday = new java.text.SimpleDateFormat("EEE", Locale.ENGLISH);
         weekday.setTimeZone(zone(place));
         return resources.getString(R.string.forecast_day_time,
-                weekday.format(new Date(millis)), time);
+                weekday.format(new Date(millis)), text);
     }
 
     /** Calendar days from the reference instant's local date to the instant's, in the zone. */

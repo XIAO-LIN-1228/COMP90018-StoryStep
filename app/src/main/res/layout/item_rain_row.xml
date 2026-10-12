@@ -19,13 +19,15 @@
         android:gravity="center_vertical"
         android:orientation="horizontal">
 
+        <!-- Two lines: a 12-hour interval with its day ("Tomorrow 11:00 AM–12:00 PM") is too
+             wide for one beside the icon, percentage and bar, so it wraps after the day. -->
         <TextView
             android:id="@+id/rain_row_time"
             style="@style/TextAppearance.StoryStep.Body"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:maxLines="1"
+            android:maxLines="2"
             android:textColor="@color/story_ink" />
 
         <ImageView

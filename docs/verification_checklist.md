@@ -16,6 +16,12 @@ ECMWF and GFS ensembles, with two-level severe-weather flags.
   already past. They now read "Tomorrow 07:00".
   - 1010 JVM tests pass; Lint 0 errors, 118 warnings.
   - Emulator check passes. The reporting phone is NOT_RUN.
+- 2026-10-12 fix on `fix/forecast-day-label`:
+  [evidence](verification/EV-BUGFIX-FORECAST-DAY-2026-10-12.md). The hourly rain page labelled
+  hours after midnight by interval alone, so "12:00 AM–1:00 AM" read as earlier than now. They
+  now read "Tomorrow 12:00 AM–1:00 AM".
+  - 1013 JVM tests pass; Lint 0 errors, 118 warnings.
+  - Emulator check passes. Physical phone is NOT_RUN.
 
 2026-09-27 attraction-coverage extension on `feature/attraction-coverage`:
 [automated evidence](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md). Trusted fallback names,
