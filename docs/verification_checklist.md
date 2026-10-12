@@ -10,6 +10,12 @@ ECMWF and GFS ensembles, with two-level severe-weather flags.
   pass.
 - NOT_RUN: physical device, TalkBack, 200% font and accuracy against observed rain. It extends
   REQ-19 and REQ-20; their rows below are unchanged.
+- 2026-10-12 fix on `fix/departure-day-label`:
+  [evidence](verification/EV-BUGFIX-DEPARTURE-DAY-2026-10-12.md). A phone report showed
+  departures after midnight labelled by time alone, so "Best: leave at 07:00" read as a time
+  already past. They now read "Tomorrow 07:00".
+  - 1010 JVM tests pass; Lint 0 errors, 118 warnings.
+  - Emulator check passes. The reporting phone is NOT_RUN.
 
 2026-09-27 attraction-coverage extension on `feature/attraction-coverage`:
 [automated evidence](verification/EV-ATTRACTION-COVERAGE-2026-09-27.md). Trusted fallback names,

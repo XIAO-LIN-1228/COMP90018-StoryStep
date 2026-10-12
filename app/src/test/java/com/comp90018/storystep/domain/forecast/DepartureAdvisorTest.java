@@ -142,6 +142,17 @@ public class DepartureAdvisorTest {
     }
 
     @Test
+    public void adviceRemembersTheInstantItCountedFrom() {
+        // The page labels departures after midnight with their day relative to this instant.
+        DepartureAdvice advice = advisor.advise(NOW, HOUR, fixture().build());
+
+        assertEquals(NOW, advice.getComputedAtMillis());
+        for (DepartureAdvice.Candidate candidate : advice.getCandidates()) {
+            assertTrue(candidate.getStartMillis() >= advice.getComputedAtMillis());
+        }
+    }
+
+    @Test
     public void thirtyFourHoursKeepEveryDepartureForAnEightHourWalk() {
         DepartureAdvice advice = advisor.advise(NOW, DepartureAdvisor.MAX_TRIP_MILLIS,
                 fixture().build());

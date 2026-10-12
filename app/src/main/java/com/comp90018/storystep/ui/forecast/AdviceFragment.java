@@ -164,11 +164,11 @@ public class AdviceFragment extends Fragment {
         zoneNote.setVisibility(note == null ? View.GONE : View.VISIBLE);
         zoneNote.setText(note);
         if (advice == null) {
-            adapter.submit(java.util.Collections.emptyList(), -1, state.getPlace(), null);
+            adapter.submit(java.util.Collections.emptyList(), -1, state.getPlace(), null, 0L);
             return;
         }
         adapter.submit(advice.getCandidates(), advice.getBestIndex(), state.getPlace(),
-                state.getHourly());
+                state.getHourly(), advice.getComputedAtMillis());
         renderSummary(advice, state.getPlace(), state.getHourlyState());
         source.setText(getString(R.string.advice_two_lines,
                 getString(R.string.advice_source,
@@ -209,10 +209,18 @@ public class AdviceFragment extends Fragment {
             return;
         }
         String chance = AdviceText.percent(getResources(), chosen);
-        best.setText(chosen.isNow()
-                ? getString(R.string.advice_best_now, chance)
-                : getString(R.string.advice_best_at,
-                        ForecastText.time(chosen.getStartMillis(), place), chance));
+        long start = chosen.getStartMillis();
+        if (chosen.isNow()) {
+            best.setText(getString(R.string.advice_best_now, chance));
+        } else if (ForecastText.dayOffset(advice.getComputedAtMillis(), start,
+                ForecastText.zone(place)) == 1) {
+            // A bare "7:00 AM" read in the evening looks like a time already past.
+            best.setText(getString(R.string.advice_best_tomorrow,
+                    ForecastText.time(start, place), chance));
+        } else {
+            best.setText(getString(R.string.advice_best_at, ForecastText.dayTime(
+                    getResources(), start, advice.getComputedAtMillis(), place), chance));
+        }
         int noteText = 0;
         if (advice.isNoDaylightCandidate()) {
             noteText = R.string.advice_note_no_daylight;

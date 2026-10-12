@@ -38,6 +38,36 @@ public final class ForecastText {
     }
 
     /**
+     * A departure time that also says its day when it is not on the reference instant's day:
+     * "2:00 PM" today, "Tomorrow 7:00 AM" after midnight. Departures span a whole day, so a bare
+     * time after midnight reads as one that has already passed.
+     */
+    public static String dayTime(Resources resources, long millis, long referenceMillis,
+                                 ForecastPlace place) {
+        String time = time(millis, place);
+        int days = dayOffset(referenceMillis, millis, zone(place));
+        if (days == 0) {
+            return time;
+        }
+        if (days == 1) {
+            return resources.getString(R.string.forecast_tomorrow_time, time);
+        }
+        DateFormat weekday = new java.text.SimpleDateFormat("EEE", Locale.ENGLISH);
+        weekday.setTimeZone(zone(place));
+        return resources.getString(R.string.forecast_day_time,
+                weekday.format(new Date(millis)), time);
+    }
+
+    /** Calendar days from the reference instant's local date to the instant's, in the zone. */
+    static int dayOffset(long referenceMillis, long millis, TimeZone zone) {
+        return (int) (localDay(millis, zone) - localDay(referenceMillis, zone));
+    }
+
+    private static long localDay(long millis, TimeZone zone) {
+        return Math.floorDiv(millis + zone.getOffset(millis), 86_400_000L);
+    }
+
+    /**
      * The location's zone: its IANA identifier when the device knows it, which follows daylight
      * saving across the day, otherwise the fixed offset the provider reported.
      */
