@@ -80,11 +80,13 @@ public final class DepartureAdvice {
     private final boolean dryThroughout;
     private final boolean severeAllDaytime;
     private final boolean severeChecked;
+    private final long computedAtMillis;
 
     DepartureAdvice(List<Candidate> candidates, List<String> models, int bestIndex,
                     boolean noMeaningfulDifference, boolean allNotAdvisable,
                     boolean noDaylightCandidate, boolean dryThroughout,
-                    boolean severeAllDaytime, boolean severeChecked) {
+                    boolean severeAllDaytime, boolean severeChecked, long computedAtMillis) {
+        this.computedAtMillis = computedAtMillis;
         this.candidates = Collections.unmodifiableList(new ArrayList<>(candidates));
         this.models = Collections.unmodifiableList(new ArrayList<>(models));
         this.bestIndex = bestIndex;
@@ -142,6 +144,14 @@ public final class DepartureAdvice {
     /** The models whose members were counted, for the page's source note. */
     public List<String> getModels() {
         return models;
+    }
+
+    /**
+     * The instant the departures were counted from. Departures span midnight, so a label must say
+     * which day a time falls on relative to this instant, not just the time.
+     */
+    public long getComputedAtMillis() {
+        return computedAtMillis;
     }
 
     public int getBestIndex() {

@@ -548,8 +548,11 @@
     <string name="advice_stay_minutes">%1$d min</string>
     <string name="advice_walk_duration">Your walk: about %1$s</string>
     <string name="advice_now">Now</string>
+    <string name="forecast_tomorrow_time">Tomorrow %1$s</string>
+    <string name="forecast_day_time">%1$s %2$s</string>
     <string name="advice_best_now">Best: leave now · about %1$s chance of rain</string>
     <string name="advice_best_at">Best: leave at %1$s · about %2$s chance of rain</string>
+    <string name="advice_best_tomorrow">Best: leave tomorrow at %1$s · about %2$s chance of rain</string>
     <string name="advice_percent_below_one" formatted="false">&lt;1%</string>
     <string name="advice_dry_title">Dry all day: leave whenever you like</string>
     <string name="advice_dry_note" formatted="false">Every departure in the next 24 hours has under a 5% chance of rain during your walk.</string>

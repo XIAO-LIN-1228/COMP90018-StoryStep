@@ -170,6 +170,12 @@ with Retry.
   meaningful difference, and the earliest daylight candidate is highlighted.
 - A summary card above the list: "Best: leave at … · about X% chance of rain" (or "leave now")
   plus at most one note (no daylight > all likely > no meaningful difference).
+- Revised 2026-10-12: a departure on a later local day than the instant the advice was
+  computed says so. Rows read "Tomorrow 07:00", and the card "Best: leave tomorrow at 07:00".
+  Today's rows keep the bare time. The 24-hour list crosses midnight, and daylight-first ranking
+  often picks tomorrow morning. A bare "7:00 AM" read in the evening was mistaken on a phone for
+  a time already past. The day is the forecast location's, like the time. See
+  `verification/EV-BUGFIX-DEPARTURE-DAY-2026-10-12.md`.
 - All candidates are listed in time order; the best row has a tinted background and the list
   scrolls to it. Rows reuse the forecast page's row layout; the icon slot shows a moon only for
   walks that run after dark (superseded: every row now shows a day or night symbol, §4.4), and the label reads "<band> · After dark". No numeric score.

@@ -114,7 +114,7 @@ public final class DepartureAdvisor {
         for (DepartureAdvice.Candidate candidate : candidates) {
             checked &= candidate.getSevere() != null;
         }
-        return choose(candidates, names, checked);
+        return choose(candidates, names, checked, nowMillis);
     }
 
     /** "Now", then each full hour after it within the horizon whose walk ends inside the data. */
@@ -188,7 +188,8 @@ public final class DepartureAdvisor {
      * when every daylight walk is severe no best is named.
      */
     private static DepartureAdvice choose(List<DepartureAdvice.Candidate> candidates,
-                                          List<String> models, boolean severeChecked) {
+                                          List<String> models, boolean severeChecked,
+                                          long nowMillis) {
         boolean anyDaylight = false;
         boolean daylightNotSevere = false;
         boolean anyNotSevere = false;
@@ -206,7 +207,7 @@ public final class DepartureAdvisor {
         boolean severeAllDaytime = anyDaylight ? !daylightNotSevere : !anyNotSevere;
         if (severeAllDaytime) {
             return new DepartureAdvice(candidates, models, -1, false, false, !anyDaylight,
-                    false, true, severeChecked);
+                    false, true, severeChecked, nowMillis);
         }
 
         int best = -1;
@@ -238,7 +239,7 @@ public final class DepartureAdvisor {
             best = clean;
         }
         return new DepartureAdvice(candidates, models, best, noMeaningfulDifference,
-                allNotAdvisable, !anyDaylight, dry, false, severeChecked);
+                allNotAdvisable, !anyDaylight, dry, false, severeChecked, nowMillis);
     }
 
     /** No caution or severe flag; an unchecked walk counts as clean, having nothing against it. */

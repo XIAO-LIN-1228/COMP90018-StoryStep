@@ -35,11 +35,14 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
     private int bestIndex = -1;
     private ForecastPlace place = ForecastPlace.unknown();
     @Nullable private HourlyForecast hourly;
+    /** When the rows were counted from; a row on a later day says which day. */
+    private long referenceMillis;
 
     /** Replaces every row: each recomputation is a new set of departures. */
     @SuppressLint("NotifyDataSetChanged")
     public void submit(List<DepartureAdvice.Candidate> rows, int best, ForecastPlace rowsPlace,
-                       @Nullable HourlyForecast rowsHourly) {
+                       @Nullable HourlyForecast rowsHourly, long rowsReferenceMillis) {
+        referenceMillis = rowsReferenceMillis;
         place = rowsPlace;
         hourly = rowsHourly;
         candidates.clear();
@@ -59,7 +62,7 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
     public void onBindViewHolder(@NonNull RainRowAdapter.Holder holder, int position) {
         DepartureAdvice.Candidate candidate = candidates.get(position);
         Resources resources = holder.itemView.getResources();
-        holder.time.setText(start(resources, candidate, place));
+        holder.time.setText(start(resources, candidate, place, referenceMillis));
         holder.icon.setVisibility(View.VISIBLE);
         HourlyForecast.Hour hour = hourly == null ? null : hourly.hourAt(candidate.getStartMillis());
         if (hour != null && hour.getSky() != null && hour.getSky() != SkyCondition.UNKNOWN) {
@@ -90,7 +93,8 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         // The tint alone says nothing to a screen reader.
         holder.itemView.setContentDescription(position == bestIndex
                 ? resources.getString(R.string.advice_best_row_description,
-                        start(resources, candidate, place), holder.percent.getText(), label)
+                        start(resources, candidate, place, referenceMillis),
+                        holder.percent.getText(), label)
                 : null);
     }
 
@@ -119,11 +123,13 @@ public class DepartureRowAdapter extends RecyclerView.Adapter<RainRowAdapter.Hol
         pill.setVisibility(View.VISIBLE);
     }
 
+    /** "Now", a time today, or a time with its day ("Tomorrow 7:00 AM") after midnight. */
     static String start(Resources resources, DepartureAdvice.Candidate candidate,
-                        ForecastPlace place) {
+                        ForecastPlace place, long referenceMillis) {
         return candidate.isNow()
                 ? resources.getString(R.string.advice_now)
-                : ForecastText.time(candidate.getStartMillis(), place);
+                : ForecastText.dayTime(resources, candidate.getStartMillis(), referenceMillis,
+                        place);
     }
 
     @Override

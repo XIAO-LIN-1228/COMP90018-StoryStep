@@ -7,11 +7,15 @@ import com.comp90018.storystep.domain.forecast.SunTimes;
 
 import org.junit.Test;
 
+import java.util.TimeZone;
+
 /** Times on the forecast pages are the forecast location's, not the phone's. */
 public class ForecastTextTest {
 
     /** 2026-10-10 00:00 UTC = 11:00 in Melbourne (AEDT, UTC+11). */
     private static final long MIDNIGHT_UTC = 1_791_590_400_000L;
+
+    private static final long HOUR = 3_600_000L;
 
     /** The JDK puts a narrow no-break space before AM/PM; compare it as a plain space. */
     private static String time(long millis, ForecastPlace place) {
@@ -44,6 +48,26 @@ public class ForecastTextTest {
         ForecastPlace melbourne = place("Australia/Melbourne", 39_600);
         assertEquals("2:00 AM", time(beforeChange, melbourne));
         assertEquals("3:00 AM", time(afterChange, melbourne));
+    }
+
+    @Test
+    public void aDepartureAfterLocalMidnightIsOnTheNextDay() {
+        // Reported on a phone: at 9 PM the best departure "7:00 AM" read as a time already past.
+        TimeZone melbourne = TimeZone.getTimeZone("Australia/Melbourne");
+        long ninePm = MIDNIGHT_UTC + 10 * HOUR;          // 2026-10-10 21:00 AEDT
+        assertEquals(0, ForecastText.dayOffset(ninePm, ninePm + 2 * HOUR, melbourne));  // 23:00
+        assertEquals(1, ForecastText.dayOffset(ninePm, ninePm + 3 * HOUR, melbourne));  // 00:00
+        assertEquals(1, ForecastText.dayOffset(ninePm, ninePm + 10 * HOUR, melbourne)); // 07:00
+        assertEquals(2, ForecastText.dayOffset(ninePm, ninePm + 27 * HOUR, melbourne));
+    }
+
+    @Test
+    public void theDayIsTheLocationsNotUtcs() {
+        // 11:00 and 23:00 Melbourne on 2026-10-10 straddle a UTC midnight but share a local day.
+        TimeZone melbourne = TimeZone.getTimeZone("Australia/Melbourne");
+        assertEquals(0, ForecastText.dayOffset(MIDNIGHT_UTC, MIDNIGHT_UTC + 12 * HOUR, melbourne));
+        assertEquals(1, ForecastText.dayOffset(MIDNIGHT_UTC - HOUR, MIDNIGHT_UTC + 13 * HOUR,
+                TimeZone.getTimeZone("UTC")));
     }
 
     @Test
